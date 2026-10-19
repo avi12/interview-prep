@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Voice Reader",
+  "description": "Reads any text aloud with an online neural voice",
+  "version": "1.0.2",
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "popup.html" },
+  "permissions": ["declarativeNetRequestWithHostAccess", "offscreen", "storage"],
+  "host_permissions": [
+    "https://voices.speech.test/*",
+    "https://gateway.speech.test/*"
+  ]
+}
