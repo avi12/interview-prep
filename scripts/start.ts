@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { writeFileDeep } from "#scripts/lib/files.ts";
 import { ROOT } from "#scripts/lib/paths.ts";
-import { killTree } from "#scripts/lib/process.ts";
+import { killMatching, killTree } from "#scripts/lib/process.ts";
 import { SERVER_DEFAULT_PORT, SERVER_HOST } from "#scripts/lib/server.ts";
 
 const PORT = Number(process.env.PORT ?? SERVER_DEFAULT_PORT);
@@ -22,6 +22,7 @@ const SERVER_ONLY_SETTINGS = {
   "workbench.welcomePage.walkthroughs.openOnInstall": false,
   "update.showReleaseNotes": false
 };
+const SERVER_PROCESS_NEEDLES = ["--server-data-dir", SERVER_DATA_DIR];
 const TOKEN_FILE = resolve(SERVER_DATA_DIR, "connection-token");
 const isOpeningBrowser = !process.argv.includes("--no-open");
 
@@ -65,6 +66,9 @@ const readOrCreateToken = () => {
 const token = readOrCreateToken();
 const url = `http://${HOST}:${PORT}/?tkn=${token}&folder=${encodeURIComponent(toUrlPath(ROOT))}`;
 
+const staleCount = killMatching(SERVER_PROCESS_NEEDLES);
+if (staleCount > 0) console.log(`Stopped ${staleCount} leftover server process(es) from an earlier run`);
+
 const server = spawn(
   "code",
   [
@@ -82,6 +86,7 @@ const server = spawn(
 
 const stopServer = () => {
   killTree(server.pid);
+  killMatching(SERVER_PROCESS_NEEDLES);
   process.exit(0);
 };
 
