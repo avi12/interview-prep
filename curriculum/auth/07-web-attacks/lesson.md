@@ -59,7 +59,7 @@ sources:
 
 ## Stop XSS: encode on output
 
-Turn the five special characters into **entities** at the moment you write text into HTML. The browser then shows them, and never runs them.
+Turn the five special characters into **entities** (codes like `&lt;` that the browser shows as a character) at the moment you write text into HTML. The browser then shows them, and never runs them.
 
 | Character | Becomes |
 |---|---|
@@ -69,7 +69,7 @@ Turn the five special characters into **entities** at the moment you write text 
 | `"` | `&quot;` |
 | `'` | `&#x27;` |
 
-Also **quote attribute values**. Modern frameworks (React, Svelte) do this for `{value}`, but `innerHTML` and `dangerouslySetInnerHTML` skip it. If users must write HTML, run it through a sanitizer such as DOMPurify.
+Also **quote attribute values**. Modern frameworks (React, Svelte) do this for `{value}`, but `innerHTML`, `dangerouslySetInnerHTML` and Svelte's `{@html}` skip it. If users must write HTML, run it through a sanitizer such as DOMPurify.
 
 > **Why:** the right encoding depends on where the text lands (HTML, attribute, JavaScript, URL). So encode at **output**, not when saving.
 
@@ -91,10 +91,10 @@ why: The same name may later go into HTML, an attribute or JSON. Each needs its 
 
 ## CSP: a seat belt
 
-A **Content Security Policy** is a response header telling the browser which scripts may run. With a nonce policy, injected inline scripts have no nonce and are blocked.
+A **Content Security Policy** is a response header telling the browser which scripts may run. A **nonce** is a random one-time value. With a nonce policy, only scripts carrying the current nonce run, so injected inline scripts are blocked.
 
 ```http
-Content-Security-Policy: default-src 'self'; script-src 'nonce-R4nd0m' 'strict-dynamic'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'
+Content-Security-Policy: default-src 'self'; script-src 'nonce-R4nd0m'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'
 ```
 
 - The nonce is **new and unpredictable for every response**
@@ -148,14 +148,14 @@ A content security policy is a header that tells the browser which scripts it ma
 
 ## CSRF: tokens first, SameSite as backup
 
-- **CSRF token** (the main defense): a random value tied to the session, sent in a hidden field or header. The server checks it on every state-changing request. The attacker's page cannot read it
+- **CSRF token** (the main defense): a random value tied to the session, sent in a hidden field or header and checked on every state-changing request. The attacker's page cannot read it. Use your framework's built-in one first
 - **`SameSite=Lax` or `Strict`** cookie: browsers hold the cookie back on cross-site requests. OWASP calls it defense in depth, not a replacement
 - **Safe GET:** never change state on GET. `Lax` still sends cookies on top-level GET navigations
 - **Also check** `Origin` or `Sec-Fetch-Site` where you can
 
 > **Trap:** XSS defeats every CSRF defense. A script on your own page can read the token.
 
-> **Not this:** "we only accept POST" or "we use a secret cookie". An auto-submitted form is a POST, and the cookie is exactly what the browser sends for you.
+> **Not this:** "we only accept POST" or "we use a secret cookie". An auto-submitted form is a POST, and the browser sends the cookie for you.
 
 ```narrate
 The main defense is a token. Give each session a random value, put it in the form or a header, and check it on every request that changes state. The attacker's page cannot read it, so it cannot send it. The same site cookie flag is a good backup, not a replacement. Never change state on a plain GET request. And remember, if the attacker also gets XSS, they can read the token too.
@@ -175,7 +175,7 @@ why: Safe methods only read. POST changes state, and the browser would attach th
 
 The attacker loads **your** page inside an invisible frame on their page, placed under a decoy button. The user thinks they click "Win a prize" and actually click your "Delete account".
 
-The defense is a header: `Content-Security-Policy: frame-ancestors 'none'` (or `'self'`). Add `X-Frame-Options: DENY` for old browsers.
+The defense is a header: `Content-Security-Policy: frame-ancestors 'none'` (or `'self'`). Add `X-Frame-Options: DENY` only for old browsers; OWASP calls that header obsolete.
 
 | Attack | What the attacker abuses | Main defense |
 |---|---|---|
@@ -195,7 +195,7 @@ Open `defenses.ts` in your copy. Three small functions:
 
 - `escapeHtml(text)`: replace `&`, `<`, `>`, `"` and `'` with the entities in the table, in **one pass**. Leave everything else alone
 - `createCsrfToken({ getRandomBytes? })`: 32 random bytes as base64url
-- `isCsrfRequestAllowed({ method, sessionToken, submittedToken })`: safe methods (`GET`, `HEAD`, `OPTIONS`, any letter case) pass. Every other method, including ones you do not know, needs a **non-empty** submitted token equal to the session token, compared in constant time
+- `isCsrfRequestAllowed({ method, sessionToken, submittedToken })`: safe methods (`GET`, `HEAD`, `OPTIONS`, any letter case; RFC 9110 lists `TRACE` too, but we treat it as unknown) pass. Every other method, including ones you do not know, needs a **non-empty** submitted token equal to the session token, compared in constant time
 
 Run the tests from the Run button, or `pnpm lesson test auth/07-web-attacks`.
 

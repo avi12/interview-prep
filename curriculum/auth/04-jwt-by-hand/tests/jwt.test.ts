@@ -1,24 +1,30 @@
-import { createHmac } from "node:crypto";
-import { describe, expect, it } from "vitest";
+import { createHmac, timingSafeEqual } from "node:crypto";
+import { describe, expect, it, vi } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import type { JwtClaims } from "../starter/jwt.ts";
 
-type Claims = { iss?: string; sub?: string; aud?: string | string[]; exp?: number; nbf?: number; iat?: number; [claim: string]: unknown };
+vi.mock("node:crypto", async importOriginal =>
+  (await import("#kit/nodeCrypto.ts")).withSpiedTimingSafeEqual(await importOriginal<typeof import("node:crypto")>())
+);
+
 type Module = {
-  signJwt: (input: { claims: Claims; secret: string }) => string;
-  verifyJwt: (input: { token: string; secret: string; issuer: string; audience: string; now: () => number }) => Claims;
+  signJwt: (input: { claims: JwtClaims; secret: string }) => string;
+  verifyJwt: (input: { token: string; secret: string; issuer: string; audience: string; now: () => number }) => JwtClaims;
 };
 
 const { signJwt, verifyJwt } = await loadImpl<Module>({ testUrl: import.meta.url, file: "jwt.ts" });
 
 const SECRET = "this-secret-is-at-least-32-bytes-long";
 const OTHER_SECRET = "another-secret-that-is-also-32-bytes";
+const SECRET_32_BYTES = "k".repeat(32);
+const SECRET_31_BYTES = "k".repeat(31);
 const ISSUER = "https://auth.example.com";
 const AUDIENCE = "orders-api";
 const NOW_SECONDS = 1_900_000_000;
 const TEN_MINUTES = 600;
 const MS_PER_SECOND = 1000;
 
-const validClaims = (overrides: Claims = {}): Claims => ({
+const validClaims = (overrides: JwtClaims = {}): JwtClaims => ({
   iss: ISSUER,
   aud: AUDIENCE,
   sub: "user-1",
@@ -36,7 +42,7 @@ const forge = ({
   hash = "sha256"
 }: {
   header?: Record<string, unknown>;
-  claims?: Claims;
+  claims?: JwtClaims;
   secret?: string;
   hash?: string;
 } = {}) => {
@@ -68,6 +74,11 @@ describe("signJwt", () => {
 
   it("refuses a secret shorter than 32 bytes", () => {
     expect(() => signJwt({ claims: validClaims(), secret: "password123" })).toThrow();
+  });
+
+  it("draws the line at exactly 32 bytes: 31 is refused, 32 is fine", () => {
+    expect(() => signJwt({ claims: validClaims(), secret: SECRET_31_BYTES })).toThrow();
+    expect(() => signJwt({ claims: validClaims(), secret: SECRET_32_BYTES })).not.toThrow();
   });
 });
 
@@ -112,8 +123,16 @@ describe("verifyJwt: tampering", () => {
     }
   });
 
-  it("refuses a verifying secret shorter than 32 bytes", () => {
+  it("refuses a verifying secret shorter than 32 bytes, even for a token that was signed with it", () => {
     expect(() => verifyAt({ token: forge({ secret: "short" }), secret: "short" })).toThrow();
+    expect(() => verifyAt({ token: forge({ secret: SECRET_31_BYTES }), secret: SECRET_31_BYTES })).toThrow();
+    expect(verifyAt({ token: forge({ secret: SECRET_32_BYTES }), secret: SECRET_32_BYTES }).sub).toBe("user-1");
+  });
+
+  it("compares signatures with crypto.timingSafeEqual, not with ===", () => {
+    vi.mocked(timingSafeEqual).mockClear();
+    verifyAt({ token: forge() });
+    expect(timingSafeEqual).toHaveBeenCalled();
   });
 });
 
@@ -140,6 +159,10 @@ describe("verifyJwt: the algorithm attacks", () => {
     expect(() => verifyAt({ token })).toThrow();
   });
 
+  it("rejects hs256 in lowercase: the algorithm name must match exactly", () => {
+    expect(() => verifyAt({ token: forge({ header: { alg: "hs256", typ: "JWT" } }) })).toThrow();
+  });
+
   it("rejects a header with no alg at all", () => {
     expect(() => verifyAt({ token: forge({ header: { typ: "JWT" } }) })).toThrow();
   });
@@ -164,6 +187,11 @@ describe("verifyJwt: time claims (clock injected, JWT times are in seconds)", ()
     expect(() => verifyAt({ token: forge({ claims: withoutExp }) })).toThrow();
   });
 
+  it("rejects an exp that is text instead of a number, even when the signature is valid", () => {
+    expect(() => verifyAt({ token: forge({ claims: validClaims({ exp: String(NOW_SECONDS + TEN_MINUTES) as unknown as number }) }) })).toThrow();
+    expect(() => verifyAt({ token: forge({ claims: validClaims({ exp: "9999999999" as unknown as number }) }) })).toThrow();
+  });
+
   it("rejects a token before its nbf and accepts it at nbf", () => {
     const token = forge({ claims: validClaims({ nbf: NOW_SECONDS + 60 }) });
     expect(() => verifyAt({ token, nowSeconds: NOW_SECONDS + 59 })).toThrow();
@@ -176,6 +204,12 @@ describe("verifyJwt: issuer and audience", () => {
     expect(() => verifyAt({ token: forge({ claims: validClaims({ iss: "https://evil.example.com" }) }) })).toThrow();
   });
 
+  it("rejects an issuer that only looks like ours (longer, shorter or with a suffix)", () => {
+    for (const iss of [`${ISSUER}.evil.io`, `${ISSUER}/`, ISSUER.slice(0, -1), ISSUER.toUpperCase()]) {
+      expect(() => verifyAt({ token: forge({ claims: validClaims({ iss }) }) })).toThrow();
+    }
+  });
+
   it("rejects a token with no issuer", () => {
     const { iss, ...withoutIssuer } = validClaims();
     expect(() => verifyAt({ token: forge({ claims: withoutIssuer }) })).toThrow();
@@ -184,6 +218,12 @@ describe("verifyJwt: issuer and audience", () => {
   it("rejects a token meant for another audience", () => {
     expect(() => verifyAt({ token: forge({ claims: validClaims({ aud: "billing-api" }) }) })).toThrow();
     expect(() => verifyAt({ token: forge({ claims: validClaims({ aud: ["billing-api", "reports-api"] }) }) })).toThrow();
+  });
+
+  it("rejects an audience that only contains ours as part of a longer name", () => {
+    for (const aud of [`${AUDIENCE}-v2`, `my-${AUDIENCE}`, [`${AUDIENCE}-admin`, "billing-api"]]) {
+      expect(() => verifyAt({ token: forge({ claims: validClaims({ aud }) }) })).toThrow();
+    }
   });
 
   it("rejects a token with no audience", () => {

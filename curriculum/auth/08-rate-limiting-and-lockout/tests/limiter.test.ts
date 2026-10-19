@@ -13,6 +13,7 @@ const { createTokenBucketLimiter } = await loadImpl<Module>({ testUrl: import.me
 const START_MS = 1_900_000_000_000;
 const ONE_SECOND = 1000;
 const ONE_HOUR = 3_600_000;
+const SLIVER_MS = 130;
 
 const makeLimiter = ({ capacity, refillPerSecond }: { capacity: number; refillPerSecond: number }) => {
   let currentMs = START_MS;
@@ -46,6 +47,25 @@ describe("token bucket limiter", () => {
     expect(attempt().retryAfterSeconds).toBe(2);
     advance(1000);
     expect(attempt().retryAfterSeconds).toBe(1);
+  });
+
+  it.each([
+    [1, 1],
+    [1, 0.5],
+    [3, 0.3],
+    [5, 2],
+    [2, 0.25]
+  ])("tells the exact wait, rounded up (capacity %i, refill %f per second)", (capacity, refillPerSecond) => {
+    const { attempt, advance } = makeLimiter({ capacity, refillPerSecond });
+    for (let spent = 0; spent < capacity; spent++) attempt();
+    advance(SLIVER_MS);
+    const blocked = attempt();
+    expect(blocked.isAllowed).toBe(false);
+    expect(blocked.retryAfterSeconds).toBeGreaterThanOrEqual(1);
+    advance((blocked.retryAfterSeconds - 1) * ONE_SECOND);
+    expect(attempt().isAllowed).toBe(false);
+    advance(ONE_SECOND);
+    expect(attempt().isAllowed).toBe(true);
   });
 
   it("gives tokens back as time passes", () => {

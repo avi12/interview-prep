@@ -48,7 +48,7 @@ A salt is random bytes, new for **each user**, mixed in before hashing. It is st
       <text x="20" y="101" fill="var(--fg)">bob</text>
       <text x="76" y="101" fill="var(--fg)">hunter2</text>
       <text x="190" y="101" fill="var(--fg)">-> X</text>
-      <text x="10" y="140" fill="var(--fg)">same digest: crack one, get both</text>
+      <text x="10" y="140" fill="var(--fg)">same hash: crack one, get both</text>
     </g>
     <g data-cue="salted">
       <text x="270" y="26" fill="var(--fg-muted)">random salt per user</text>
@@ -60,7 +60,7 @@ A salt is random bytes, new for **each user**, mixed in before hashing. It is st
       <text x="280" y="101" fill="var(--fg)">bob</text>
       <text x="330" y="101" fill="var(--fg)">salt-B + hunter2</text>
       <text x="468" y="101" fill="var(--fg)">-> Z</text>
-      <text x="270" y="140" fill="var(--fg)">different digests: one at a time</text>
+      <text x="270" y="140" fill="var(--fg)">different hashes: one at a time</text>
     </g>
     <g data-cue="open">
       <text x="10" y="186" fill="var(--fg-muted)">The salt sits next to the hash. It is not a secret.</text>
@@ -70,7 +70,7 @@ A salt is random bytes, new for **each user**, mixed in before hashing. It is st
 ```
 
 ```narrate
-Two users, same password. [[same]] On the left there is no salt, so both rows show the same digest. Crack one and you have both, and precomputed tables work. [[salted]] On the right every user gets a random salt, so the digests all differ, and each one must be attacked on its own. [[open]] The salt is stored in the open, right next to the hash. It only has to be unique.
+Two users, same password. [[same]] On the left there is no salt, so both rows show the same hash. Crack one and you have both, and precomputed tables work. [[salted]] On the right every user gets a random salt, so the hashes all differ, and each one must be attacked on its own. [[open]] The salt is stored in the open, right next to the hash. It only has to be unique.
 ```
 
 > **Why:** a salt does not make one guess harder. It makes the attacker pay for every user separately.
@@ -87,7 +87,7 @@ why: The salt differs per user, so the same password produces a different hash f
 
 ## Slow on purpose
 
-A fast hash like SHA-256 is built to be quick. A graphics card tries billions of guesses per second. A password hash is built to be **slow and memory hungry**: you pay once per login, the attacker pays per guess.
+A fast hash like SHA-256 is built to be quick. A graphics card tries billions of guesses per second. A password hash is built to be **slow**, and the best ones (Argon2id, scrypt) are also **memory hungry**. You pay once per login, the attacker pays per guess.
 
 | Algorithm | OWASP minimum | Use it when |
 |---|---|---|
@@ -103,7 +103,7 @@ Node 24.7 and newer also has `crypto.argon2`. This lesson uses scrypt: same shap
 > **Trap:** Node's scrypt default is N = 2^14 with a 32 MiB `maxmem`. OWASP's N = 2^17 needs 128 MiB, so Node throws "memory limit exceeded" until you raise `maxmem`.
 
 ```narrate
-A fast hash is the wrong tool. A graphics card can try billions of guesses per second against sha two fifty-six. A password hash is slow and hungry for memory on purpose. Your user waits a fraction of a second once. An attacker pays that price for every single guess. OWASP names Argon two I D first, then scrypt, then bcrypt for legacy systems.
+A fast hash is the wrong tool. A graphics card can try billions of guesses per second against sha two fifty-six. A password hash is slow on purpose, and the best ones are hungry for memory too. Your user waits a fraction of a second once. An attacker pays that price for every single guess. OWASP names Argon two I D first, then scrypt, then bcrypt for legacy systems.
 ```
 
 ```quiz
@@ -165,7 +165,7 @@ Open `password.ts` in your copy. It exports two async functions.
 
 - `hashPassword({ password, salt?, params? })` returns `scrypt$cost$blockSize$parallelization$salt$hash`. Salt and hash are standard base64, the key is 32 bytes, and a missing salt means 16 random bytes
 - `verifyPassword({ password, stored })` reads the settings **from the string**, derives again, and compares with `timingSafeEqual`
-- Anything that is not a valid stored string returns `false`. It never throws
+- Anything that is not a valid stored string returns `false`, and it never throws. That includes an empty salt or an empty hash, which must never accept any password
 
 Run the tests from the Run button, or `pnpm lesson test auth/02-password-storage`.
 
@@ -174,7 +174,7 @@ Run the tests from the Run button, or `pnpm lesson test auth/02-password-storage
 ```
 
 ```hint
-hashPassword joins six parts with SEPARATOR. verifyPassword splits the string, checks for six parts and the name scrypt, turns the three settings into numbers, and derives with the same length as the stored hash.
+hashPassword joins six parts with SEPARATOR. verifyPassword splits the string, checks for six parts and the name scrypt, turns the three settings into numbers, rejects an empty salt or hash, and derives with the same length as the stored hash.
 ```
 
 ```hint

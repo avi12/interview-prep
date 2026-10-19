@@ -60,12 +60,12 @@ The most common real-world authorization bug: the server checks **who you are**,
 
 | Check | Question | Example |
 |---|---|---|
-| **Role** (RBAC) | May this kind of user do this action? | Only an admin deletes |
+| **Role** (RBAC, role-based access control) | May this kind of user do this action? | Only an admin deletes |
 | **Ownership** | May this user touch **this** object? | `invoice.ownerId === user.id` |
 
 A role cannot say "only your own". Ownership alone cannot say "auditors may read everything". The role grants the **action**, the relationship grants the **object**.
 
-OWASP also notes that pure RBAC handles object-level rules poorly and grows into a pile of roles.
+OWASP's Authorization cheat sheet prefers attribute or relationship based rules over plain RBAC, because roles multiply ("role explosion") and role checks are easy to miss.
 
 > **Not this:** `if (user.role === "user") return invoice`. Every user is a `user`, so every user reads every invoice.
 
@@ -109,7 +109,7 @@ Start from "no" and add exceptions. An unknown role gets nothing. A new endpoint
 | Object is missing **or** not yours | **404**, same body in both cases |
 | You may see it, but not do this to it | **403** |
 
-> **Why:** a 403 for invoice 43 tells the attacker that invoice 43 exists. MDN notes servers may answer 404 instead of 403 when admitting existence is undesirable.
+> **Why:** a 403 for invoice 43 tells the attacker that invoice 43 exists. MDN notes servers may answer 404 instead of 403 when admitting existence is undesirable. This is a design choice, not a law: pick one rule and use it everywhere.
 
 ```narrate
 Deny by default means start from no and add exceptions. A role the code does not know gets nothing. For objects, answer not found when the object is missing and also when it belongs to someone else, with the same body. A forbidden answer for number forty-three would confirm that number forty-three exists. Forbidden is for when the person may see the thing but not do this action to it.
@@ -143,7 +143,7 @@ Users read their own. Auditors and admins read all. Only admins delete someone e
 Run the tests from the Run button, or `pnpm lesson test auth/06-authorization-and-idor`.
 
 ```hint
-Put the rules in data, not in `if` chains: a table from role to `{ canReadAny, canDeleteAny }`. A role missing from the table is your "unknown role" case.
+Put the rules in data, not in `if` chains: a table from role to `{ canReadAny, canDeleteAny }`. A role missing from the table is your "unknown role" case. Careful: `table["constructor"]` is not missing, so test with `Object.hasOwn` or use a `Map`.
 ```
 
 ```hint

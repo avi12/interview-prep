@@ -24,7 +24,7 @@ OAuth 2.0 lets an app act on your behalf **without ever seeing your password**. 
 | Authorization server | The login page and token issuer (Google) |
 | Resource server | The API that accepts the token |
 
-Today's recommended recipe for browsers and mobile apps: **authorization code flow + PKCE**.
+Today's recommended recipe, for browser, mobile and server apps: **authorization code flow + PKCE**.
 
 ```narrate
 OAuth lets an app act for you without ever seeing your password. There are four roles. You, the resource owner. The app, called the client. The authorization server, such as Google, which shows the login page and issues tokens. And the resource server, the interface that accepts those tokens. The recipe to remember is the authorization code flow with PKCE.
@@ -34,7 +34,7 @@ OAuth lets an app act for you without ever seeing your password. There are four 
 
 ## The flow, in order
 
-```svg The browser carries only a one-time code; the token travels server to server
+```svg The browser carries only a one-time code; the token comes back on a direct request
 <svg viewBox="0 0 560 350" role="img" aria-label="Authorization code flow with PKCE between the app and the authorization server">
   <g font-family="var(--font-mono)" font-size="12">
     <rect x="30" y="8" width="140" height="28" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
@@ -76,16 +76,16 @@ OAuth lets an app act for you without ever seeing your password. There are four 
       <path d="M460 314 L114 314" stroke="var(--ok)" stroke-width="2" fill="none"/>
       <polygon points="107,314 114,310 114,318" fill="var(--ok)"/>
     </g>
-    <text x="10" y="346" fill="var(--fg-muted)" font-size="11">dashed: through the browser. solid: server to server.</text>
+    <text x="10" y="346" fill="var(--fg-muted)" font-size="11">dashed: through the browser. solid: direct request.</text>
   </g>
 </svg>
 ```
 
 ```narrate
-Start on the app. [[prepare]] It makes a random state value and a secret called the verifier, and saves both. [[authorize]] Step one: it sends the browser to the authorization server with the state and only a hash of the verifier. [[consent]] The user logs in and agrees. [[callback]] Step two: the browser comes back with a one-time code and the same state. [[checkstate]] Step three: the app checks the state. [[exchange]] Step four: it sends the code and the verifier straight to the server, which hashes and compares. [[token]] A match gets the token.
+Start on the app. [[prepare]] It makes a random state value and a secret called the verifier, and saves both. [[authorize]] Step one: it sends the browser to the authorization server with the state and only a hash of the verifier. [[consent]] The user logs in and agrees. [[callback]] Step two: the browser comes back with a one-time code and the same state. [[checkstate]] Step three: the app checks the state. [[exchange]] Step four: it sends the code and the verifier straight to the server, not through the browser's address bar, and the server hashes and compares. [[token]] A match gets the token.
 ```
 
-> **Why:** the browser only ever carries a short-lived, single-use **code**. The valuable token travels server to server. Per RFC 6749, a code must expire shortly and work once.
+> **Why:** the browser only ever carries a short-lived, single-use **code**. The valuable token comes back on a direct request from the app, never through the browser redirect. Per RFC 6749, a code must expire shortly and work once.
 
 ## state: refuse forged callbacks
 
@@ -93,7 +93,7 @@ An attacker starts their own login, gets a code for **their** account, and trick
 
 The defense: before redirecting, save a random `state` in the user's session. At the callback, accept only if the returned `state` **equals** the saved one.
 
-> **Why:** RFC 6749 section 10.12 says the client must protect its redirect URI against CSRF. RFC 9700 allows either a one-time `state` or PKCE for this. Doing both costs nothing.
+> **Why:** RFC 6749 section 10.12 says the client must protect its redirect URI against CSRF. RFC 9700 prefers a one-time `state`, but lets a client rely on PKCE instead if it knows the server checks PKCE. Doing both costs nothing.
 
 > **Trap:** `undefined === undefined`. If the app saved no state and the callback has none, a naive compare passes. Treat an empty expected state as a failure.
 
@@ -148,7 +148,7 @@ why: A mismatch means this browser did not start that login. Exchanging the code
 [[verifier]] The app makes a random verifier and keeps it secret. [[challenge]] It sends only the hash of the verifier, called the challenge, when it starts the login. [[stolen]] Now suppose an attacker grabs the code out of the redirect. At the token endpoint the server asks for the verifier, hashes it, and compares. The attacker does not have it, so the token is refused.
 ```
 
-> **Not this:** the `plain` method. It sends the verifier itself in step 1, so there is nothing secret left. Use `S256`. RFC 9700 says public clients must use PKCE.
+> **Not this:** the `plain` method. It sends the verifier itself in step 1, so there is nothing secret left. Use `S256`: RFC 9700 says to use a method that does not expose the verifier, and S256 is the only one. It also says public clients (apps that cannot keep a secret, like mobile and single-page apps) must use PKCE.
 
 ## Redirect URIs match exactly
 

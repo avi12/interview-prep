@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import type { GetRandomBytes } from "#kit/nodeCrypto.ts";
 
 type Callback = { isValid: true; code: string } | { isValid: false; reason: string };
 type Module = {
-  createPkcePair: (input?: { getRandomBytes?: (size: number) => Buffer }) => { codeVerifier: string; codeChallenge: string; method: string };
+  createPkcePair: (input?: { getRandomBytes?: GetRandomBytes }) => { codeVerifier: string; codeChallenge: string; method: string };
   validateCallback: (input: { callbackUrl: string; expectedState: string }) => Callback;
 };
 
@@ -87,6 +88,13 @@ describe("validateCallback", () => {
     expect(validate({ query: `code=abc123&state=${EXPECTED_STATE.slice(0, 4)}` })).toEqual({ isValid: false, reason: "state_mismatch" });
   });
 
+  it("rejects a state with the right length but different characters, or different letter case", () => {
+    const sameLength = `${EXPECTED_STATE.slice(0, -1)}X`;
+    for (const state of [sameLength, EXPECTED_STATE.toUpperCase(), EXPECTED_STATE.toLowerCase()]) {
+      expect(validate({ query: `code=abc123&state=${state}` })).toEqual({ isValid: false, reason: "state_mismatch" });
+    }
+  });
+
   it("rejects when the app has no saved state, even if the callback also has none", () => {
     expect(validate({ query: "code=abc123", expectedState: "" })).toEqual({ isValid: false, reason: "state_mismatch" });
     expect(validate({ query: "code=abc123&state=", expectedState: "" })).toEqual({ isValid: false, reason: "state_mismatch" });
@@ -99,6 +107,10 @@ describe("validateCallback", () => {
 
   it("reports an error from the provider, such as access_denied", () => {
     expect(validate({ query: `error=access_denied&state=${EXPECTED_STATE}` })).toEqual({ isValid: false, reason: "provider_error" });
+  });
+
+  it("reports a provider error even when a code is present too", () => {
+    expect(validate({ query: `code=abc123&error=server_error&state=${EXPECTED_STATE}` })).toEqual({ isValid: false, reason: "provider_error" });
   });
 
   it("checks the state before it trusts anything else in the callback", () => {

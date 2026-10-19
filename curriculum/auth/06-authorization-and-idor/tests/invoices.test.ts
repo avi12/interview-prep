@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import type { Database, Invoice, User } from "../starter/invoices.ts";
 
-type Role = "user" | "admin" | "auditor";
-type User = { id: string; role: Role };
-type Invoice = { id: string; ownerId: string; amountCents: number };
-type Database = { invoices: Map<string, Invoice> };
 type Response = { status: number; body: unknown };
 type Module = {
   getInvoice: (input: { db: Database; user: User | null; invoiceId: string }) => Response;
@@ -21,6 +18,9 @@ const AUDITOR: User = { id: "audrey", role: "auditor" };
 const INTERN = { id: "ivan", role: "intern" } as unknown as User;
 
 const SECRET_AMOUNT_CENTS = 987_654;
+const INHERITED_ROLE_NAMES = ["constructor", "toString", "__proto__", "hasOwnProperty"];
+
+const withRole = (role: string) => ({ id: "alice", role }) as unknown as User;
 
 const makeDb = (): Database => ({
   invoices: new Map([
@@ -69,6 +69,18 @@ describe("getInvoice", () => {
     db.invoices.set("inv-9", { id: "inv-9", ownerId: "ivan", amountCents: 5 });
     expect(getInvoice({ db, user: INTERN, invoiceId: "inv-9" }).status).toBe(403);
   });
+
+  it("an unknown role stays unknown even when its name exists on every JavaScript object", () => {
+    for (const role of INHERITED_ROLE_NAMES) {
+      expect(getInvoice({ db: makeDb(), user: withRole(role), invoiceId: "inv-1" }).status).toBe(403);
+    }
+  });
+
+  it("answers a missing invoice with 404 for every role that may read, not only for users", () => {
+    for (const user of [ADMIN, AUDITOR, ALICE]) {
+      expect(getInvoice({ db: makeDb(), user, invoiceId: "inv-999" }).status).toBe(404);
+    }
+  });
 });
 
 describe("listInvoices", () => {
@@ -92,6 +104,9 @@ describe("listInvoices", () => {
   it("answers 401 when nobody is logged in, and 403 for an unknown role", () => {
     expect(listInvoices({ db: makeDb(), user: null }).status).toBe(401);
     expect(listInvoices({ db: makeDb(), user: INTERN }).status).toBe(403);
+    for (const role of INHERITED_ROLE_NAMES) {
+      expect(listInvoices({ db: makeDb(), user: withRole(role) }).status).toBe(403);
+    }
   });
 });
 
@@ -133,7 +148,17 @@ describe("deleteInvoice", () => {
     expect(db.invoices.size).toBe(3);
   });
 
-  it("answers a missing invoice with 404", () => {
-    expect(deleteInvoice({ db: makeDb(), user: ALICE, invoiceId: "inv-999" }).status).toBe(404);
+  it("answers a missing invoice with 404, whoever asks", () => {
+    for (const user of [ALICE, AUDITOR, ADMIN]) {
+      expect(deleteInvoice({ db: makeDb(), user, invoiceId: "inv-999" }).status).toBe(404);
+    }
+  });
+
+  it("an unknown role cannot delete, even a role named like an inherited property", () => {
+    for (const role of INHERITED_ROLE_NAMES) {
+      const db = makeDb();
+      expect(deleteInvoice({ db, user: withRole(role), invoiceId: "inv-1" }).status).toBe(403);
+      expect(db.invoices.size).toBe(3);
+    }
   });
 });

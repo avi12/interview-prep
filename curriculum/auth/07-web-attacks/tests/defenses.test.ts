@@ -1,9 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { timingSafeEqual } from "node:crypto";
+import { describe, expect, it, vi } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import type { GetRandomBytes } from "#kit/nodeCrypto.ts";
+
+vi.mock("node:crypto", async importOriginal =>
+  (await import("#kit/nodeCrypto.ts")).withSpiedTimingSafeEqual(await importOriginal<typeof import("node:crypto")>())
+);
 
 type Module = {
   escapeHtml: (text: string) => string;
-  createCsrfToken: (input?: { getRandomBytes?: (size: number) => Buffer }) => string;
+  createCsrfToken: (input?: { getRandomBytes?: GetRandomBytes }) => string;
   isCsrfRequestAllowed: (input: { method: string; sessionToken: string; submittedToken: string | undefined }) => boolean;
 };
 
@@ -52,6 +58,7 @@ describe("escapeHtml", () => {
   it("leaves safe text alone, including other alphabets", () => {
     expect(escapeHtml("hello world 123")).toBe("hello world 123");
     expect(escapeHtml("שלום עולם")).toBe("שלום עולם");
+    expect(escapeHtml("a/b=c`d(e);f")).toBe("a/b=c`d(e);f");
   });
 
   it("leaves no raw angle bracket or quote in the output of known attack strings", () => {
@@ -110,6 +117,19 @@ describe("isCsrfRequestAllowed", () => {
 
   it("blocks a wrong token", () => {
     expect(isCsrfRequestAllowed({ method: "POST", sessionToken: SESSION_TOKEN, submittedToken: "d3Jvbmc" })).toBe(false);
+  });
+
+  it("blocks a wrong token that has the right length", () => {
+    const sameLength = `${SESSION_TOKEN.slice(0, -1)}X`;
+    expect(sameLength).toHaveLength(SESSION_TOKEN.length);
+    expect(isCsrfRequestAllowed({ method: "POST", sessionToken: SESSION_TOKEN, submittedToken: sameLength })).toBe(false);
+    expect(isCsrfRequestAllowed({ method: "POST", sessionToken: SESSION_TOKEN, submittedToken: SESSION_TOKEN.toUpperCase() })).toBe(false);
+  });
+
+  it("compares the tokens with crypto.timingSafeEqual, not with ===", () => {
+    vi.mocked(timingSafeEqual).mockClear();
+    isCsrfRequestAllowed({ method: "POST", sessionToken: SESSION_TOKEN, submittedToken: SESSION_TOKEN });
+    expect(timingSafeEqual).toHaveBeenCalled();
   });
 
   it("blocks a token of a different length without throwing", () => {

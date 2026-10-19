@@ -1,6 +1,5 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
-
-type GetRandomBytes = (size: number) => Buffer;
+import type { GetRandomBytes } from "#kit/nodeCrypto.ts";
 
 const HTML_ESCAPES: Record<string, string> = {
   "&": "&amp;",

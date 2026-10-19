@@ -129,7 +129,7 @@ why: Five at the end of the first minute, then the counter resets and five more 
 Safer:
 
 - **Slow down, don't lock.** A bucket per account: wait seconds or minutes, then try again
-- **Limit two ways:** per account (slows any attacker, even a spread-out one) and per IP (one machine cannot try many accounts)
+- **Limit two ways:** per account (slows any attacker, even a spread-out one) and per IP (one machine cannot try many accounts). Behind a proxy, trust only the proxy's own IP header
 - Let **password reset** still work for a throttled account
 - Block known-breached passwords. Offer MFA (multi-factor authentication)
 
@@ -181,7 +181,7 @@ Keep a Map from key to `{ tokens, updatedAt }`. On each call, read `now()`, comp
 ```
 
 ```hint
-Save the new `tokens` and `updatedAt` on blocked calls too, and keep the fractional tokens. If you throw the fraction away, a caller who retries often never gets a token.
+Keep the fractional tokens. If you round them down when you save, a caller who retries often never gets a token.
 ```
 
 ```hint

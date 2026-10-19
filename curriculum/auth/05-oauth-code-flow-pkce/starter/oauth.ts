@@ -1,4 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import type { GetRandomBytes } from "#kit/nodeCrypto.ts";
 
 export const PKCE_METHOD = "S256";
 
@@ -7,8 +8,6 @@ export const CallbackFailure = {
   providerError: "provider_error",
   missingCode: "missing_code"
 } as const;
-
-type GetRandomBytes = (size: number) => Buffer;
 
 const VERIFIER_BYTES = 32;
 const ENCODING = "base64url";

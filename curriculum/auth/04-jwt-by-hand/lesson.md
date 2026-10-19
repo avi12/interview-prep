@@ -15,7 +15,7 @@ sources:
 
 ## Three parts, and none is secret
 
-A JWT (JSON Web Token) is three base64url pieces joined by dots: `header.payload.signature`.
+A JWT (JSON Web Token) is three **base64url** pieces (bytes written as URL-safe text) joined by dots: `header.payload.signature`.
 
 ```svg The first two parts are readable by anyone; only the signature needs the secret
 <svg viewBox="0 0 560 210" role="img" aria-label="A JWT split into header, payload and signature">
@@ -81,10 +81,10 @@ A good signature says only that **someone with the secret** made the token. It d
 
 | Claim | Check | Rule |
 |---|---|---|
-| `exp` | Expiry | Reject when now is **at or after** exp. Require it |
+| `exp` | Expiry | Reject when now is **at or after** exp. Require it: RFC 7519 makes it optional, but a token with no expiry lives forever |
 | `nbf` | Not before | Reject when now is before nbf. At nbf it is fine |
-| `iss` | Issuer | Must equal exactly the issuer you trust |
-| `aud` | Audience | Your API's name must be in it |
+| `iss` | Issuer | Must equal exactly the issuer you trust. We also reject a missing one |
+| `aud` | Audience | Your API's name must be in it (RFC 8725: reject if it is absent or not yours) |
 
 > **Trap:** JWT times are **seconds**. `Date.now()` is milliseconds. Divide by 1000 before comparing.
 
@@ -146,7 +146,7 @@ Look at the left side. [[bad]] If the token chooses the algorithm, an attacker w
 
 A JWT is valid until `exp`. There is no server record to delete. A stolen or fired-user token keeps working.
 
-The common fix: a **short access token** (about 10 minutes) plus a **refresh token** that the server stores, rotates on each use, and can revoke.
+The common fix: a **short access token** (5 to 15 minutes is typical) plus a **refresh token** that the server stores, rotates on each use, and can revoke. The other fix, a deny list of revoked token ids, brings server state back.
 
 ```svg Access tokens die on their own; refresh tokens can be killed at the server
 <svg viewBox="0 0 560 190" role="img" aria-label="Short access token, stored refresh token, and revocation">
@@ -197,16 +197,16 @@ why: Revoking the stored refresh token blocks renewal. The short access token is
 | | Server session | JWT |
 |---|---|---|
 | State lives | On the server | In the token |
-| Revoke now | Delete the record | Hard (wait for exp) |
+| Revoke now | Delete the record | Hard (wait for exp, or keep a deny list) |
 | Many servers | Shared store | Share the key |
 | Best for | One web app and its browser | Several services, APIs, mobile |
 
-> **Not this:** "JWT because it is modern". For a plain web app with a browser, a session cookie is simpler and safer.
+> **Not this:** "JWT because it is modern". For a plain web app with a browser, the usual advice is a session cookie: simpler, and revocable.
 
-> **Trap:** storing a JWT in `localStorage`. XSS reads it. Prefer an `HttpOnly; Secure; SameSite` cookie.
+> **Trap:** storing a JWT in `localStorage` or `sessionStorage`. XSS reads it, and OWASP says to keep credentials out of both. Prefer an `HttpOnly; Secure; SameSite` cookie.
 
 ```narrate
-When an interviewer asks JWT or sessions, say where the state lives. A session keeps it on the server, so you can revoke instantly, but servers need a shared store. A JWT keeps it in the token, so any service holding the key can verify it, but you cannot take it back. For a normal website with a browser, a session cookie is simpler. And never keep either in local storage.
+When an interviewer asks JWT or sessions, say where the state lives. A session keeps it on the server, so you can revoke instantly, but servers need a shared store. A JWT keeps it in the token, so any service holding the key can verify it, but you cannot take it back. For a normal website with a browser, a session cookie is the usual advice. And keep neither in browser storage that scripts can read.
 ```
 
 ## Your turn

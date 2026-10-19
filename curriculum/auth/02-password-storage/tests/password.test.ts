@@ -2,11 +2,9 @@ import { scryptSync, timingSafeEqual } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
 
-vi.mock("node:crypto", async importOriginal => {
-  const actual = await importOriginal<typeof import("node:crypto")>();
-  const timingSafeEqual = vi.fn(actual.timingSafeEqual);
-  return { ...actual, timingSafeEqual, default: { ...actual, timingSafeEqual } };
-});
+vi.mock("node:crypto", async importOriginal =>
+  (await import("#kit/nodeCrypto.ts")).withSpiedTimingSafeEqual(await importOriginal<typeof import("node:crypto")>())
+);
 
 type Params = { cost: number; blockSize: number; parallelization: number };
 type Module = {
@@ -23,7 +21,20 @@ const DEFAULT_COST = 2 ** 14;
 const CHEAP_PARAMS = { cost: 2 ** 10, blockSize: 8, parallelization: 1 };
 const OWASP_MINIMUM_PARAMS = { cost: 2 ** 17, blockSize: 8, parallelization: 1 };
 const BCRYPT_LIMIT = 72;
-const GARBAGE_STORED_VALUES = ["", "plain-text", "bcrypt$12$abc$def$ghi$jkl", "scrypt$16384$8$1$onlysalt", "scrypt$abc$8$1$c2FsdA==$aGFzaA=="];
+const SALT_TEXT = "c2FsdA==";
+const GARBAGE_STORED_VALUES = [
+  "",
+  "plain-text",
+  "bcrypt$12$abc$def$ghi$jkl",
+  "scrypt$16384$8$1$onlysalt",
+  "scrypt$abc$8$1$c2FsdA==$aGFzaA==",
+  `scrypt$16384$8$1$${SALT_TEXT}$aGFzaA==`,
+  `scrypt$16384$8$1$${SALT_TEXT}$${Buffer.alloc(64).toString("base64")}`,
+  `scrypt$16384$8$1$${SALT_TEXT}$`,
+  "scrypt$16384$8$1$$",
+  `scrypt$-1$8$1$${SALT_TEXT}$aGFzaA==`,
+  `scrypt$16383$8$1$${SALT_TEXT}$aGFzaA==`
+];
 
 const expectedStored = ({ password, salt, params }: { password: string; salt: Buffer; params: Params }) => {
   const key = scryptSync(password, salt, KEY_BYTES, { N: params.cost, r: params.blockSize, p: params.parallelization });
@@ -71,7 +82,7 @@ describe("verifyPassword", () => {
     expect(await verifyPassword({ password: PASSWORD, stored })).toBe(true);
   });
 
-  it("returns false, and does not throw, for strings that are not hashes", async () => {
+  it("returns false, and does not throw, for strings that are not usable hashes (an empty hash must never accept any password)", async () => {
     for (const stored of GARBAGE_STORED_VALUES) {
       expect(await verifyPassword({ password: PASSWORD, stored })).toBe(false);
     }

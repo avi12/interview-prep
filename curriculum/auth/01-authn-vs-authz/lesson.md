@@ -82,9 +82,9 @@ Follow one request from the left. [[client]] The browser sends it with its sessi
 
 | Status | Meaning | Will logging in again help? |
 |---|---|---|
-| **401** | No valid credentials. The caller is not authenticated | Yes |
-| **403** | Known caller, not allowed | No |
-| **404** | Same as 403, but hides that the thing exists | No |
+| **401** | No valid credentials. The caller is not authenticated. RFC 9110 says the reply must carry a `WWW-Authenticate` header | Yes |
+| **403** | Known caller, not allowed | No, not as the same user |
+| **404** | Same as 403, but hides that the thing exists (a choice RFC 9110 allows) | No |
 
 > **Trap:** 401 is named "Unauthorized" but it means *unauthenticated*.
 

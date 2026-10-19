@@ -35,7 +35,9 @@ const parseStored = (stored: string) => {
   if (algorithm !== ALGORITHM) return null;
   const params = { cost: Number(cost), blockSize: Number(blockSize), parallelization: Number(parallelization) };
   if (!Object.values(params).every(isPositiveInteger)) return null;
-  return { params, salt: Buffer.from(salt, ENCODING), hash: Buffer.from(hash, ENCODING) };
+  const parsed = { params, salt: Buffer.from(salt, ENCODING), hash: Buffer.from(hash, ENCODING) };
+  if (parsed.salt.length === 0 || parsed.hash.length === 0) return null;
+  return parsed;
 };
 
 export async function hashPassword({

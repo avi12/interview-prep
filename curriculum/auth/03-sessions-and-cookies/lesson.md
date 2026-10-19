@@ -70,9 +70,9 @@ Set-Cookie: __Host-sid=<id>; Max-Age=3600; Path=/; HttpOnly; Secure; SameSite=La
 
 | Flag | It stops |
 |---|---|
-| `HttpOnly` | Page scripts reading the cookie (XSS theft) |
+| `HttpOnly` | Page scripts reading the cookie. This is **XSS** theft: an attacker's script running on your page |
 | `Secure` | The cookie travelling over plain HTTP |
-| `SameSite=Lax` or `Strict` | The cookie riding along on cross-site requests (CSRF) |
+| `SameSite=Lax` or `Strict` | The cookie riding along on cross-site requests. This is **CSRF**: another site making your browser act as you. `Lax` still sends it on top-level link clicks (GET), so treat this as one layer, not the whole fix |
 | `__Host-` prefix | Another subdomain overwriting it. Needs `Secure`, `Path=/`, no `Domain` |
 | `Max-Age=3600` | Living forever. Seconds. Wins over `Expires`. `0` deletes it |
 

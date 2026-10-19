@@ -17,7 +17,8 @@ const PERMISSIONS_BY_ROLE: Record<Role, Permissions> = {
   admin: { canReadAny: true, canDeleteAny: true }
 };
 
-const permissionsOf = (user: User) => PERMISSIONS_BY_ROLE[user.role] as Permissions | undefined;
+const permissionsOf = (user: User): Permissions | undefined =>
+  Object.hasOwn(PERMISSIONS_BY_ROLE, user.role) ? PERMISSIONS_BY_ROLE[user.role] : undefined;
 
 const isOwner = ({ user, invoice }: { user: User; invoice: Invoice }) => invoice.ownerId === user.id;
 

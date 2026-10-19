@@ -1,6 +1,5 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
-
-type GetRandomBytes = (size: number) => Buffer;
+import type { GetRandomBytes } from "#kit/nodeCrypto.ts";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const TOKEN_BYTES = 32;
