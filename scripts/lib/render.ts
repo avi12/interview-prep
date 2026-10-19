@@ -4,6 +4,7 @@ import hljs from "highlight.js";
 import { Marked } from "marked";
 import { ASSETS_DIR } from "#scripts/lib/paths.ts";
 import type { Block, Card, Figure, Lesson } from "#scripts/lib/lessons.ts";
+import { PanelAction } from "#scripts/lib/panel.ts";
 import { EXERCISE_CARD_TITLE, type Quiz } from "#scripts/lib/schema.ts";
 
 const FONTS_URL =
@@ -51,8 +52,14 @@ const renderQuiz = ({ quiz, id }: { quiz: Quiz; id: string }) => {
   return `<fieldset class="quiz"><legend>Quick check</legend><p class="quiz-q">${markdown.parseInline(quiz.q)}</p>${options}<p class="quiz-why">${markdown.parseInline(quiz.why)}</p></fieldset>`;
 };
 
-const renderActions = (lesson: Lesson) =>
-  `<p class="actions"><button class="btn" data-variant="primary" data-needs-host data-action="runTests">Run my tests</button><button class="btn" data-needs-host data-action="openExercise">Open my file</button><button class="btn" data-needs-host data-action="resetExercise">Reset</button><span class="cli">pnpm lesson test ${escapeHtml(lesson.id)}</span></p>`;
+const actionButton = ({ action, label, isPrimary = false }: { action: string; label: string; isPrimary?: boolean }) =>
+  `<button class="btn"${isPrimary ? ' data-variant="primary"' : ""} data-needs-host data-action="${action}">${label}</button>`;
+
+const renderExerciseActions = (lesson: Lesson) =>
+  `<p class="actions">${actionButton({ action: PanelAction.runTests, label: "Run my tests", isPrimary: true })}${actionButton({ action: PanelAction.openExercise, label: "Open my file" })}${actionButton({ action: PanelAction.resetExercise, label: "Reset" })}<span class="cli">pnpm lesson test ${escapeHtml(lesson.id)}</span></p>`;
+
+const renderReadingActions = (lesson: Lesson) =>
+  `<p class="actions">${actionButton({ action: PanelAction.markDone, label: "Done - next lesson", isPrimary: true })}<span class="cli">pnpm lesson done ${escapeHtml(lesson.id)}</span></p>`;
 
 const renderBlock = ({ block, hintCounter, quizId }: { block: Block; hintCounter: { count: number }; quizId: string }) => {
   if (block.kind === "tokens") return renderTokens(block.tokens);
@@ -64,6 +71,7 @@ const renderBlock = ({ block, hintCounter, quizId }: { block: Block; hintCounter
 
 const renderCard = ({ lesson, card, index }: { lesson: Lesson; card: Card; index: number }) => {
   const isExercise = lesson.hasExercise && card.title === EXERCISE_CARD_TITLE;
+  const isLastCard = index === lesson.cards.length - 1;
   const narrateAttributes = card.narrate
     ? ` data-narrate="${escapeHtml(card.narrate)}" data-narrate-title="${escapeHtml(card.title)}"`
     : "";
@@ -71,9 +79,10 @@ const renderCard = ({ lesson, card, index }: { lesson: Lesson; card: Card; index
   const hintCounter = { count: 0 };
   const body = [
     ...card.blocks.map((block, i) => renderBlock({ block, hintCounter, quizId: `quiz-${index}-${i}` })),
-    isExercise ? renderActions(lesson) : ""
+    isExercise ? renderExerciseActions(lesson) : ""
   ].join("\n");
-  return `<section class="card chamfer"${kind}${narrateAttributes} id="card-${index + 1}"><h2 class="card-head">${escapeHtml(card.title)}</h2>\n${body}</section>`;
+  const readingActions = !lesson.hasExercise && isLastCard ? renderReadingActions(lesson) : "";
+  return `<section class="card chamfer"${kind}${narrateAttributes} id="card-${index + 1}"><h2 class="card-head">${escapeHtml(card.title)}</h2>\n${body}${readingActions}</section>`;
 };
 
 const renderSources = (sources: string[]) =>

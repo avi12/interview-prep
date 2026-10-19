@@ -1,9 +1,10 @@
 import { relative, resolve, sep } from "node:path";
 import * as vscode from "vscode";
 import { LESSON_ID_SEGMENTS, WORK_DIR_NAME } from "@scripts/lib/layout.ts";
+import { DONE_COMMAND, PanelAction } from "@scripts/lib/panel.ts";
 import { findLesson, findNextLesson } from "@/lessonData.ts";
 import { ensureExerciseFiles, onTestsFinished, runLessonCli, runTestsInTerminal } from "@/lessonCli.ts";
-import { PanelAction, showLesson } from "@/lessonPanel.ts";
+import { showLesson } from "@/lessonPanel.ts";
 import { Command, LessonTree } from "@/lessonTree.ts";
 
 const CLAUDE_TERMINAL_NAME = "Claude tutor";
@@ -40,6 +41,13 @@ export function activate(context: vscode.ExtensionContext) {
     await openExercise(id);
   };
 
+  const markDone = async (id: string | undefined) => {
+    if (!id) return vscode.window.showInformationMessage("Open a lesson first");
+    await runLessonCli({ root, args: [DONE_COMMAND, id] });
+    tree.refresh();
+    await openNextLesson();
+  };
+
   const openLesson = async (id: string) => {
     const lesson = findLesson({ root, id });
     if (!lesson) return vscode.window.showErrorMessage(`No lesson ${id}. Run: pnpm build`);
@@ -53,6 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (action === PanelAction.runTests) runTests(id);
         if (action === PanelAction.openExercise) openExercise(id);
         if (action === PanelAction.resetExercise) resetExercise(id);
+        if (action === PanelAction.markDone) markDone(id);
       }
     });
   };
@@ -81,6 +90,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(Command.nextLesson, openNextLesson),
     vscode.commands.registerCommand(Command.runTests, (uri?: vscode.Uri) => runTests((uri && lessonIdOfFile({ root, file: uri.fsPath })) ?? activeLessonId())),
     vscode.commands.registerCommand(Command.resetExercise, () => resetExercise(activeLessonId())),
+    vscode.commands.registerCommand(Command.markDone, () => markDone(activeLessonId())),
     vscode.commands.registerCommand(Command.askClaude, askClaude),
     vscode.commands.registerCommand(Command.refresh, () => tree.refresh()),
     vscode.workspace.onDidChangeConfiguration(e => e.affectsConfiguration("interviewPrep.role") && tree.refresh()),

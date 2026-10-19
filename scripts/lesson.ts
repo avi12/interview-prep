@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { findLesson, readLessons, readStudyOrders, readTracks } from "#scripts/lib/lessons.ts";
+import { DONE_COMMAND } from "#scripts/lib/panel.ts";
 import { ALL_ROLES } from "#scripts/lib/path.ts";
 import { readProgress, recordAttempt } from "#scripts/lib/progress.ts";
 import { ensureWorkCopy, prepareSolutionDir, resetWorkCopy, runTests } from "#scripts/lib/run.ts";
@@ -41,6 +42,17 @@ const testLesson = async (id: string) => {
   process.exitCode = isPass ? 0 : 1;
 };
 
+const markDone = (id: string) => {
+  const lesson = findLesson(id);
+  if (lesson.hasExercise) {
+    console.log(`${lesson.id} has an exercise: pass its tests with pnpm lesson test ${lesson.id}`);
+    process.exitCode = 1;
+    return;
+  }
+  recordAttempt({ id: lesson.id, isPass: true });
+  console.log("Marked done - next lesson: pnpm lesson next");
+};
+
 const resetLesson = (id: string) => {
   resetWorkCopy(findLesson(id));
   console.log("Reset to the starter");
@@ -60,12 +72,13 @@ const COMMANDS: Record<string, () => unknown> = {
   open: () => openLesson(idArgument),
   test: () => testLesson(idArgument),
   reset: () => resetLesson(idArgument),
+  [DONE_COMMAND]: () => markDone(idArgument),
   next: showNext
 };
 
 const handler = COMMANDS[command];
 if (!handler) {
-  console.log("Usage: pnpm lesson <list|open|test|reset> <lesson-id> [--solution]   |   pnpm lesson next [backend|analyst|ai]");
+  console.log("Usage: pnpm lesson <list|open|test|reset|done> <lesson-id> [--solution]   |   pnpm lesson next [backend|analyst|ai]");
   process.exit(1);
 }
 await handler();

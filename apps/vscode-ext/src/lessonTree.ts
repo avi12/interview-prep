@@ -7,6 +7,7 @@ export const Command = {
   nextLesson: "interviewPrep.nextLesson",
   runTests: "interviewPrep.runTests",
   resetExercise: "interviewPrep.resetExercise",
+  markDone: "interviewPrep.markDone",
   askClaude: "interviewPrep.askClaude",
   refresh: "interviewPrep.refresh"
 } as const;

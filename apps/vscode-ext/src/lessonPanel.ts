@@ -1,15 +1,8 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import * as vscode from "vscode";
+import type { PanelActionName } from "@scripts/lib/panel.ts";
 import type { LessonEntry } from "@/lessonData.ts";
-
-export const PanelAction = {
-  runTests: "runTests",
-  openExercise: "openExercise",
-  resetExercise: "resetExercise"
-} as const;
-
-type Action = (typeof PanelAction)[keyof typeof PanelAction];
 
 const VIEW_TYPE = "interviewPrep.lesson";
 
@@ -25,7 +18,7 @@ export const showLesson = ({
   root: string;
   lesson: LessonEntry;
   viewColumn: vscode.ViewColumn;
-  onAction: (action: Action) => void;
+  onAction: (action: PanelActionName) => void;
 }) => {
   const html = readFileSync(resolve(root, lesson.html), "utf8");
   if (!panel) {
@@ -36,5 +29,5 @@ export const showLesson = ({
   panel.webview.html = html;
   panel.reveal(viewColumn, true);
   messageSubscription?.dispose();
-  messageSubscription = panel.webview.onDidReceiveMessage(({ action }: { action: Action }) => onAction(action));
+  messageSubscription = panel.webview.onDidReceiveMessage(({ action }: { action: PanelActionName }) => onAction(action));
 };

@@ -58,6 +58,12 @@
         "category": "Interview Prep"
       },
       {
+        "command": "interviewPrep.markDone",
+        "title": "Mark Reading Lesson as Done",
+        "category": "Interview Prep",
+        "icon": "$(check)"
+      },
+      {
         "command": "interviewPrep.askClaude",
         "title": "Ask Claude (tutor)",
         "category": "Interview Prep",
