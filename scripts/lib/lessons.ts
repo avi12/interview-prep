@@ -3,12 +3,20 @@ import { resolve, basename } from "node:path";
 import { marked, type Tokens, type Token } from "marked";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
-import { CURRICULUM_DIR, KIT_DIR_NAME, TRACKS_FILE, WORK_DIR } from "#scripts/lib/paths.ts";
-import { lessonMetaSchema, quizSchema, tracksSchema } from "#scripts/lib/schema.ts";
+import { CURRICULUM_DIR, KIT_DIR_NAME, PATH_FILE, TRACKS_FILE, WORK_DIR } from "#scripts/lib/paths.ts";
+import { buildOrders } from "#scripts/lib/path.ts";
+import { Role, lessonMetaSchema, quizSchema, tracksSchema } from "#scripts/lib/schema.ts";
 
 const FRONTMATTER_PATTERN = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
 const CARD_HEADING_DEPTH = 2;
 const SPECIAL_FENCES = new Set(["narrate", "hint", "quiz", "svg"]);
+
+export const readStudyOrders = (lessons: ReturnType<typeof readLessons>) =>
+  buildOrders({
+    lessons: lessons.map(({ id, track, meta }) => ({ id, track, roles: meta.roles })),
+    cycle: z.array(z.string()).parse(JSON.parse(readFileSync(PATH_FILE, "utf8"))),
+    roles: Object.values(Role)
+  });
 
 export const readTracks = () => tracksSchema.parse(JSON.parse(readFileSync(TRACKS_FILE, "utf8")));
 
@@ -133,10 +141,10 @@ export const readLessonEntries = () => {
   return entries;
 };
 
-export const readLessons = () => {
+export const readLessons = ({ isStrict = true }: { isStrict?: boolean } = {}) => {
   const entries = readLessonEntries();
   const broken = entries.find(entry => entry.error);
-  if (broken) throw new Error(`${broken.id}: ${broken.error}`);
+  if (broken && isStrict) throw new Error(`${broken.id}: ${broken.error}`);
   const trackOrder = new Map(readTracks().map(({ id }, i) => [id, i]));
   return entries
     .flatMap(entry => (entry.lesson ? [entry.lesson] : []))
@@ -146,7 +154,9 @@ export const readLessons = () => {
 export type Lesson = ReturnType<typeof readLessons>[number];
 
 export const findLesson = (id: string) => {
-  const lesson = readLessons().find(l => l.id === id || l.slug === id);
-  if (!lesson) throw new Error(`No lesson "${id}". Run: pnpm lesson list`);
-  return lesson;
+  const entry = readLessonEntries().find(({ lesson }) => lesson && (lesson.id === id || lesson.slug === id));
+  if (entry?.lesson) return entry.lesson;
+  const broken = readLessonEntries().find(candidate => candidate.id === id && candidate.error);
+  if (broken) throw new Error(`${broken.id}: ${broken.error}`);
+  throw new Error(`No lesson "${id}". Run: pnpm lesson list`);
 };

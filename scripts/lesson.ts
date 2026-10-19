@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
-import { findLesson, readLessons, readTracks } from "#scripts/lib/lessons.ts";
+import { findLesson, readLessons, readStudyOrders, readTracks } from "#scripts/lib/lessons.ts";
+import { ALL_ROLES } from "#scripts/lib/path.ts";
 import { isPassed, readProgress, recordAttempt } from "#scripts/lib/progress.ts";
 import { ensureWorkCopy, resetWorkCopy, runTests } from "#scripts/lib/run.ts";
 
@@ -8,7 +9,7 @@ const isSolutionRequested = flags.includes("--solution");
 
 const listLessons = () => {
   const progress = readProgress();
-  const lessons = readLessons();
+  const lessons = readLessons({ isStrict: false });
   for (const track of readTracks()) {
     const inTrack = lessons.filter(l => l.track === track.id);
     if (inTrack.length === 0) continue;
@@ -46,7 +47,10 @@ const resetLesson = (id: string) => {
 
 const showNext = () => {
   const progress = readProgress();
-  const next = readLessons().find(l => !isPassed({ id: l.id, progress }));
+  const lessons = readLessons({ isStrict: false });
+  const order = readStudyOrders(lessons)[idArgument ?? ALL_ROLES] ?? [];
+  const nextId = order.find(id => !isPassed({ id, progress }));
+  const next = lessons.find(l => l.id === nextId);
   console.log(next ? `Next: ${next.id} - ${next.meta.title}` : "All lessons passed");
 };
 
@@ -60,7 +64,7 @@ const COMMANDS: Record<string, () => unknown> = {
 
 const handler = COMMANDS[command];
 if (!handler) {
-  console.log("Usage: pnpm lesson <list|open|test|reset|next> [lesson-id] [--solution]");
+  console.log("Usage: pnpm lesson <list|open|test|reset> <lesson-id> [--solution]   |   pnpm lesson next [backend|analyst|ai]");
   process.exit(1);
 }
 handler();

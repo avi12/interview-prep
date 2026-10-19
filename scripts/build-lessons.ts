@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { DIST_DIR, LESSONS_DIST_DIR } from "#scripts/lib/paths.ts";
-import { readLessons, readTracks } from "#scripts/lib/lessons.ts";
+import { readLessons, readStudyOrders, readTracks } from "#scripts/lib/lessons.ts";
 import { withCachedNarration } from "#scripts/lib/narration-cache.ts";
 import { renderLesson } from "#scripts/lib/render.ts";
 
@@ -24,6 +24,7 @@ for (const lesson of lessons) {
 
 const index = {
   tracks: readTracks(),
+  orders: readStudyOrders(lessons),
   lessons: lessons.map(lesson => ({
     id: lesson.id,
     track: lesson.track,

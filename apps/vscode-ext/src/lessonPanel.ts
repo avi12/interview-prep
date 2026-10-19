@@ -19,20 +19,22 @@ let messageSubscription: vscode.Disposable | undefined;
 export const showLesson = ({
   root,
   lesson,
+  viewColumn,
   onAction
 }: {
   root: string;
   lesson: LessonEntry;
+  viewColumn: vscode.ViewColumn;
   onAction: (action: Action) => void;
 }) => {
   const html = readFileSync(resolve(root, lesson.html), "utf8");
   if (!panel) {
-    panel = vscode.window.createWebviewPanel(VIEW_TYPE, lesson.title, { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true }, { enableScripts: true, retainContextWhenHidden: true });
+    panel = vscode.window.createWebviewPanel(VIEW_TYPE, lesson.title, { viewColumn, preserveFocus: true }, { enableScripts: true, retainContextWhenHidden: true });
     panel.onDidDispose(() => (panel = undefined));
   }
   panel.title = lesson.title;
   panel.webview.html = html;
-  panel.reveal(undefined, true);
+  panel.reveal(viewColumn, true);
   messageSubscription?.dispose();
   messageSubscription = panel.webview.onDidReceiveMessage(({ action }: { action: Action }) => onAction(action));
 };

@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { isPassed, readIndex, readProgress } from "@/lessonData.ts";
+import { isPassed, lessonsForRole, readIndex, readProgress } from "@/lessonData.ts";
 
 export const Command = {
   openLesson: "interviewPrep.openLesson",
@@ -23,7 +23,8 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
   }
 
   getChildren(node?: Node) {
-    const { tracks, lessons } = readIndex(this.root);
+    const { tracks } = readIndex(this.root);
+    const lessons = lessonsForRole(this.root);
     if (!node) return tracks.filter(track => lessons.some(l => l.track === track.id)).map((track): Node => ({ kind: "track", id: track.id }));
     if (node.kind === "lesson") return [];
     return lessons.filter(lesson => lesson.track === node.id).map((lesson): Node => ({ kind: "lesson", id: lesson.id }));
@@ -35,7 +36,8 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
   }
 
   private trackItem(id: string) {
-    const { tracks, lessons } = readIndex(this.root);
+    const { tracks } = readIndex(this.root);
+    const lessons = lessonsForRole(this.root);
     const progress = readProgress(this.root);
     const inTrack = lessons.filter(lesson => lesson.track === id);
     const passedCount = inTrack.filter(lesson => isPassed({ progress, id: lesson.id })).length;

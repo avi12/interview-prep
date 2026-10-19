@@ -11,6 +11,6 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["scripts", "curriculum", "apps"],
+  "include": ["scripts", "curriculum"],
   "exclude": ["node_modules", "dist", "work"]
 }

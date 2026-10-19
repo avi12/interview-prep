@@ -49,6 +49,7 @@ export function activate(context: vscode.ExtensionContext) {
     showLesson({
       root,
       lesson,
+      viewColumn: lesson.hasExercise ? vscode.ViewColumn.Two : vscode.ViewColumn.One,
       onAction: action => {
         if (action === PanelAction.runTests) runTests(id);
         if (action === PanelAction.openExercise) openExercise(id);
@@ -83,6 +84,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(Command.resetExercise, () => resetExercise(activeLessonId())),
     vscode.commands.registerCommand(Command.askClaude, askClaude),
     vscode.commands.registerCommand(Command.refresh, () => tree.refresh()),
+    vscode.workspace.onDidChangeConfiguration(e => e.affectsConfiguration("interviewPrep.role") && tree.refresh()),
     onTestsFinished(({ id, isPass }) => {
       tree.refresh();
       if (!isPass) return;

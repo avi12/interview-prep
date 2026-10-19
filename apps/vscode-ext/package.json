@@ -103,6 +103,17 @@
           "type": "boolean",
           "default": true,
           "description": "Open the next unfinished lesson when the workspace loads"
+        },
+        "interviewPrep.role": {
+          "type": "string",
+          "enum": [
+            "all",
+            "backend",
+            "analyst",
+            "ai"
+          ],
+          "default": "all",
+          "description": "Show only the lessons that matter for this role"
         }
       }
     },

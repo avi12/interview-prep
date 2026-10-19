@@ -41,6 +41,7 @@ export const progressSchema = z.record(
 
 export const lessonIndexSchema = z.object({
   tracks: tracksSchema,
+  orders: z.record(z.string(), z.array(z.string())),
   lessons: z.array(
     z.object({
       id: z.string(),

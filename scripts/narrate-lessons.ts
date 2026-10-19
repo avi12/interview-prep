@@ -1,12 +1,15 @@
 import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 import { readLessons } from "#scripts/lib/lessons.ts";
 import { narratedInputPath, narratedPath, removeStaleNarrations } from "#scripts/lib/narration-cache.ts";
 import { renderLesson } from "#scripts/lib/render.ts";
 
 const NARRATE_REPO = "C:/repositories/avi/reverse-engineer-edge-tts";
-const PARALLEL_JOBS = 2;
+const PARALLEL_JOBS = 1;
+const MAX_ATTEMPTS = 4;
+const RETRY_DELAY_MS = 4000;
 const [, , ...filters] = process.argv;
 
 const toNativePath = (path: string) => path.replaceAll("\\", "/");
@@ -20,7 +23,15 @@ const narrate = ({ input, output }: { input: string; output: string }) =>
     child.on("exit", code => done(code === 0));
   });
 
-const pending = readLessons()
+const narrateWithRetry = async ({ input, output }: { input: string; output: string }) => {
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    if (await narrate({ input, output })) return true;
+    await sleep(RETRY_DELAY_MS * attempt);
+  }
+  return false;
+};
+
+const pending = readLessons({ isStrict: false })
   .filter(lesson => filters.length === 0 || filters.some(filter => lesson.id.startsWith(filter)))
   .map(lesson => {
     const html = renderLesson(lesson);
@@ -39,7 +50,7 @@ const worker = async () => {
     mkdirSync(dirname(input), { recursive: true });
     mkdirSync(dirname(job.output), { recursive: true });
     writeFileSync(input, job.html);
-    const isDone = await narrate({ input, output: resolve(job.output) });
+    const isDone = await narrateWithRetry({ input, output: resolve(job.output) });
     if (!isDone) failureCount++;
     if (isDone) removeStaleNarrations({ id: job.id, keepPath: job.output });
     console.log(`${isDone ? "narrated" : "FAILED  "} ${job.id}`);
