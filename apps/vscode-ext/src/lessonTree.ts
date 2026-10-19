@@ -16,7 +16,11 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
   private readonly changeEmitter = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this.changeEmitter.event;
 
-  constructor(private readonly root: string) {}
+  private readonly root: string;
+
+  constructor(root: string) {
+    this.root = root;
+  }
 
   refresh() {
     this.changeEmitter.fire();

@@ -1,6 +1,6 @@
 import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { ROOT } from "#scripts/lib/paths.ts";
 
@@ -19,6 +19,7 @@ const SERVER_ONLY_SETTINGS = {
   "workbench.welcomePage.walkthroughs.openOnInstall": false,
   "update.showReleaseNotes": false
 };
+const TOKEN_FILE = resolve(SERVER_DATA_DIR, "connection-token");
 const isOpeningBrowser = !process.argv.includes("--no-open");
 
 const toUrlPath = (path: string) => `/${path.replaceAll("\\", "/")}`;
@@ -52,7 +53,15 @@ if (!isBuilt) process.exit(1);
 installExtension(`"${VSIX_PATH}"`);
 for (const extension of RECOMMENDED_EXTENSIONS) installExtension(extension);
 
-const token = randomBytes(16).toString("hex");
+const readOrCreateToken = () => {
+  if (existsSync(TOKEN_FILE)) return readFileSync(TOKEN_FILE, "utf8").trim();
+  const created = randomBytes(16).toString("hex");
+  mkdirSync(dirname(TOKEN_FILE), { recursive: true });
+  writeFileSync(TOKEN_FILE, created);
+  return created;
+};
+
+const token = readOrCreateToken();
 const url = `http://${HOST}:${PORT}/?tkn=${token}&folder=${encodeURIComponent(toUrlPath(ROOT))}`;
 
 const server = spawn(

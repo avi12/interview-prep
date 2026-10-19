@@ -2,11 +2,12 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import * as vscode from "vscode";
 import { ALL_ROLES } from "@scripts/lib/path.ts";
+import type { z } from "zod";
 import { lessonIndexSchema, progressSchema } from "@scripts/lib/schema.ts";
 
 const INDEX_PATH = "dist/index.json";
 const PROGRESS_PATH = ".progress/progress.json";
-const EMPTY_INDEX = { tracks: [], orders: {}, lessons: [] };
+const EMPTY_INDEX: z.infer<typeof lessonIndexSchema> = { tracks: [], orders: {}, lessons: [] };
 
 export const readIndex = (root: string) => {
   const path = resolve(root, INDEX_PATH);
