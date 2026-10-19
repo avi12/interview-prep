@@ -20,7 +20,7 @@ sources:
 It is not a request for your life story. The interviewer wants a **map**: who you are, what you can do, why you are here.
 
 - Aim for **90 seconds**. Guides say 90 to 120
-- It is an elevator pitch: "short" and "direct"
+- It works like an elevator pitch: the headline, not the whole story
 - You only need the summary. Their questions fill in the rest
 
 > **Not this:** your life in order, from school to today. The Tech Interview Handbook says it plainly: "avoid a history lesson".
@@ -90,6 +90,8 @@ Do not apologize for the change. Say what it gives you.
 | Any team job | Communication, teamwork | Backend: 41 of 45 ads |
 | Studying alone to switch | You learn fast | Backend: learning mindset, 31 of 45 |
 
+The counts come from our own samples of job ads. They show a trend, not a rule.
+
 ```narrate
 Do not apologize for your career change. Say what it gives you. A weak opening is, I am trying to break into tech. A stronger one starts from experience: I spent years in a field where I understand the problems deeply. Hiring managers for juniors look for curiosity and clear communication. And the job ads ask for exactly the skills your old work already proves.
 ```
@@ -137,7 +139,7 @@ Compare these two. The weak one starts with history, says um, apologizes, and en
 
 Interviews in Israel are usually in Hebrew, with English tech terms (lesson 01). Some firms switch to English.
 
-Prepare **both**. Same four parts. Tech words stay English in both.
+Prepare **both**. Same four parts. Tech words stay English in both. If asked about army service or studies, answer in one plain sentence, then return to your story.
 
 | English | עברית |
 |---|---|

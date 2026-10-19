@@ -14,9 +14,11 @@ sources:
   - https://www.capitalone.com/learn-grow/life-events/how-to-answer-salary-expectations/
   - https://www.linkedin.com/business/talent/blog/talent-management/why-giving-salary-ranges-during-interviews-is-a-bad-idea
   - https://www.techinterviewhandbook.org/negotiation-rules/
+  - https://www.techinterviewhandbook.org/negotiation/
   - https://careers.usc.edu/blog/2024/07/01/should-you-send-a-thank-you-note-after-an-interview/
   - https://interviewing.io/blog/after-a-lot-more-data-technical-interview-performance-really-is-kind-of-arbitrary
   - https://techcrunch.com/2023/02/06/to-improve-close-rates-for-technical-interviews-give-applicants-feedback-good-or-bad
+  - https://interviewing.io/blog/why-giving-feedback-good-or-bad-will-help-you-hire
 ---
 
 ## Any questions for us?
@@ -33,7 +35,7 @@ Ask **different things** to different people:
 |---|---|
 | Recruiter | The process, the format, next steps |
 | Hiring manager | Day to day, the team's focus, how they work |
-| Engineer | Culture, how the team works together, growth |
+| Engineer | Current challenges, how the team works together, growth |
 
 > **Why:** an interview goes both ways. You are choosing a team too, and you will spend most of your week with it.
 
@@ -91,8 +93,8 @@ The recruiter often asks, what are your salary expectations? Research first. The
 |---|---|---|
 | Ask first | "Could you share the salary range for this role?" | "אפשר לדעת מה טווח השכר שהוגדר לתפקיד?" |
 | Not yet | "I'd like to understand the role better before I name a number." | "אשמח להבין את התפקיד לעומק לפני שאציין מספר." |
-| Pressed | "From my research, similar roles pay [low] to [high]. I'm flexible, depending on the full package." | "לפי בדיקת השוק שלי, תפקידים דומים משלמים בין [מינימום] ל[מקסימום], ואני גמיש בהתאם לחבילה המלאה." |
-| Current pay | "I'd rather not share my current pay. I'm focused on the market range for this role." | "אני מעדיף לא לחשוף את השכר הנוכחי שלי. אני מתמקד בטווח השוק של התפקיד." |
+| Pressed | "From my research, similar roles pay [low] to [high]. I'm flexible, depending on the full package." | "לפי בדיקת השוק שלי, תפקידים דומים משלמים בין [מינימום] ל[מקסימום], ואני גמיש/ה בהתאם לחבילה המלאה." |
+| Current pay | "I'd rather not share my current pay. I'm focused on the market range for this role." | "אני מעדיף/ה לא לחשוף את השכר הנוכחי שלי. אני מתמקד/ת בטווח השוק של התפקיד." |
 
 > **Trap:** a number with no reason, or a flat "what are you offering?". Nisha lists both as common mistakes.
 
@@ -156,7 +158,7 @@ Best,
 ## An offer arrives
 
 - **Say thanks. Ask for time.** Do not answer in the first minute
-- The first offer is never the best the company can give, and recruiters expect you to negotiate (Tech Interview Handbook)
+- There is usually room to negotiate, and recruiters expect you to (Tech Interview Handbook)
 - Below your range? Stay calm and ask what the full package includes (Nisha)
 
 As a junior, you can also ask for things that are not money: training, your first project, your team, a mentor (Tech Interview Handbook).
@@ -164,7 +166,7 @@ As a junior, you can also ask for things that are not money: training, your firs
 > **Not this:** accepting on the spot, or saying "the minimum I'd accept is...". Drushim lists both as mistakes.
 
 ```narrate
-When an offer arrives, say thanks and ask for time. Do not answer in the first minute. The Tech Interview Handbook says the first offer is never the best the company can give, and recruiters expect you to negotiate. If it is below your range, stay calm and ask what the full package includes. As a junior you can also ask for training, your first project, your team, or a mentor. Do not accept on the spot.
+When an offer arrives, say thanks and ask for time. Do not answer in the first minute. The Tech Interview Handbook says there is usually room to negotiate, and recruiters expect it. If it is below your range, stay calm and ask what the full package includes. As a junior you can also ask for training, your first project, your team, or a mentor. Do not accept on the spot.
 ```
 
 ## A rejection arrives
@@ -172,9 +174,9 @@ When an offer arrives, say thanks and ask for time. Do not answer in the first m
 A no is **data**, not a verdict.
 
 - interviewing.io, over 1,000 interviews: only about **20%** of people performed consistently from one interview to the next
-- interviewing.io also found: **43%** of candidates consistently underrate how they did
+- interviewing.io's own data says **43%** of candidates consistently underrate how they did
 
-So one result is noisy. Do three things:
+These come from practice interviews on one platform, so read them as a hint. One result is noisy. Do three things:
 
 1. Email thanks and ask **one specific** question: "Which part of the coding round should I improve?"
 2. Write it in the mistake log (lesson 02)
@@ -193,7 +195,7 @@ why: interviewing.io found only about 20% of people perform consistently across 
 ```
 
 ```narrate
-A rejection is data, not a verdict. interviewing.io looked at over one thousand interviews and found that only about twenty percent of people performed consistently from one interview to the next. Another study found that forty-three percent of candidates underrate how they did. So one result is noisy. Email a thank-you and ask one specific question. Write the answer in your mistake log. Then retry. Many companies will not reply, so ask once.
+A rejection is data, not a verdict. interviewing.io looked at over one thousand interviews and found that only about twenty percent of people performed consistently from one interview to the next. The same company reports that forty-three percent of its candidates underrate how they did. So one result is noisy. Email a thank-you and ask one specific question. Write the answer in your mistake log. Then retry. Many companies will not reply, so ask once.
 ```
 
 ## Say it out loud

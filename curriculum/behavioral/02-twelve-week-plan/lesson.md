@@ -134,11 +134,11 @@ A 2021 review of ten learning techniques ranked two at the top:
 - **Spreading practice over time** (effect size 0.85)
 - **Testing yourself** (0.74)
 
-An earlier review rated rereading and highlighting low.
+An earlier review rated rereading and highlighting low. In the 2021 review they also sat near the bottom (0.47 and 0.44).
 
 The exact days (1, 7, 21) are a rule of thumb, not a result. Most studies measured facts, not interview skills.
 
-> **Not this:** reread the lesson. It feels like work, but it is the weakest way to learn. Cover the answer and try to say it instead.
+> **Not this:** reread the lesson. It feels like work, but it ranked low in the older review and in the lower half of the 2021 one. Cover the answer and try to say it instead.
 
 ```narrate
 Why does the log work? A big review of ten learning techniques ranked two at the top: spreading practice over time, and testing yourself. Rereading and highlighting were rated low. The exact days are only a rule of thumb, because most studies measured facts, not interview skills. So cover the answer and say it, instead of reading it again.

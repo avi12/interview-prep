@@ -203,7 +203,7 @@ Listen back and count:
 - Did you say the slow way and its cost?
 - Did you test an empty case?
 
-Do it again next week with a different problem.
+Do it again next week with a different problem. If your interview may be in Hebrew, practice that way too: Hebrew sentences, English technical terms.
 
 ```narrate
 Solve one easy problem in twenty minutes, and talk the whole time while you record your voice. Two Sum is fine. Listen back and count the silences longer than fifteen seconds. Did you restate and ask two questions? Did you say the slow way and its cost? Did you test an empty case? Do it again next week with a different problem.

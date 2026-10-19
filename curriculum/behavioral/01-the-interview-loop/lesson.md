@@ -57,7 +57,7 @@ Same order at most companies. The names change. The jobs of the gates do not.
     <rect x="208" y="20" width="92" height="44" fill="var(--primary-container)" stroke="var(--border)" stroke-width="2"/>
     <text x="254" y="46" fill="var(--fg)">3 Design</text>
     <text x="254" y="88" fill="var(--fg)">trade-offs</text>
-    <text x="254" y="104" fill="var(--fg-muted)">about 60 min</text>
+    <text x="254" y="104" fill="var(--fg-muted)">45-60 min</text>
     <text x="254" y="120" fill="var(--fg-muted)">junior: light</text>
   </g>
   <g data-cue="behavioral" font-family="var(--font-mono)" font-size="11" text-anchor="middle">
@@ -94,7 +94,7 @@ The **recruiter call** is a real gate, not small talk.
 
 - It checks motivation, pay, availability
 - It explains the process (Monzo promises next steps, so you are not left hanging)
-- In Israel, reports say it also asks about army service and degree
+- In Israel, candidate reports say it can also cover army service and degree
 
 **HR** comes last. References, then the offer.
 
@@ -123,7 +123,7 @@ why: The first gate is about you and the logistics. Technical depth comes in lat
 
 Monzo says its pair exercise is not a speed test and not LeetCode style. Meta's is 45 minutes: 35 of coding.
 
-In Israel: Check Point sends 3 online LeetCode questions. Others send a 1 to 3 day task, then a walkthrough.
+In Israel, candidate reports say Check Point sends 3 online LeetCode questions. Others send a 1 to 3 day task, then a walkthrough.
 
 ```narrate
 Coding comes in two shapes. A take-home task gives you about a week to send back two hours of work, and then you walk through it. A live session lasts forty-five to sixty minutes. Monzo says its pair exercise is not a speed test. Meta gives thirty-five minutes of coding. In Israel, some firms start with an online test of three easy to medium questions.
@@ -135,16 +135,16 @@ Every role has one round that is **not** plain coding.
 
 | Role | The round | At junior level |
 |---|---|---|
-| Backend | System design, about 60 min | One small scenario, say the trade-offs |
+| Backend | System design, 45 to 60 min | One small scenario, say the trade-offs |
 | Analyst | Live SQL, 45 to 60 min, plus a case | "Why did this metric drop?" |
 | AI | Build a small RAG endpoint, about 40 min | Show how you check the output |
 
 In Israel, junior design is often a talk about the architecture of **your own** take-home.
 
-> **Not this:** "I am junior, so I will skip it." The round is lighter, not missing. About 4 in 10 junior backend postings mention it.
+> **Not this:** "I am junior, so I will skip it." The round is lighter, not missing. 17 of the 45 junior backend postings in our research mention design.
 
 ```narrate
-Every role has one round that is not plain coding. Backend roles get a system design talk of about an hour, but for juniors it is one small scenario. Analysts get live S Q L and a case, like why a metric dropped. A I roles may build a small retrieval endpoint in about forty minutes. In Israel, juniors are often asked to explain the design of their own take-home.
+Every role has one round that is not plain coding. Backend roles get a system design talk of forty-five to sixty minutes, but for juniors it is one small scenario. Analysts get live S Q L and a case, like why a metric dropped. A I roles may build a small retrieval endpoint in about forty minutes. In Israel, juniors are often asked to explain the design of their own take-home.
 ```
 
 ## Behavioral round
@@ -174,7 +174,7 @@ The behavioral round asks about the past. Tell me about a time when. At Google e
 
 - "Junior" often means one to two years. Students and interns are the real entry door
 - Interviews are usually Hebrew with English tech terms. Ads at product firms are English
-- Reports show a junior loop at a large bank as two steps: a data structures interview, then a manager talk about team fit and your interests
+- One 2020 candidate report describes a junior loop at a large bank as two steps: a data structures interview, then a manager talk about team fit and your interests
 - Larger firms may run a full day with many candidates for one or two seats
 
 > **Why:** you cannot control the market. You can control how ready you are at each gate.
@@ -182,7 +182,7 @@ The behavioral round asks about the past. Tell me about a time when. At Google e
 These are anecdotes from candidate reports, not rules.
 
 ```narrate
-Israel has a few differences. A junior role often asks for one to two years, and student jobs are the real way in. Interviews are usually in Hebrew with English technical words. Reports show some junior loops with just two steps, a data structures interview and a talk with the manager. These are stories from candidates, not rules, so ask the recruiter about your loop.
+Israel has a few differences. A junior role often asks for one to two years, and student jobs are the real way in. Interviews are usually in Hebrew with English technical words. One candidate report describes a junior loop with just two steps, a data structures interview and a talk with the manager. These are stories from candidates, not rules, so ask the recruiter about your loop.
 ```
 
 ## Say it out loud
