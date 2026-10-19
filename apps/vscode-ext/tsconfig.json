@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": [
+      "node",
+      "vscode"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@scripts/*": [
+        "../../scripts/*"
+      ]
+    }
+  },
+  "include": [
+    "src"
+  ]
+}

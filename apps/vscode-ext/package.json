@@ -1,0 +1,133 @@
+{
+  "name": "interview-prep",
+  "displayName": "Interview Prep",
+  "description": "Narrated lessons, runnable exercises and progress for the interview-prep course",
+  "publisher": "avi12",
+  "version": "0.1.0",
+  "private": true,
+  "license": "GPL-3.0-or-later",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Education"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "workspaceContains:curriculum/tracks.json"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "interviewPrep",
+          "title": "Interview Prep",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "interviewPrep": [
+        {
+          "id": "interviewPrep.lessons",
+          "name": "Lessons"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "interviewPrep.openLesson",
+        "title": "Open Lesson",
+        "category": "Interview Prep"
+      },
+      {
+        "command": "interviewPrep.nextLesson",
+        "title": "Open Next Lesson",
+        "category": "Interview Prep",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "interviewPrep.runTests",
+        "title": "Run My Tests",
+        "category": "Interview Prep",
+        "icon": "$(play)"
+      },
+      {
+        "command": "interviewPrep.resetExercise",
+        "title": "Reset Exercise to Starter",
+        "category": "Interview Prep"
+      },
+      {
+        "command": "interviewPrep.askClaude",
+        "title": "Ask Claude (tutor)",
+        "category": "Interview Prep",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "interviewPrep.refresh",
+        "title": "Refresh Lessons",
+        "category": "Interview Prep",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "interviewPrep.nextLesson",
+          "when": "view == interviewPrep.lessons",
+          "group": "navigation@1"
+        },
+        {
+          "command": "interviewPrep.askClaude",
+          "when": "view == interviewPrep.lessons",
+          "group": "navigation@2"
+        },
+        {
+          "command": "interviewPrep.refresh",
+          "when": "view == interviewPrep.lessons",
+          "group": "navigation@3"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "interviewPrep.runTests",
+          "when": "resourcePath =~ /[\\\\/]work[\\\\/]/",
+          "group": "navigation@1"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Interview Prep",
+      "properties": {
+        "interviewPrep.autoOpenNextLesson": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open the next unfinished lesson when the workspace loads"
+        }
+      }
+    },
+    "taskDefinitions": [
+      {
+        "type": "interviewPrep",
+        "properties": {}
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "package": "pnpm build && vsce package --no-dependencies --allow-missing-repository --skip-license -o interview-prep.vsix"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.6.0",
+    "esbuild": "^0.25.0"
+  },
+  "dependencies": {
+    "zod": "^4.0.0"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  }
+}
