@@ -1,0 +1,8 @@
+pytest>=9
+pandas>=2.3
+numpy>=2.3
+scipy>=1.16
+fastapi>=0.124
+httpx>=0.28
+pydantic>=2.12
+requests>=2.32

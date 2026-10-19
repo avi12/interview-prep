@@ -85,19 +85,35 @@ const readLesson = ({ dir, track }: { dir: string; track: string }) => {
   };
 };
 
-export const readLessons = () => {
-  const lessons = [];
+const readLessonEntry = ({ dir, track }: { dir: string; track: string }) => {
+  const id = `${track}/${basename(dir)}`;
+  try {
+    return { id, lesson: readLesson({ dir, track }), error: null };
+  } catch (error) {
+    return { id, lesson: null, error: error instanceof Error ? error.message : String(error) };
+  }
+};
+
+export const readLessonEntries = () => {
+  const entries = [];
   for (const trackDir of listDirectories(CURRICULUM_DIR)) {
     if (basename(trackDir) === KIT_DIR_NAME) continue;
     for (const dir of listDirectories(trackDir)) {
       if (!existsSync(resolve(dir, "lesson.md"))) continue;
-      lessons.push(readLesson({ dir, track: basename(trackDir) }));
+      entries.push(readLessonEntry({ dir, track: basename(trackDir) }));
     }
   }
+  return entries;
+};
+
+export const readLessons = () => {
+  const entries = readLessonEntries();
+  const broken = entries.find(entry => entry.error);
+  if (broken) throw new Error(`${broken.id}: ${broken.error}`);
   const trackOrder = new Map(readTracks().map(({ id }, i) => [id, i]));
-  return lessons.sort(
-    (a, b) => (trackOrder.get(a.track) ?? Infinity) - (trackOrder.get(b.track) ?? Infinity) || a.slug.localeCompare(b.slug)
-  );
+  return entries
+    .flatMap(entry => (entry.lesson ? [entry.lesson] : []))
+    .sort((a, b) => (trackOrder.get(a.track) ?? Infinity) - (trackOrder.get(b.track) ?? Infinity) || a.slug.localeCompare(b.slug));
 };
 
 export type Lesson = ReturnType<typeof readLessons>[number];

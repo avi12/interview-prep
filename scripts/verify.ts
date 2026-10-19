@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { readLessons } from "#scripts/lib/lessons.ts";
+import { readLessonEntries } from "#scripts/lib/lessons.ts";
 import { runQuiet } from "#scripts/lib/run.ts";
 import { lessonProblems } from "#scripts/lib/validate.ts";
 
@@ -7,7 +7,7 @@ const [, , ...filters] = process.argv;
 const isStructureOnly = filters.includes("--structure");
 const idFilters = filters.filter(filter => !filter.startsWith("--"));
 
-const lessons = readLessons().filter(lesson => idFilters.length === 0 || idFilters.some(filter => lesson.id.startsWith(filter)));
+const entries = readLessonEntries().filter(entry => idFilters.length === 0 || idFilters.some(filter => entry.id.startsWith(filter)));
 let failureCount = 0;
 
 const fail = ({ id, message }: { id: string; message: string }) => {
@@ -15,7 +15,11 @@ const fail = ({ id, message }: { id: string; message: string }) => {
   console.log(`  FAIL ${id}: ${message}`);
 };
 
-for (const lesson of lessons) {
+for (const { id, lesson, error } of entries) {
+  if (!lesson) {
+    fail({ id, message: `cannot be read: ${error}` });
+    continue;
+  }
   const problems = lessonProblems(lesson);
   for (const message of problems) fail({ id: lesson.id, message });
   if (!lesson.hasExercise || isStructureOnly || problems.length > 0) continue;
@@ -26,5 +30,5 @@ for (const lesson of lessons) {
   console.log(`  ok   ${lesson.id}`);
 }
 
-console.log(failureCount === 0 ? `\n${lessons.length} lessons verified` : `\n${failureCount} problems in ${lessons.length} lessons`);
+console.log(failureCount === 0 ? `\n${entries.length} lessons verified` : `\n${failureCount} problems in ${entries.length} lessons`);
 process.exitCode = failureCount === 0 ? 0 : 1;
