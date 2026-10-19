@@ -1,0 +1,28 @@
+{
+  "workbench.startupEditor": "none",
+  "window.autoDetectColorScheme": true,
+  "workbench.preferredDarkColorTheme": "Default Dark Modern",
+  "workbench.preferredLightColorTheme": "Default Light Modern",
+  "chat.disableAIFeatures": true,
+  "editor.fontSize": 15,
+  "editor.minimap.enabled": false,
+  "editor.wordWrap": "on",
+  "editor.formatOnSave": false,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 800,
+  "files.exclude": {
+    "**/solution": true,
+    "**/__pycache__": true,
+    "**/.git": true
+  },
+  "search.exclude": {
+    "**/solution": true,
+    "**/node_modules": true,
+    "**/dist": true
+  },
+  "explorer.compactFolders": false,
+  "python.defaultInterpreterPath": "python",
+  "python.testing.pytestEnabled": false,
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "interviewPrep.autoOpenNextLesson": true
+}

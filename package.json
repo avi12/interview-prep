@@ -14,6 +14,7 @@
   "scripts": {
     "lesson": "node scripts/lesson.ts",
     "build": "node scripts/build-lessons.ts",
+    "narrate": "node scripts/narrate-lessons.ts",
     "verify": "node scripts/verify.ts",
     "start": "node scripts/start.ts"
   },
