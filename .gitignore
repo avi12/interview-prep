@@ -1,0 +1,8 @@
+node_modules/
+dist/
+work/
+.progress/
+.vscode-server/
+*.vsix
+__pycache__/
+.pytest_cache/

@@ -1,0 +1,32 @@
+{
+  "name": "interview-prep",
+  "private": true,
+  "type": "module",
+  "description": "Hands-on interview prep: lessons, exercises and a VS Code in the browser trainer",
+  "packageManager": "pnpm@11.13.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "imports": {
+    "#scripts/*": "./scripts/*",
+    "#kit/*": "./curriculum/_kit/*"
+  },
+  "scripts": {
+    "lesson": "node scripts/lesson.ts",
+    "build": "node scripts/build-lessons.ts",
+    "verify": "node scripts/verify.ts",
+    "start": "node scripts/start.ts"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.10",
+    "highlight.js": "^11.11.1",
+    "marked": "^16.0.0",
+    "yaml": "^2.8.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}
