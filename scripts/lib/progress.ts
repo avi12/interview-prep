@@ -1,13 +1,8 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname } from "node:path";
+import { writeFileDeep, readJsonFile } from "#scripts/lib/files.ts";
 import { PROGRESS_FILE } from "#scripts/lib/paths.ts";
 import { progressSchema } from "#scripts/lib/schema.ts";
 
-export const readProgress = () => {
-  if (!existsSync(PROGRESS_FILE)) return {};
-  const parsed = progressSchema.safeParse(JSON.parse(readFileSync(PROGRESS_FILE, "utf8")));
-  return parsed.success ? parsed.data : {};
-};
+export const readProgress = () => readJsonFile({ path: PROGRESS_FILE, schema: progressSchema, fallback: {} });
 
 export const recordAttempt = ({ id, isPass }: { id: string; isPass: boolean }) => {
   const progress = readProgress();
@@ -16,9 +11,5 @@ export const recordAttempt = ({ id, isPass }: { id: string; isPass: boolean }) =
     attempts: previous.attempts + 1,
     passedAt: isPass ? (previous.passedAt ?? new Date().toISOString()) : previous.passedAt
   };
-  mkdirSync(dirname(PROGRESS_FILE), { recursive: true });
-  writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
+  writeFileDeep({ path: PROGRESS_FILE, content: JSON.stringify(progress, null, 2) });
 };
-
-export const isPassed = ({ id, progress }: { id: string; progress: ReturnType<typeof readProgress> }) =>
-  Boolean(progress[id]?.passedAt);

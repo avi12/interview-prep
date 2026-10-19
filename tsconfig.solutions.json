@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "dist/solution-overlay"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

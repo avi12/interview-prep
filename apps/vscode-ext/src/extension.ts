@@ -1,12 +1,11 @@
 import { relative, resolve, sep } from "node:path";
 import * as vscode from "vscode";
+import { LESSON_ID_SEGMENTS, WORK_DIR_NAME } from "@scripts/lib/layout.ts";
 import { findLesson, findNextLesson } from "@/lessonData.ts";
 import { ensureExerciseFiles, onTestsFinished, runLessonCli, runTestsInTerminal } from "@/lessonCli.ts";
 import { PanelAction, showLesson } from "@/lessonPanel.ts";
 import { Command, LessonTree } from "@/lessonTree.ts";
 
-const WORK_DIR_NAME = "work";
-const LESSON_ID_SEGMENTS = 2;
 const CLAUDE_TERMINAL_NAME = "Claude tutor";
 
 const lessonIdOfFile = ({ root, file }: { root: string; file: string }) => {

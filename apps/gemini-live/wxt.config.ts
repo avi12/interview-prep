@@ -1,7 +1,7 @@
 import { defineConfig } from "wxt";
-import { DEFAULT_VSCODE_ORIGIN } from "./src/lib/vscode-origin.ts";
+import { serverOrigin } from "../../scripts/lib/server.ts";
 
-const vscodeOrigin = process.env.VSCODE_ORIGIN ?? DEFAULT_VSCODE_ORIGIN;
+const vscodeOrigin = process.env.VSCODE_ORIGIN ?? serverOrigin();
 process.env.WXT_VSCODE_ORIGIN = vscodeOrigin;
 
 const HOST_PERMISSION_CAPTURE_VISIBLE_TAB_REQUIRES = "<all_urls>";

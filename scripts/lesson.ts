@@ -1,8 +1,9 @@
 import { resolve } from "node:path";
 import { findLesson, readLessons, readStudyOrders, readTracks } from "#scripts/lib/lessons.ts";
 import { ALL_ROLES } from "#scripts/lib/path.ts";
-import { isPassed, readProgress, recordAttempt } from "#scripts/lib/progress.ts";
-import { ensureWorkCopy, resetWorkCopy, runTests } from "#scripts/lib/run.ts";
+import { readProgress, recordAttempt } from "#scripts/lib/progress.ts";
+import { ensureWorkCopy, prepareSolutionDir, resetWorkCopy, runTests } from "#scripts/lib/run.ts";
+import { isPassed, nextUnpassedId } from "#scripts/lib/study.ts";
 
 const [command, idArgument, ...flags] = process.argv.slice(2);
 const isSolutionRequested = flags.includes("--solution");
@@ -29,12 +30,12 @@ const openLesson = (id: string) => {
   for (const file of lesson.meta.files) console.log(`  ${resolve(lesson.workDir, file)}`);
 };
 
-const testLesson = (id: string) => {
+const testLesson = async (id: string) => {
   const lesson = findLesson(id);
   if (!lesson.hasExercise) return console.log("Reading lesson, no tests");
   ensureWorkCopy(lesson);
-  const implDir = isSolutionRequested ? resolve(lesson.dir, "solution") : lesson.workDir;
-  const isPass = runTests({ lesson, implDir });
+  const implDir = isSolutionRequested ? prepareSolutionDir(lesson) : lesson.workDir;
+  const isPass = await runTests({ lesson, implDir });
   if (!isSolutionRequested) recordAttempt({ id: lesson.id, isPass });
   console.log(isPass ? "\nPASS - next lesson: pnpm lesson next" : "\nNot yet - read the first failing test, fix one thing, run again");
   process.exitCode = isPass ? 0 : 1;
@@ -49,7 +50,7 @@ const showNext = () => {
   const progress = readProgress();
   const lessons = readLessons({ isStrict: false });
   const order = readStudyOrders(lessons)[idArgument ?? ALL_ROLES] ?? [];
-  const nextId = order.find(id => !isPassed({ id, progress }));
+  const nextId = nextUnpassedId({ order, progress });
   const next = lessons.find(l => l.id === nextId);
   console.log(next ? `Next: ${next.id} - ${next.meta.title}` : "All lessons passed");
 };
@@ -67,4 +68,4 @@ if (!handler) {
   console.log("Usage: pnpm lesson <list|open|test|reset> <lesson-id> [--solution]   |   pnpm lesson next [backend|analyst|ai]");
   process.exit(1);
 }
-handler();
+await handler();

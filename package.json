@@ -16,7 +16,8 @@
     "build": "node scripts/build-lessons.ts",
     "narrate": "node scripts/narrate-lessons.ts",
     "verify": "node scripts/verify.ts",
-    "start": "node scripts/start.ts"
+    "start": "node scripts/start.ts",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.solutions.json"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.10",

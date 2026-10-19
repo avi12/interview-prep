@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import { readLessonEntries } from "#scripts/lib/lessons.ts";
-import { runQuiet } from "#scripts/lib/run.ts";
+import { prepareSolutionDir, runQuiet } from "#scripts/lib/run.ts";
 import { lessonProblems } from "#scripts/lib/validate.ts";
 
 const [, , ...filters] = process.argv;
@@ -23,9 +23,9 @@ for (const { id, lesson, error } of entries) {
   const problems = lessonProblems(lesson);
   for (const message of problems) fail({ id: lesson.id, message });
   if (!lesson.hasExercise || isStructureOnly || problems.length > 0) continue;
-  const solution = runQuiet({ lesson, implDir: resolve(lesson.dir, "solution") });
+  const solution = await runQuiet({ lesson, implDir: prepareSolutionDir(lesson) });
   if (!solution.isPass) fail({ id: lesson.id, message: `solution does not pass its tests\n${solution.output.slice(-1500)}` });
-  const starter = runQuiet({ lesson, implDir: resolve(lesson.dir, "starter") });
+  const starter = await runQuiet({ lesson, implDir: resolve(lesson.dir, "starter") });
   if (starter.isPass) fail({ id: lesson.id, message: "starter already passes, so the exercise proves nothing" });
   console.log(`  ok   ${lesson.id}`);
 }

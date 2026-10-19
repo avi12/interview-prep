@@ -24,5 +24,8 @@
   "python.defaultInterpreterPath": "python",
   "python.testing.pytestEnabled": false,
   "terminal.integrated.defaultProfile.windows": "PowerShell",
-  "interviewPrep.autoOpenNextLesson": true
+  "interviewPrep.autoOpenNextLesson": true,
+  "python.analysis.extraPaths": [
+    "curriculum/_kit"
+  ]
 }

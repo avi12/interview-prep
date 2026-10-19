@@ -1,11 +1,14 @@
 import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { writeFileDeep } from "#scripts/lib/files.ts";
 import { ROOT } from "#scripts/lib/paths.ts";
+import { killTree } from "#scripts/lib/process.ts";
+import { SERVER_DEFAULT_PORT, SERVER_HOST } from "#scripts/lib/server.ts";
 
-const PORT = Number(process.env.PORT ?? 8765);
-const HOST = "127.0.0.1";
+const PORT = Number(process.env.PORT ?? SERVER_DEFAULT_PORT);
+const HOST = SERVER_HOST;
 const SERVER_DATA_DIR = resolve(ROOT, ".vscode-server");
 const EXTENSION_DIR = resolve(ROOT, "apps", "vscode-ext");
 const VSIX_PATH = resolve(EXTENSION_DIR, "interview-prep.vsix");
@@ -39,8 +42,7 @@ const installExtension = (target: string) =>
 
 const writeMachineSettings = () => {
   const workspaceSettings = JSON.parse(readFileSync(WORKSPACE_SETTINGS_FILE, "utf8"));
-  mkdirSync(dirname(MACHINE_SETTINGS_FILE), { recursive: true });
-  writeFileSync(MACHINE_SETTINGS_FILE, JSON.stringify({ ...workspaceSettings, ...SERVER_ONLY_SETTINGS }, null, 2));
+  writeFileDeep({ path: MACHINE_SETTINGS_FILE, content: JSON.stringify({ ...workspaceSettings, ...SERVER_ONLY_SETTINGS }, null, 2) });
 };
 
 writeMachineSettings();
@@ -56,8 +58,7 @@ for (const extension of RECOMMENDED_EXTENSIONS) installExtension(extension);
 const readOrCreateToken = () => {
   if (existsSync(TOKEN_FILE)) return readFileSync(TOKEN_FILE, "utf8").trim();
   const created = randomBytes(16).toString("hex");
-  mkdirSync(dirname(TOKEN_FILE), { recursive: true });
-  writeFileSync(TOKEN_FILE, created);
+  writeFileDeep({ path: TOKEN_FILE, content: created });
   return created;
 };
 
@@ -80,7 +81,7 @@ const server = spawn(
 );
 
 const stopServer = () => {
-  if (server.pid) spawnSync("taskkill", ["/PID", String(server.pid), "/T", "/F"], { stdio: "ignore" });
+  killTree(server.pid);
   process.exit(0);
 };
 

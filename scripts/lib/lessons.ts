@@ -4,8 +4,9 @@ import { marked, type Tokens, type Token } from "marked";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { CURRICULUM_DIR, KIT_DIR_NAME, PATH_FILE, TRACKS_FILE, WORK_DIR } from "#scripts/lib/paths.ts";
+import { readJsonFile } from "#scripts/lib/files.ts";
 import { buildOrders } from "#scripts/lib/path.ts";
-import { Role, lessonMetaSchema, quizSchema, tracksSchema } from "#scripts/lib/schema.ts";
+import { Role, lessonMetaSchema, quizSchema, tracksSchema, type Quiz } from "#scripts/lib/schema.ts";
 
 const FRONTMATTER_PATTERN = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
 const CARD_HEADING_DEPTH = 2;
@@ -14,11 +15,11 @@ const SPECIAL_FENCES = new Set(["narrate", "hint", "quiz", "svg"]);
 export const readStudyOrders = (lessons: ReturnType<typeof readLessons>) =>
   buildOrders({
     lessons: lessons.map(({ id, track, meta }) => ({ id, track, roles: meta.roles })),
-    cycle: z.array(z.string()).parse(JSON.parse(readFileSync(PATH_FILE, "utf8"))),
+    cycle: readJsonFile({ path: PATH_FILE, schema: z.array(z.string()) }),
     roles: Object.values(Role)
   });
 
-export const readTracks = () => tracksSchema.parse(JSON.parse(readFileSync(TRACKS_FILE, "utf8")));
+export const readTracks = () => readJsonFile({ path: TRACKS_FILE, schema: tracksSchema });
 
 const isDirectory = (path: string) => statSync(path).isDirectory();
 
@@ -37,9 +38,8 @@ const splitFrontmatter = ({ source, id }: { source: string; id: string }) => {
 const fenceName = (token: Tokens.Code) => (token.lang ?? "").split(/\s+/)[0];
 const fenceRest = (token: Tokens.Code) => (token.lang ?? "").split(/\s+/).slice(1).join(" ");
 
-type Quiz = z.infer<typeof quizSchema>;
-type Figure = { caption: string; svg: string };
-type Block =
+export type Figure = { caption: string; svg: string };
+export type Block =
   | { kind: "tokens"; tokens: Token[] }
   | { kind: "figure"; figure: Figure }
   | { kind: "quiz"; quiz: Quiz }
@@ -55,7 +55,9 @@ const emptyCard = (title: string) => ({
   figures: [] as Figure[]
 });
 
-const absorbSpecialFence = ({ card, token }: { card: ReturnType<typeof emptyCard>; token: Tokens.Code }) => {
+export type Card = ReturnType<typeof emptyCard>;
+
+const absorbSpecialFence = ({ card, token }: { card: Card; token: Tokens.Code }) => {
   const name = fenceName(token);
   if (name === "narrate") card.narrate = token.text.trim();
   if (name === "hint") {
@@ -74,7 +76,7 @@ const absorbSpecialFence = ({ card, token }: { card: ReturnType<typeof emptyCard
   }
 };
 
-const pushToken = ({ card, token }: { card: ReturnType<typeof emptyCard>; token: Token }) => {
+const pushToken = ({ card, token }: { card: Card; token: Token }) => {
   card.tokens.push(token);
   const last = card.blocks.at(-1);
   if (last?.kind === "tokens") return last.tokens.push(token);
@@ -84,7 +86,7 @@ const pushToken = ({ card, token }: { card: ReturnType<typeof emptyCard>; token:
 const isSpecialFence = (token: Token) => token.type === "code" && SPECIAL_FENCES.has(fenceName(token as Tokens.Code));
 
 export const parseCards = (body: string) => {
-  const cards: ReturnType<typeof emptyCard>[] = [];
+  const cards: Card[] = [];
   for (const token of marked.lexer(body)) {
     const isCardStart = token.type === "heading" && token.depth === CARD_HEADING_DEPTH;
     if (isCardStart) {
@@ -102,9 +104,11 @@ export const parseCards = (body: string) => {
   return cards;
 };
 
+const lessonIdOf = ({ dir, track }: { dir: string; track: string }) => `${track}/${basename(dir)}`;
+
 const readLesson = ({ dir, track }: { dir: string; track: string }) => {
   const slug = basename(dir);
-  const id = `${track}/${slug}`;
+  const id = lessonIdOf({ dir, track });
   const { rawMeta, body } = splitFrontmatter({ source: readFileSync(resolve(dir, "lesson.md"), "utf8"), id });
   const meta = lessonMetaSchema.parse(rawMeta);
   return {
@@ -121,7 +125,7 @@ const readLesson = ({ dir, track }: { dir: string; track: string }) => {
 };
 
 const readLessonEntry = ({ dir, track }: { dir: string; track: string }) => {
-  const id = `${track}/${basename(dir)}`;
+  const id = lessonIdOf({ dir, track });
   try {
     return { id, lesson: readLesson({ dir, track }), error: null };
   } catch (error) {

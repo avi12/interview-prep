@@ -1,16 +1,10 @@
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { DIST_DIR, LESSONS_DIST_DIR } from "#scripts/lib/paths.ts";
+import { rmSync } from "node:fs";
+import { resolve } from "node:path";
+import { writeFileDeep } from "#scripts/lib/files.ts";
+import { INDEX_FILE, LESSONS_DIST_DIR } from "#scripts/lib/paths.ts";
 import { readLessons, readStudyOrders, readTracks } from "#scripts/lib/lessons.ts";
 import { withCachedNarration } from "#scripts/lib/narration-cache.ts";
 import { renderLesson } from "#scripts/lib/render.ts";
-
-const INDEX_FILE = resolve(DIST_DIR, "index.json");
-
-const writeFileDeep = ({ path, content }: { path: string; content: string }) => {
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, content);
-};
 
 const lessons = readLessons();
 rmSync(LESSONS_DIST_DIR, { recursive: true, force: true });

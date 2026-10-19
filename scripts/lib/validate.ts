@@ -1,9 +1,9 @@
 import { existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Token } from "marked";
-import type { Lesson } from "#scripts/lib/lessons.ts";
+import type { Card, Lesson } from "#scripts/lib/lessons.ts";
+import { EXERCISE_CARD_TITLE } from "#scripts/lib/schema.ts";
 
-const EXERCISE_CARD_TITLE = "Your turn";
 const MIN_CARDS = 4;
 const MAX_CARD_WORDS = 130;
 const MAX_NARRATE_WORDS = 110;
@@ -31,7 +31,7 @@ const matchesOf = ({ pattern, text }: { pattern: RegExp; text: string }) =>
 const hasFiles = ({ dir, files }: { dir: string; files: string[] }) =>
   existsSync(dir) && files.every(file => existsSync(resolve(dir, file)));
 
-const cardProblems = (card: Lesson["cards"][number]) => {
+const cardProblems = (card: Card) => {
   const problems: string[] = [];
   const isExerciseCard = card.title === EXERCISE_CARD_TITLE;
   const words = proseWords(card.tokens);

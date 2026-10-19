@@ -5,6 +5,9 @@ export const Role = { backend: "backend", analyst: "analyst", ai: "ai" } as cons
 
 const MINUTES_MIN = 5;
 const MINUTES_MAX = 60;
+const RUN_SECONDS_MIN = 10;
+const RUN_SECONDS_MAX = 600;
+const RUN_SECONDS_DEFAULT = 90;
 
 export const lessonMetaSchema = z.object({
   title: z.string().min(3),
@@ -13,6 +16,7 @@ export const lessonMetaSchema = z.object({
   level: z.enum(["junior", "mid"]).default("junior"),
   roles: z.array(z.enum(Role)).min(1),
   files: z.array(z.string()).default([]),
+  timeoutSeconds: z.number().int().min(RUN_SECONDS_MIN).max(RUN_SECONDS_MAX).default(RUN_SECONDS_DEFAULT),
   sources: z.array(z.url()).default([])
 });
 
@@ -23,6 +27,8 @@ export const tracksSchema = z.array(
     blurb: z.string()
   })
 );
+
+export const EXERCISE_CARD_TITLE = "Your turn";
 
 export const quizSchema = z.object({
   q: z.string(),
@@ -57,3 +63,5 @@ export const lessonIndexSchema = z.object({
     })
   )
 });
+
+export type Quiz = z.infer<typeof quizSchema>;

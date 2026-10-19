@@ -1,7 +1,8 @@
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
+import { ensureParentDir, writeFileDeep } from "#scripts/lib/files.ts";
 import { readLessons } from "#scripts/lib/lessons.ts";
 import { narratedInputPath, narratedPath, removeStaleNarrations } from "#scripts/lib/narration-cache.ts";
 import { renderLesson } from "#scripts/lib/render.ts";
@@ -47,9 +48,8 @@ let failureCount = 0;
 const worker = async () => {
   for (let job = queue.shift(); job; job = queue.shift()) {
     const input = narratedInputPath(job.id);
-    mkdirSync(dirname(input), { recursive: true });
-    mkdirSync(dirname(job.output), { recursive: true });
-    writeFileSync(input, job.html);
+    writeFileDeep({ path: input, content: job.html });
+    ensureParentDir(job.output);
     const isDone = await narrateWithRetry({ input, output: resolve(job.output) });
     if (!isDone) failureCount++;
     if (isDone) removeStaleNarrations({ id: job.id, keepPath: job.output });

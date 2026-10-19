@@ -3,9 +3,9 @@ import { resolve } from "node:path";
 import hljs from "highlight.js";
 import { Marked } from "marked";
 import { ASSETS_DIR } from "#scripts/lib/paths.ts";
-import type { Lesson } from "#scripts/lib/lessons.ts";
+import type { Block, Card, Figure, Lesson } from "#scripts/lib/lessons.ts";
+import { EXERCISE_CARD_TITLE, type Quiz } from "#scripts/lib/schema.ts";
 
-const EXERCISE_CARD_TITLE = "Your turn";
 const FONTS_URL =
   "https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&display=swap";
 const CALLOUT_KINDS = { Why: "ok", "Not this": "danger", Trap: "warn" } as const;
@@ -36,12 +36,12 @@ const markdown = new Marked({
   }
 });
 
-const renderTokens = (tokens: Lesson["cards"][number]["tokens"]) => markdown.parser(tokens);
+const renderTokens = (tokens: Card["tokens"]) => markdown.parser(tokens);
 
-const renderFigure = ({ caption, svg }: { caption: string; svg: string }) =>
+const renderFigure = ({ caption, svg }: Figure) =>
   `<figure class="figure">${svg}${caption ? `<figcaption class="caption">${escapeHtml(caption)}</figcaption>` : ""}</figure>`;
 
-const renderQuiz = ({ quiz, id }: { quiz: Lesson["cards"][number]["quizzes"][number]; id: string }) => {
+const renderQuiz = ({ quiz, id }: { quiz: Quiz; id: string }) => {
   const options = quiz.options
     .map(
       (option, i) =>
@@ -54,7 +54,7 @@ const renderQuiz = ({ quiz, id }: { quiz: Lesson["cards"][number]["quizzes"][num
 const renderActions = (lesson: Lesson) =>
   `<p class="actions"><button class="btn" data-variant="primary" data-needs-host data-action="runTests">Run my tests</button><button class="btn" data-needs-host data-action="openExercise">Open my file</button><button class="btn" data-needs-host data-action="resetExercise">Reset</button><span class="cli">pnpm lesson test ${escapeHtml(lesson.id)}</span></p>`;
 
-const renderBlock = ({ block, hintCounter, quizId }: { block: Lesson["cards"][number]["blocks"][number]; hintCounter: { count: number }; quizId: string }) => {
+const renderBlock = ({ block, hintCounter, quizId }: { block: Block; hintCounter: { count: number }; quizId: string }) => {
   if (block.kind === "tokens") return renderTokens(block.tokens);
   if (block.kind === "figure") return renderFigure(block.figure);
   if (block.kind === "quiz") return renderQuiz({ quiz: block.quiz, id: quizId });
@@ -62,7 +62,7 @@ const renderBlock = ({ block, hintCounter, quizId }: { block: Lesson["cards"][nu
   return `<details class="hint"><summary>Hint ${hintCounter.count}</summary><p>${markdown.parseInline(block.text)}</p></details>`;
 };
 
-const renderCard = ({ lesson, card, index }: { lesson: Lesson; card: Lesson["cards"][number]; index: number }) => {
+const renderCard = ({ lesson, card, index }: { lesson: Lesson; card: Card; index: number }) => {
   const isExercise = lesson.hasExercise && card.title === EXERCISE_CARD_TITLE;
   const narrateAttributes = card.narrate
     ? ` data-narrate="${escapeHtml(card.narrate)}" data-narrate-title="${escapeHtml(card.title)}"`

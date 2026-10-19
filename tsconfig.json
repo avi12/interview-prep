@@ -9,8 +9,18 @@
     "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["scripts", "curriculum"],
-  "exclude": ["node_modules", "dist", "work"]
+  "include": [
+    "scripts",
+    "curriculum"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "work",
+    "curriculum/**/solution/**"
+  ]
 }

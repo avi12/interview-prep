@@ -1,11 +1,13 @@
-import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
-import { CURRICULUM_DIR, KIT_DIR_NAME, ROOT } from "#scripts/lib/paths.ts";
+import { CURRICULUM_DIR, DIST_DIR, KIT_DIR_NAME, ROOT } from "#scripts/lib/paths.ts";
+import { runWithTimeout } from "#scripts/lib/process.ts";
 import { Lang } from "#scripts/lib/schema.ts";
 import type { Lesson } from "#scripts/lib/lessons.ts";
 
 const VITEST_ENTRY = resolve(ROOT, "node_modules", "vitest", "vitest.mjs");
+const MS_PER_SECOND = 1000;
+const SOLUTION_OVERLAY_DIR_NAME = "solution-overlay";
 
 export const ensureWorkCopy = (lesson: Lesson) => {
   if (existsSync(lesson.workDir)) return false;
@@ -16,6 +18,15 @@ export const ensureWorkCopy = (lesson: Lesson) => {
 export const resetWorkCopy = (lesson: Lesson) => {
   rmSync(lesson.workDir, { recursive: true, force: true });
   ensureWorkCopy(lesson);
+};
+
+export const prepareSolutionDir = (lesson: Lesson) => {
+  const dir = resolve(DIST_DIR, SOLUTION_OVERLAY_DIR_NAME, lesson.id);
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  cpSync(resolve(lesson.dir, "starter"), dir, { recursive: true });
+  cpSync(resolve(lesson.dir, "solution"), dir, { recursive: true });
+  return dir;
 };
 
 const commandFor = (lesson: Lesson) => {
@@ -33,14 +44,20 @@ const envFor = (implDir: string) => ({
   PYTHONDONTWRITEBYTECODE: "1"
 });
 
-export const runTests = ({ lesson, implDir }: { lesson: Lesson; implDir: string }) => {
+const timeoutMessage = (lesson: Lesson) =>
+  `Stopped after ${lesson.meta.timeoutSeconds} seconds. Something never finishes: look for a loop whose exit condition is never reached, or a recursion with no base case.`;
+
+const timeoutMsOf = (lesson: Lesson) => lesson.meta.timeoutSeconds * MS_PER_SECOND;
+
+export const runTests = async ({ lesson, implDir }: { lesson: Lesson; implDir: string }) => {
   const { command, args } = commandFor(lesson);
-  const result = spawnSync(command, args, { cwd: ROOT, stdio: "inherit", env: envFor(implDir) });
-  return result.status === 0;
+  const { status, isTimedOut } = await runWithTimeout({ command, args, cwd: ROOT, env: envFor(implDir), isInherited: true, timeoutMs: timeoutMsOf(lesson) });
+  if (isTimedOut) console.log(`\n${timeoutMessage(lesson)}`);
+  return status === 0 && !isTimedOut;
 };
 
-export const runQuiet = ({ lesson, implDir }: { lesson: Lesson; implDir: string }) => {
+export const runQuiet = async ({ lesson, implDir }: { lesson: Lesson; implDir: string }) => {
   const { command, args } = commandFor(lesson);
-  const result = spawnSync(command, args, { cwd: ROOT, encoding: "utf8", env: envFor(implDir) });
-  return { isPass: result.status === 0, output: `${result.stdout}\n${result.stderr}` };
+  const { status, output, isTimedOut } = await runWithTimeout({ command, args, cwd: ROOT, env: envFor(implDir), timeoutMs: timeoutMsOf(lesson) });
+  return { isPass: status === 0 && !isTimedOut, isTimedOut, output: isTimedOut ? `${timeoutMessage(lesson)}\n${output.slice(-500)}` : output };
 };
