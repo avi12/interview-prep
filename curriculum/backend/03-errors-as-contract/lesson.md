@@ -62,7 +62,7 @@ Start on the left. [[mess]] Out of the box, an app answers errors in three diffe
 | `title` | short, the same for every occurrence |
 | `status` | the HTTP status, repeated in the body |
 | `detail` | explains **this** occurrence, for people |
-| `instance` | identifies this occurrence, such as the path |
+| `instance` | identifies this occurrence (a URI; we use the request path) |
 
 You may add **extension members**, like an `errors` list for validation. Clients must ignore the ones they do not know.
 
@@ -80,9 +80,9 @@ There is a standard for this, called problem details. Five members. Type names t
 
 An unhandled crash often carries a stack trace, a file path, a SQL fragment, or a connection string with a password. FastAPI's default 422 even echoes the submitted `input` back.
 
-The rule: **log everything, tell the client almost nothing.**
+The rule: **log the details, tell the client almost nothing.**
 
-> **Why:** OWASP lists verbose errors as a leak that helps attackers map your system. The full story belongs in your logs, where only your team reads it.
+> **Why:** OWASP lists verbose errors as a leak that helps attackers map your system. The full story belongs in your logs, where only your team reads it. Even there, keep passwords and tokens out.
 
 > **Not this:** `detail=str(exc)`. It puts whatever the exception happens to say on the wire.
 

@@ -5,7 +5,7 @@ type Task = { id: number; title: string; done: boolean };
 type Handler = (input: { id: number; body: unknown }) => ApiResponse;
 
 const COLLECTION_PATH = "/tasks";
-const ITEM_PATH_PATTERN = /^\/tasks\/([^/]+)$/;
+const ITEM_PATH_PATTERN = /^\/tasks\/(\d+)$/;
 const NO_ID = Number.NaN;
 const STATUS = {
   ok: 200,

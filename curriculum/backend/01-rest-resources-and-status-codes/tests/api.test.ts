@@ -22,6 +22,23 @@ describe("collection: /tasks", () => {
     expect(response.headers?.location).toBe("/tasks/1");
   });
 
+  it("POST ignores fields it does not own: the server picks the id and done starts false", () => {
+    const handle = newApi();
+    const response = handle({ method: "POST", path: "/tasks", body: { title: "sneaky", id: 99, done: true, owner: "mallory" } });
+    expect(response.status).toBe(201);
+    expect(response.body).toEqual({ id: 1, title: "sneaky", done: false });
+    expect(response.headers?.location).toBe("/tasks/1");
+  });
+
+  it("ids are never reused: a task created after a delete gets a new id and overwrites nothing", () => {
+    const handle = newApi();
+    createTask(handle, "first");
+    createTask(handle, "second");
+    handle({ method: "DELETE", path: "/tasks/1" });
+    expect(createTask(handle, "third").body.id).toBe(3);
+    expect(handle({ method: "GET", path: "/tasks/2" }).body.title).toBe("second");
+  });
+
   it("GET lists what POST created, in creation order", () => {
     const handle = newApi();
     createTask(handle, "first");
@@ -67,12 +84,31 @@ describe("item: /tasks/:id", () => {
     expect(handle({ method: "GET", path: "/tasks/not-a-number" }).status).toBe(404);
   });
 
+  it("an id must be a plain whole number: 1abc, 1.5, 1e0, 0x1 and -1 are not task 1", () => {
+    const handle = newApi();
+    createTask(handle, "exists");
+    for (const id of ["1abc", "1.5", "1e0", "0x1", "-1", "+1"]) {
+      expect(handle({ method: "GET", path: `/tasks/${id}` }).status, `/tasks/${id}`).toBe(404);
+      expect(handle({ method: "DELETE", path: `/tasks/${id}` }).status, `DELETE /tasks/${id}`).toBe(404);
+    }
+    expect(handle({ method: "GET", path: "/tasks" }).body.items).toHaveLength(1);
+  });
+
   it("PUT replaces the whole task and answers 200 with the new version", () => {
     const handle = newApi();
     createTask(handle, "draft");
     const response = handle({ method: "PUT", path: "/tasks/1", body: { title: "final", done: true } });
     expect(response).toMatchObject({ status: 200, body: { id: 1, title: "final", done: true } });
     expect(handle({ method: "GET", path: "/tasks/1" }).body).toEqual({ id: 1, title: "final", done: true });
+  });
+
+  it("PUT sets only title and done: a client cannot choose the id or add fields of its own", () => {
+    const handle = newApi();
+    createTask(handle, "draft");
+    createTask(handle, "other");
+    const response = handle({ method: "PUT", path: "/tasks/1", body: { id: 2, title: "final", done: true, owner: "mallory" } });
+    expect(response.body).toEqual({ id: 1, title: "final", done: true });
+    expect(handle({ method: "GET", path: "/tasks/2" }).body).toEqual({ id: 2, title: "other", done: false });
   });
 
   it("PUT is idempotent: sending the same request twice leaves the same state and gives the same answer", () => {

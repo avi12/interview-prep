@@ -36,7 +36,7 @@ The client can send a string where you expect a number, a missing field, or an e
     <text x="255" y="70" text-anchor="middle" fill="var(--fg)">schema</text>
     <text x="255" y="92" text-anchor="middle" fill="var(--fg)">safeParse</text>
     <path d="M255 120 L255 160" stroke="var(--danger)" stroke-width="2"/>
-    <text x="268" y="158" fill="var(--danger)">reject: 422</text>
+    <text x="268" y="158" fill="var(--danger)">reject: 400 or 422</text>
   </g>
   <g data-cue="inside" font-family="var(--font-mono)" font-size="14">
     <path d="M310 75 L360 75" stroke="var(--ok)" stroke-width="2"/>
@@ -85,7 +85,7 @@ why: Type assertions are erased at runtime. Only a parser such as a zod schema i
 
 Both are defended. RFC 9110: **400** is a request the server cannot process because of a client error, such as bad syntax. **422** means the syntax is right but the content cannot be processed.
 
-Stripe answers 400 for everything invalid. FastAPI and Rails answer 422.
+Stripe answers 400 for invalid requests. FastAPI answers 422, and so do Rails scaffolds.
 
 Our rule, easy to say in an interview:
 

@@ -2,13 +2,8 @@ import type { PGlite } from "@electric-sql/pglite";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
 import { openDb } from "#kit/db.ts";
+import type { Changes, Product, UpdateResult } from "../starter/products.ts";
 
-type Product = { id: number; name: string; stock: number; version: number };
-type Changes = { name: string; stock: number };
-type UpdateResult =
-  | { outcome: "updated"; product: Product }
-  | { outcome: "conflict"; current: Product }
-  | { outcome: "not_found" };
 type Module = {
   updateWithVersion: (input: { db: PGlite; id: number; expectedVersion: number; changes: Changes }) => Promise<UpdateResult>;
   updateWithRetry: (input: {
@@ -201,6 +196,7 @@ describe("toResponse", () => {
     const response = toResponse({ outcome: "conflict", current: product });
     expect(response.status).toBe(409);
     expect(response.body.current).toEqual(product);
+    expect(typeof response.body.error).toBe("string");
   });
 
   it("maps not_found to 404", () => {

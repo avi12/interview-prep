@@ -73,8 +73,22 @@ describe("handleCreateUser", () => {
   });
 
   it("rejects ages that are fractions or outside the allowed range", () => {
-    for (const age of [29.5, 12, 121, -1, Number.NaN]) {
+    for (const age of [29.5, 12, 121, -1, 0, Number.NaN, Number.POSITIVE_INFINITY, true, null]) {
       expect(handleCreateUser({ ...validBody, age }).status).toBe(422);
+    }
+  });
+
+  it("accepts the youngest and the oldest allowed age", () => {
+    for (const age of [13, 120]) {
+      expect(handleCreateUser({ ...validBody, age })).toMatchObject({ status: 201, body: { user: { age } } });
+    }
+  });
+
+  it("rejects text that is not an email address", () => {
+    for (const email of ["dana@", "@example.com", "dana@example", "da na@example.com", "dana@@example.com", "dana.example.com", ""]) {
+      const { status, body } = handleCreateUser({ ...validBody, email });
+      expect(status, email).toBe(422);
+      expect(Object.keys(body.errors)).toEqual(["email"]);
     }
   });
 
@@ -82,6 +96,7 @@ describe("handleCreateUser", () => {
     expect(handleCreateUser({ ...validBody, name: "   " }).status).toBe(422);
     expect(handleCreateUser({ ...validBody, name: "x".repeat(51) }).status).toBe(422);
     expect(handleCreateUser({ ...validBody, name: "x".repeat(50) }).status).toBe(201);
+    expect(handleCreateUser({ ...validBody, name: "x" }).status).toBe(201);
   });
 
   it("rejects values of the wrong type without throwing", () => {

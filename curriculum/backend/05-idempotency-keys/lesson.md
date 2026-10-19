@@ -66,9 +66,9 @@ Idempotency-Key: 8b9f1c6e-4d5a-4f0e-9a1b-2c3d4e5f6a7b
 
 The server stores the key with the result of the first run. A retry with the same key gets the **saved response** and runs nothing again.
 
-- Stripe saves the status and body of the first request, even a `500`
+- Stripe saves the status and body of the first request that starts running, even a `500`
 - Keys are random strings (a V4 UUID), up to 255 characters, and Stripe may prune them after 24 hours
-- The IETF draft (still a draft, now expired) names the cases: missing key `400`, key reused with a different payload `422`, original still running `409`
+- The IETF draft (never became a standard, and expired in April 2026) names the cases: missing key `400`, key reused with a different payload `422`, original still running `409`
 
 > **Why:** the key says "this is the same attempt", which a body never can.
 
@@ -119,7 +119,7 @@ Two groups. [[new]] A key the server has never seen is reserved first, then the 
 
 | Question | A good answer | Because |
 |---|---|---|
-| Handler crashes midway | release the key | the client may retry, and the work never finished |
+| Handler crashes midway | release the key (Stripe saves even a `500`) | the client may retry. Safe only if the work is all-or-nothing |
 | Handler returns an error response | save and replay it | it is a real answer |
 | Request fails validation before any work | do not save | nothing ran, so a corrected retry should proceed |
 | How long to keep keys | hours to days | the table must not grow forever |

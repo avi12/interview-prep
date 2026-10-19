@@ -2,14 +2,35 @@ import type { PGlite } from "@electric-sql/pglite";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
 import { openDb } from "#kit/db.ts";
+import type { Page, Post } from "../starter/listPosts.ts";
 
-type Post = { id: number; title: string; createdAt: string };
-type Page = { items: Post[]; nextCursor: string | null };
 type Module = { listPosts: (input: { db: PGlite; limit: number; cursor?: string | null }) => Promise<Page> };
 
 const { listPosts } = await loadImpl<Module>({ testUrl: import.meta.url, file: "listPosts.ts" });
 
 const MAX_PAGES = 50;
+const WALK_LIMIT = 2;
+const INJECTION_TIMESTAMP = "2100-01-01', 1) OR true OR (created_at, id) < ('2100-01-01";
+
+const encodeRawCursor = (value: unknown) => Buffer.from(JSON.stringify(value)).toString("base64url");
+
+const withRowCounter = (db: PGlite) => {
+  const counter = { maxRows: 0 };
+  const wrapped = new Proxy(db, {
+    get(target, property) {
+      if (property === "query") {
+        return async (...args: Parameters<PGlite["query"]>) => {
+          const result = await target.query(...args);
+          counter.maxRows = Math.max(counter.maxRows, result.rows.length);
+          return result;
+        };
+      }
+      const value = Reflect.get(target, property);
+      return typeof value === "function" ? value.bind(target) : value;
+    }
+  });
+  return { wrapped, counter };
+};
 
 const SCHEMA = `
   CREATE TABLE posts (id int PRIMARY KEY, title text NOT NULL, created_at timestamptz NOT NULL);
@@ -126,6 +147,13 @@ describe.each([
     expect(rest.at(-1)).toBe(950);
   });
 
+  it("asks the database for one page at a time: never more than limit + 1 rows come back per query", async () => {
+    const { wrapped, counter } = withRowCounter(db);
+    await walk({ db: wrapped, limit: WALK_LIMIT });
+    expect(counter.maxRows).toBeGreaterThan(0);
+    expect(counter.maxRows).toBeLessThanOrEqual(WALK_LIMIT + 1);
+  });
+
   it("returns the created time as text, not a Date, so the cursor keeps full precision", async () => {
     const { items } = await listPosts({ db, limit: 1 });
     expect(typeof items[0].createdAt).toBe("string");
@@ -136,6 +164,20 @@ describe("listPosts edge cases", () => {
   it("an empty table gives an empty page and no cursor", async () => {
     const db = await openDb(SCHEMA);
     expect(await listPosts({ db, limit: 5 })).toEqual({ items: [], nextCursor: null });
+  });
+
+  it("a cursor carrying SQL is rejected, not run", async () => {
+    const db = await openDb(DAILY_TIES);
+    const cursor = encodeRawCursor({ createdAt: INJECTION_TIMESTAMP, id: 1 });
+    await expect(listPosts({ db, limit: 3, cursor })).rejects.toThrow();
+    expect((await db.query(`SELECT count(*)::int AS total FROM posts`)).rows).toEqual([{ total: 12 }]);
+  });
+
+  it("a cursor with the wrong shape is rejected", async () => {
+    const db = await openDb(DAILY_TIES);
+    for (const value of [{}, { createdAt: "2024-01-01 10:00:00+00" }, { createdAt: 5, id: 1 }, { createdAt: "2024-01-01 10:00:00+00", id: "1" }, null]) {
+      await expect(listPosts({ db, limit: 3, cursor: encodeRawCursor(value) })).rejects.toThrow();
+    }
   });
 
   it("a cursor that was not made by this API is rejected", async () => {

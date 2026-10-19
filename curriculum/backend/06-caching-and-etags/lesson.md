@@ -66,7 +66,7 @@ The server tells every cache what it may do with the response.
 | `no-store` | do not store at all |
 | `private` | only the user's own browser may store it |
 | `public` | shared caches such as a CDN may store it |
-| `immutable` | will never change, so skip revalidation |
+| `immutable` | will not change while it is fresh, so skip revalidation |
 
 > **Trap:** `no-cache` does **not** mean "do not cache". It means "check with me first". The directive for "never keep this" is `no-store`.
 

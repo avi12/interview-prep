@@ -67,7 +67,7 @@ RETURNING id, name, stock, version;
 
 One row back: you won. **Zero rows**: someone changed it first, so you lost.
 
-> **Why:** the check and the write are one atomic statement. PostgreSQL makes a waiting updater re-check `WHERE` against the freshly committed row, so a stale `version` no longer matches.
+> **Why:** the check and the write are one atomic statement: all or nothing, with no gap for anyone to slip into. PostgreSQL makes a waiting updater re-check `WHERE` against the freshly committed row, so a stale `version` no longer matches.
 
 > **Not this:** `SELECT ... FOR UPDATE` for every edit. It blocks others while you hold the lock, and a person staring at a form can hold it for minutes.
 

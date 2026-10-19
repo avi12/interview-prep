@@ -13,6 +13,7 @@ sources:
   - https://docs.docker.com/build/building/best-practices/
   - https://docs.docker.com/reference/dockerfile/
   - https://docs.docker.com/build/building/context/#dockerignore-files
+  - https://docs.docker.com/reference/build-checks/secrets-used-in-arg-or-env/
   - https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/
   - https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/
   - https://docs.github.com/en/actions/about-github-actions/understanding-github-actions
@@ -75,7 +76,7 @@ Litmus test: could you open-source the repo right now without leaking a secret?
 const env = z.object({ DATABASE_URL: z.url(), PORT: z.coerce.number().default(3000) }).parse(process.env);
 ```
 
-> **Trap:** a secret written as `ENV` in a Dockerfile. Docker warns that the value stays in that layer and can be dumped, even if you unset it later. Pass secrets when the container **runs**.
+> **Trap:** a secret written as `ENV` in a Dockerfile. Docker's build checks warn that `ENV` and `ARG` values persist in the final image, so anyone who gets the image can read them. Pass secrets when the container **runs**.
 
 ```narrate
 Read the environment once, when the program starts, and parse it like any other input. If a variable is missing or malformed, crash immediately with a clear message. That is far better than failing later on a customer's request. Keep a dot env file for local work, out of git. And never put a secret in the Dockerfile, because it stays in the image layers where anyone with the image can read it.
@@ -145,9 +146,9 @@ CMD ["node", "server.js"]
 |---|---|
 | copy package files, install, **then** copy source | edits skip the slow install |
 | `.dockerignore` for `node_modules`, `.git`, `.env` | smaller context, no secrets copied in |
-| pin the base image tag | the same build tomorrow |
+| pin the base image version, or best its digest (a content hash) | tags can move, so pinning gives the same build tomorrow |
 | `USER node`, not root | a break-in gets fewer powers |
-| exec form `CMD [...]` | the app receives SIGTERM and can stop cleanly |
+| exec form `CMD [...]` | the app receives SIGTERM, so a handler in your code can stop it cleanly |
 
 > **Not this:** `COPY . .` before `npm ci`. Every source edit then reinstalls all dependencies.
 
@@ -293,7 +294,7 @@ Junior question lists keep returning to the same few topics. Answer in one sente
 | They ask | You say |
 |---|---|
 | Image vs container? | An image is the read-only package. A container is a running instance of it |
-| What is a Dockerfile? | The recipe that builds an image, one layer per instruction |
+| What is a Dockerfile? | The recipe that builds an image, roughly one layer per instruction |
 | How do you pass config? | Environment variables at run time, validated at startup. Secrets from the platform, never in the image |
 | Why is the rebuild slow? | A changed layer rebuilds everything after it. Install dependencies before copying source |
 | Does `EXPOSE` open a port? | No, it documents it. Publish with `-p` |

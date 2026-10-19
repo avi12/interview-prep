@@ -114,7 +114,7 @@ Return the items plus where to continue:
 - Fetch `limit + 1` rows. If you got the extra one there is a next page, so you need no `COUNT(*)`
 - `nextCursor` is `null` on the last page
 - The cursor is **opaque**: base64 of the sort values. Clients pass it back untouched (Stripe: `starting_after`, Google AIP-158: `page_token`)
-- A cursor comes from the client, so **parse it** like any input. Garbage gives an error, not a crash
+- A cursor comes from the client, and base64 hides nothing. **Parse it** like any input, and pass it to SQL as parameters, never pasted into the text. Garbage gives an error, not a crash
 
 > **Trap:** keep the timestamp as text. A JavaScript `Date` keeps milliseconds, Postgres keeps microseconds, and the lost digits make rows repeat.
 
@@ -166,7 +166,7 @@ Two queries are easiest: one for the first page (no `WHERE`), one with `WHERE (c
 ```
 
 ```hint
-Ask for `limit + 1` rows. Keep the first `limit` as `items`. If there were more than `limit` rows, `nextCursor` is `encodeCursor` of the last item.
+Ask the database for `limit + 1` rows, never the whole table. Keep the first `limit` as `items`. If there were more than `limit` rows, `nextCursor` is `encodeCursor` of the last item.
 ```
 
 ```hint

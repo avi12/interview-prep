@@ -29,6 +29,12 @@ describe("etagFor", () => {
     expect(etagFor({ ...profile, plan: "free" })).not.toBe(etagFor(profile));
   });
 
+  it("tells apart content that has the same letters in another order", () => {
+    expect(etagFor(["ab"])).not.toBe(etagFor(["ba"]));
+    expect(etagFor({ id: 7, name: "Dana" })).not.toBe(etagFor({ id: 7, name: "Dnaa" }));
+    expect(etagFor({ id: 12 })).not.toBe(etagFor({ id: 21 }));
+  });
+
   it("works for lists and for text", () => {
     expect(etagFor([1, 2, 3])).not.toBe(etagFor([1, 2, 4]));
     expect(etagFor("hello")).not.toBe(etagFor("hello!"));
@@ -67,6 +73,10 @@ describe("a request whose If-None-Match matches the current version", () => {
     expect(request(`"old-1", ${etagFor(profile)} , "old-2"`).status).toBe(304);
   });
 
+  it("matches a weak copy of the tag inside a list too", () => {
+    expect(request(`"old-1", W/${etagFor(profile)}`).status).toBe(304);
+  });
+
   it("matches the wildcard, which means any current version", () => {
     expect(request("*").status).toBe(304);
   });
@@ -91,6 +101,10 @@ describe("a request whose If-None-Match is out of date", () => {
     expect(response.body).toEqual(changed);
     expect(response.headers.etag).toBe(etagFor(changed));
     expect(response.headers.etag).not.toBe(staleTag);
+  });
+
+  it("is a full 200 for a weak tag of some other version", () => {
+    expect(request('W/"something-else"').status).toBe(200);
   });
 
   it("is a full 200 for an empty header", () => {

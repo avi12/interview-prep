@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import { createGate, nextTick } from "#kit/async.ts";
 
 type Response = { status: number; headers?: Record<string, string>; body?: any };
 type Handler = (request: { body: unknown }) => Promise<Response>;
@@ -12,16 +13,8 @@ const { createIdempotentHandler } = await loadImpl<Module>({ testUrl: import.met
 const KEY_HEADER = "idempotency-key";
 const PAYMENT = { amount: 1000, currency: "usd" };
 
-const makeGate = () => {
-  let open: () => void = () => {};
-  const opened = new Promise<void>(resolve => {
-    open = resolve;
-  });
-  return { opened, open };
-};
-
 const settledWithinTick = <T>(promise: Promise<T>) =>
-  Promise.race([promise, new Promise<undefined>(resolve => setImmediate(() => resolve(undefined)))]);
+  Promise.race([promise, nextTick().then(() => undefined)]);
 
 const setup = (options: { respond?: (count: number) => Response | Promise<Response>; gate?: Promise<void> } = {}) => {
   let chargeCount = 0;
@@ -64,6 +57,18 @@ describe("retries with the same key", () => {
     expect(retry.body).toEqual(first.body);
     expect(retry.headers?.["idempotent-replayed"]).toBe("true");
     expect(charges()).toBe(1);
+  });
+
+  it("replay without changing the original response, so every retry looks the same", async () => {
+    const { send } = setup();
+    const first = await send({ key: "k1" });
+    const secondRetry = await (async () => {
+      await send({ key: "k1" });
+      return send({ key: "k1" });
+    })();
+    expect(first.headers?.["idempotent-replayed"]).toBeUndefined();
+    expect(secondRetry.headers?.["idempotent-replayed"]).toBe("true");
+    expect(secondRetry.body).toEqual(first.body);
   });
 
   it("replay the original answer even after other payments happened", async () => {
@@ -121,7 +126,7 @@ describe("different keys, different requests", () => {
 
 describe("a retry that arrives while the first request is still running", () => {
   it("gets 409 and the handler runs only once", async () => {
-    const { opened, open } = makeGate();
+    const { promise: opened, release: open } = createGate();
     const { send, charges } = setup({ gate: opened });
     const first = send({ key: "k1" });
     const duplicate = await settledWithinTick(send({ key: "k1" }));
@@ -132,7 +137,7 @@ describe("a retry that arrives while the first request is still running", () => 
   });
 
   it("once the first request finishes, the same key replays its answer", async () => {
-    const { opened, open } = makeGate();
+    const { promise: opened, release: open } = createGate();
     const { send, charges } = setup({ gate: opened });
     const first = send({ key: "k1" });
     await settledWithinTick(send({ key: "k1" }));
@@ -144,7 +149,7 @@ describe("a retry that arrives while the first request is still running", () => 
   });
 
   it("two truly simultaneous requests charge once", async () => {
-    const { opened, open } = makeGate();
+    const { promise: opened, release: open } = createGate();
     const { send, charges } = setup({ gate: opened });
     const both = Promise.all([send({ key: "k1" }), send({ key: "k1" })]);
     open();

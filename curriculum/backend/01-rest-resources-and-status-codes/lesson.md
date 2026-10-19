@@ -87,7 +87,7 @@ why: Idempotent is about the state the server ends up in. The task is gone after
 Read the code by its first digit. It answers one question: **who has to change something?**
 
 - **2xx**: nobody, it worked
-- **4xx**: the client. Fix the request first, because resending it unchanged fails the same way
+- **4xx**: the client. Fix the request first, because resending it unchanged fails the same way (except `429`: the request is fine, you are too fast)
 - **5xx**: the server. The same request may work later
 
 ```svg The first digit tells the client what to do next
@@ -125,12 +125,12 @@ Three lanes. [[ok]] Two hundred range means it worked, so use the result. [[clie
 | `201 Created` | `POST` made a new resource, send a `Location` header | follow `Location` |
 | `204 No Content` | worked, nothing to send back | move on |
 | `400 Bad Request` | the request cannot be read: broken JSON, wrong shape | fix the request |
-| `401 Unauthorized` | not logged in (it really means unauthenticated) | log in |
+| `401 Unauthorized` | not logged in (it really means unauthenticated; RFC 9110 wants a `WWW-Authenticate` header) | log in |
 | `403 Forbidden` | logged in, not allowed | stop |
 | `404 Not Found` | no such resource | check the id |
 | `405 Method Not Allowed` | URL exists, method does not, send `Allow` | use an allowed method |
 | `409 Conflict` | clashes with current state: duplicate, stale version | re-read, then decide |
-| `422 Unprocessable Content` | readable, but a field breaks the rules | fix the fields |
+| `422 Unprocessable Content` | readable, but a field breaks the rules (many APIs use `400` here too; lesson 2) | fix the fields |
 | `429 Too Many Requests` | rate limited, send `Retry-After` | wait |
 | `500 Internal Server Error` | our bug | retry later |
 
@@ -152,21 +152,21 @@ why: The server knows who the caller is and refuses. 401 would mean no valid ide
 
 ## Your turn
 
-Open `api.ts` and implement `createApi()`. It returns `{ handle }`, a function from request to response. No HTTP server needed: this is the routing logic on its own.
+Open `api.ts` and implement `createApi()`. It returns `{ handle }`, a function from request to response. No HTTP server: just the routing logic.
 
 - `GET /tasks` is 200 with `{ items }`
 - `POST /tasks` with `{ title }` is 201, a `location` header and the task. Body not an object: 400. Bad title: 422. Same title again: 409
 - `GET`, `PUT` and `DELETE` on `/tasks/:id`: 200, 200, 204. Missing id: 404
-- `PUT` takes `{ title, done }` and replaces the task
+- `PUT` takes `{ title, done }` and replaces the task (a `PUT` may create when clients pick ids, but ours do not)
 - Unknown path: 404. Known path, wrong method: 405 with an `allow` header
-- Ids start at 1. Two `createApi()` calls share nothing
+- Ids start at 1, never repeat, and the client cannot set them. Two `createApi()` calls share nothing
 
 ```hint
 Keep a `Map` from id to task inside `createApi`, plus a `nextId` counter. Both live in the closure, so each call gets fresh state.
 ```
 
 ```hint
-Make two small maps of handlers: one for `/tasks` (GET, POST) and one for `/tasks/:id` (GET, PUT, DELETE). Match the path first, then look up the method.
+Make two small maps of handlers: one for `/tasks` (GET, POST) and one for `/tasks/:id` (GET, PUT, DELETE). Match the path first (the id is digits only), then look up the method.
 ```
 
 ```hint

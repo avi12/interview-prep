@@ -55,6 +55,7 @@ def test_wrong_method_is_a_405_problem_and_keeps_the_allow_header():
     response = client.delete("/items/1")
     body = problem_of(response, 405)
     assert body["title"] == "Method Not Allowed"
+    assert body["type"] == "about:blank"
     assert "GET" in response.headers["allow"]
 
 
