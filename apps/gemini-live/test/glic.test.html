@@ -1,0 +1,140 @@
+<!doctype html>
+<!-- A stand-in for gemini.google.com/glic, for livechain.ts: only the parts of the real
+     client the bridge (src/entrypoints/glic.content.ts) leans on, each the way the real one
+     behaves as measured in learn-math-5-units and gemini-live-windows.
+
+       - the bootstrap: a `message` listener that takes only a `glic-bootstrap` from origin
+         chrome://glic, then hands `internalAutoGlicBoot()`'s registry a client;
+       - the host calls: in Live, one `getContextFromTab(..., {viewportScreenshot})` a second,
+         as the real client does while sharing; every picture is decoded and sampled so the
+         test can tell what it shows;
+       - the buttons, by the aria-labels the bridge looks for;
+       - a text box whose Submit stays disabled until a TRUSTED key is pressed in it, which is
+         the gate that makes the worker type through the debugger;
+       - the four Live timeout flags, under their numeric keys.
+
+     It is not Gemini. What it cannot tell you is whether Google's page still matches. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>glic stand-in</title>
+  </head>
+  <body>
+    <main id="ui"></main>
+    <script>
+      window.__log = [];
+      window.__frames = [];
+      window.__probes = [];
+      window.__prompts = [];
+      window.default_BardChatUi = {
+        a: { key: "45681081", defaultValue: 30 },
+        b: { key: "45681082", defaultValue: 30 },
+        c: { key: "45687231", defaultValue: 7000 },
+        d: { key: "45677155", defaultValue: 3600000 },
+        e: { key: "1", defaultValue: 1 }
+      };
+
+      let host = null;
+      let mode = "text";
+      let frameTimer = null;
+      const ui = document.getElementById("ui");
+
+      const button = (label, onclick, disabled = false) => {
+        const element = document.createElement("button");
+        element.setAttribute("aria-label", label);
+        element.textContent = label;
+        element.disabled = disabled;
+        element.onclick = onclick;
+        return element;
+      };
+
+      const reply = (text) => {
+        const box = document.createElement("div");
+        box.className = "presented-response-container";
+        box.append(document.createTextNode(text));
+        box.append(button("Copy", () => {}));
+        document.body.append(box);
+      };
+
+      const probe = async (shot) => {
+        const bitmap = await createImageBitmap(new Blob([shot.data], { type: shot.mimeType }));
+        const context = new OffscreenCanvas(bitmap.width, bitmap.height).getContext("2d");
+        context.drawImage(bitmap, 0, 0);
+        const at = (x, y) => Array.from(context.getImageData(x, y, 1, 1).data.slice(0, 3));
+        return { topLeft: at(8, 8), bottomRight: at(bitmap.width - 8, bitmap.height - 8) };
+      };
+
+      const pullFrame = async () => {
+        const context = await host.getContextFromTab("vscode", { viewportScreenshot: true });
+        const shot = context.viewportScreenshot;
+        window.__frames.push(shot ? [shot.widthPixels, shot.heightPixels, shot.data.byteLength, shot.mimeType] : null);
+        window.__tab = context.tabData;
+        if (shot) window.__probes.push(await probe(shot));
+      };
+
+      const render = () => {
+        ui.replaceChildren();
+        clearInterval(frameTimer);
+        if (mode === "broken") {
+          const message = document.createElement("p");
+          message.textContent = "Something went wrong";
+          const retry = document.createElement("button");
+          retry.textContent = "Try again";
+          retry.addEventListener("click", () => window.__log.push("try-again"));
+          ui.append(message, retry);
+          return;
+        }
+
+        if (mode === "live") {
+          ui.append(button("Pause live mode", () => {}), button("Switch to text mode", () => go("text")));
+          frameTimer = setInterval(pullFrame, 1000);
+          return;
+        }
+
+        const editor = document.createElement("div");
+        editor.contentEditable = "true";
+        editor.id = "ed";
+        const submit = button(
+          "Submit",
+          () => {
+            const prompt = editor.textContent;
+            window.__log.push("submitted:" + prompt.length);
+            window.__prompts.push(prompt);
+            reply("Ready");
+            editor.textContent = "";
+            submit.disabled = true;
+          },
+          true
+        );
+        editor.addEventListener("keydown", (event) => {
+          if (event.isTrusted) submit.disabled = false;
+        });
+        ui.append(editor, submit, button("Go Live", () => go("live")));
+      };
+
+      const go = (next) => {
+        mode = next;
+        window.__log.push("mode:" + next);
+        render();
+      };
+
+      window.__break = () => go("broken");
+
+      const client = {
+        initialize(hostApi) {
+          host = hostApi;
+          window.__log.push("init");
+          render();
+        },
+        notifyPanelWillOpen() {
+          window.__log.push("willOpen");
+        }
+      };
+
+      window.addEventListener("message", (event) => {
+        if (event.origin !== "chrome://glic" || event.source === null || event.data?.type !== "glic-bootstrap") return;
+        window.internalAutoGlicBoot(event.source).registerWebClient(client);
+      });
+    </script>
+  </body>
+</html>

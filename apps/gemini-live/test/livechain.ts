@@ -1,0 +1,342 @@
+/*
+ * Gemini Live, the extension's half, in a real browser with the built extension loaded.
+ *
+ *   pnpm test:chain        (builds, serves a fake VS Code, launches Chrome for Testing, runs this)
+ *
+ * or by hand, with the extension built for that origin and loaded into a Chrome for Testing
+ * started with --remote-debugging-port:
+ *
+ *   node test/livechain.ts <debug-port> <fake-vscode-origin>
+ *
+ * gemini.google.com is answered by this script, not by Google: every request to it is caught
+ * at the browser and given glic.test.html, a stand-in that behaves like the real client where
+ * the bridge depends on it. So this covers every hop that is OURS and none that is Google's:
+ *
+ *   popup button -> worker -> a Gemini window -> relay -> bridge -> the client adopts our host
+ *   -> the brief typed with TRUSTED keys -> Live -> a picture a second, taken of the VS Code
+ *   tab -> the shared tab renamed with the lesson -> VS Code hidden or navigated away: no
+ *   picture -> Live breaks and the window is reloaded and briefed again -> stop, language,
+ *   a refused sign-in, and the VS Code tab closing.
+ *
+ * What it cannot cover is Google's page itself: the login, and the thing that will one day
+ * change. When that happens the bridge's vocabulary is named once at the top of
+ * src/entrypoints/glic.content.ts.
+ */
+import { readFileSync } from "node:fs";
+import { buildBrief } from "../src/lib/brief.ts";
+import { Language } from "../src/lib/language.ts";
+import { oneLine } from "../src/lib/text.ts";
+import { parseVscodeTitle } from "../src/lib/vscode-title.ts";
+import { connect, type Cdp } from "./cdp.ts";
+
+const [, , debugPort, vscodeOrigin] = process.argv;
+if (!debugPort || !vscodeOrigin) {
+  console.log("usage: node test/livechain.ts <debug-port> <fake-vscode-origin>");
+  process.exit(2);
+}
+
+const EXTENSION_NAME = "Interview Prep: Gemini Live tutor";
+const BASE = `http://127.0.0.1:${debugPort}`;
+const GEMINI = "https://gemini.google.com/";
+const GLIC = `${GEMINI}glic`;
+const VSCODE_URL = `${vscodeOrigin}/?folder=%2Finterview-prep`;
+const STAND_IN = readFileSync(new URL("./glic.test.html", import.meta.url), "utf8");
+const UNAVAILABLE_PAGE = "<!doctype html><title>glic</title><p>Gemini isn't available right now</p>";
+const FILE_TITLE = "● two_sum.py - interview-prep - Visual Studio Code";
+const LESSON_TITLE = "Two Sum - interview-prep - Visual Studio Code";
+const MAX_FRAME_WIDTH = 1600;
+const MIN_FRAME_BYTES = 2000;
+const COLOR_TOLERANCE = 70;
+const MAGENTA = [255, 0, 255];
+const GREEN = [0, 255, 0];
+const LIVE_TIMEOUT_FLAG_COUNT = 4;
+const BRIEF_TIMEOUT_MS = 120_000;
+const BOOT_REPORT_MS = 17_000;
+
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const targets = async (): Promise<any[]> => (await fetch(`${BASE}/json/list`)).json();
+const targetByUrl = async (prefix: string) => (await targets()).find(target => target.url.startsWith(prefix));
+const isGeminiOpen = async () => !!(await targetByUrl(GEMINI));
+const isNear = ({ color, expected }: { color: number[]; expected: number[] }) =>
+  expected.every((channel, i) => Math.abs(channel - (color[i] ?? Number.NEGATIVE_INFINITY)) < COLOR_TOLERANCE);
+const expectedBrief = (language: Language) => oneLine(buildBrief({ context: parseVscodeTitle(FILE_TITLE), language }));
+
+let failures = 0;
+const check = ({ name, ok, detail = "" }: { name: string; ok: boolean; detail?: string }) => {
+  if (!ok) failures++;
+  console.log(`${ok ? "ok  " : "FAIL"}  ${name.padEnd(66)} ${detail}`.trimEnd());
+};
+
+const until = async <T>({ get, ms = 30_000, every = 300 }: { get: () => Promise<T> | T; ms?: number; every?: number }) => {
+  const end = Date.now() + ms;
+  for (;;) {
+    const value = await get();
+    if (value || Date.now() > end) return value;
+    await wait(every);
+  }
+};
+
+const read = async <T>({ cdp, expression, fallback }: { cdp: Cdp; expression: string; fallback: T }) => {
+  const raw = await cdp.ev(`JSON.stringify(${expression})`).catch(() => null);
+  if (typeof raw !== "string" || raw.startsWith("EXC")) return fallback;
+  return (JSON.parse(raw) ?? fallback) as T;
+};
+
+// ---- every gemini.google.com request is ours to answer ----
+const version = await (await fetch(`${BASE}/json/version`)).json();
+const browserCdp = await connect(version.webSocketDebuggerUrl);
+await browserCdp.send("Fetch.enable", { patterns: [{ urlPattern: `${GEMINI}*` }] });
+let geminiPage = STAND_IN;
+let served = 0;
+browserCdp.on(({ method, params }) => {
+  if (method !== "Fetch.requestPaused") return;
+  served++;
+  void browserCdp.send("Fetch.fulfillRequest", {
+    requestId: params.requestId,
+    responseCode: 200,
+    responseHeaders: [{ name: "content-type", value: "text/html; charset=utf-8" }],
+    body: Buffer.from(geminiPage, "utf8").toString("base64")
+  });
+});
+
+// ---- the fake VS Code tab and the popup, each in a window of its own ----
+const blank = (await targets()).find(target => target.type === "page" && target.url === "about:blank");
+if (!blank) {
+  console.log("no about:blank page target, start the browser as the header describes");
+  process.exit(1);
+}
+const vscode = await connect(blank.webSocketDebuggerUrl);
+await vscode.send("Page.enable");
+await vscode.send("Runtime.enable");
+
+const isOurWorker = async (target: { type: string; url: string; webSocketDebuggerUrl: string }) => {
+  if (target.type !== "service_worker" || !target.url.startsWith("chrome-extension://")) return false;
+  const worker = await connect(target.webSocketDebuggerUrl);
+  const name = await worker.ev(`chrome.runtime.getManifest().name`).catch(() => null);
+  worker.close();
+  return name === EXTENSION_NAME;
+};
+
+const findOurWorker = async () => {
+  for (const target of await targets()) if (await isOurWorker(target)) return target;
+  return null;
+};
+
+const extensionTarget = await until({ get: findOurWorker });
+check({ name: "the extension is loaded", ok: !!extensionTarget, detail: extensionTarget?.url ?? "none" });
+if (!extensionTarget) process.exit(1);
+const extensionId = new URL(extensionTarget.url).host;
+const worker = await connect(extensionTarget.webSocketDebuggerUrl);
+worker.on(({ method, params }) => {
+  if (method === "Runtime.exceptionThrown") console.log("  worker threw:", params.exceptionDetails?.exception?.description ?? params.exceptionDetails?.text);
+  if (method === "Runtime.consoleAPICalled" && params.type === "error") console.log("  worker error:", params.args?.map((arg: any) => arg.value ?? arg.description).join(" "));
+});
+await worker.send("Runtime.enable");
+
+const created = await browserCdp.send("Target.createTarget", { url: `chrome-extension://${extensionId}/popup.html`, newWindow: true });
+const popupTarget = await until({ get: async () => (await targets()).find(target => target.id === created.targetId) });
+const popup = await connect(popupTarget.webSocketDebuggerUrl);
+await popup.send("Runtime.enable");
+await popup.ev(`(() => {
+  window.__states = [];
+  const el = document.querySelector('#status');
+  new MutationObserver(() => window.__states.push(el.textContent)).observe(el, { childList: true, characterData: true, subtree: true });
+  return 1; })()`);
+
+const status = async (): Promise<string> => (await popup.ev(`document.querySelector('#status').textContent`)) ?? "";
+const chip = async (): Promise<string> => (await popup.ev(`document.querySelector('#chip').textContent`)) ?? "";
+const isStartEnabled = async () => !(await popup.ev(`document.querySelector('#start').disabled`));
+const statusIncludes = (text: string) => until({ get: async () => ((await status()).includes(text) ? status() : null), ms: 15_000 });
+const everStatedIncluding = (text: string) =>
+  until({ get: async () => (await read<string[]>({ cdp: popup, expression: "window.__states", fallback: [] })).some(state => state.includes(text)), ms: 15_000 });
+const pressStart = () => popup.ev(`document.querySelector('#start').click()`);
+const pressStop = () => popup.ev(`document.querySelector('#stop').click()`);
+const storedSession = (): Promise<any> => popup.ev(`chrome.storage.local.get('session').then(row => row.session ?? null)`);
+const isSessionCleared = (ms: number) => until({ get: async () => (await storedSession()) === null, ms });
+const vscodeTabInfo = (): Promise<{ id: number; windowId: number }> =>
+  popup.ev(`chrome.tabs.query({ url: ${JSON.stringify(`${vscodeOrigin}/*`)} }).then(tabs => ({ id: tabs[0].id, windowId: tabs[0].windowId }))`);
+
+const attachGemini = async () => {
+  const target = await until({ get: () => targetByUrl(GLIC) });
+  if (!target) return null;
+  const cdp = await connect(target.webSocketDebuggerUrl);
+  await cdp.send("Runtime.enable");
+  return { target, cdp };
+};
+const logOf = (cdp: Cdp) => read<string[]>({ cdp, expression: "window.__log", fallback: [] });
+const promptsOf = (cdp: Cdp) => read<string[]>({ cdp, expression: "window.__prompts", fallback: [] });
+const framesOf = (cdp: Cdp) => read<(number | string)[][]>({ cdp, expression: "window.__frames", fallback: [] });
+const hasLived = (cdp: Cdp) => until({ get: async () => (await logOf(cdp)).includes("mode:live"), ms: BRIEF_TIMEOUT_MS });
+const firstPrompts = (cdp: Cdp) =>
+  until({
+    get: async () => {
+      const prompts = await promptsOf(cdp);
+      return prompts.length ? prompts : null;
+    },
+    ms: BRIEF_TIMEOUT_MS
+  });
+const hasNewPicture = ({ cdp, since }: { cdp: Cdp; since: number }) =>
+  until({ get: async () => (await framesOf(cdp)).slice(since).some(Boolean), ms: 20_000 });
+
+await until({ get: async () => (await status()) !== "" });
+check({ name: "popup: no VS Code tab, so start is disabled", ok: !(await isStartEnabled()), detail: await status() });
+check({ name: "popup: and it says to open VS Code", ok: (await status()).includes("Open VS Code") });
+await vscode.send("Page.navigate", { url: VSCODE_URL });
+check({ name: "popup: a VS Code tab appears, start enables by itself", ok: !!(await until({ get: isStartEnabled, ms: 15_000 })), detail: await status() });
+
+// ---- session one: English, a file open ----
+const viewportWidth: number = await vscode.ev(`Math.round(innerWidth * devicePixelRatio)`);
+const pressedAt = Date.now();
+await pressStart();
+const first = await attachGemini();
+check({ name: "the worker opened a Gemini window", ok: !!first, detail: first?.target.url ?? "none" });
+if (!first) {
+  console.log("  popup:", await status(), "|", await popup.ev(`document.querySelector('#note').textContent`));
+  for (const target of await targets()) console.log("  target:", target.type, target.url);
+  process.exit(1);
+}
+const { cdp: glic } = first;
+
+check({ name: "the client adopted our host", ok: !!(await until({ get: async () => (await logOf(glic)).includes("init") })) });
+const prompts = await firstPrompts(glic);
+const brief = prompts?.[0] ?? "";
+check({ name: "the brief was typed with trusted keys and sent", ok: !!brief, detail: prompts ? `${brief.length} chars, ${((Date.now() - pressedAt) / 1000).toFixed(1)}s from the button` : "nothing submitted" });
+check({ name: "...and is exactly the brief built for this tab and language", ok: brief === expectedBrief(Language.ENGLISH) });
+check({ name: "...naming the open file", ok: brief.includes('the file "two_sum.py"') });
+check({ name: "...with the coaching rules (Socratic, why, early returns)", ok: ["Socratic", "WHY", "early returns", "magic numbers"].every(word => brief.includes(word)) });
+check({ name: "...on one line, so Enter could not send it early", ok: !!brief && !brief.includes("\n") });
+
+check({ name: "then Live", ok: !!(await hasLived(glic)) });
+const flagCount = await glic.ev(`Object.values(window.default_BardChatUi).filter((flag) => flag.defaultValue === 86400 || flag.defaultValue === 86400000).length`);
+check({ name: "Live's four timeouts were rewritten first", ok: flagCount === LIVE_TIMEOUT_FLAG_COUNT, detail: `${flagCount} of ${LIVE_TIMEOUT_FLAG_COUNT}` });
+
+const pictures = await until({ get: async () => ((await framesOf(glic)).filter(Boolean).length >= 2 ? framesOf(glic) : null), ms: 25_000 });
+const shot = pictures?.find(Boolean);
+const expectedWidth = Math.min(MAX_FRAME_WIDTH, viewportWidth);
+check({
+  name: "Gemini is handed a picture a second, downscaled to the cap",
+  ok: !!shot && shot[0] === expectedWidth && shot[3] === "image/jpeg" && Number(shot[2]) > MIN_FRAME_BYTES,
+  detail: shot ? `${shot[0]}x${shot[1]} ${shot[3]}, ${Math.round(Number(shot[2]) / 1024)} KB (viewport ${viewportWidth}px)` : "none"
+});
+const probe = (await read<{ topLeft: number[]; bottomRight: number[] }[]>({ cdp: glic, expression: "window.__probes", fallback: [] }))[0];
+check({
+  name: "...and it shows the VS Code tab (magenta bar, green corner)",
+  ok: !!probe && isNear({ color: probe.topLeft, expected: MAGENTA }) && isNear({ color: probe.bottomRight, expected: GREEN }),
+  detail: JSON.stringify(probe)
+});
+const tabData = await read<{ title: string; url: string } | null>({ cdp: glic, expression: "window.__tab", fallback: null });
+check({ name: "the shared tab carries the VS Code title and address", ok: tabData?.title === FILE_TITLE && tabData.url === vscodeOrigin, detail: tabData?.title ?? "" });
+
+check({ name: "popup: says Gemini is listening and watching", ok: !!(await statusIncludes("listening and watching")), detail: `${await chip()} / ${await status()}` });
+const stateLog: string = await popup.ev(`JSON.stringify(window.__states)`);
+const order = ["Opening", "Briefing", "listening and watching"].map(word => stateLog.indexOf(word));
+check({ name: "popup: went through opening, briefing, live in order", ok: order.every(at => at >= 0) && (order[0] ?? 0) < (order[1] ?? 0) && (order[1] ?? 0) < (order[2] ?? 0) });
+const stored = await storedSession();
+check({ name: "worker state lives in storage.local", ok: stored?.state === "live" && stored.sight === "seeing", detail: stored ? `${stored.state}/${stored.sight}` : "no row" });
+
+const wasPaused = async () => {
+  const entries = await logOf(glic);
+  return entries.slice(entries.indexOf("mode:live")).includes("mode:text");
+};
+
+// ---- the lesson changes: the tab is renamed, Live is left alone ----
+await vscode.ev(`document.title = ${JSON.stringify(LESSON_TITLE)}`);
+const renamed = await until({
+  get: async () => ((await read<{ title: string } | null>({ cdp: glic, expression: "window.__tab", fallback: null }))?.title === LESSON_TITLE),
+  ms: 15_000
+});
+check({ name: "a new tab title renames the shared tab", ok: !!renamed });
+await wait(4000);
+check({ name: "...without typing another brief", ok: (await promptsOf(glic)).length === 1 });
+check({ name: "...so Live was never paused for it", ok: !(await wasPaused()) });
+
+// ---- VS Code behind another tab: no picture ----
+const vscodeTab = await vscodeTabInfo();
+let seen = (await framesOf(glic)).length;
+await popup.ev(`chrome.tabs.create({ windowId: ${vscodeTab.windowId}, url: 'about:blank', active: true }).then(tab => tab.id)`);
+await wait(3500);
+let late = (await framesOf(glic)).slice(seen + 1);
+check({ name: "another tab in front: Gemini gets no picture of it", ok: late.length >= 1 && late.every(frame => frame === null), detail: `${late.length} calls, all empty` });
+check({ name: "popup: says Gemini cannot see VS Code", ok: !!(await statusIncludes("cannot see VS Code")), detail: await status() });
+await popup.ev(`chrome.tabs.update(${vscodeTab.id}, { active: true })`);
+seen = (await framesOf(glic)).length;
+check({ name: "VS Code back in front: pictures resume", ok: !!(await hasNewPicture({ cdp: glic, since: seen })) });
+check({ name: "popup: back to listening and watching", ok: !!(await statusIncludes("listening and watching")) });
+
+// ---- the tab goes somewhere else: never a picture of it ----
+seen = (await framesOf(glic)).length;
+await vscode.send("Page.navigate", { url: "about:blank" });
+await wait(3500);
+late = (await framesOf(glic)).slice(seen + 1);
+check({ name: "tab navigated away from VS Code: no picture of the new page", ok: late.length >= 1 && late.every(frame => frame === null), detail: `${late.length} calls, all empty` });
+await vscode.send("Page.navigate", { url: VSCODE_URL });
+seen = (await framesOf(glic)).length;
+check({ name: "navigated back: pictures resume", ok: !!(await hasNewPicture({ cdp: glic, since: seen })) });
+check({ name: "...and the session was not ended by any of it", ok: (await storedSession())?.state === "live" });
+
+// ---- Live breaks mid-session: "Something went wrong", and Try again does not help ----
+await glic.ev(`window.__break(), 1`);
+check({ name: "Live broken: its own Try again is tried first", ok: !!(await until({ get: async () => (await logOf(glic)).includes("try-again"), ms: 12_000 })) });
+check({ name: "...and when that does not bring it back, the popup says reconnecting", ok: !!(await everStatedIncluding("reconnecting")) });
+const rebriefed = await until({
+  get: async () => {
+    const entries = await logOf(glic);
+    const sent = await promptsOf(glic);
+    return entries.includes("mode:live") && !entries.includes("try-again") && sent.length === 1 ? sent : null;
+  },
+  ms: 90_000,
+  every: 1000
+});
+check({ name: "the window is reloaded, briefed again as a new conversation, back in Live", ok: rebriefed?.[0] === expectedBrief(Language.ENGLISH) });
+check({ name: "popup: listening and watching again", ok: !!(await statusIncludes("listening and watching")) });
+seen = 0;
+check({ name: "and Gemini sees VS Code again", ok: !!(await hasNewPicture({ cdp: glic, since: seen })) });
+
+// ---- stop ----
+await pressStop();
+check({ name: "stop closes the Gemini window", ok: !!(await until({ get: async () => !(await isGeminiOpen()), ms: 10_000 })) });
+check({ name: "...and clears the stored session", ok: !!(await isSessionCleared(5000)) });
+check({ name: "popup: back to a start button", ok: !!(await until({ get: isStartEnabled, ms: 5000 })) });
+glic.close();
+
+// ---- language: Hebrew, chosen in the popup ----
+await popup.ev(`(() => { const select = document.querySelector('#language'); select.value = 'he'; select.dispatchEvent(new Event('change', { bubbles: true })); return select.value; })()`);
+const isHebrewStored = await until({ get: async () => (await popup.ev(`chrome.storage.local.get('language').then(row => row.language ?? null)`)) === "he", ms: 5000 });
+check({ name: "language: Hebrew is stored because it was chosen", ok: !!isHebrewStored });
+await pressStart();
+const hebrew = await attachGemini();
+const hebrewPrompts = hebrew ? await firstPrompts(hebrew.cdp) : null;
+check({ name: "language: the next brief asks for spoken Hebrew", ok: hebrewPrompts?.[0] === expectedBrief(Language.HEBREW) && !!hebrewPrompts[0]?.includes("natural spoken Hebrew") });
+check({ name: "...and went Live", ok: !!hebrew && !!(await hasLived(hebrew.cdp)) });
+
+// ---- the person closes the Gemini window by hand ----
+hebrew?.cdp.close();
+if (hebrew) await browserCdp.send("Target.closeTarget", { targetId: hebrew.target.id });
+check({ name: "closing the Gemini window ends the session", ok: !!(await isSessionCleared(10_000)) });
+check({ name: "popup: back to a start button", ok: !!(await until({ get: isStartEnabled, ms: 5000 })) });
+
+// ---- a Gemini that is not signed in ----
+geminiPage = UNAVAILABLE_PAGE;
+await pressStart();
+const signIn = await statusIncludes("Sign in to Google");
+check({ name: "a signed-out Gemini: the popup says to sign in", ok: !!signIn, detail: signIn ?? (await status()) });
+check({ name: "...the session is marked failed, and start is offered again", ok: (await chip()) === "failed" && (await isStartEnabled()) });
+await wait(BOOT_REPORT_MS);
+check({ name: "...and the sign-in message is not overwritten later", ok: (await status()).includes("Sign in to Google"), detail: await status() });
+await pressStop();
+check({ name: "stop clears the failed session and closes its window", ok: !!(await until({ get: async () => !(await isGeminiOpen()) && (await storedSession()) === null, ms: 10_000 })) });
+geminiPage = STAND_IN;
+
+// ---- the VS Code tab closes: so does the session ----
+await pressStart();
+const last = await attachGemini();
+check({ name: "a fresh session goes Live", ok: !!last && !!(await hasLived(last.cdp)) });
+last?.cdp.close();
+await popup.ev(`chrome.tabs.remove(${vscodeTab.id})`);
+check({ name: "closing the VS Code tab closes the Gemini window", ok: !!(await until({ get: async () => !(await isGeminiOpen()), ms: 10_000 })) });
+check({ name: "...and ends the session", ok: !!(await isSessionCleared(5000)) });
+check({ name: "popup: asks for VS Code again", ok: !!(await until({ get: async () => (await status()).includes("Open VS Code"), ms: 5000 })) });
+
+console.log(`\n(${served} requests to gemini.google.com answered here)`);
+console.log(failures ? `${failures} FAILED` : "the Live chain holds end to end");
+process.exit(failures ? 1 : 0);

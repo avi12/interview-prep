@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="manifest.type" content="browser_action" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gemini Live tutor</title>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Gemini Live tutor</h1>
+        <span class="chip" id="chip"></span>
+      </header>
+      <section class="card">
+        <output id="status"></output>
+        <p class="sub" id="note"></p>
+      </section>
+      <label class="field">
+        <span class="sub">Tutor language</span>
+        <select id="language"></select>
+        <small class="sub">Applies to the next session</small>
+      </label>
+      <footer>
+        <button class="btn" id="start" data-variant="primary">Start session</button>
+        <button class="btn" id="stop" data-variant="danger">Stop session</button>
+      </footer>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>● two_sum.py - interview-prep - Visual Studio Code</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        background: rgb(30, 30, 30);
+        color: rgb(220, 220, 220);
+        font: 28px monospace;
+      }
+      #bar {
+        height: 90px;
+        background: rgb(255, 0, 255);
+      }
+      #corner {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        width: 220px;
+        height: 140px;
+        background: rgb(0, 255, 0);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="bar"></div>
+    <pre>def two_sum(nums, target):
+    seen = {}
+    for index, value in enumerate(nums):
+        if target - value in seen:
+            return [seen[target - value], index]
+        seen[value] = index</pre
+    >
+    <div id="corner"></div>
+  </body>
+</html>
