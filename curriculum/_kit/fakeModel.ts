@@ -94,6 +94,10 @@ export class FakeApiError extends Error {
   }
 }
 
+export const isToolUse = (block: AssistantBlock): block is ToolUseBlock => block.type === "tool_use";
+
+export const textOf = (blocks: AssistantBlock[]) => blocks.flatMap(block => (block.type === "text" ? [block.text] : [])).join("");
+
 export const estimateTokens = (value: unknown) => Math.ceil(JSON.stringify(value ?? "").length / CHARS_PER_TOKEN);
 
 export const textTurn = ({ text, ...options }: { text: string } & TurnOptions): ReplyTurn => ({

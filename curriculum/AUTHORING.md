@@ -79,7 +79,9 @@ Progressive nudge. The first is gentle, the last nearly gives it away.
 - The learner edits `work/<track>/<slug>/<file>`, a copy of `starter/`. Tests read the implementation through the kit, never by a fixed relative path:
   - TypeScript: `import { loadImpl } from "#kit/impl.ts"` then `await loadImpl({ testUrl: import.meta.url, file: "x.ts" })`
   - Python: `from impl import load_impl` then `load_impl(__file__, "x.py")`
-  - SQL: `import { openDb, runQueryFile } from "#kit/db.ts"` (real Postgres via PGlite). The learner writes a `.sql` file. Run it on **two different datasets** so a hard-coded answer fails
+  - SQL: `import { runSeeded } from "#kit/db.ts"` (real Postgres via PGlite; `openDb` and `runQueryFile` are the pieces). The learner writes a `.sql` file. Run it on **two different datasets** so a hard-coded answer fails. Pass `numericColumns` and `dayColumns` to `runSeeded` instead of writing your own `Number(...)` row mapping
+- Reuse the kit before writing a helper (`curriculum/_kit/`): `random.ts` (`createSeededRandom`, `createSeededPicker`), `timing.ts` (`measureMs`), `async.ts` (`createGate`, `nextTick`), `ids.ts` (`sequentialIds`), `limits.py` (`run_within`, `measure_seconds`, `Stopwatch`), `toy_embedding.py`, and `bookstore/` (the given `Money` and `DomainError` of OOP lessons 02 to 06, imported as `#kit/bookstore/money.ts`). A new helper that a second lesson needs belongs there too
+- A file that is identical in `starter/` and `solution/` lives only in `starter/`: the solution is laid over a copy of the starter before the tests run
 - The **starter must fail** the tests and the **solution must pass** them. `pnpm verify <track>` checks both
 - Tests must prove the lesson's point. If complexity is the point (brute force vs hash map), include a size where the naive version times out
 - Tests have readable names that say what behavior failed. Test the behavior, not the implementation
