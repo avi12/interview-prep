@@ -1,0 +1,42 @@
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { DIST_DIR, LESSONS_DIST_DIR } from "#scripts/lib/paths.ts";
+import { readLessons, readTracks } from "#scripts/lib/lessons.ts";
+import { withCachedNarration } from "#scripts/lib/narration-cache.ts";
+import { renderLesson } from "#scripts/lib/render.ts";
+
+const INDEX_FILE = resolve(DIST_DIR, "index.json");
+
+const writeFileDeep = ({ path, content }: { path: string; content: string }) => {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, content);
+};
+
+const lessons = readLessons();
+rmSync(LESSONS_DIST_DIR, { recursive: true, force: true });
+
+const narratedIds = new Set<string>();
+for (const lesson of lessons) {
+  const { html, isNarrated } = withCachedNarration({ id: lesson.id, html: renderLesson(lesson) });
+  if (isNarrated) narratedIds.add(lesson.id);
+  writeFileDeep({ path: resolve(LESSONS_DIST_DIR, `${lesson.id}.html`), content: html });
+}
+
+const index = {
+  tracks: readTracks(),
+  lessons: lessons.map(lesson => ({
+    id: lesson.id,
+    track: lesson.track,
+    title: lesson.meta.title,
+    minutes: lesson.meta.minutes,
+    lang: lesson.meta.lang,
+    roles: lesson.meta.roles,
+    files: lesson.meta.files,
+    hasExercise: lesson.hasExercise,
+    isNarrated: narratedIds.has(lesson.id),
+    html: `dist/lessons/${lesson.id}.html`
+  }))
+};
+
+writeFileDeep({ path: INDEX_FILE, content: JSON.stringify(index, null, 2) });
+console.log(`Built ${lessons.length} lessons into dist/lessons (${narratedIds.size} narrated)`);

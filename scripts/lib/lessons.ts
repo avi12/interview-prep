@@ -29,21 +29,48 @@ const splitFrontmatter = ({ source, id }: { source: string; id: string }) => {
 const fenceName = (token: Tokens.Code) => (token.lang ?? "").split(/\s+/)[0];
 const fenceRest = (token: Tokens.Code) => (token.lang ?? "").split(/\s+/).slice(1).join(" ");
 
+type Quiz = z.infer<typeof quizSchema>;
+type Figure = { caption: string; svg: string };
+type Block =
+  | { kind: "tokens"; tokens: Token[] }
+  | { kind: "figure"; figure: Figure }
+  | { kind: "quiz"; quiz: Quiz }
+  | { kind: "hint"; text: string };
+
 const emptyCard = (title: string) => ({
   title,
   tokens: [] as Token[],
+  blocks: [] as Block[],
   narrate: "",
   hints: [] as string[],
-  quizzes: [] as z.infer<typeof quizSchema>[],
-  figures: [] as { caption: string; svg: string }[]
+  quizzes: [] as Quiz[],
+  figures: [] as Figure[]
 });
 
 const absorbSpecialFence = ({ card, token }: { card: ReturnType<typeof emptyCard>; token: Tokens.Code }) => {
   const name = fenceName(token);
   if (name === "narrate") card.narrate = token.text.trim();
-  if (name === "hint") card.hints.push(token.text.trim());
-  if (name === "quiz") card.quizzes.push(quizSchema.parse(parseYaml(token.text)));
-  if (name === "svg") card.figures.push({ caption: fenceRest(token), svg: token.text.trim() });
+  if (name === "hint") {
+    card.hints.push(token.text.trim());
+    card.blocks.push({ kind: "hint", text: token.text.trim() });
+  }
+  if (name === "quiz") {
+    const quiz = quizSchema.parse(parseYaml(token.text));
+    card.quizzes.push(quiz);
+    card.blocks.push({ kind: "quiz", quiz });
+  }
+  if (name === "svg") {
+    const figure = { caption: fenceRest(token), svg: token.text.trim() };
+    card.figures.push(figure);
+    card.blocks.push({ kind: "figure", figure });
+  }
+};
+
+const pushToken = ({ card, token }: { card: ReturnType<typeof emptyCard>; token: Token }) => {
+  card.tokens.push(token);
+  const last = card.blocks.at(-1);
+  if (last?.kind === "tokens") return last.tokens.push(token);
+  card.blocks.push({ kind: "tokens", tokens: [token] });
 };
 
 const isSpecialFence = (token: Token) => token.type === "code" && SPECIAL_FENCES.has(fenceName(token as Tokens.Code));
@@ -62,7 +89,7 @@ export const parseCards = (body: string) => {
       absorbSpecialFence({ card, token: token as Tokens.Code });
       continue;
     }
-    card.tokens.push(token);
+    pushToken({ card, token });
   }
   return cards;
 };

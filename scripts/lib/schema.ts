@@ -30,3 +30,29 @@ export const quizSchema = z.object({
   answer: z.number().int().min(0),
   why: z.string()
 });
+
+export const progressSchema = z.record(
+  z.string(),
+  z.object({
+    attempts: z.number().int(),
+    passedAt: z.string().nullable()
+  })
+);
+
+export const lessonIndexSchema = z.object({
+  tracks: tracksSchema,
+  lessons: z.array(
+    z.object({
+      id: z.string(),
+      track: z.string(),
+      title: z.string(),
+      minutes: z.number(),
+      lang: z.enum(Lang),
+      roles: z.array(z.enum(Role)),
+      files: z.array(z.string()),
+      hasExercise: z.boolean(),
+      isNarrated: z.boolean(),
+      html: z.string()
+    })
+  )
+});

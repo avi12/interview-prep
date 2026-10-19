@@ -1,15 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { z } from "zod";
 import { PROGRESS_FILE } from "#scripts/lib/paths.ts";
-
-const progressSchema = z.record(
-  z.string(),
-  z.object({
-    attempts: z.number().int(),
-    passedAt: z.string().nullable()
-  })
-);
+import { progressSchema } from "#scripts/lib/schema.ts";
 
 export const readProgress = () => {
   if (!existsSync(PROGRESS_FILE)) return {};
