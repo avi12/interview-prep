@@ -53,10 +53,10 @@ Read left to right. When you see a closer, it must match the **most recent** ope
 ```
 
 ```narrate
-Picture a stack of plates. [[push]] Each opener goes on top. [[pop]] A closer must match the plate on top, so we take it off and compare. [[empty]] If the string ends and the stack is empty, everything was matched.
+Picture a stack of plates. [[push]] Each opener goes on top. [[pop]] A closer must match the plate on top, so we take it off and compare. [[empty]] If the string ends and the stack is empty, everything was matched. One pass means linear time, and the stack can grow as long as the string, so the space is linear too.
 ```
 
-> **Why:** a stack remembers **order**, and order is the whole problem.
+> **Why:** a stack remembers **order**, and order is the whole problem. One pass is `O(n)` time. The stack can hold every character, so extra space is `O(n)` too.
 
 > **Not this:** one counter per bracket type. It accepts `([)]`, because the counts balance while the order is wrong.
 

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import { createSeededPicker } from "#kit/random.ts";
+import { measureMs } from "#kit/timing.ts";
 
 type Module = { maxProfit: (prices: number[]) => number };
 
@@ -9,6 +11,20 @@ const LARGE_SIZE = 20_000;
 const HALF_SIZE = LARGE_SIZE / 2;
 const READS_PER_PRICE_LIMIT = 10;
 const INDEX_KEY_PATTERN = /^\d+$/;
+const COPY_PROOF_SIZE = 30_000;
+const COPY_PROOF_LIMIT_MS = 100;
+const RANDOM_SEED = 20_240_602;
+const RANDOM_CASE_COUNT = 300;
+const RANDOM_MAX_LENGTH = 10;
+const RANDOM_PRICE_SPAN = 20;
+
+const bestProfitOfEveryPair = (prices: number[]) => {
+  let best = 0;
+  for (const [buyDay, buyPrice] of prices.entries()) {
+    for (const sellPrice of prices.slice(buyDay + 1)) best = Math.max(best, sellPrice - buyPrice);
+  }
+  return best;
+};
 
 const withReadLimit = (prices: number[]) => {
   const readLimit = prices.length * READS_PER_PRICE_LIMIT;
@@ -56,8 +72,30 @@ describe("maxProfit", () => {
     expect(maxProfit([3, 3, 3, 9])).toBe(6);
   });
 
+  it("does not change the prices it was given", () => {
+    const prices = Object.freeze([7, 1, 5, 3, 6, 4]) as number[];
+    expect(maxProfit(prices)).toBe(5);
+    expect(prices).toEqual([7, 1, 5, 3, 6, 4]);
+  });
+
+  it("agrees with a check of every pair of days on random prices", () => {
+    const random = createSeededPicker(RANDOM_SEED);
+    for (let caseNumber = 0; caseNumber < RANDOM_CASE_COUNT; caseNumber++) {
+      const prices = Array.from({ length: random(RANDOM_MAX_LENGTH + 1) }, () => random(RANDOM_PRICE_SPAN) + 1);
+      expect(maxProfit([...prices]), `prices ${JSON.stringify(prices)}`).toBe(bestProfitOfEveryPair(prices));
+    }
+  });
+
   it("makes one pass over 20,000 prices (O(n), not a check of every pair of days)", () => {
     const prices = Array.from({ length: LARGE_SIZE }, (_, day) => Math.abs(day - HALF_SIZE) + 1);
     expect(maxProfit(withReadLimit(prices))).toBe(HALF_SIZE - 1);
+  });
+
+  it("stays fast on 30,000 prices even when you copy them first", () => {
+    const prices = Array.from({ length: COPY_PROOF_SIZE }, (_, day) => COPY_PROOF_SIZE - day);
+    prices.push(COPY_PROOF_SIZE * 2);
+    const { result: profit, elapsedMs } = measureMs(() => maxProfit(prices));
+    expect(elapsedMs).toBeLessThan(COPY_PROOF_LIMIT_MS);
+    expect(profit).toBe(COPY_PROOF_SIZE * 2 - 1);
   });
 });

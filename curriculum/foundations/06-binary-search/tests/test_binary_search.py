@@ -26,8 +26,10 @@ class SortedEvens(Sequence):
     def __getitem__(self, index):
         if isinstance(index, slice):
             raise AssertionError("Slicing copies the array and costs O(n). Move low and high instead.")
-        if not 0 <= index < self._size:
+        if not -self._size <= index < self._size:
             raise IndexError(f"index {index} is outside 0..{self._size - 1}")
+        if index < 0:
+            index += self._size
         self.read_count += 1
         if self.read_count > READ_LIMIT:
             raise AssertionError(

@@ -14,7 +14,7 @@ sources:
 
 ## The problem
 
-Given a list `nums` and a number `k`, return the `k` values that appear **most often**. Any order is fine, and the answer is always unique.
+Given a list `nums` of length `n` and a number `k`, return the `k` values that appear **most often**. Any order is fine. The answer is always unique: no tie for the last place.
 
 - `top_k_frequent([1, 1, 1, 2, 2, 3], 2)` returns `[1, 2]`
 - `1` appears 3 times, `2` twice, `3` once
@@ -32,7 +32,7 @@ Counting by calling `nums.count(value)` for every distinct value is the slow tra
 
 Next idea: sort all the pairs by count and take `k`. That is correct, and a fine first answer. But it orders every distinct value to answer a question about only `k` of them: `O(d log d)`, where `d` is the number of distinct values.
 
-> **Why:** the follow-up is always "can you beat `O(n log n)`?". You do not need a full order, only the top `k`.
+> **Why:** the usual follow-up is "can you beat `O(n log n)`?". You do not need a full order, only the top `k`.
 
 > **Not this:** `nums.count(value)` inside a loop. Count with a hash map, once.
 
@@ -44,7 +44,7 @@ Always count first, with a hash map, in one pass. Counting with the list count m
 
 A **heap** keeps its smallest item on top and finds it in one step. Python's `heapq` is a **min-heap**.
 
-Keep a heap of at most `k` pairs `(count, value)`. The top is the **weakest** of the best `k` so far. A new value joins, and if the heap grows past `k`, the top leaves. Each push or pop costs `O(log k)`, so the whole thing is `O(d log k)`.
+Keep a heap of at most `k` pairs `(count, value)`. The top is the **weakest** of the best `k` so far. A new value joins, and if the heap grows past `k`, the top leaves. Each push or pop costs `O(log k)`, so after counting, the work is `O(d log k)`.
 
 ```svg With k = 2, the third value makes the heap too big, so the weakest one on top is removed
 <svg viewBox="0 0 520 230" role="img" aria-label="A min-heap of size two evicts the weakest value">
@@ -84,7 +84,7 @@ Keep a heap of at most `k` pairs `(count, value)`. The top is the **weakest** of
 Follow the picture. [[counts]] The counts arrive one value at a time. [[heap]] Each one is pushed into a heap that has room for two. The smallest count always sits on top, so the top is the weakest candidate. After the third push, the heap holds three. [[pop]] We pop the top, value three with a count of one, and what remains is the answer.
 ```
 
-> **Why:** the heap stays small. Memory beyond the counts is `O(k)`, and it also works when values arrive as a stream.
+> **Why:** the heap stays small. Memory beyond the counts is `O(k)`, and you never sort the whole list.
 
 ## Or skip comparisons: buckets
 
@@ -93,10 +93,10 @@ A count is a whole number from `1` to `n`. So use the count as an **index**: `bu
 | Approach | Time | Pick it when |
 |---|---|---|
 | Sort all pairs | `O(d log d)` | first answer, small input |
-| Heap of size `k` | `O(d log k)` | `k` is small, or data streams in |
-| Bucket sort | `O(n)` | counts are small whole numbers |
+| Heap of size `k` | `O(d log k)` | `k` is much smaller than `d` |
+| Bucket sort | `O(n)` | you must beat `O(n log n)` |
 
-> **Trap:** a **max**-heap of everything. For the top `k`, keep a **min**-heap of size `k`. The weakest must be on top, because it is the one you evict.
+> **Trap:** a size-`k` heap with the **strongest** on top. It evicts your best value. Python's `heapq` is a min-heap, so push `(count, value)` and the weakest stays on top, ready to evict.
 
 ```quiz
 q: Your heap holds the best k pairs so far. Which one sits on top?
@@ -109,7 +109,7 @@ why: A min-heap puts the smallest count on top. That is the weakest of the kept 
 ```
 
 ```narrate
-There is also a way with no comparisons. A count is a whole number from one up to n, so use the count as an index into a list of buckets. Fill the buckets, then read from the highest one down until you have k values. That is linear time. In an interview, start with sort, improve to the heap, and mention buckets. And remember the trap: keep a min-heap of size k, never a max-heap of everything.
+There is also a way with no comparisons. A count is a whole number from one up to n, so use the count as an index into a list of buckets. Fill the buckets, then read from the highest one down until you have k values. That is linear time. In an interview, start with sort, improve to the heap, and mention buckets. And remember the trap: the weakest value must sit on top of the heap, because it is the one you evict.
 ```
 
 ## Your turn
@@ -119,6 +119,7 @@ Implement `top_k_frequent(nums, k)` in `top_k_frequent.py`.
 - Count with `Counter`
 - Keep a `heapq` min-heap of at most `k` pairs `(count, value)`
 - Return the `k` values in any order. The tests send 66,000 numbers, so counting inside a loop will time out
+- `Counter.most_common(k)` is a one-line shortcut that uses a heap inside. Mention it in an interview, then write the heap so the idea shows
 
 ```hint
 `counts = Counter(nums)` gives you value to count in one pass.

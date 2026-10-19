@@ -96,7 +96,7 @@ Walk through the picture. [[scan]] We scan the grid row by row, and the first la
 Without a mark the flood bounces between two neighbors forever. You need to remember what you have seen.
 
 - **A `visited` set** of `(row, column)`: the input stays untouched. Costs `O(rows * columns)` memory
-- **Sink the land**: overwrite `"1"` with `"0"`. No extra memory, but you destroy the caller's grid
+- **Sink the land**: overwrite `"1"` with `"0"`. No `visited` set needed, but you destroy the caller's grid
 
 > **Not this:** sinking land without asking. It is short, but a function that quietly ruins its input surprises everyone. In an interview, ask "may I change the grid?". Here the tests check the grid is unchanged.
 
@@ -108,11 +108,11 @@ You must remember which cells you have seen, or the flood walks back and forth f
 
 ## The recursion depth trap
 
-Recursive DFS is only four lines, so it is tempting. But a grid that is all land is **one huge island**: the recursion goes as deep as the island is big. A 300 by 300 grid is 90,000 calls deep.
+Recursive depth-first search (**DFS**) is only four lines, so it is tempting. But a grid that is all land is **one huge island**: the recursion can go as deep as the island is big. A 300 by 300 grid is 90,000 calls deep.
 
 Python stops at about **1000** with `RecursionError`. Raising the limit is not a fix: the docs warn that "a too-high limit can lead to a crash".
 
-The fix: replace the call stack with your own. A `deque` and a loop is **BFS**. Swap `popleft()` for `pop()` and the same loop is **DFS**.
+The fix: replace the call stack with your own. A `deque` (a queue you can pop from both ends) and a loop is breadth-first search (**BFS**). Swap `popleft()` for `pop()` and the same loop is DFS.
 
 > **Not this:** `list.pop(0)` as a queue. It moves every item (`O(n)`). A `deque` pops from the left in `O(1)`.
 
@@ -127,7 +127,7 @@ why: The whole grid is one island, so the recursion goes about 90,000 calls deep
 ```
 
 ```narrate
-Now the trap that catches people. Recursive depth first search is short, but on a grid that is all land, the recursion goes as deep as the island is big. Python gives up at about a thousand calls with a recursion error. Raising the limit is risky. The safe fix is to use your own queue in a loop. With a deque it is breadth first search, and the loop never goes deep.
+Now the trap that catches people. Recursive depth first search is short, but on a grid that is all land, the recursion can go as deep as the island is big. Python gives up at about a thousand calls with a recursion error. Raising the limit is risky. The safe fix is to use your own queue in a loop. With a deque it is breadth first search, and the loop never goes deep.
 ```
 
 ## Your turn

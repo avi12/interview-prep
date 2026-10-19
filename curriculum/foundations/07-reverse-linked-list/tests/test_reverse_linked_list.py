@@ -1,3 +1,6 @@
+import sys
+import tracemalloc
+
 import pytest
 from impl import load_impl
 
@@ -6,6 +9,8 @@ ListNode = module.ListNode
 reverse_list = module.reverse_list
 
 LARGE_SIZE = 100_000
+DEFAULT_RECURSION_LIMIT = 1000
+EXTRA_MEMORY_LIMIT_BYTES = 100_000
 
 
 def build(values):
@@ -71,4 +76,22 @@ def test_reversing_twice_gives_the_original_order():
 
 def test_handles_100000_nodes_without_recursion():
     values = list(range(LARGE_SIZE))
-    assert values_of(reverse_list(build(values))) == values[::-1]
+    head = build(values)
+    raised_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(DEFAULT_RECURSION_LIMIT)
+    try:
+        reversed_head = reverse_list(head)
+    finally:
+        sys.setrecursionlimit(raised_limit)
+    assert values_of(reversed_head) == values[::-1]
+
+
+def test_needs_only_a_few_variables_not_a_copy_of_the_list():
+    head = build(list(range(LARGE_SIZE)))
+    tracemalloc.start()
+    try:
+        reverse_list(head)
+        _, peak_bytes = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert peak_bytes < EXTRA_MEMORY_LIMIT_BYTES, f"used {peak_bytes:,} bytes of extra memory for {LARGE_SIZE:,} nodes: reverse the links in place"

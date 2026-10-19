@@ -84,7 +84,7 @@ Then use the key in a dict: key to list of words. One pass, no searching.
     </g>
     <g data-cue="lists">
       <path d="M250 37 L300 37" stroke="var(--accent-2)" stroke-width="2"/>
-      <path d="M250 125 L275 125 L275 37" stroke="var(--accent-2)" stroke-width="2"/>
+      <path d="M250 125 L275 125 L275 37" stroke="var(--accent-2)" stroke-width="2" fill="none"/>
       <path d="M250 81 L300 81" stroke="var(--accent-2)" stroke-width="2"/>
       <path d="M250 169 L300 169" stroke="var(--accent-2)" stroke-width="2"/>
       <rect x="300" y="20" width="190" height="34" fill="var(--primary-container)" stroke="var(--border)" stroke-width="2"/>
@@ -130,7 +130,7 @@ options:
   - "(1, 0, 1)"
   - "{1, 0, 1}"
 answer: 1
-why: A tuple of numbers cannot change, so it is hashable. Lists and sets can change, so they are not.
+why: A tuple of numbers cannot change, so Python can turn it into a fixed hash for the dict. Lists and sets can change, so they cannot be keys.
 ```
 
 ## Your turn

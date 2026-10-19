@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import { createSeededPicker } from "#kit/random.ts";
+import { measureMs } from "#kit/timing.ts";
 
 type Module = { lengthOfLongestSubstring: (text: string) => number };
 
@@ -9,6 +11,20 @@ const FIRST_CJK_CODE = 0x4e00;
 const DISTINCT_CHAR_COUNT = 4_000;
 const REPEAT_COUNT = 5;
 const TIME_LIMIT_MS = 150;
+const RANDOM_SEED = 20_240_605;
+const RANDOM_CASE_COUNT = 400;
+const RANDOM_MAX_LENGTH = 16;
+const RANDOM_ALPHABETS = ["ab", "abcd", "abcdefgh", "aAbB1! "];
+
+const longestWithoutRepeatByRescanning = (text: string) => {
+  let longest = 0;
+  for (let start = 0; start < text.length; start++) {
+    let end = start;
+    while (end < text.length && !text.slice(start, end).includes(text[end])) end++;
+    longest = Math.max(longest, end - start);
+  }
+  return longest;
+};
 
 describe("lengthOfLongestSubstring", () => {
   it("finds a window at the start", () => {
@@ -51,12 +67,20 @@ describe("lengthOfLongestSubstring", () => {
     expect(lengthOfLongestSubstring("a1!a1!")).toBe(3);
   });
 
+  it("agrees with a slow rescan from every start on random texts", () => {
+    const random = createSeededPicker(RANDOM_SEED);
+    for (let caseNumber = 0; caseNumber < RANDOM_CASE_COUNT; caseNumber++) {
+      const alphabet = RANDOM_ALPHABETS[random(RANDOM_ALPHABETS.length)];
+      const text = Array.from({ length: random(RANDOM_MAX_LENGTH + 1) }, () => alphabet[random(alphabet.length)]).join("");
+      expect(lengthOfLongestSubstring(text), `text ${JSON.stringify(text)}`).toBe(longestWithoutRepeatByRescanning(text));
+    }
+  });
+
   it("stays fast on 20,000 characters with a 4,000 character window (O(n), not a rescan from every start)", () => {
     const distinct = Array.from({ length: DISTINCT_CHAR_COUNT }, (_, i) => String.fromCharCode(FIRST_CJK_CODE + i)).join("");
     const text = distinct.repeat(REPEAT_COUNT);
-    const startedAt = performance.now();
-    const length = lengthOfLongestSubstring(text);
-    expect(performance.now() - startedAt).toBeLessThan(TIME_LIMIT_MS);
+    const { result: length, elapsedMs } = measureMs(() => lengthOfLongestSubstring(text));
+    expect(elapsedMs).toBeLessThan(TIME_LIMIT_MS);
     expect(length).toBe(DISTINCT_CHAR_COUNT);
   });
 });

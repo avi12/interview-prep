@@ -139,7 +139,7 @@ Open `maxProfit.ts` in your copy and make the tests pass. The file exports `maxP
 - One loop, two variables
 - Return `0` for an empty list or a falling market
 
-The last test counts how many times you read the prices. A check of every pair runs out of reads long before it finishes.
+Two big tests catch a check of every pair. One counts how many times you read the prices, the other has a time limit.
 
 ```hint
 Make two variables before the loop: `lowestPrice` starting at `Infinity` and `bestProfit` starting at `0`.

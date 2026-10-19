@@ -1,3 +1,4 @@
+import random
 import tracemalloc
 
 import pytest
@@ -8,6 +9,34 @@ is_palindrome = load_impl(__file__, "valid_palindrome.py").is_palindrome
 REPEAT_COUNT = 100_000
 NOISE = " !"
 EXTRA_MEMORY_LIMIT_BYTES = 50_000
+RANDOM_SEED = 2024
+RANDOM_CASE_COUNT = 400
+MAX_HALF_LENGTH = 6
+ALPHABET = "aAbB01 ,_"
+COUNTED_ALPHABET = "aAbB01"
+
+
+def reference_is_palindrome(text):
+    cleaned = [char.lower() for char in text if char.isalnum()]
+    return cleaned == cleaned[::-1]
+
+
+def random_text(random_source, alphabet):
+    return "".join(random_source.choice(alphabet) for _ in range(random_source.randint(0, MAX_HALF_LENGTH * 2)))
+
+
+def noisy_palindrome(random_source):
+    half = random_text(random_source, COUNTED_ALPHABET)
+    middle = random_source.choice(["", "a", "0"])
+    mirrored = half + middle + half[::-1].swapcase()
+    return "".join(random_source.choice(["", "", ",", " ", "_"]) + char for char in mirrored)
+
+
+def with_one_character_changed(text, random_source):
+    if not text:
+        return text
+    position = random_source.randrange(len(text))
+    return text[:position] + random_source.choice(ALPHABET) + text[position + 1 :]
 
 
 @pytest.mark.parametrize(
@@ -49,6 +78,14 @@ def test_ignores_case():
 def test_skips_punctuation_in_the_middle_of_both_ends():
     assert is_palindrome(",,a,,b,,,b,,a,,") is True
     assert is_palindrome(",,a,,b,,,c,,a,,") is False
+
+
+def test_agrees_with_a_simple_reference_on_random_and_nearly_palindromic_texts():
+    random_source = random.Random(RANDOM_SEED)
+    for _ in range(RANDOM_CASE_COUNT):
+        palindrome = noisy_palindrome(random_source)
+        for text in (random_text(random_source, ALPHABET), palindrome, with_one_character_changed(palindrome, random_source)):
+            assert is_palindrome(text) is reference_is_palindrome(text), f"wrong answer for {text!r}"
 
 
 def test_uses_constant_extra_memory_on_a_long_text():

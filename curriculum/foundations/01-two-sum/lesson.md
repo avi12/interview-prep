@@ -80,11 +80,11 @@ Walk the list once. [[array]] Here is the list, and we are standing on the seven
 
 ## Why not sort and use two pointers?
 
-Sorting plus two pointers also finds the pair, in `O(n log n)`. But sorting **moves the numbers**, and the question asks for the **original indexes**. You would need to carry the indexes along.
+Sorting plus two pointers (one index at each end, moving inward) also finds the pair, in `O(n log n)`. But sorting **moves the numbers**, and the question asks for the **original indexes**. You would need to carry the indexes along.
 
 > **Not this:** sort first. It is slower than one pass and loses the positions you were asked for.
 
-> **Trap:** insert the current number into the map **after** the lookup. Do it before, and `target = 6` with `[3, 2]` would match the 3 with itself.
+> **Trap:** insert the current number into the map **after** the lookup. Do it before, and `[3, 2]` with `target = 6` matches the 3 with itself and returns `[0, 0]`, though no pair exists.
 
 ```narrate
 You could sort the list and walk two pointers inward. That works, but sorting shuffles the positions and the question wants the original ones. One more trap: look the partner up before you store the current number, or a number can pair with itself.
@@ -105,7 +105,7 @@ why: The partner is whatever number completes the sum, and that is t - x.
 Open `twoSum.ts` in your copy and make the tests pass. The file exports `twoSum(numbers, target)`.
 
 - One loop, one `Map`
-- Return `[]` if nothing matches (the tests never ask for it, but a function should say what it does when it fails)
+- Return `[]` if nothing matches. The tests check this, because a function should say what it does when it fails
 
 Run the tests from the Run button, or `pnpm lesson test foundations/01-two-sum`.
 

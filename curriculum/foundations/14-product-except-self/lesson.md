@@ -28,14 +28,14 @@ For every position, multiply all the other numbers together. With one, two, thre
 
 **Brute force.** For each position, loop over all the others and multiply. Two nested loops: `O(n²)`. With 100,000 numbers that is 10 billion multiplications.
 
-**The division shortcut.** Multiply everything once, then divide by each number. One pass, `O(n)`. It looks perfect, and the problem forbids it for a reason: a **zero** breaks it. The total becomes `0`, and `0 / 0` is `NaN`. Even without the rule, the shortcut needs special code for zeros.
+**The division shortcut.** Multiply everything once, then divide by each number. One pass, `O(n)`. It looks perfect, and the problem forbids it for a reason: a **zero** breaks it. The total becomes `0`, and at the zero's own position you compute `0 / 0`, which is `NaN` (not a number). Even without the rule, the shortcut needs special code for zeros.
 
 > **Why:** the rule forces you to find a structure that works for every input, zeros included.
 
-> **Not this:** total product divided by each number. It is banned, and one zero in the input gives `NaN` or `Infinity` instead of an answer.
+> **Not this:** total product divided by each number. It is banned, and one zero in the input gives `NaN` at that position instead of the right answer.
 
 ```narrate
-Two ideas fail. Brute force multiplies everything for every position, and that is quadratic, billions of steps for fifty thousand numbers. The division shortcut is fast, but a single zero turns the total into zero, and zero divided by zero is not a number. That is why the rule exists. We need a way that never divides.
+Two ideas fail. Brute force multiplies everything for every position, and that is quadratic: ten billion steps for one hundred thousand numbers. The division shortcut is fast, but a single zero turns the total into zero, and at that position zero divided by zero is not a number. That is why the rule exists. We need a way that never divides.
 ```
 
 ## Left times right
@@ -45,7 +45,7 @@ For position `i`, the answer is two products multiplied:
 - the product of everything **to the left** of `i`
 - the product of everything **to the right** of `i`
 
-Each of those is a running product, so you can build all of them in one pass each.
+Each of those is a **running product** (a product you update as you walk along), so you can build all of them in one pass each.
 
 ```svg For the number 3: everything left of it is 1 times 2 = 2, everything right is 4, and 2 times 4 = 8
 <svg viewBox="0 0 520 230" role="img" aria-label="Rows of numbers, left products, right products and answers">

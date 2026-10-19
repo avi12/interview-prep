@@ -142,7 +142,7 @@ Watch the two markers, prev and curr. [[start]] At the start, prev is None and c
 
 ## Recursion, and the edge cases
 
-You can also reverse the rest of the list by recursion, then point the next node back at the head. It is elegant, but every node adds a stack frame: `O(n)` space. Python stops at about 1,000 nested calls, so a list of 100,000 nodes raises `RecursionError`.
+You can also reverse the rest of the list by recursion, then point the next node back at the head. It is elegant, but every node adds a stack frame (one waiting call kept in memory): `O(n)` space. Python stops at about 1,000 nested calls, so a list of 100,000 nodes raises `RecursionError`.
 
 - **Empty list:** `head` is `None`. The loop never runs. Return `None`
 - **One node:** nothing to flip. Its `next` is already `None`
@@ -169,7 +169,7 @@ Implement `reverse_list(head)` in `reverse_linked_list.py`. `ListNode` is alread
 - A loop with `previous`, `current` and one saved variable
 - Return the new head
 
-The tests check the order, that you reuse the **same nodes**, and that a **100,000 node** list works.
+The tests check the order, that you reuse the **same nodes**, that a **100,000 node** list works, and that you do not copy the list into a Python list.
 
 ```hint
 Start with `previous = None` and `current = head`, then `while current:`.

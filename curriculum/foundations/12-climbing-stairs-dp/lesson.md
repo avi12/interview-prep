@@ -101,7 +101,7 @@ Draw the calls for `ways(5)`. The same questions are asked again and again.
 Here is the call tree for five steps. [[tree]] Each circle is one call. The root asks for five, which asks for four and three, and so on down. [[repeats]] Look at the red circles. The question for three is asked twice, and the question for two is asked three times, each time from scratch. [[cost]] The repeats multiply at every level, so for forty five steps there are about two point three billion calls.
 ```
 
-> **Trap:** the number of calls roughly multiplies by 1.6 for every extra step. It is usually quoted as **O(2^n)**. That is why 45 steps already takes seconds and 90 would never finish.
+> **Trap:** the number of calls multiplies by about 1.6 for every extra step. It is usually quoted as the simpler upper bound **O(2^n)**. Either way it is exponential: 45 steps already takes seconds and 90 would never finish.
 
 ## Remember the answers
 
@@ -130,21 +130,20 @@ Two fixes, same idea: **never solve the same small problem twice**.
       <text x="345" y="79" text-anchor="middle" fill="var(--fg)">5</text>
     </g>
     <g data-cue="rule">
-      <path d="M165 98 L165 112 L255 112 L255 98" stroke="var(--accent-2)" stroke-width="2" fill="none"/>
-      <path d="M255 98 L255 126 L345 126 L345 98" stroke="var(--accent-2)" stroke-width="2" fill="none"/>
+      <path d="M165 98 L165 114 L335 114 L335 100 M245 98 L245 114 M330 106 L335 98 L340 106" stroke="var(--accent-2)" stroke-width="2" fill="none"/>
       <text x="40" y="154" fill="var(--fg)" font-size="14">each cell = the two before it</text>
     </g>
     <g data-cue="answer">
       <rect x="400" y="50" width="70" height="44" fill="var(--primary-container)" stroke="var(--border)" stroke-width="2"/>
       <text x="435" y="79" text-anchor="middle" fill="var(--fg)">8</text>
-      <path d="M345 98 L345 126 L435 126 L435 98" stroke="var(--accent-2)" stroke-width="2" fill="none"/>
+      <path d="M265 98 L265 132 L435 132 L435 100 M355 98 L355 132 M430 106 L435 98 L440 106" stroke="var(--accent-2)" stroke-width="2" fill="none"/>
     </g>
   </g>
 </svg>
 ```
 
 ```narrate
-Now the fix. [[cells]] Start from the cells we already know: one way for step one, two ways for step two. [[rule]] Every new cell is the sum of the two cells before it, so three is one plus two, and five is two plus three. [[answer]] Keep going to the step you need. Five steps gives eight ways. Each step is computed once, so the work is linear.
+Now the fix. [[cells]] Start from the cells we already know: one way for step one, two ways for step two. [[rule]] Every new cell is the sum of the two cells before it. Step three is one plus two. Step four is two plus three, which is five. [[answer]] Step five is three plus five: eight ways. Each step is computed once, so the work is linear.
 ```
 
 > **Why:** a cell only needs the two before it, so two variables can replace the whole table. Time stays `O(n)`, memory drops to `O(1)`. Offer that as the follow-up.

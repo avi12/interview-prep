@@ -99,12 +99,12 @@ Thinking silently is invisible. Use these as sentence starters, shown here for T
 | Brute force | "Simplest idea: check every pair. That is O(n squared), fine for small input, slow for big." |
 | Optimize | "I repeat the search for a partner. A map can remember what I have seen: O(n) time, O(n) memory." |
 | Code | "Map first, then one loop. This line asks whether the partner is already in the map." |
-| Test | "Tracing the first example: at 7 I need 2, and it is in the map. Now an empty list." |
+| Test | "Tracing the first example: at 7 I need 2, and it is in the map. Now an empty list. Final cost: O(n) time, O(n) memory." |
 
 > **Trap:** asking no questions. The Handbook says to ask at least two or three clarifying questions before coding.
 
 ```narrate
-Here is what the routine sounds like for Two Sum. Restating includes real questions, like whether the list can be empty. For examples, give one normal case and one edge case. For brute force, name the cost in big O terms. For optimizing, say what work repeats and what you will remember instead. While coding, explain each line as you write it. While testing, trace by hand, out loud.
+Here is what the routine sounds like for Two Sum. Restating includes real questions, like whether the list can be empty. For examples, give one normal case and one edge case. For brute force, name the cost in big O terms. For optimizing, say what work repeats and what you will remember instead. While coding, explain each line as you write it. While testing, trace by hand, out loud, then state the final time and memory cost.
 ```
 
 ## When you are stuck

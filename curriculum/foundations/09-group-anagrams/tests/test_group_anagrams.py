@@ -1,9 +1,9 @@
 import random
 import string
-import threading
 from collections import Counter
 
 from impl import load_impl
+from limits import run_within
 
 group_anagrams = load_impl(__file__, "group_anagrams.py").group_anagrams
 
@@ -15,24 +15,6 @@ TIME_LIMIT_SECONDS = 2
 
 def as_comparable(groups):
     return sorted(sorted(group) for group in groups)
-
-
-def run_within(seconds, function, *args):
-    outcome = {}
-
-    def target():
-        try:
-            outcome["result"] = function(*args)
-        except Exception as error:
-            outcome["error"] = error
-
-    worker = threading.Thread(target=target, daemon=True)
-    worker.start()
-    worker.join(seconds)
-    assert not worker.is_alive(), f"still running after {seconds} seconds: too slow for this many words"
-    if "error" in outcome:
-        raise outcome["error"]
-    return outcome["result"]
 
 
 def build_large_input():
@@ -79,9 +61,15 @@ def test_equal_letter_sums_are_not_anagrams():
     assert as_comparable(group_anagrams(["ad", "bc"])) == [["ad"], ["bc"]]
 
 
+def test_does_not_change_the_list_it_was_given():
+    words = ["eat", "tea", "tan", "ate", "nat", "bat"]
+    group_anagrams(words)
+    assert words == ["eat", "tea", "tan", "ate", "nat", "bat"]
+
+
 def test_stays_fast_on_30000_words():
     words = build_large_input()
-    groups = run_within(TIME_LIMIT_SECONDS, group_anagrams, words)
+    groups = run_within(TIME_LIMIT_SECONDS, group_anagrams, words, too_slow_for="this many words")
     returned_words = [word for group in groups for word in group]
     assert Counter(returned_words) == Counter(words)
     assert all(len({tuple(sorted(word)) for word in group}) == 1 for group in groups)

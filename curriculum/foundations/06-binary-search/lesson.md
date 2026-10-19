@@ -176,7 +176,7 @@ why: With both ends included, a range where low equals high still holds one item
 | `high = len(nums)` with `<=` | reads `nums[len(nums)]`: `IndexError` |
 | slicing `nums[:middle]` | copies half the array on every call: back to `O(n)` |
 
-> **Trap:** in Java or C++, `(low + high) / 2` overflows when the sum passes the largest integer. Write `low + (high - low) // 2`. That bug sat in a widely used library for years.
+> **Trap:** in Java or C++, `(low + high) / 2` overflows when the sum passes the largest integer. Write `low + (high - low) / 2` there. Python integers never overflow, but the habit costs nothing. The bug sat in the Java standard library for about nine years.
 
 ```narrate
 Four classic bugs. A loop that uses less-than instead of less-than-or-equal skips the last item. Forgetting the plus one when moving low gives an endless loop. A high that starts one too far reads past the end. And slicing the array copies it, which throws the speed away. One more, from Java and C plus plus: adding low and high can overflow, so write low plus half the gap instead.

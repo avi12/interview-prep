@@ -16,7 +16,7 @@ sources:
 
 Two questions about one binary tree. The starter already gives you the `TreeNode` class: `val`, `left`, `right`, and `null` where a child is missing.
 
-- `maxDepth(root)`: how many nodes lie on the longest path from the root down to a leaf
+- `maxDepth(root)`: how many nodes lie on the longest path from the root down to a leaf (a node with no children)
 - `levelOrder(root)`: the values grouped by level, top to bottom, left to right
 
 For the tree `3, 9, 20, null, null, 15, 7`, the depth is `3` and the levels are `[[3], [9, 20], [15, 7]]`. An empty tree (`null`) gives `0` and `[]`.
@@ -78,9 +78,9 @@ Here are two small questions about the same binary tree. How deep is it? And wha
       <text x="490" y="191" text-anchor="middle" fill="var(--fg)">7</text>
     </g>
     <g data-cue="queue">
-      <text x="276" y="55" fill="var(--fg)" font-size="12">q: 3</text>
-      <text x="276" y="123" fill="var(--fg)" font-size="12">q: 9 20</text>
-      <text x="276" y="191" fill="var(--fg)" font-size="12">q: 15 7</text>
+      <text x="272" y="55" fill="var(--fg)" font-size="11">q: 3</text>
+      <text x="272" y="123" fill="var(--fg)" font-size="11">q: 9 20</text>
+      <text x="272" y="191" fill="var(--fg)" font-size="11">q: 15 7</text>
     </g>
   </g>
 </svg>
@@ -101,7 +101,7 @@ depth(node) = 1 + max(depth(left), depth(right))
 
 > **Why:** every node asks the same question about a smaller tree. When a node's answer is built from its children's answers, recursion is the natural fit.
 
-> **Trap:** no base case and the function never stops: `RangeError: Maximum call stack size exceeded`. A chain of 100,000 nodes overflows even with one. For that, count the levels with BFS.
+> **Trap:** no base case (the `depth(null) = 0` line) and the function never stops: `RangeError: Maximum call stack size exceeded`. A chain of 100,000 nodes overflows even with one. For that, count the levels with BFS.
 
 ```narrate
 Depth is a recursive idea. A missing node has depth zero. Any other node is one plus the deeper of its two children. Write the base case first, or the function calls itself forever and the stack overflows. Mention in the interview that a very deep chain can overflow the stack, and that the breadth first version avoids that.
@@ -111,7 +111,7 @@ Depth is a recursive idea. A missing node has depth zero. Any other node is one 
 
 Put the root in a queue. Then repeat until the queue is empty:
 
-1. **Freeze the level size**: how many nodes are in the queue right now. That is exactly one level
+1. **Freeze the level size**: how many nodes are in the queue right now. That is exactly one level (`head` is the index of the next node)
 2. Take that many nodes, record their values, add their children at the back
 3. Push the finished level into the result
 
@@ -121,7 +121,7 @@ const levelSize = queue.length - head;
 
 > **Not this:** looping while `queue.length` is positive for the inner loop. The length grows as you add children, so the next level leaks into this one. Freeze the size first.
 
-> **Trap:** `queue.shift()` moves every remaining item one place left (MDN). Fine for small trees. For big ones keep a `head` index and move it forward.
+> **Trap:** `queue.shift()` moves every remaining item one place left (MDN). Engines hide that on small queues, but a big queue gets slow. Keep a `head` index and move it forward.
 
 ```quiz
 q: A queue holds [9, 20]. You take 9 and add its two children. Which nodes still belong to the current level?

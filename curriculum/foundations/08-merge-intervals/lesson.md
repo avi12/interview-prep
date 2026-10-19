@@ -116,7 +116,7 @@ Open `mergeIntervals.ts` in your copy and make the tests pass. The file exports 
 - Sort a copy by `start`, then one pass
 - Return `[]` for an empty list
 
-The tests include touching intervals, nested intervals, input that must stay unchanged, and 30,000 shuffled intervals with a 300 millisecond limit.
+The tests include touching intervals, nested intervals, input that must stay unchanged, and 60,000 shuffled intervals with a 400 millisecond limit.
 
 ```hint
 Copy and sort in one line: `[...intervals].sort(([startA], [startB]) => startA - startB)`.

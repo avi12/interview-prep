@@ -117,7 +117,7 @@ Put one pointer at each end. [[ends]] First we compare the two ends, a and a. Th
 ## Details that fail people
 
 - Skip with a loop that **rechecks** `left < right`, or the pointers can cross while skipping
-- `isalnum()` is true for letters and digits. An underscore is not alphanumeric
+- `isalnum()` is true for letters and digits (also letters like `é`). An underscore is not alphanumeric
 - Compare `.lower()` of both characters, not the raw ones
 
 > **Trap:** do not drop digits. `"0P"` is **not** a palindrome. Cleaned and lowercased it is `"0p"`, which reversed is `"p0"`.

@@ -189,11 +189,13 @@ why: The copy holds n items, so the extra memory grows in step with n.
 | sort a list or array | O(n log n) |
 | binary search in a sorted array | O(log n) |
 
+**Amortized** means averaged over many calls: an append is sometimes slow because the list must grow, but almost always one step.
+
 These answer most "what does this line cost?" questions.
 
 > **Trap:** `x in list` looks like one step, but it loops inside. Put it in a loop over `n` items and the whole function is O(n²) by accident.
 
-> **Trap:** hash lookups are O(1) on **average**. Many collisions push one toward O(n). Say "on average" out loud.
+> **Trap:** hash lookups are O(1) on **average**. If many keys land in the same slot (a collision), one lookup can slow toward O(n). Say "on average" out loud.
 
 ```narrate
 Memorize this short list. Reading by index is constant. Searching a plain list is linear. Looking up a key in a dictionary or a map is constant on average. Sorting is n log n. And watch out for hidden loops: the word in on a list loops inside, so putting it inside your own loop makes the whole function quadratic by accident.
