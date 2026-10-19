@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { openDb, runQueryFile } from "#kit/db.ts";
+import { runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `
 CREATE TABLE users (id int PRIMARY KEY, signed_up_at date NOT NULL);
@@ -34,18 +34,11 @@ INSERT INTO events VALUES
   (8, '2025-01-21'),
   (9, '2025-01-27');`;
 
-const toDay = (value: unknown) => (value instanceof Date ? value.toISOString().slice(0, 10) : value);
+const NUMERIC_COLUMNS = ["users", "retained_week_1", "retention_pct"];
+const DAY_COLUMNS = ["cohort_week"];
 
-const run = async (seed: string) => {
-  const { rows, columns } = await runQueryFile({ db: await openDb(seed), testUrl: import.meta.url, file: "retention.sql" });
-  const cohorts = rows.map(row => ({
-    cohort_week: toDay(row.cohort_week),
-    users: Number(row.users),
-    retained_week_1: Number(row.retained_week_1),
-    retention_pct: Number(row.retention_pct)
-  }));
-  return { columns, cohorts };
-};
+const run = (seed: string) =>
+  runSeeded({ seed, testUrl: import.meta.url, file: "retention.sql", numericColumns: NUMERIC_COLUMNS, dayColumns: DAY_COLUMNS });
 
 describe("week 1 retention by signup week", () => {
   it("returns cohort_week, users, retained_week_1, retention_pct", async () => {
@@ -54,7 +47,7 @@ describe("week 1 retention by signup week", () => {
   });
 
   it("counts people once and keeps a cohort nobody came back to", async () => {
-    const { cohorts } = await run(JANUARY_SIGNUPS);
+    const { rows: cohorts } = await run(JANUARY_SIGNUPS);
     expect(cohorts).toEqual([
       { cohort_week: "2025-01-06", users: 4, retained_week_1: 2, retention_pct: 50 },
       { cohort_week: "2025-01-13", users: 3, retained_week_1: 2, retention_pct: 66.7 },
@@ -63,7 +56,7 @@ describe("week 1 retention by signup week", () => {
   });
 
   it("works across a year boundary and ignores week 2 activity (no hardcoding)", async () => {
-    const { cohorts } = await run(YEAR_BOUNDARY);
+    const { rows: cohorts } = await run(YEAR_BOUNDARY);
     expect(cohorts).toEqual([
       { cohort_week: "2024-12-30", users: 3, retained_week_1: 2, retention_pct: 66.7 },
       { cohort_week: "2025-01-06", users: 4, retained_week_1: 4, retention_pct: 100 },

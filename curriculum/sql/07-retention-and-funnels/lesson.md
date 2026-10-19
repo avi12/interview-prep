@@ -18,7 +18,7 @@ sources:
 
 Both count **people**, not events. A user who clicks ten times is still one user. Count events and every percentage is wrong.
 
-> **Why:** interviewers use these to test three habits at once: choosing the right grain, counting distinct people, and defining the denominator out loud.
+> **Why:** interviewers use these to test three habits at once: choosing the right grain, counting distinct people, and saying the denominator (the bottom of the fraction) out loud.
 
 ```narrate
 Two questions come up in almost every analyst interview. Retention asks how many people came back. A funnel asks how many people reached each step. Both count people, not clicks, and that one rule is where most wrong answers come from.
@@ -165,13 +165,13 @@ A classic bug. If you put the date test in the where clause, cohorts with zero r
 ```
 
 ```quiz
-q: A cohort of 5 users has a single returning user, who has 3 events. Which count gives the right retained number?
+q: A cohort of 5 users has a single returning user, who has 3 events. After the LEFT JOIN, which count gives the right retained number?
 options:
-  - COUNT(*) = 3
+  - COUNT(*) = 7
   - COUNT(events.user_id) = 3
   - COUNT(DISTINCT events.user_id) = 1
 answer: 2
-why: Retention counts people. One person with three events is one retained user, and distinct is how you say that.
+why: Retention counts people. The joined result has 7 rows (3 for the returner, 1 for each of the 4 others), and 3 of them hold an event. Only distinct gives the 1 returning person.
 ```
 
 ## Funnels: distinct people per step
@@ -218,6 +218,8 @@ Read it top down. [[top]] Ten people visited. [[steps]] Six signed up, three add
 > **Why:** step-to-step percent shows **where** people drop. Percent of the first step shows the **overall** yield. Ask which one the stakeholder wants.
 
 > **Trap:** the previous step can be 0, and dividing by 0 raises an error. Wrap the divisor in `NULLIF(..., 0)`.
+
+> **Trap:** this counts anyone with the event. A strict funnel also demands the earlier steps, in time order. Ask which one is wanted.
 
 ```quiz
 q: Why start the funnel query from a steps table instead of grouping the events table directly?

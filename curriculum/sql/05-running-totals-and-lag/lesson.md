@@ -71,7 +71,7 @@ why: The window sums from the first row through the current one, so 10 + 20 + 30
 
 ## The tie trap: RANGE vs ROWS
 
-With `ORDER BY` and no frame, the default frame is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`. `RANGE` includes all **peers**: rows tied on the `ORDER BY` value.
+The **frame** is the set of rows the function adds up for the current row. With `ORDER BY` and no frame written, it is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`. `RANGE` includes all **peers**: rows tied on the `ORDER BY` value.
 
 So three payments on the same day all show the same total, as if they happened at once.
 
@@ -193,7 +193,7 @@ Lag looks one row back. [[first]] The first month has nothing before it, so lag 
 </svg>
 ```
 
-> **Trap:** in Postgres, `100 * 30 / 100` with integers truncates. Use `100.0` to get decimals. MySQL's `/` already returns a decimal.
+> **Trap:** in Postgres, `100 * 7 / 3` with integers gives 233, because integer division truncates. Use `100.0` to get decimals. MySQL's `/` already returns a decimal.
 
 ```quiz
 q: A monthly table has January (100), February (130) and April (117). There is no March row. What does LAG(revenue) OVER (ORDER BY month) return for April?

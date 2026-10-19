@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { openDb, runQueryFile } from "#kit/db.ts";
+import { runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `
 CREATE TABLE customers (id int PRIMARY KEY, name text NOT NULL);
@@ -24,7 +24,7 @@ INSERT INTO orders VALUES
   (5, NULL, 'cancelled'),
   (6, 12, 'cancelled');`;
 
-const run = async (seed: string) => runQueryFile({ db: await openDb(seed), testUrl: import.meta.url, file: "query.sql" });
+const run = (seed: string) => runSeeded({ seed, testUrl: import.meta.url, file: "query.sql" });
 
 describe("customers with no paid order", () => {
   it("returns the columns id, name", async () => {

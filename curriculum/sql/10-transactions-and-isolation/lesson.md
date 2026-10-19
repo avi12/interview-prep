@@ -152,7 +152,7 @@ There are two fixes. First, a single atomic update. The database subtracts, and 
 | Level | You see | If two sessions collide |
 |---|---|---|
 | **Read Committed** (default) | rows committed before **each statement** | the second update re-reads the new row and goes on |
-| **Repeatable Read** | one snapshot for the **whole transaction** | the second update fails with a serialization error |
+| **Repeatable Read** | one snapshot (a frozen view of the data) for the **whole transaction** | the second update fails with a serialization error |
 | **Serializable** | as if sessions ran one after another | may also fail with a serialization error |
 
 Postgres treats `READ UNCOMMITTED` as Read Committed, so dirty reads never happen.
@@ -185,7 +185,7 @@ Make it safe:
 
 - Move the money in **one transaction**. On any failure, throw, and leave **both** balances unchanged
 - Throw when the sender lacks the money, when the recipient does not exist, and when the amount is not above 0
-- Two transfers started at the same time must not overdraw the sender
+- Simultaneous transfers must not overdraw the sender. PGlite has one connection, so no test can show a real race: use the guarded `UPDATE`
 - PGlite: `db.transaction(async tx => { ... })` rolls back when the callback throws, and `result.affectedRows` tells how many rows an `UPDATE` changed
 
 ```hint

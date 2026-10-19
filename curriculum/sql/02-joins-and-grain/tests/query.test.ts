@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { openDb, runQueryFile } from "#kit/db.ts";
+import { runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `
 CREATE TABLE customers (id int PRIMARY KEY, name text NOT NULL);
@@ -24,13 +24,7 @@ INSERT INTO order_items VALUES
 
 const NUMERIC_COLUMNS = ["revenue", "units"];
 
-const withNumbers = (row: Record<string, unknown>) =>
-  Object.fromEntries(Object.entries(row).map(([column, value]) => [column, NUMERIC_COLUMNS.includes(column) ? Number(value) : value]));
-
-const run = async (seed: string) => {
-  const { rows, columns } = await runQueryFile({ db: await openDb(seed), testUrl: import.meta.url, file: "query.sql" });
-  return { rows: rows.map(withNumbers), columns };
-};
+const run = (seed: string) => runSeeded({ seed, testUrl: import.meta.url, file: "query.sql", numericColumns: NUMERIC_COLUMNS });
 
 const rowFor = ({ rows, name }: { rows: Record<string, unknown>[]; name: string }) => rows.find(row => row.name === name);
 

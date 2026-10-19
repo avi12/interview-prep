@@ -76,6 +76,12 @@ describe("findUser", () => {
     expect(await findUser({ db, username: "O'Brien" })).toEqual({ id: 4, username: "O'Brien", role: "member" });
   });
 
+  it("sends the name as a parameter, never pasted or hand-escaped inside the query text", async () => {
+    const { watchedDb, sentTexts } = withQueryLog(db);
+    expect(await findUser({ db: watchedDb, username: "dana" })).not.toBeNull();
+    expect(sentTexts.filter(text => text.includes("dana"))).toEqual([]);
+  });
+
   it.each(LOGIN_PAYLOADS)("treats the payload %s as a plain name and finds nobody", async payload => {
     expect(await findUser({ db, username: payload })).toBeNull();
     expect(await userCount()).toBe(USER_COUNT);

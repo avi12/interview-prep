@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { openDb, runQueryFile } from "#kit/db.ts";
+import { runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `CREATE TABLE employees (id int PRIMARY KEY, name text NOT NULL, department text NOT NULL, salary int NOT NULL);`;
 
@@ -14,7 +14,7 @@ INSERT INTO employees VALUES
   (1, 'Ari', 'data', 5000), (2, 'Bat', 'data', 5000), (3, 'Cal', 'data', 5000), (4, 'Dov', 'data', 3000),
   (5, 'Eli', 'ops', 2000), (6, 'Fay', 'ops', 1000), (7, 'Gil', 'ops', 500);`;
 
-const run = async (seed: string) => runQueryFile({ db: await openDb(seed), testUrl: import.meta.url, file: "query.sql" });
+const run = (seed: string) => runSeeded({ seed, testUrl: import.meta.url, file: "query.sql" });
 
 describe("top two salaries per department", () => {
   it("returns the columns department, name, salary", async () => {

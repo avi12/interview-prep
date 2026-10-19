@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { openDb, readQueryFile, runQueryFile } from "#kit/db.ts";
+import { readQueryFile, runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `CREATE TABLE payments (id int PRIMARY KEY, customer text NOT NULL, amount int NOT NULL);`;
 
@@ -22,7 +22,7 @@ INSERT INTO payments VALUES
 const MIN_CTE_COUNT = 2;
 const CTE_DEFINITION = /\b\w+\s+AS\s*\(/gi;
 
-const run = async (seed: string) => runQueryFile({ db: await openDb(seed), testUrl: import.meta.url, file: "query.sql" });
+const run = (seed: string) => runSeeded({ seed, testUrl: import.meta.url, file: "query.sql" });
 
 describe("customers above the average customer total", () => {
   it("is written as two chained CTEs: WITH first AS (...), second AS (...)", () => {

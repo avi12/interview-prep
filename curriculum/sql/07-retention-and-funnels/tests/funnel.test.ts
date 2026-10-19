@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { openDb, runQueryFile } from "#kit/db.ts";
+import { runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `
 CREATE TABLE funnel_steps (position int PRIMARY KEY, name text NOT NULL UNIQUE);
@@ -24,15 +24,13 @@ ${reached({ step: "signup", from: 1, to: 5 })}
 ${reached({ step: "add_to_cart", from: 1, to: 2 })}
 INSERT INTO funnel_events VALUES (2, 'signup', '2025-02-03 10:00');`;
 
-const run = async (seed: string) => {
-  const { rows, columns } = await runQueryFile({ db: await openDb(seed), testUrl: import.meta.url, file: "funnel.sql" });
-  const steps = rows.map(row => ({
-    step: row.step,
-    users: Number(row.users),
-    pct_of_previous: row.pct_of_previous === null ? null : Number(row.pct_of_previous)
-  }));
-  return { columns, steps };
-};
+const STALLED = `${SCHEMA}
+${reached({ step: "visit", from: 1, to: 5 })}
+${reached({ step: "signup", from: 1, to: 3 })}`;
+
+const NUMERIC_COLUMNS = ["users", "pct_of_previous"];
+
+const run = (seed: string) => runSeeded({ seed, testUrl: import.meta.url, file: "funnel.sql", numericColumns: NUMERIC_COLUMNS });
 
 describe("funnel conversion by step", () => {
   it("returns step, users, pct_of_previous", async () => {
@@ -41,7 +39,7 @@ describe("funnel conversion by step", () => {
   });
 
   it("counts distinct people per step and compares with the step above", async () => {
-    const { steps } = await run(SHOP);
+    const { rows: steps } = await run(SHOP);
     expect(steps).toEqual([
       { step: "visit", users: 10, pct_of_previous: null },
       { step: "signup", users: 6, pct_of_previous: 60 },
@@ -51,12 +49,22 @@ describe("funnel conversion by step", () => {
   });
 
   it("keeps a step nobody reached, with 0 users (no hardcoding)", async () => {
-    const { steps } = await run(NO_SALES);
+    const { rows: steps } = await run(NO_SALES);
     expect(steps).toEqual([
       { step: "visit", users: 8, pct_of_previous: null },
       { step: "signup", users: 5, pct_of_previous: 62.5 },
       { step: "add_to_cart", users: 2, pct_of_previous: 40 },
       { step: "purchase", users: 0, pct_of_previous: 0 }
+    ]);
+  });
+
+  it("gives NULL, not an error, when the step above has no users (division by zero)", async () => {
+    const { rows: steps } = await run(STALLED);
+    expect(steps).toEqual([
+      { step: "visit", users: 5, pct_of_previous: null },
+      { step: "signup", users: 3, pct_of_previous: 60 },
+      { step: "add_to_cart", users: 0, pct_of_previous: 0 },
+      { step: "purchase", users: 0, pct_of_previous: null }
     ]);
   });
 });

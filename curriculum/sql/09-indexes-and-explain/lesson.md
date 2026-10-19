@@ -66,23 +66,24 @@ Without an index, the database reads every row. [[seq]] Picture all twenty thous
 
 ## Read EXPLAIN: four node names
 
-`EXPLAIN` prints the plan Postgres chose, **without running the query**. Read the innermost, most indented line first.
+`EXPLAIN` prints the plan the **planner** chose (the part of Postgres that decides how to run a query), **without running the query**. Read the innermost, most indented line first.
 
 | Node | What it does |
 |---|---|
 | `Seq Scan` | reads the whole table |
 | `Index Scan` | walks the index, then fetches each row |
 | `Bitmap Index Scan` + `Bitmap Heap Scan` | collects row locations from the index, then reads table pages in order |
-| `Index Only Scan` | answers from the index alone |
+| `Index Only Scan` | answers from the index alone, if it holds every column the query needs |
 
 ```
-Seq Scan on orders  (cost=0.00..378.00 rows=20 width=17)
+Seq Scan on orders  (cost=0.00..379.00 rows=10 width=21)
   Filter: (customer_id = 42)
 ```
 
 ```
-Bitmap Heap Scan on orders  (cost=4.44..58.73 rows=20 width=17)
-  ->  Bitmap Index Scan on orders_customer_idx
+Bitmap Heap Scan on orders  (cost=4.37..36.14 rows=10 width=21)
+  Recheck Cond: (customer_id = 42)
+  ->  Bitmap Index Scan on orders_customer_idx  (cost=0.00..4.36 rows=10 width=0)
         Index Cond: (customer_id = 42)
 ```
 
@@ -90,25 +91,25 @@ Bitmap Heap Scan on orders  (cost=4.44..58.73 rows=20 width=17)
 
 > **Trap:** `EXPLAIN ANALYZE` really **runs** the query. On an `UPDATE` or `DELETE` the rows change for real. Wrap it in `BEGIN ... ROLLBACK`.
 
-```svg Same query, two plans: adding the index drops the estimated cost from 378 to about 59
+```svg Same query, two plans: adding the index drops the estimated cost from 379 to about 36
 <svg viewBox="0 0 520 170" role="img" aria-label="Cost before and after adding an index">
   <g font-family="var(--font-mono)" font-size="13">
     <g data-cue="before">
       <text x="20" y="30" fill="var(--fg-muted)">Seq Scan</text>
-      <rect x="20" y="40" width="378" height="26" fill="var(--danger)" stroke="var(--border)" stroke-width="2"/>
-      <text x="408" y="59" fill="var(--fg)">378</text>
+      <rect x="20" y="40" width="379" height="26" fill="var(--danger)" stroke="var(--border)" stroke-width="2"/>
+      <text x="409" y="59" fill="var(--fg)">379</text>
     </g>
     <g data-cue="after">
       <text x="20" y="100" fill="var(--fg-muted)">Bitmap Index Scan</text>
-      <rect x="20" y="110" width="59" height="26" fill="var(--ok)" stroke="var(--border)" stroke-width="2"/>
-      <text x="89" y="129" fill="var(--fg)">59</text>
+      <rect x="20" y="110" width="36" height="26" fill="var(--ok)" stroke="var(--border)" stroke-width="2"/>
+      <text x="66" y="129" fill="var(--fg)">36</text>
     </g>
   </g>
 </svg>
 ```
 
 ```narrate
-Reading explain takes four names. Sequential scan reads the whole table. Index scan and bitmap scan use the index. Index only scan answers from the index alone. [[before]] Here is the same query without an index, with an estimated cost of three hundred seventy eight. [[after]] With the index, the estimate drops to about fifty nine. The numbers are made up units, so only compare them.
+Reading explain takes four names. Sequential scan reads the whole table. Index scan and bitmap scan use the index. Index only scan answers from the index alone. [[before]] Here is the same query without an index, with an estimated cost of three hundred seventy nine. [[after]] With the index, the estimate drops to about thirty six. The numbers are made up units, so only compare them.
 ```
 
 ```quiz
@@ -165,7 +166,7 @@ A **composite index** sorts by the first column, then by the second inside it, l
 CREATE INDEX orders_customer_created_idx ON orders (customer_id, created_at);
 ```
 
-It helps when the query fixes the **leading** column. Both `WHERE customer_id = 42` and `WHERE customer_id = 42 AND created_at >= ...` can use it. A query on `created_at` alone cannot jump in.
+It helps when the query fixes the **leading** column. Both `WHERE customer_id = 42` and `WHERE customer_id = 42 AND created_at >= ...` can use it. A query on `created_at` alone cannot jump in. (Postgres 18 can skip through the first column, but only when it has few distinct values.)
 
 > **Why:** equality columns first, the range column last. One composite index also replaces a separate index on its first column.
 

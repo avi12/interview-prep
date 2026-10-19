@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { openDb, runQueryFile } from "#kit/db.ts";
+import { runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `
 CREATE TABLE support_tickets (
@@ -39,17 +39,14 @@ INSERT INTO support_tickets VALUES
   (8, 'Tali', 'closed', 'tier2', NULL, NULL),
   (9, 'Tali', 'closed', 'tier2', 15, NULL),
   (10, 'Uri', 'closed', 'legal', 5, 2),
-  (11, 'Uri', 'closed', 'legal', 8, 3);`;
+  (11, 'Uri', 'closed', 'legal', 8, 3),
+  (12, 'Vic', 'closed', NULL, 5, 5),
+  (13, 'Vic', 'closed', NULL, 5, 5),
+  (14, 'Vic', 'closed', 'tier2', 5, 4);`;
 
-const withNumbers = (row: Record<string, unknown>): Record<string, unknown> => ({
-  ...row,
-  avg_rating: row.avg_rating === null ? null : Number(row.avg_rating)
-});
+const NUMERIC_COLUMNS = ["avg_rating"];
 
-const run = async (seed: string) => {
-  const { rows, columns } = await runQueryFile({ db: await openDb(seed), testUrl: import.meta.url, file: "query.sql" });
-  return { rows: rows.map(withNumbers), columns };
-};
+const run = (seed: string) => runSeeded({ seed, testUrl: import.meta.url, file: "query.sql", numericColumns: NUMERIC_COLUMNS });
 
 const rowFor = ({ rows, agent }: { rows: Record<string, unknown>[]; agent: string }) => rows.find(row => row.agent === agent);
 
@@ -103,7 +100,8 @@ describe("closed ticket report per agent", () => {
     const { rows } = await run(TEAM_B);
     expect(rows).toEqual([
       { agent: "Rina", tickets: 3, rated: 3, avg_rating: 4.3, total_minutes: 60 },
-      { agent: "Tali", tickets: 2, rated: 0, avg_rating: null, total_minutes: 15 }
+      { agent: "Tali", tickets: 2, rated: 0, avg_rating: null, total_minutes: 15 },
+      { agent: "Vic", tickets: 3, rated: 3, avg_rating: 4.7, total_minutes: 15 }
     ]);
   });
 });

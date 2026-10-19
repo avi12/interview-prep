@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { openDb, runQueryFile } from "#kit/db.ts";
+import { runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `CREATE TABLE contacts (id int PRIMARY KEY, email text NOT NULL, name text NOT NULL, created_at timestamp NOT NULL);`;
 
@@ -21,8 +21,7 @@ INSERT INTO contacts VALUES
   (5, 'C@x.com', 'C', '2025-03-06 08:00');`;
 
 const run = async (seed: string) => {
-  const db = await openDb(seed);
-  const { rows, columns } = await runQueryFile({ db, testUrl: import.meta.url, file: "dedupe.sql" });
+  const { db, rows, columns } = await runSeeded({ seed, testUrl: import.meta.url, file: "dedupe.sql" });
   const remaining = await db.query<{ id: number }>("SELECT id FROM contacts ORDER BY id");
   return {
     columns,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { openDb, runQueryFile } from "#kit/db.ts";
+import { runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `CREATE TABLE payments (id int PRIMARY KEY, paid_on date NOT NULL, amount int NOT NULL);`;
 
@@ -20,17 +20,9 @@ INSERT INTO payments VALUES
   (6, '2026-03-15', 30),
   (3, '2026-03-15', 10);`;
 
-const DATE_LENGTH = 10;
+const DAY_COLUMNS = ["paid_on"];
 
-const withPlainDate = (row: Record<string, unknown>) => ({
-  ...row,
-  paid_on: row.paid_on instanceof Date ? row.paid_on.toISOString().slice(0, DATE_LENGTH) : row.paid_on
-});
-
-const run = async (seed: string) => {
-  const { rows, columns } = await runQueryFile({ db: await openDb(seed), testUrl: import.meta.url, file: "query.sql" });
-  return { rows: rows.map(withPlainDate), columns };
-};
+const run = (seed: string) => runSeeded({ seed, testUrl: import.meta.url, file: "query.sql", dayColumns: DAY_COLUMNS });
 
 const columnOf = ({ rows, column }: { rows: Record<string, unknown>[]; column: string }) => rows.map(row => row[column]);
 

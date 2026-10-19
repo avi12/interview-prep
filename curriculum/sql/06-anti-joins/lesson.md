@@ -63,7 +63,7 @@ An anti join returns the rows that have no match. [[matched]] Ava and Cleo each 
 | Form | NULL in the subquery | Postgres 18 plan |
 |---|---|---|
 | `WHERE NOT EXISTS (SELECT 1 FROM orders WHERE ...)` | safe | Hash Anti Join |
-| `LEFT JOIN orders ON ... WHERE orders.id IS NULL` | safe | Hash Join, then filter |
+| `LEFT JOIN orders ON ... WHERE orders.id IS NULL` | safe | Hash Right Join, then a Filter |
 | `WHERE id NOT IN (SELECT customer_id FROM orders)` | **zero rows** | hashed SubPlan, never an anti join |
 
 ```sql

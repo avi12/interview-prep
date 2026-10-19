@@ -24,7 +24,7 @@ Three bugs are waiting:
 
 - **Update:** change Dana's email in one row, miss the other. Now there are two truths
 - **Insert:** you cannot add a new course until someone enrolls
-- **Delete:** remove Omer's only row and the fact that his course exists, with its credits, is gone
+- **Delete:** remove Dana's only Networks row and the fact that Networks exists, with its 3 credits, is gone
 
 ```narrate
 Here is a table that looks fine. Dana's email appears twice, and the credits of Databases appear twice. That causes three bugs. Change one copy and you get two truths. You cannot add a course nobody has taken. And deleting the last enrollment erases the course itself.

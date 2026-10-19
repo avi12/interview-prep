@@ -114,7 +114,7 @@ Look at three values: ten, null, and thirty. [[values]] The middle one is unknow
 
 > **Trap:** `AVG` quietly skips NULLs. Decide what NULL means: unknown (skip it) or zero (`COALESCE`). They give different answers, and the interviewer wants to hear you choose.
 
-In MySQL the rules are the same. The one visible difference: `ORDER BY x` puts NULLs **first** in MySQL and **last** in Postgres.
+MySQL follows the same NULL rules. One visible difference: a plain ascending `ORDER BY x` puts NULLs **first** in MySQL and **last** in Postgres. Postgres lets you choose with `NULLS FIRST` or `NULLS LAST`.
 
 ```quiz
 q: Over the values 10, NULL, 30, what does AVG(x) return?
