@@ -89,7 +89,7 @@ Here is one query. [[ranked]] The retriever returned five passages, best first. 
 
 Start with **recall@k**. A passage you did not fetch is gone for good.
 
-Anthropic tracks retrieval as `1 - recall@20`, the share of relevant passages missing from the top 20. Their baseline missed **5.7%**. Adding context to each chunk, keyword search and reranking together cut that to **1.9%**.
+Anthropic tracks retrieval as `1 - recall@20`, the share of relevant passages missing from the top 20. Their baseline missed **5.7%**. Adding context to each chunk, keyword search and reranking (a second model re-sorts the results) together cut that to **1.9%**.
 
 - **Precision@k** next: extra passages cost tokens and can distract the model
 - **MRR and hit rate** when you show one best result, like a help-widget suggestion
@@ -120,7 +120,7 @@ Three details catch people. Precision divides by k, not by how many results came
 
 > **Trap:** precision divides by **k**, not by the number of results returned. One result that hits, at k = 5, is precision 0.2, not 1.0.
 
-> **Trap:** a repeated id counts once. Otherwise `["d2", "d2", "d2"]` gives recall above 1.
+> **Trap:** a repeated id counts once, for precision and recall. Otherwise `["d2", "d2", "d2"]` gives recall above 1.
 
 > **Trap:** a query with **no** relevant ids has no recall. Return `0.0` rather than dividing by zero, and test "no answer exists" questions separately (next lessons).
 

@@ -1,16 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
 import { FakeModel, textTurn, toolUseTurn } from "#kit/fakeModel.ts";
-import type { MessageRequest, MessagesClient, ToolDefinition } from "#kit/fakeModel.ts";
+import type { MessageRequest, ToolDefinition } from "#kit/fakeModel.ts";
+import type { AgentConfig, ToolImpl, ToolInput } from "../starter/hardenedAgent.ts";
 
-type ToolInput = Record<string, unknown>;
-type ToolImpl = {
-  definition: ToolDefinition;
-  run: (input: ToolInput) => Promise<string> | string;
-  isUntrusted?: boolean;
-  needsApproval?: boolean;
-};
-type Approver = (request: { name: string; input: ToolInput }) => Promise<boolean> | boolean;
 type Module = {
   MAX_UNTRUSTED_CHARS: number;
   TRUNCATION_MARK: string;
@@ -18,16 +11,7 @@ type Module = {
   sanitizeUntrusted: (text: string) => string;
   wrapUntrusted: (args: { source: string; text: string }) => string;
   redactUnapprovedLinks: (args: { text: string; allowedHosts: string[] }) => string;
-  runAgent: (args: {
-    client: MessagesClient;
-    model: string;
-    userText: string;
-    tools: ToolImpl[];
-    allowedToolNames: string[];
-    approve?: Approver;
-    allowedHosts?: string[];
-    maxTurns?: number;
-  }) => Promise<{ text: string; turns: number }>;
+  runAgent: (args: AgentConfig) => Promise<{ text: string; turns: number }>;
 };
 
 const { MAX_UNTRUSTED_CHARS, TRUNCATION_MARK, REMOVED_LINK_MARK, sanitizeUntrusted, wrapUntrusted, redactUnapprovedLinks, runAgent } =
@@ -52,6 +36,11 @@ describe("sanitizeUntrusted", () => {
   it("cuts long text to the limit and marks the cut", () => {
     const long = "x".repeat(MAX_UNTRUSTED_CHARS + 500);
     expect(sanitizeUntrusted(long)).toBe("x".repeat(MAX_UNTRUSTED_CHARS) + TRUNCATION_MARK);
+  });
+
+  it("measures the limit on the visible text, after hidden characters are removed", () => {
+    const padded = "z".repeat(MAX_UNTRUSTED_CHARS) + ZERO_WIDTH_SPACE.repeat(50);
+    expect(sanitizeUntrusted(padded)).toBe("z".repeat(MAX_UNTRUSTED_CHARS));
   });
 
   it("does not mark text that fits exactly", () => {

@@ -1,17 +1,15 @@
 import math
-import time
 import warnings
 
 import numpy as np
 import pytest
 from impl import load_impl
+from limits import measure_seconds
+from toy_embedding import embed, embed_many
 
 similarity = load_impl(__file__, "similarity.py")
-toy = load_impl(__file__, "toy_embedding.py")
 cosine_similarity = similarity.cosine_similarity
 top_k_similar = similarity.top_k_similar
-embed = toy.embed
-embed_many = toy.embed_many
 
 PETS_AND_FOOD = [
     "the dog loves to fetch and walk",
@@ -118,6 +116,12 @@ def test_ties_keep_the_lower_index_first():
     assert indexes(result) == [0, 2, 3]
 
 
+def test_ties_keep_the_lower_index_first_in_a_large_corpus():
+    texts = ["dog", "cat"] * 500
+    result = top_k_similar(embed("dog"), embed_many(texts), 10)
+    assert indexes(result) == list(range(0, 20, 2))
+
+
 def test_k_larger_than_the_corpus_returns_everything():
     matrix = embed_many(PETS_AND_FOOD)
     assert len(top_k_similar(embed("dog"), matrix, 100)) == len(PETS_AND_FOOD)
@@ -165,17 +169,9 @@ def test_scores_a_large_matrix_in_one_pass_instead_of_a_python_loop():
     query = rng.random(DIMENSIONS)
     sample_lists = sample.tolist()
     query_list = query.tolist()
-    loop_seconds = min(_time(lambda: [reference_cosine(query_list, row) for row in sample_lists]) for _ in range(3))
+    loop_seconds = min(measure_seconds(lambda: [reference_cosine(query_list, row) for row in sample_lists])[1] for _ in range(3))
     budget_seconds = loop_seconds * (LARGE_ROWS / SAMPLE_ROWS) / REQUIRED_SPEEDUP
     matrix = rng.random((LARGE_ROWS, DIMENSIONS))
-    started_at = time.perf_counter()
-    result = top_k_similar(query, matrix, 5)
-    elapsed = time.perf_counter() - started_at
+    result, elapsed = measure_seconds(top_k_similar, query, matrix, 5)
     assert len(result) == 5
     assert elapsed < budget_seconds
-
-
-def _time(action):
-    started_at = time.perf_counter()
-    action()
-    return time.perf_counter() - started_at

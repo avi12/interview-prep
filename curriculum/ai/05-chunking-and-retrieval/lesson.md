@@ -174,7 +174,7 @@ Fixed size chunks with overlap are the simple default, and Pinecone says they wo
 2. Score each chunk by cosine similarity (last lesson's maths)
 3. Keep the best `k`, best first
 
-> **Why:** keep only chunks with a score above zero. Returning `k` chunks no matter what hands the model junk to answer from.
+> **Why:** keep only chunks with a score above zero. Returning `k` chunks no matter what hands the model junk to answer from. Real embeddings rarely score exactly zero, so there you tune a score cutoff.
 
 > **Trap:** embedding the query with one model and the chunks with another. The numbers live in different spaces and the scores mean nothing.
 
@@ -186,7 +186,7 @@ Retrieval has three steps. Embed every chunk and the query with the same embeddi
 
 ## Your turn
 
-Open `retrieval.py`. Two functions. `toy_embedding.py` is your `embed`.
+Open `retrieval.py`. Two functions. Your `embed` is the toy from lesson 4: `from toy_embedding import embed` (`curriculum/_kit/toy_embedding.py`).
 
 - `chunk_text(text, size, overlap)`: split on whitespace, windows of `size` words, each next window starts `size - overlap` words later. Join with one space. No extra tail chunk made only of repeated words. Empty text gives `[]`. Raise `ValueError` when `size < 1` or `overlap` is negative or `>= size`
 - `retrieve(query, chunks, embed, k=3)`: the top `k` chunk **strings**, best first, ties keep the earlier chunk, only chunks with a score above zero

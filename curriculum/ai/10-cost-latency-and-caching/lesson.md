@@ -50,7 +50,7 @@ cached  : 4,000 x $0.10/M + 1,000 x $2/M + 300 x $10/M = $0.0004 + $0.0020 + $0.
 | + cache the 4,000-token prefix | $0.0054 | $54 |
 | + Haiku 5.5 for the easy 60%, with a cheap router call | $0.0024 | $24 |
 
-Assumed: steady traffic keeps the cache warm, and 60% of questions are easy. Each cache write adds about $0.01, and they are rare.
+Assumed: steady traffic keeps the cache warm, 60% of questions are easy, Haiku also reads the cached prefix, and the router call (a small model that sorts easy from hard) is about 1,000 tokens in. Each cache write adds about $0.01, and they are rare.
 
 > **Not this:** "it will be expensive". Say "$130 a day, about $54 with caching, about $24 with routing", and name your assumptions.
 

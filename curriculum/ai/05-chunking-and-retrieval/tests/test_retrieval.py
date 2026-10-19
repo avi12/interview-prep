@@ -1,12 +1,11 @@
 import numpy as np
 import pytest
 from impl import load_impl
+from toy_embedding import embed
 
 retrieval = load_impl(__file__, "retrieval.py")
-toy = load_impl(__file__, "toy_embedding.py")
 chunk_text = retrieval.chunk_text
 retrieve = retrieval.retrieve
-embed = toy.embed
 
 BREAD_GUIDE = (
     "Bread is simple. Mix flour and water with salt. Let the dough rest for hours. "
@@ -109,6 +108,11 @@ def test_retrieve_keeps_the_earlier_chunk_first_on_a_tie():
     chunks = ["dog 1", "cat", "dog 2", "dog 3"]
     assert retrieve("dog", chunks, embed, 3) == ["dog 1", "dog 2", "dog 3"]
     assert retrieve("dog", ["first dog", "second dog"], embed, 2) == ["first dog", "second dog"]
+
+
+def test_retrieve_keeps_the_earlier_chunk_first_on_ties_in_a_large_corpus():
+    chunks = [f"{'dog' if number % 2 == 0 else 'cat'} {number}" for number in range(1000)]
+    assert retrieve("dog", chunks, embed, 10) == [f"dog {number}" for number in range(0, 20, 2)]
 
 
 def test_retrieve_handles_an_empty_corpus():

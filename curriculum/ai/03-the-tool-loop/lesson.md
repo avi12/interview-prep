@@ -15,7 +15,7 @@ sources:
 
 ## The loop in one picture
 
-An **agent** is "LLMs using tools based on environmental feedback in a loop" (Anthropic's definition).
+Anthropic describes agents as "typically just LLMs using tools based on environmental feedback in a loop".
 
 The model **never runs anything**. It asks, in a `tool_use` block. Your code runs the tool and reports back. Then the model decides what is next.
 
@@ -98,7 +98,7 @@ Your reply is a **user** message with a `tool_result` per `tool_use`:
 
 > **Trap:** text before a `tool_result` is a 400 error.
 
-> **Not this:** a separate `tool` role. That is OpenAI's style (`function_call_output` with a `call_id`). Claude keeps tools inside user and assistant messages.
+> **Not this:** a separate `tool` role. Some other APIs use one (OpenAI's Responses API uses `function_call_output` items with a `call_id`). Claude keeps tools inside user and assistant messages.
 
 ```narrate
 The model asks for a tool inside its own turn, as a tool use block with an id, a name and an input. You answer with a user message that holds one tool result for each request, matched by id. Append the model's whole turn first, exactly as it came. Put tool results before any text, and put all results from one turn into a single message. OpenAI uses different names, but the loop is the same.
@@ -141,6 +141,7 @@ Anthropic's agents post: it is "also common to include stopping conditions (such
 - **Unknown tool name**: return an error result, do not crash
 - **Irreversible tools** (refunds, emails, deletes): ask a human first
 - **Log each step**: tool name, input, result, tokens
+- **Other stop reasons**: `max_tokens` can cut a tool call in half. In production, raise the cap and retry. The exercise just returns the text
 
 > **Trap:** a model stuck calling the same tool forever. Each turn re-sends the whole history, so cost grows with every lap.
 

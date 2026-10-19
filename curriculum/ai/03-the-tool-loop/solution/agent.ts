@@ -1,4 +1,4 @@
-import type { AssistantBlock, Message, MessagesClient, ToolDefinition, ToolResultBlock, ToolUseBlock } from "#kit/fakeModel.ts";
+import { isToolUse, textOf, type Message, type MessagesClient, type ToolDefinition, type ToolResultBlock, type ToolUseBlock } from "#kit/fakeModel.ts";
 
 export type AgentTool = ToolDefinition & { run: (input: Record<string, unknown>) => unknown };
 
@@ -17,10 +17,6 @@ const MAX_TOKENS = 1024;
 
 export const toResultText = (value: unknown) => (typeof value === "string" ? value : JSON.stringify(value));
 
-export const textOf = (blocks: AssistantBlock[]) =>
-  blocks.flatMap(block => (block.type === "text" ? [block.text] : [])).join("");
-
-const isToolUse = (block: AssistantBlock): block is ToolUseBlock => block.type === "tool_use";
 
 const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
 

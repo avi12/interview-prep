@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { MessageResponse, MessagesClient } from "#kit/fakeModel.ts";
+import { textOf, type MessageResponse, type MessagesClient } from "#kit/fakeModel.ts";
 
 export class ExtractionError extends Error {
   readonly attempts: number;
@@ -19,8 +19,7 @@ const MODEL = "claude-sonnet-5-5";
 const MAX_TOKENS = 1024;
 const FENCE_PATTERN = /^```(?:json)?\s*([\s\S]*?)\s*```$/;
 
-export const replyTextOf = (response: MessageResponse) =>
-  response.content.flatMap(block => (block.type === "text" ? [block.text] : [])).join("");
+export const replyTextOf = (response: MessageResponse) => textOf(response.content);
 
 export const jsonTextOf = (replyText: string) => FENCE_PATTERN.exec(replyText.trim())?.[1] ?? replyText.trim();
 

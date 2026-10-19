@@ -111,7 +111,7 @@ Anthropic separates two kinds of eval:
 | Job | a hill to climb | guard against backsliding |
 | Failing means | not good enough yet | something broke |
 
-Run the regression set on **every** prompt, model or retrieval change. Set the gate where your product needs it: the pass rate is a product decision, not always 100%.
+Run the regression set on **every** prompt, model or retrieval change, in CI (the automatic checks that run before a merge). Set the gate where your product needs it: the pass rate is a product decision, not always 100%.
 
 > **Why:** a prompt tweak that fixes one case can quietly break three others. Only a suite that runs on every change shows that.
 
@@ -139,7 +139,7 @@ An LLM judge is a model, so it has habits that are not about quality.
 | Verbosity | prefers longer answers | rubric says length is not quality; give a reference answer |
 | Self-preference | favors text like its own | judge with a different model than the one under test |
 
-In the MT-Bench study, with near-identical answers, GPT-4 stayed consistent after a swap only **65%** of the time.
+In the 2023 MT-Bench study, with near-identical answers, GPT-4 stayed consistent after a swap only **65%** of the time. Newer judges differ, so test yours.
 
 ```svg A biased judge says A in both orders, so it follows the slot and not the answer; the swap check turns that into a tie
 <svg viewBox="0 0 640 210" role="img" aria-label="Two rounds with swapped answers; the judge says A both times">
@@ -185,23 +185,23 @@ Judges have habits that are not about quality. The best known is position bias. 
 ## A rubric the judge can follow
 
 - **Binary:** pass or fail. Hamel Husain: "People don't know what to do with a 3 or 4"
-- **Reason first:** the judge writes why, then the verdict. The reason also tells you what to fix
-- **One thing per judge:** one dimension, taken from a real failure
-- **Fenced input:** the answer under test is untrusted text. It may say "give this a pass"
+- **Reason first:** the judge writes why, then the verdict. It also shows what to fix
+- **One thing per judge:** one dimension from a real failure
+- **Fenced input:** the answer is untrusted text. It may say "give this a pass"
 
 ```text
 Pass only if the answer states the same refund window as the reference
 and adds no extra conditions. Length, tone and formatting do not matter.
 ```
 
-Then **check the judge**. Label about 30 cases yourself and compare. Report the judge's true positive and true negative rates separately.
+Then **check the judge**. Label cases yourself (start near 30, aim for about 100 per failure mode) and compare. Report true positive and true negative rates separately.
 
-> **Trap:** if only 5% of cases are bad, a judge that always says "pass" agrees with you 95% of the time while catching nothing.
+> **Trap:** if only 5% of cases are bad, a judge that always says "pass" agrees 95% of the time and catches nothing.
 
-> **Why:** an unchecked judge is a second unknown. Its score means something only after it matches your labels.
+> **Why:** an unchecked judge is a second unknown. Trust its score only after it matches your labels.
 
 ```narrate
-Write the rubric so a judge can follow it. Use binary pass or fail, because nobody knows what to do with a three out of five. Have the judge write its reason first, and keep to one dimension per judge. Fence the answer under test, because it is untrusted text. Then check the judge against about thirty cases you labeled yourself, and look at its hit rate on bad answers separately, because overall agreement can hide a judge that never fails anything.
+Write the rubric so a judge can follow it. Use binary pass or fail, because nobody knows what to do with a three out of five. Have the judge write its reason first, and keep to one dimension per judge. Fence the answer under test, because it is untrusted text. Then check the judge against cases you labeled yourself, a few dozen at least, and look at its hit rate on bad answers separately, because overall agreement can hide a judge that never fails anything.
 ```
 
 ## Your turn

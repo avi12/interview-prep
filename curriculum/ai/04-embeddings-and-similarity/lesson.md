@@ -22,7 +22,7 @@ An **embedding** is a list of numbers that stands for a piece of text. Texts wit
 - Anthropic offers no embedding model of its own and points to Voyage AI
 - Real vectors have 1,000+ dimensions (Voyage defaults to 1024)
 
-In this lesson `embed(text)` is a **toy**: one slot per word in a 50-word vocabulary, counting how often each word appears. Look at `toy_embedding.py`.
+In this lesson `embed(text)` is a **toy**: one slot per word in a 50-word vocabulary, counting how often each word appears. Look at `curriculum/_kit/toy_embedding.py`.
 
 ```python
 embed("the dog loves to fetch")
@@ -37,6 +37,8 @@ An embedding turns text into a list of numbers, so a computer can measure how cl
 ```
 
 ## Three ways to compare two vectors
+
+The **dot product** multiplies matching slots and adds them up: `[1, 2] . [3, 4] = 1x3 + 2x4 = 11`. Bigger means more alike, but long vectors score high too.
 
 ```svg Vector A points the same way as q but is longer; B is nearer to q but points elsewhere. Cosine and dot pick A, distance picks B
 <svg viewBox="0 0 640 300" role="img" aria-label="Two vectors compared to a query with cosine, dot product and distance">
@@ -148,7 +150,7 @@ Open `similarity.py`. Two functions:
 - `cosine_similarity(a, b)`: a float. Lists and arrays both work. A zero vector gives `0.0`, with no warning
 - `top_k_similar(query, matrix, k)`: a list of `(index, score)` pairs, best first. Ties keep the lower index. `k` larger than the matrix returns all rows; `k` of 0 returns `[]`
 
-Do not change `query` or `matrix`. Use the toy `embed` and `embed_many` from `toy_embedding.py` in your own experiments.
+Do not change `query` or `matrix`. Use the toy `embed` and `embed_many` in your own experiments: `from toy_embedding import embed, embed_many` (the file is `curriculum/_kit/toy_embedding.py`).
 
 ```hint
 `np.asarray(a, dtype=float)` accepts lists and arrays. `np.linalg.norm(a)` is the length. If the product of both lengths is 0, return `0.0`.

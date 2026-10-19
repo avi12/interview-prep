@@ -60,6 +60,8 @@ return result.data;
 
 The same schema also tells the model what to send: `z.toJSONSchema(Invoice)`.
 
+Anthropic's structured outputs reject rules such as `minimum` and `minLength`. SDK helpers strip them before sending, and your own check still enforces them.
+
 > **Why:** one schema is the single source of truth. The prompt and the check cannot drift apart.
 
 ```quiz
@@ -136,7 +138,7 @@ When validation fails, show the model **its own wrong answer and the exact error
 Start at the left. [[ask]] Send the text to the model. [[parse]] First check: is the reply valid JSON? [[validate]] Second check: does it match the zod schema? [[ok]] If both pass, return the clean data. [[feedback]] If either fails, add two messages: the bad reply, and the exact error. Then ask again, with the model seeing its own mistake. [[giveup]] After N attempts, stop and throw, so a bad day never turns into an endless bill.
 ```
 
-> **Why:** the error is new information. A model that sees what it wrote and what was wrong usually fixes it in one retry.
+> **Why:** the error is new information. A model that sees what it wrote and what was wrong often fixes it on the next try.
 
 > **Not this:** resending the identical request. Same input, same likely mistake, double the cost.
 
@@ -148,7 +150,7 @@ The interviewer is checking whether you treat model output as **untrusted input*
 
 - "I validate with a schema, and I send the schema to the model too"
 - "On failure I feed back the exact error, and I cap attempts at a small number"
-- "If `stop_reason` is `max_tokens`, retrying will not help. I raise the cap instead"
+- "If `stop_reason` is `max_tokens`, the same request will likely be cut off again. I raise the cap instead"
 
 ```quiz
 q: A reply fails validation. What do you send on the retry?
@@ -161,7 +163,7 @@ why: The bad reply and the exact error are new information. Without them the mod
 ```
 
 ```narrate
-Here is what to say in the interview. Model output is untrusted input, so you validate it with a schema, and you give the same schema to the model. On failure you feed back the exact error and you cap the attempts. One more detail: if the answer was cut off at the token limit, retrying the same request will fail the same way. Raise the limit instead.
+Here is what to say in the interview. Model output is untrusted input, so you validate it with a schema, and you give the same schema to the model. On failure you feed back the exact error and you cap the attempts. One more detail: if the answer was cut off at the token limit, sending the same request again will likely be cut off again. Raise the limit instead.
 ```
 
 ## Your turn

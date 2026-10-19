@@ -3,11 +3,11 @@ import { z } from "zod";
 import { loadImpl } from "#kit/impl.ts";
 import { FakeModel, textTurn } from "#kit/fakeModel.ts";
 import type { Message, MessageRequest, MessagesClient } from "#kit/fakeModel.ts";
+import type { CheckResult } from "../starter/extract.ts";
 
-type CheckResult = { isValid: true; data: unknown } | { isValid: false; problem: string };
 type Module = {
   ExtractionError: new (input: { attempts: number; lastProblem: string }) => Error & { attempts: number; lastProblem: string };
-  checkReply: (input: { reply: string; schema: z.ZodType }) => CheckResult;
+  checkReply: (input: { reply: string; schema: z.ZodType }) => CheckResult<unknown>;
   extractWithRetry: (input: { client: MessagesClient; text: string; schema: z.ZodType; maxAttempts: number }) => Promise<{ data: any; attempts: number }>;
 };
 
@@ -114,6 +114,13 @@ describe("extractWithRetry", () => {
     expect(textOfMessage(retryMessages[1])).toBe(STRING_TOTAL);
     expect(textOfMessage(retryMessages[2])).toContain("total");
     expect(textOfMessage(retryMessages[2])).toContain("expected number");
+  });
+
+  it("keeps the system prompt on every attempt", async () => {
+    const fake = new FakeModel([textTurn({ text: STRING_TOTAL }), textTurn({ text: VALID_INVOICE })]);
+    await extractWithRetry({ client: fake, text: INVOICE_TEXT, schema: Invoice, maxAttempts: MAX_ATTEMPTS });
+    expect(fake.requests[1].system).toBe(fake.requests[0].system);
+    expect(fake.requests[1].system).toContain("vendor");
   });
 
   it("tells the model when its reply was not JSON at all", async () => {

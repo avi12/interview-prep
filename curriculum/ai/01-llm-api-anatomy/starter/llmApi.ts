@@ -7,7 +7,7 @@ export type Prices = {
   cacheReadPerMillion: number;
 };
 
-type RequestInput = {
+export type RequestInput = {
   model: string;
   system?: string;
   history?: Message[];

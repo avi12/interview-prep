@@ -80,6 +80,13 @@ def test_retrieve_drops_hits_below_the_score_threshold(faq_index):
     assert [hit.chunk.id for hit in kept] == [every_hit[0].chunk.id]
 
 
+def test_retrieve_keeps_a_hit_whose_score_equals_the_threshold(faq_index):
+    question = "How do I reset my password?"
+    best = retrieve(index=faq_index, question=question, min_score=0.0)[0]
+    kept = retrieve(index=faq_index, question=question, min_score=best.score)
+    assert [hit.chunk.id for hit in kept] == [best.chunk.id]
+
+
 def test_retrieve_returns_nothing_for_an_off_topic_question(faq_index):
     assert retrieve(index=faq_index, question="What is the capital of France?") == []
 

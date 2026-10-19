@@ -150,7 +150,7 @@ A **token** is a chunk of text, often part of a word. Models read, write and bil
 - Only a rule of thumb: every model family has its own tokenizer
 - For a count before sending, use the free `count_tokens` endpoint (still an estimate)
 
-The **context window** is the most one call can hold: everything you send plus everything the model writes. Current Claude models allow 1M tokens.
+The **context window** is the most one call can hold: everything you send plus everything the model writes. Current top Claude models allow up to 1M tokens; older ones allow 200k. Check the model page.
 
 > **Trap:** Claude 4.7 and later count about 30% more tokens for the same text than earlier models. Never reuse old counts for a new model.
 
@@ -241,9 +241,11 @@ Three dials matter. Max tokens caps the length, and it is required. Stop sequenc
 Without streaming you wait for the whole answer. With `stream: true` the server sends **server-sent events** while it writes.
 
 1. `message_start`: the message, content still empty
-2. `content_block_delta`: many small `text_delta` pieces
+2. `content_block_start`, then many small `content_block_delta` events (`text_delta` pieces), then `content_block_stop`
 3. `message_delta`: the `stop_reason` and cumulative `usage`
 4. `message_stop`
+
+`ping` events may arrive anywhere. Ignore them.
 
 ```
 event: content_block_delta

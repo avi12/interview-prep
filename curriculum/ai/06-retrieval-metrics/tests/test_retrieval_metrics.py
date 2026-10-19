@@ -47,6 +47,10 @@ def test_a_repeated_id_counts_once_so_recall_never_passes_one():
     assert recall_at_k(retrieved=["d2", "d2", "d2"], relevant=RELEVANT, k=3) == pytest.approx(0.5)
 
 
+def test_a_repeated_id_counts_once_for_precision_too():
+    assert precision_at_k(retrieved=["d2", "d2", "d2"], relevant=RELEVANT, k=3) == pytest.approx(1 / 3)
+
+
 def test_no_relevant_ids_gives_zero_instead_of_a_crash():
     assert recall_at_k(retrieved=RETRIEVED, relevant=[], k=3) == 0.0
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { MessagesClient } from "#kit/fakeModel.ts";
+import { textOf, type MessagesClient } from "#kit/fakeModel.ts";
 
 export type EvalCase = { id: string; input: string; reference: string };
 export type Verdict = { verdict: "pass" | "fail"; reason: string };
@@ -35,7 +35,7 @@ const askJudge = async ({ judge, judgeModel, rubric, replyFormat, userText }: Ju
     system: `${rubric}\n\n${replyFormat}`,
     messages: [{ role: "user", content: userText }]
   });
-  return response.content.flatMap(block => (block.type === "text" ? [block.text] : [])).join("");
+  return textOf(response.content);
 };
 
 const parseWinner = (text: string) => {

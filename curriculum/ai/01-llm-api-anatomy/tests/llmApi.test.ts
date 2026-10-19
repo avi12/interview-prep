@@ -2,9 +2,8 @@ import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
 import { FakeModel, failTurn, textTurn } from "#kit/fakeModel.ts";
 import type { AssistantBlock, Message, MessageRequest, MessageResponse, MessagesClient, StopReason, Usage } from "#kit/fakeModel.ts";
+import type { Prices, RequestInput } from "../starter/llmApi.ts";
 
-type Prices = { inputPerMillion: number; outputPerMillion: number; cacheWritePerMillion: number; cacheReadPerMillion: number };
-type RequestInput = { model: string; system?: string; history?: Message[]; userText: string; maxTokens: number; stopSequences?: string[] };
 type Module = {
   buildRequest: (input: RequestInput) => MessageRequest;
   readResponse: (response: MessageResponse) => { text: string; stopReason: string; isTruncated: boolean };
@@ -96,6 +95,15 @@ describe("readResponse", () => {
     const finished = readResponse(responseWith({ content: [{ type: "text", text: "Done." }], stopReason: "end_turn" }));
     expect(finished.isTruncated).toBe(false);
     expect(finished.stopReason).toBe("end_turn");
+  });
+
+  it("flags only max_tokens as truncated, not other early stops", () => {
+    const stopReasons: StopReason[] = ["stop_sequence", "tool_use", "refusal", "pause_turn"];
+    for (const stopReason of stopReasons) {
+      const result = readResponse(responseWith({ content: [{ type: "text", text: "Partial" }], stopReason }));
+      expect(result.isTruncated, stopReason).toBe(false);
+      expect(result.stopReason).toBe(stopReason);
+    }
   });
 });
 

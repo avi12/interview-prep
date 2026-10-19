@@ -22,7 +22,7 @@ The **Model Context Protocol (MCP)** is an open standard that lets an AI app use
 - **Host:** the AI app (Claude Code, an editor)
 - **Client:** one per server, kept inside the host
 - **Server:** a program that offers tools and data
-- Messages are **JSON-RPC 2.0**
+- Messages are **JSON-RPC 2.0**: a plain JSON format for a request and its reply
 
 ```svg A host creates one client per server; a local server runs as a subprocess, a remote one over the network; every message is JSON-RPC
 <svg viewBox="0 0 680 250" role="img" aria-label="MCP host with two clients connected to a local and a remote server">
@@ -105,16 +105,18 @@ A server can offer three kinds of things. Tools are functions with a schema for 
 
 ## How it travels
 
+**stdio** means standard input and output, the pipes every program has.
+
 | | stdio | Streamable HTTP |
 |---|---|---|
 | Server | a subprocess the client starts | its own process, many clients |
 | Messages | one JSON message per line on stdin and stdout | HTTP POST to one endpoint, optional event stream back |
 | Fits | local tools: files, git | remote services |
-| Must do | keep stdout for protocol only, log to stderr | check the `Origin` header, bind to localhost when local, authenticate (OAuth is recommended) |
+| Must do | keep stdout for protocol only, log to stderr | check the `Origin` header, bind to localhost when local, authenticate (the spec defines an OAuth-based flow) |
 
 > **Trap:** with stdio, a stray `print()` to stdout corrupts the stream. Log to stderr.
 
-> **Trap:** tutorials from before mid-2026 show an `initialize` handshake and server "sampling". The 2026-07-28 spec is stateless: every request carries its version and capabilities, `server/discover` is optional, and sampling is deprecated. Check the spec date.
+> **Trap:** tutorials from before mid-2026 show an `initialize` handshake and server "sampling". The 2026-07-28 spec is stateless: every request carries its version and capabilities, clients may call `server/discover` first, and sampling is deprecated. Check the spec date.
 
 ```narrate
 Two transports are standard. With standard input and output, the client starts the server as a subprocess and they exchange one JSON message per line. That suits local tools. With streamable HTTP, the server is its own process, clients post messages to one endpoint, and the server can stream replies back. Remote servers must check the origin header and authenticate. One common trap: on the standard input and output transport, anything extra you print corrupts the stream, so log to the error stream.

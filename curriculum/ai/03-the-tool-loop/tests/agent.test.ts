@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
 import { FakeModel, textTurn, toolUseTurn } from "#kit/fakeModel.ts";
-import type { Message, MessageRequest, MessagesClient, ToolDefinition, ToolResultBlock, ToolUseBlock } from "#kit/fakeModel.ts";
+import type { Message, MessageRequest, MessagesClient, ToolResultBlock, ToolUseBlock } from "#kit/fakeModel.ts";
+import type { AgentTool } from "../starter/agent.ts";
 
-type AgentTool = ToolDefinition & { run: (input: Record<string, unknown>) => unknown };
 type Module = {
   MaxIterationsError: new (iterations: number) => Error & { iterations: number };
   runTool: (input: { tools: AgentTool[]; block: ToolUseBlock }) => Promise<ToolResultBlock>;

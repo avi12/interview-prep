@@ -159,7 +159,7 @@ why: With no good evidence the safe answer is I don't know, and skipping the mod
 The prompt does three jobs. It numbers the sources. It tells the model how to cite them. And it gives the model permission to say it does not know. When the reply says one in brackets, map that number back to the chunk id and show the user where the answer came from. If the reply cites a number that is not a source, the model invented it, so drop it. Also remember that retrieved text is data, never instructions.
 ```
 
-## Two layers of I don't know
+## Three layers of I don't know
 
 - **Before the model:** the score gate. No evidence, no call
 - **Inside the prompt:** permission to say "I don't know" when the sources fall short. Anthropic's guide says this simple permission can drastically reduce false information
