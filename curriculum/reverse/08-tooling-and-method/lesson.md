@@ -102,7 +102,7 @@ Work from the outside in. [[network]] The network layer comes first. Watch the r
 
 - **mitmproxy** sits between app and server. For HTTPS it makes certificates on the fly, so the client must **trust its certificate authority**
 - **`strings`** prints readable text of 4 or more characters; `-e l` finds UTF-16 text
-- **Ghidra** is an open source decompiler from the NSA
+- **Ghidra** is an open source reverse engineering suite from the NSA, with a decompiler
 
 > **Why:** each layer down costs more time and shows more detail. A ten minute network capture often answers the whole question.
 
@@ -217,9 +217,9 @@ why: A name is a hint, not proof. The loop still applies, so turn the claim into
 This is not legal advice. It is a habit list.
 
 - Work only on what you **own** or have **written permission** to study
-- Read the license and terms of service. Contracts can forbid reverse engineering
-- The usual safe purpose is **interoperability**. In the US, section 1201(f) permits circumvention only for a lawfully obtained program, for that sole purpose
-- Authentication handshakes can count as access controls, so do not clone one lightly (EFF)
+- Read the license and terms. Contracts can forbid reverse engineering
+- The usual safe purpose is **interoperability**. In the US, section 1201(f) is a narrow exception: only for a lawfully obtained program, for that sole purpose
+- Authentication handshakes can count as access controls (EFF cites a US case), so do not clone one lightly
 
 ```svg Three gates before you start: ownership, terms, purpose
 <svg viewBox="0 0 520 190" role="img" aria-label="Three questions to ask before reverse engineering">

@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import type { Finding } from "../starter/auditManifest.ts";
 
-type Finding = { rule: string; severity: "high" | "medium" | "low"; subject: string };
 type Manifest = Record<string, unknown>;
 type Module = { auditManifest: (manifest: Manifest) => Finding[] };
 

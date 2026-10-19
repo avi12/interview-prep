@@ -52,6 +52,12 @@ def test_slowest_phase_ignores_ssl_because_it_is_part_of_connect():
     assert summarize_har(har)["slowest"][0]["phase"] == "connect"
 
 
+def test_slowest_phase_does_not_count_ssl_twice():
+    timings = {"blocked": 0, "dns": 10, "ssl": 320, "connect": 330, "send": 1, "wait": 400, "receive": 5}
+    har = make_har(make_entry("https://a.test/", time=746, timings=timings))
+    assert summarize_har(har)["slowest"][0]["phase"] == "wait"
+
+
 def test_fewer_than_three_requests_are_all_returned():
     har = make_har(make_entry("https://a.test/", time=5))
     assert len(summarize_har(har)["slowest"]) == 1
@@ -94,6 +100,16 @@ def test_chain_is_just_the_first_url_when_it_does_not_redirect():
 def test_not_modified_is_not_a_redirect():
     har = make_har(make_entry("https://a.test/", status=304, redirect="https://a.test/x"), make_entry("https://a.test/x"))
     assert summarize_har(har)["redirect_chain"] == ["https://a.test/"]
+
+
+def test_chain_finds_each_target_by_url_not_by_position_in_the_capture():
+    har = make_har(
+        make_entry("https://a.test/a", status=301, redirect="https://a.test/b"),
+        make_entry("https://a.test/c", status=302, redirect="https://a.test/d"),
+        make_entry("https://a.test/b", status=302, redirect="https://a.test/c"),
+        make_entry("https://a.test/d", status=200),
+    )
+    assert summarize_har(har)["redirect_chain"] == ["https://a.test/a", "https://a.test/b", "https://a.test/c", "https://a.test/d"]
 
 
 def test_chain_stops_at_a_redirect_loop():

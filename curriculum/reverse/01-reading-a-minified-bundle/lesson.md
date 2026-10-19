@@ -157,7 +157,7 @@ why: Minifying changes names and spacing only. The string is still in the file t
 Open `extractEndpoints.ts` in your copy. `bundle.min.js` sits next to it: read it first. Then write `extractEndpoints(source)`. It returns `{ method, url }` for each network call, in order of appearance.
 
 - `fetch(url)` is a `GET`; `fetch(url, { method: "X" })` uses `X`
-- `thing.open("METHOD", url)` is an XHR call; `window.open("https://...", "_blank")` is not
+- `thing.open("METHOD", url)` is an XHR call (XMLHttpRequest, the older way to call a server); `window.open("https://...", "_blank")` is not
 - A url is a `+` chain of literals, constants (`e`) and table entries (`t[1]`); unknown names become `{name}`
 - Methods come back upper-case
 

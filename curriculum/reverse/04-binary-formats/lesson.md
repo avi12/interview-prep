@@ -121,10 +121,10 @@ The header length counts **bytes**. In UTF-8 an `é` takes 2 bytes, so a header 
 - Slice the **bytes** first, then decode only the header
 - Never decode the payload: audio is not text
 - Split each header line on the **first** colon only: `X-Timestamp:12:30:45` has a value with colons
-- A file's first bytes are often a **magic number**: `1a 45 df a3` starts every WebM file, so this payload really is WebM
+- A file's first bytes are often a **magic number**: `1a 45 df a3` starts every WebM (and Matroska) file, so this payload really is WebM-style audio
 
 ```narrate
-Two habits save you here. The length counts bytes, not letters, so slice the bytes before you decode anything, and decode only the header. And split each header line at the first colon only, because values such as timestamps contain more colons. Finally, notice the first bytes of the payload. One a, forty-five, D F, A three is the magic number that begins every WebM audio file.
+Two habits save you here. The length counts bytes, not letters, so slice the bytes before you decode anything, and decode only the header. And split each header line at the first colon only, because values such as timestamps contain more colons. Finally, notice the first bytes of the payload. One a, forty-five, D F, A three is the magic number that begins every WebM file.
 ```
 
 ```quiz

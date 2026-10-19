@@ -205,7 +205,7 @@ Open `sourceMap.ts`. Implement two functions. Lines and columns count from **0**
 - `decodeMappings(mappings)`: returns one list per generated line. Each segment is `{ generatedColumn, sourceIndex, originalLine, originalColumn, nameIndex }`, with `null` for fields it does not have. Throw on a character outside Base64 or a segment of 2 or 3 fields
 - `originalPositionFor({ sourceMap, generatedLine, generatedColumn })`: returns `{ source, line, column, name }` or `null` when nothing maps there (no such line, column before the first segment, or an unmapped one-field segment)
 
-The tests use the spec example and 40 seeded random lines.
+The tests use small hand-checked maps (including the spec's `iB` = 17) and 40 seeded random lines.
 
 ```hint
 Write a small `decodeValues(text)` first: it turns "iB,..." style letters into a list of numbers using the continue bit and the sign bit.

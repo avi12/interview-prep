@@ -17,11 +17,11 @@ sources:
 
 The network is the one place where an app **cannot hide what it does**. Every request leaves the browser.
 
-A **HAR** (HTTP Archive) is a JSON file with every request of a session. In DevTools, Network panel: **Export HAR (sanitized)**.
+A **HAR** (HTTP Archive) is a JSON file with every request of a session. In DevTools, Network panel: **Export HAR (sanitized)**. HAR is an informal format (its W3C draft was never published), but browsers and tools share one layout.
 
 Why it helps with Edge Read Aloud: in a capture you would see one plain GET that returns the voice list as JSON, and one WebSocket row that stays open. Two different kinds of traffic, two different tools.
 
-> **Trap:** the default export strips `Cookie`, `Set-Cookie` and `Authorization`. A HAR exported **with** sensitive data is a password file. Never commit or share one.
+> **Trap:** the default export strips sensitive data, such as the `Cookie`, `Set-Cookie` and `Authorization` headers. A HAR exported **with** sensitive data is a password file. Never commit or share one.
 
 ```svg A HAR holds a log, the log holds one entry per request, and each entry has a request, a response and timings
 <svg viewBox="0 0 520 220" role="img" aria-label="Structure of a HAR file">

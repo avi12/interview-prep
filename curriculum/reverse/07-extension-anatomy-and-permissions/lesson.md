@@ -81,7 +81,7 @@ Review starts at the manifest, because it lists everything the extension is allo
 
 ## How broad is the match?
 
-A **match pattern** is `scheme://host/path`. The path is ignored for host permissions, so the host decides.
+A **match pattern** is `scheme://host/path`. The path is ignored for host permissions, so the host decides: `https://*/api/*` is as broad as `https://*/*`. The exercise below checks only the four exact patterns.
 
 ```svg From one host to every site: three patterns, three very different reaches
 <svg viewBox="0 0 520 190" role="img" aria-label="Match patterns from narrow to broad">

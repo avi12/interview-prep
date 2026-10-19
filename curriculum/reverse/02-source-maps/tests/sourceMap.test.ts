@@ -1,14 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import { createSeededPicker } from "#kit/random.ts";
+import type { Segment, SourceMap } from "../starter/sourceMap.ts";
 
-type Segment = {
-  generatedColumn: number;
-  sourceIndex: number | null;
-  originalLine: number | null;
-  originalColumn: number | null;
-  nameIndex: number | null;
-};
-type SourceMap = { version: number; sources: string[]; names: string[]; mappings: string };
 type Position = { source: string; line: number; column: number; name: string | null } | null;
 type Module = {
   decodeMappings: (mappings: string) => Segment[][];
@@ -67,19 +61,8 @@ const encodeMappings = (lines: Segment[][]) => {
     .join(";");
 };
 
-const seededRandom = (seed: number) => {
-  let state = seed;
-  return () => {
-    state = (state + 0x6d2b79f5) | 0;
-    let mixed = Math.imul(state ^ (state >>> 15), 1 | state);
-    mixed = (mixed + Math.imul(mixed ^ (mixed >>> 7), 61 | mixed)) ^ mixed;
-    return ((mixed ^ (mixed >>> 14)) >>> 0) / 4294967296;
-  };
-};
-
 const randomLines = () => {
-  const random = seededRandom(RANDOM_SEED);
-  const pick = (limit: number) => Math.floor(random() * limit);
+  const pick = createSeededPicker(RANDOM_SEED);
   return Array.from({ length: RANDOM_LINE_COUNT }, () => {
     let column = 0;
     return Array.from({ length: pick(6) }, () => {
@@ -100,7 +83,7 @@ const GREET_MAP: SourceMap = {
 };
 
 describe("decodeMappings", () => {
-  it("decodes the example from the Source Map spec", () => {
+  it("decodes a two-line map by hand-checked values", () => {
     expect(decodeMappings("AAAA,IAAM;AACA")).toEqual([
       [segment(0, 0, 0, 0), segment(4, 0, 0, 6)],
       [segment(0, 0, 1, 6)]
@@ -110,6 +93,7 @@ describe("decodeMappings", () => {
   it("decodes values that need more than one Base64 digit", () => {
     expect(decodeMappings("iB")).toEqual([[segment(17)]]);
     expect(decodeMappings("iB,hB")).toEqual([[segment(17), segment(1)]]);
+    expect(decodeMappings("V")).toEqual([[segment(-10)]]);
   });
 
   it("decodes negative values", () => {
