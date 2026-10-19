@@ -20,8 +20,8 @@ describe("paginate: normal pages", () => {
     expect(result.items).toEqual([1, 2, 3]);
   });
 
-  it("says there is a next page when more pages follow", () => {
-    const items = numbered(9);
+  it("says there is a next page on the page just before the last", () => {
+    const items = numbered(6);
 
     const result = paginate({ items, page: 1, pageSize: 3 });
 
@@ -120,5 +120,13 @@ describe("paginate: invalid input", () => {
     const askForEmptyPages = () => paginate({ items, page: 1, pageSize: 0 });
 
     expect(askForEmptyPages).toThrow(RangeError);
+  });
+
+  it("rejects a negative page size", () => {
+    const items = numbered(6);
+
+    const askForNegativePages = () => paginate({ items, page: 1, pageSize: -1 });
+
+    expect(askForNegativePages).toThrow(RangeError);
   });
 });

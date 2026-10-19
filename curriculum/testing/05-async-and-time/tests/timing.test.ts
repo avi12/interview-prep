@@ -117,10 +117,10 @@ describe("retry with fake timers", () => {
     expect(task).toHaveBeenCalledTimes(1);
   });
 
-  it("rejects with a RangeError when attempts is below 1", async () => {
+  it.each([0, -1])("rejects with a RangeError when attempts is %i, below 1", async attempts => {
     const task = failingThenSucceeding(0);
 
-    const outcome = retry({ task, attempts: 0, delayMs: DELAY_MS });
+    const outcome = retry({ task, attempts, delayMs: DELAY_MS });
 
     await expect(outcome).rejects.toThrow(RangeError);
     expect(task).not.toHaveBeenCalled();

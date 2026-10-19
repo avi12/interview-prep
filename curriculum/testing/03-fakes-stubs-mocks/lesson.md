@@ -15,12 +15,12 @@ sources:
 
 ## Test doubles, in plain words
 
-`registerUser` talks to a database and an email service. In a test you do not want the real ones: slow, shared, unpredictable. So you swap in a **test double**. Fowler names five kinds:
+`registerUser` talks to a database and an email service. In a test you do not want the real ones: slow, shared, unpredictable. So you swap in a **test double**. Gerard Meszaros named five kinds, and Fowler wrote them up:
 
 | Kind | What it does | Example |
 |---|---|---|
 | Dummy | passed in, never used | `{}` as an unused logger |
-| Stub | returns canned answers | `hashPassword` returns `"hashed:" + password` |
+| Stub | returns canned (pre-written) answers | `hashPassword` returns `"hashed:" + password` |
 | Fake | really works, with a shortcut | a user repository in memory |
 | Spy | a stub that records its calls | `vi.fn()` |
 | Mock | pre-set expectations, fails if the calls differ | strict mock objects |
@@ -61,7 +61,7 @@ The service under test sits in the middle. [[service]] The function register use
 
 > **Why:** a double makes the test fast and repeatable, and lets you create situations that are hard to trigger for real.
 
-> **Trap:** people say "mock" for all five. In an interview, name the kind you mean.
+> **Trap:** people say "mock" for all five, even for `vi.fn()`, which is a spy on this list. In an interview, name the kind you mean.
 
 ## State or interaction?
 

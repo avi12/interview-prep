@@ -1,6 +1,7 @@
 ---
 title: pytest - fixtures and parametrize
 lang: py
+timeoutSeconds: 300
 minutes: 25
 level: junior
 roles: [backend, analyst, ai]
@@ -165,7 +166,7 @@ Open `test_pricing.py`. `pricing.py` sits beside it; read it, do not change it. 
 | `Cart.total_cents(discount=0)` | discount percent first, then tax from env var `TAX_PERCENT` (unset means 0) |
 | `discount_percent(code, path)` | reads a JSON file like `{"SAVE10": 10}`. Codes ignore case. Unknown code or missing file: 0 |
 
-Run `pnpm lesson test testing/06-pytest-fixtures-and-parametrize`. You need 10 or more tests, using a fixture, `parametrize`, `tmp_path` and `monkeypatch`. They must pass on the correct code and fail on **13 buggy copies**.
+Run `pnpm lesson test testing/06-pytest-fixtures-and-parametrize`. You need 10 or more tests, using a fixture, `parametrize`, `tmp_path` and `monkeypatch`. They must pass on the correct code and fail on **16 buggy copies**.
 
 ```hint
 Start by moving `Cart()` into a fixture, then a second fixture that adds a few items to it.

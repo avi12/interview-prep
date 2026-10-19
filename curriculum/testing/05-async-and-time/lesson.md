@@ -48,7 +48,9 @@ Waiting is the enemy of a fast test suite. [[real]] A test that really waits thr
 
 ## Fake timers: you move the clock
 
-`vi.useFakeTimers()` replaces `setTimeout`, `setInterval` and `Date` until `vi.useRealTimers()`. It does **not** fake `process.nextTick` or `queueMicrotask`. Always restore in `afterEach`.
+`vi.useFakeTimers()` replaces `setTimeout`, `setInterval`, `Date` and similar functions until `vi.useRealTimers()`. It does **not** fake `process.nextTick` or `queueMicrotask`. Always restore in `afterEach`.
+
+A `debounce` runs a callback once, after calls have stopped for `waitMs`.
 
 ```ts
 beforeEach(() => {
@@ -81,7 +83,7 @@ Fake timers put you in charge of the clock. Switch them on before each test and 
 
 ## Async code: advance the async way
 
-`retry` waits between attempts, and attempts are promises. A promise continues only when the engine gets a turn. `advanceTimersByTime` moves the clock but gives no turn. **`await vi.advanceTimersByTimeAsync(ms)`** does both.
+A `retry` helper (you write one below) waits between attempts, and each attempt is a promise. A promise continues only when the engine gets a turn. `advanceTimersByTime` moves the clock but gives no turn. **`await vi.advanceTimersByTimeAsync(ms)`** does both.
 
 ```svg The timer only exists after attempt 1 failed, so the test must give the promise a turn before it advances
 <svg viewBox="0 0 520 190" role="img" aria-label="Retry timeline with a fake clock">
@@ -124,7 +126,7 @@ export function isExpired({ issuedAt, ttlMs, now = Date.now }) {
 }
 ```
 
-A test passes `now: () => 1499` or `() => 1500`. No fake timers, exact borders. If you cannot change the code, `vi.setSystemTime(date)` fixes `Date` while fake timers are on.
+With `issuedAt: 1000` and `ttlMs: 500`, a test passes `now: () => 1499` or `() => 1500`. No fake timers, exact borders. If you cannot change the code, `vi.setSystemTime(date)` fixes `Date` while fake timers are on.
 
 > **Not this:** `Date.now()` buried deep in business logic. It is a hidden input, so tests must patch the whole world.
 
@@ -150,10 +152,10 @@ Open `timing.ts`. It exports two functions to implement.
 - Calls `task` up to `attempts` times, waiting `delayMs` between tries, not after the last one
 - Resolves with the first success
 - Rejects with the **last** error when all attempts fail
-- Throws `RangeError` if `attempts` is below 1
+- Rejects with `RangeError` if `attempts` is below 1
 
-**`isExpired({ issuedAt, ttlMs, now })`**
-- True once `ttlMs` has fully passed. `now` defaults to `Date.now`
+**`isExpired({ issuedAt, ttlMs, now })`** (`ttl` means time to live)
+- True once `ttlMs` or more has passed, so exactly `ttlMs` counts. `now` defaults to `Date.now`
 
 Run `pnpm lesson test testing/05-async-and-time`. The tests use fake timers and an injected clock.
 

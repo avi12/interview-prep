@@ -1,6 +1,7 @@
 ---
 title: Edge cases and boundaries
 lang: ts
+timeoutSeconds: 300
 minutes: 20
 level: junior
 roles: [backend, analyst, ai]
@@ -13,7 +14,7 @@ sources:
 
 ## Bugs live on the border
 
-A page is a slice of a list: page 1 of size 3 is items 1 to 3. The classic slip is `<` versus `<=`.
+A page is a slice of a list: page 1 of size 3 is items 1 to 3. The classic slip is `<` versus `<=` in the check that answers "is there a next page?".
 
 ```ts
 hasNextPage: page < totalPages
@@ -67,7 +68,7 @@ An **equivalence class** is a group of inputs the code treats the same way. One 
 | Class | Example | Expected |
 |---|---|---|
 | Middle page | page 2 of 3 | its items |
-| Last page, partly full | page 3 of 7 items | leftovers |
+| Last page, partly full | page 3 of 7 items, size 3 | leftovers |
 | Past the end | page 9 | no items |
 | Zero | page 0 | error |
 | Negative | page -1 | error |
@@ -95,7 +96,7 @@ Run every function through the same checklist:
 
 | Situation | Example | Why it breaks code |
 |---|---|---|
-| Empty | `[]` | divides or indexes into nothing |
+| Empty | `[]` | code assumes a first item, or invents a page |
 | Exactly full | 6 items, size 3 | a rounding slip adds a phantom page |
 | One over | 7 items, size 3 | the last page is partly filled |
 | Beyond the end | page 9 of 3 | slice runs past the list |
@@ -120,7 +121,7 @@ Open `paginate.test.ts`. `paginate.ts` sits next to it; read it, do not change i
 - An empty list has 0 pages
 - `page` and `pageSize` must be whole numbers of 1 or more, else `RangeError`
 
-Run `pnpm lesson test testing/02-edge-cases-and-boundaries`. Your tests must pass on the correct code and go red on **10 buggy copies**. Use 8 or more tests with names of 3 or more words.
+Run `pnpm lesson test testing/02-edge-cases-and-boundaries`. Your tests must pass on the correct code and go red on **12 buggy copies**. Use 8 or more tests with names of 3 or more words.
 
 ```hint
 Walk the checklist card one row at a time: empty, exactly full, one over, beyond the end, invalid.
@@ -131,5 +132,5 @@ A border needs a test on each side: page 0 and page 1, the last page and the pag
 ```
 
 ```hint
-The check prints the name of each bug that got through. Typical gaps: a fractional page, a page size of 0, an empty list, a full last page, the last page's hasNextPage.
+The check prints the name of each bug that got through. Typical gaps: a fractional page, a negative page size, an empty list, a full last page, `hasNextPage` on the last page and on the page just before it.
 ```

@@ -80,7 +80,7 @@ def test_total_adds_tax_from_the_environment(cart_with_items, monkeypatch):
     assert cart_with_items.total_cents() == 960
 
 
-def test_total_applies_the_discount_before_tax(cart_with_items, monkeypatch):
+def test_total_applies_both_the_discount_and_the_tax(cart_with_items, monkeypatch):
     monkeypatch.setenv(pricing.TAX_ENV_VAR, "10")
 
     assert cart_with_items.total_cents(discount=50) == 440

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import { sequentialIds } from "#kit/ids.ts";
 import type * as ServiceModule from "../starter/registerUser.ts";
 import type * as FakeModule from "../starter/fakeUserRepository.ts";
 
@@ -12,15 +13,10 @@ const BEN = { id: "id-2", email: "ben@example.com", passwordHash: "hash-2" };
 
 const stubHash = (password: string) => `hashed:${password}`;
 
-const sequentialIds = () => {
-  let count = 0;
-  return () => `user-${++count}`;
-};
-
 const setup = () => {
   const users = createInMemoryUserRepository();
   const mailer = { sendWelcome: vi.fn(async (_email: string) => {}) };
-  const registerUser = createRegisterUser({ users, mailer, hashPassword: stubHash, newId: sequentialIds() });
+  const registerUser = createRegisterUser({ users, mailer, hashPassword: stubHash, newId: sequentialIds("user") });
   return { users, mailer, registerUser };
 };
 
@@ -72,6 +68,31 @@ describe("your fake repository behaves like a real one", () => {
     original.passwordHash = "tampered";
 
     expect((await users.findByEmail(ANA.email))?.passwordHash).toBe(ANA.passwordHash);
+  });
+
+  it("hands out copies from list too, so changing a listed user does not change the store", async () => {
+    const users = createInMemoryUserRepository();
+    await users.save(ANA);
+    const [listed] = await users.list();
+    listed.passwordHash = "tampered";
+
+    expect((await users.list())[0].passwordHash).toBe(ANA.passwordHash);
+  });
+
+  it("returns a new list each time, so adding to the list does not change the store", async () => {
+    const users = createInMemoryUserRepository();
+    await users.save(ANA);
+    const listed = await users.list();
+    listed.push(BEN);
+
+    expect(await users.list()).toEqual([ANA]);
+  });
+
+  it("finds a user only by the whole email, not by a part of it", async () => {
+    const users = createInMemoryUserRepository();
+    await users.save(ANA);
+
+    expect(await users.findByEmail("example.com")).toBeUndefined();
   });
 
   it("does not share data between two repositories", async () => {

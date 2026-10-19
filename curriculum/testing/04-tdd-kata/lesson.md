@@ -58,7 +58,7 @@ The loop has three steps. [[red]] Red: write a tiny test for behavior that does 
 
 ## Be lazy on purpose
 
-The kata: `toRoman(value)` turns 1 into `I`, 4 into `IV`, 1994 into `MCMXCIV`.
+The kata (a small practice exercise) is `toRoman(value)`. It turns 1 into `I`, 4 into `IV`, 1994 into `MCMXCIV`.
 
 Test 1 says `toRoman(1)` is `"I"`. It is red because the code returns `""`. The laziest green is:
 
@@ -76,7 +76,7 @@ export function toRoman(value: number) {
 }
 ```
 
-A second example **forces** the real rule. Fowler lists this as part of the craft: choose the next test well.
+A second example **forces** the real rule. Choosing the next test well is part of the craft: Fowler says to pick tests that drive the design forward quickly.
 
 ```narrate
 Start lazy on purpose. The first test only needs the letter I, so return the letter I. That is honest, and it is green. The second test, two, breaks that shortcut, so now the code has to repeat the letter. Each new example pushes the code a little closer to the real rule, and you never write code that no test asked for.
@@ -119,16 +119,16 @@ Look at fourteen. [[biggest]] The biggest piece that fits is ten, written X. [[s
 
 ## Refactor is not optional
 
-Fowler: "the most common way to screw up TDD is neglecting the third step." Green means you may tidy:
+Fowler: "The most common way that I hear to screw up TDD is neglecting the third step." Green means you may tidy:
 
 - Remove duplication
 - Replace magic numbers with names
 - Make the loop read like the rule
 
-Do it **only while green**. The tests are your safety net, and a net with a hole catches nothing.
+Do it **only while green**. If a test is already red, you cannot tell whether your tidy-up broke something.
 
 ```narrate
-Refactoring is the step people skip, and skipping it is the most common way to ruin test-driven development. When the tests are green, you are allowed to tidy: remove duplication, give numbers names, make the code read like the rule. Do it only while green, because a red test means the safety net has a hole.
+Refactoring is the step people skip, and skipping it is the most common way to ruin test-driven development. When the tests are green, you are allowed to tidy: remove duplication, give numbers names, make the code read like the rule. Do it only while green, because with a red test you cannot tell whether your tidying broke something.
 ```
 
 ```quiz
@@ -151,7 +151,7 @@ Open `roman.ts` and implement `toRoman(value)` for whole numbers from 1 to 3999.
 The tests come in **7 stages**. Work like TDD: run `pnpm lesson test testing/04-tdd-kata`, find the **first** red stage, make only that pass, tidy, repeat. Stage 6 checks all 3999 numbers, so hard-coding the examples fails.
 
 ```hint
-Stages 1 and 2 only need a loop of repeats. Do not look at stage 3 yet.
+Stage 1 only needs the letter I repeated. Stage 2 adds one more rule: five. Do not look at stage 3 yet.
 ```
 
 ```hint

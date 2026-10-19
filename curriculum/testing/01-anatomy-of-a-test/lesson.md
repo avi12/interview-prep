@@ -1,6 +1,7 @@
 ---
 title: Anatomy of a test
 lang: ts
+timeoutSeconds: 300
 minutes: 20
 level: junior
 roles: [backend, analyst, ai]
@@ -20,7 +21,7 @@ Every good test has three beats:
 - **Act:** call the code, once
 - **Assert:** check one result
 
-Martin Fowler calls the same beats Given, When, Then.
+The same beats go by another name, Given, When, Then (Martin Fowler explains the link).
 
 ```ts
 it("joins two words with a hyphen", () => {
@@ -93,7 +94,7 @@ The function under test is `slugify(text)`. It turns a title into a web address 
 - No hyphen at the start or the end
 - Nothing usable left gives `""`
 
-Turn each rule into its own test. Start with the happy path, then **attack each rule** with an input built to break it.
+Turn each rule into its own test. Start with the happy path (a normal input that should just work), then **attack each rule** with an input built to break it.
 
 > **Trap:** testing only the example from the spec. Bugs hide in the inputs nobody wrote down.
 
@@ -138,7 +139,7 @@ How do you know your tests are good? **Break the code on purpose.** Change one t
 Start with the correct code. [[code]] It has a lowercase step. [[mutant]] Now make a mutant: the same code with that step removed, one small bug. Run your tests against it. [[killed]] If a test goes red, the mutant is killed, which is what you want. [[survived]] If everything stays green, the mutant survived, and a real bug like that would slip through your tests.
 ```
 
-> **Why:** line coverage only proves a line ran. A killed mutant proves a test would notice the bug. Stryker, a mutation testing tool, is built on this idea.
+> **Why:** line coverage (the share of lines your tests ran) only proves a line ran. A killed mutant proves a test would notice the bug. Stryker, a mutation testing tool, is built on this idea.
 
 ```quiz
 q: You delete the lowercase step from slugify and every test still passes. What does that mean?

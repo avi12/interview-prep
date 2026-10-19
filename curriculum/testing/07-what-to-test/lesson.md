@@ -16,7 +16,11 @@ sources:
 
 ## The question behind "how do you test?"
 
-Testing is named in most junior backend job posts: about 35 of the 45 we read. The interviewer is not after a tool name. They listen for four things.
+Testing is named in most junior backend job posts: about 35 of the 45 we read. The interviewer is not after a tool name. They listen for four things. One is the **level** of a test:
+
+- **Unit:** one small piece alone, like a function
+- **Integration:** several pieces together, like code plus a real database
+- **End-to-end (e2e):** the whole app, driven the way a user would
 
 ```svg The four things a good answer touches. Say one sentence for each
 <svg viewBox="0 0 520 200" role="img" aria-label="What, level, trust, enough">
@@ -50,7 +54,7 @@ Testing is named in most junior backend job posts: about 35 of the 45 we read. T
 ```
 
 ```narrate
-Interviewers ask how you test to hear how you think. [[what]] First, what you test: behavior, seen from the outside, not internal details. [[level]] Second, at which level: mostly small fast tests, some integration tests, very few end to end ones. [[trust]] Third, whether you can trust the suite: fast, repeatable, and free of sleeps. [[enough]] Fourth, how you know it is enough: bugs rarely escape, and changing code feels safe.
+Interviewers ask how you test to hear how you think. A unit test checks one small piece alone, an integration test checks pieces together, and an end to end test drives the whole app. [[what]] First, what you test: behavior, seen from the outside, not internal details. [[level]] Second, at which level: mostly small fast tests, some integration tests, very few end to end ones. [[trust]] Third, whether you can trust the suite: fast, repeatable, and free of sleeps. [[enough]] Fourth, how you know it is enough: bugs rarely escape, and changing code feels safe.
 ```
 
 > **Why:** Fowler judges "enough" by two signs: bugs rarely reach production, and developers rarely fear changing code.
@@ -62,7 +66,7 @@ Two pictures of how to spread your tests across levels.
 - **Pyramid** (Fowler): many unit tests, fewer coarse tests, very few end-to-end
 - **Trophy** (Kent C. Dodds): the middle is widest. He builds on a tweet by Guillermo Rauch: "Write tests. Not too many. Mostly integration."
 
-Both agree end-to-end tests are slow and brittle, so keep them few.
+Both keep end-to-end tests at the top and few. Fowler's reason: they are slow, flaky and costly to maintain.
 
 ```svg Pyramid: wide base of unit tests. Trophy: the widest part is integration, with static checks underneath
 <svg viewBox="0 0 520 230" role="img" aria-label="Test pyramid next to testing trophy">
@@ -95,23 +99,23 @@ Both agree end-to-end tests are slow and brittle, so keep them few.
 Two popular pictures. [[pyramid]] The pyramid has a wide base of fast unit tests, a smaller middle, and a tiny top of end to end tests. [[trophy]] The trophy keeps the tiny top, but makes the middle widest: integration tests that use several parts together, with type checking underneath. They disagree about the middle, and agree about the top: keep slow tests few.
 ```
 
-> **Not this:** an upside-down pyramid, mostly slow UI tests and almost no unit tests. Slow, brittle, and failures are hard to place.
+> **Not this:** an upside-down pyramid (Fowler calls it the "test ice-cream cone"): mostly slow UI tests and almost no unit tests. Slow, brittle, and failures are hard to place.
 
-In the interview: "Logic gets unit tests, the seams get integration tests, and a few key journeys get end-to-end."
+In the interview: "Logic gets unit tests, the joins between parts get integration tests, and a few key journeys get end-to-end."
 
 ## Flaky tests
 
-A **flaky** test "passes sometimes and fails sometimes, without any noticeable change" (Fowler). The cause is almost always a **hidden input** the test does not control.
+A **flaky** test (Fowler says "non-deterministic") "passes sometimes and fails sometimes, without any noticeable change in the code, tests, or environment". The cause is almost always a **hidden input** the test does not control.
 
 | Cause | Fix |
 |---|---|
 | Shared data or test order | each test builds its own data |
 | Real clock, `sleep` | fake timers, injected clock |
 | Randomness | seed it, or inject it |
-| Live network or API | a fake, plus a separate contract test |
+| Live network or API | a fake, plus a separate contract test (checks the fake still matches the real service) |
 | Async timing | wait for the event, not for a guess |
 
-> **Not this:** "re-run until green." It teaches the team that red means nothing. Quarantine the test, then fix it quickly.
+> **Not this:** "re-run until green." It teaches the team that red means nothing. Quarantine the test (move it to a separate suite that does not block), then fix it quickly.
 
 ```svg A flaky test has hidden inputs. Control or fake each one
 <svg viewBox="0 0 520 190" role="img" aria-label="Hidden inputs make a test flaky">
@@ -152,7 +156,7 @@ def test_slugify_runs():
     slugify("Hello World")
 ```
 
-This test gives full coverage of the happy path and asserts nothing. Fowler: coverage is "a useful tool for finding untested parts of a codebase" but "of little use as a numeric statement of how good your tests are". Make it a target and people will hit it.
+This test gives full coverage of the happy path and asserts nothing. Fowler: coverage is "a useful tool for finding untested parts of a codebase" but "of little use as a numeric statement of how good your tests are". Make it a target and people will try to hit it, by the cheapest route.
 
 > **Why:** a mutant that survives shows a bug your tests would miss. Coverage cannot show that.
 
