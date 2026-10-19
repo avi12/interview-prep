@@ -1,0 +1,12 @@
+[
+  { "id": "foundations", "title": "Foundations and LeetCode patterns", "blurb": "Big-O and the handful of patterns behind most interview problems" },
+  { "id": "sql", "title": "SQL on real Postgres", "blurb": "From joins to window functions, indexes and transactions" },
+  { "id": "testing", "title": "Writing tests", "blurb": "What to test, how to isolate it, and why" },
+  { "id": "auth", "title": "Authentication and authorization", "blurb": "Passwords, sessions, tokens, OAuth and the attacks around them" },
+  { "id": "backend", "title": "Backend and APIs", "blurb": "REST design, validation, errors, pagination, idempotency" },
+  { "id": "analyst", "title": "Data analysis", "blurb": "Metrics, statistics, experiments and pandas" },
+  { "id": "ai", "title": "AI engineering", "blurb": "LLM calls, tool loops, retrieval and evals" },
+  { "id": "systemdesign", "title": "System design", "blurb": "Sketching systems and defending the trade-offs" },
+  { "id": "reverse", "title": "Reverse engineering", "blurb": "Read what you did not write: bundles, protocols and binaries" },
+  { "id": "behavioral", "title": "Behavioral and communication", "blurb": "Stories, punchline-first answers, case structure" }
+]
