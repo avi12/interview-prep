@@ -135,7 +135,7 @@ When X and Y move together, there are four stories: X causes Y, **Y causes X**, 
 | Pattern | Example | Check |
 |---|---|---|
 | Common cause | ice cream sales and drownings both rise in hot weather | what could drive both? |
-| Reverse | windmills spin faster when the wind is stronger | which moved first? |
+| Reverse | cities with more police have more crime: crime may be what brings the police | which moved first? |
 | Coincidence | two trends line up by chance | does it hold on new data? |
 
 ```svg Hot weather drives both ice cream sales and drownings, so they move together without either causing the other
@@ -183,7 +183,7 @@ why: Engaged users may be the ones who find the feature. Randomly assigning it r
 Each test at 5% significance has a 5% chance of a false alarm. Run **20** tests where nothing is real:
 
 - Expected false alarms: 20 x 0.05 = **1**
-- Chance of at least one: 1 - 0.95^20 = **64%**
+- Chance of at least one, if the tests are independent: 1 - 0.95^20 = **64%**
 
 **p-hacking** is trying metrics, slices or stopping points until one crosses 0.05, and reporting only that one.
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { openDb, runQueryFile } from "#kit/db.ts";
+import { runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `
 CREATE TABLE visitors (visitor_id int PRIMARY KEY, channel text NOT NULL);
@@ -21,11 +21,9 @@ INSERT INTO orders VALUES
   (1, 101, 10), (2, 101, 10), (3, 102, 25), (4, 103, 5), (5, 103, 5),
   (6, 201, 15), (7, 201, 15), (8, 201, 15);`;
 
-const run = async (seed: string) => {
-  const { rows, columns } = await runQueryFile({ db: await openDb(seed), testUrl: import.meta.url, file: "query.sql" });
-  const typedRows: Record<string, unknown>[] = rows.map(row => ({ ...row, conversion_rate: Number(row.conversion_rate) }));
-  return { rows: typedRows, columns };
-};
+const NUMERIC_COLUMNS = ["conversion_rate"];
+
+const run = (seed: string) => runSeeded({ seed, testUrl: import.meta.url, file: "query.sql", numericColumns: NUMERIC_COLUMNS });
 
 describe("conversion rate by channel", () => {
   it("returns channel, visitor_count, buyer_count, conversion_rate", async () => {

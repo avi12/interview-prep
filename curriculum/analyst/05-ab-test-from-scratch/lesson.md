@@ -22,7 +22,7 @@ sources:
 Half the visitors see the old page (control), half see the new one (variant). The **null hypothesis** says the two pages convert equally. Any gap you see is luck.
 
 - **p-value**: if there were truly no difference, how often would luck alone give a gap at least this big?
-- **95% confidence interval**: the range of true differences that the data cannot rule out
+- **95% confidence interval**: the range of true differences that the data cannot rule out at the 5% level
 
 ```svg If there is no real difference, gaps this large (z = 2.5, either direction) happen about 1.2% of the time
 <svg viewBox="0 0 520 230" role="img" aria-label="Normal curve with both tails shaded beyond z of 2.5">
@@ -65,9 +65,9 @@ p      = 2 * P(Z > |z|)
 ci     = (rate_v - rate_c) +/- 1.96 * sqrt(rate_c*(1-rate_c)/n_c + rate_v*(1-rate_v)/n_v)
 ```
 
-Here `c` is control, `v` is variant, `x` is conversions, `n` is visitors.
+Here `c` is control, `v` is variant, `x` is conversions, `n` is visitors. `se` (standard error) is the typical size of the luck wobble in the gap, and `z` is the gap measured in those units.
 
-Example: 200 of 2,000 buy on control (10%), 250 of 2,000 on variant (12.5%). Lift = 2.5 points, z = 2.50, p = 0.012.
+Example: 200 of 2,000 buy on control (10%), 250 of 2,000 on variant (12.5%). Lift (variant rate minus control rate) = 2.5 points, z = 2.50, p = 0.012.
 
 > **Why:** the **test** assumes no difference, so both groups share one rate and the best estimate pools everyone. The **interval** assumes nothing, so each group keeps its own rate and its own uncertainty.
 
@@ -109,7 +109,7 @@ The picture shows the lift in percentage points. [[zero]] The dashed line at zer
 
 ## How many people? Decide first
 
-Before launch, fix four inputs: the baseline rate, the **smallest lift worth detecting** (in points, not percent of percent), significance (5%) and power (80%). **Power** is the chance to detect that lift if it is real.
+Before launch, fix four inputs: the baseline rate, the **smallest lift worth detecting** (in points, not percent of percent), significance (5%, the false alarm rate you accept) and power (80%). **Power** is the chance to detect that lift if it is real.
 
 ```text
 n = ((z_alpha * sqrt(2 * pbar * (1 - pbar))
@@ -158,7 +158,7 @@ why: The lift sits squared in the bottom of the formula, so halving it multiplie
 
 The p-value is only valid if you fixed the sample size **before** the test and look **once**. Check daily and stop at the first p below 0.05, and luck gets many chances.
 
-Seeded simulation, 4,000 A/A tests per bar (both groups identical, so every "win" is false), at 5% significance:
+Simulation, 20,000 A/A tests per bar (both groups identical, so every "win" is false), 5% significance, looks evenly spaced:
 
 ```svg Same test, more looks: false winners grow from 5% to about 25%
 <svg viewBox="0 0 520 230" role="img" aria-label="False positive rate by number of looks">
@@ -171,14 +171,14 @@ Seeded simulation, 4,000 A/A tests per bar (both groups identical, so every "win
     <rect x="120" y="160" width="44" height="30" fill="var(--surface-3)" stroke="var(--border)" stroke-width="2"/>
     <text x="142" y="154" text-anchor="middle" fill="var(--fg)">5%</text>
     <text x="142" y="208" text-anchor="middle" fill="var(--fg-muted)">1 look</text>
-    <rect x="188" y="136" width="44" height="54" fill="var(--surface-3)" stroke="var(--border)" stroke-width="2"/>
-    <text x="210" y="130" text-anchor="middle" fill="var(--fg)">9%</text>
+    <rect x="188" y="142" width="44" height="48" fill="var(--surface-3)" stroke="var(--border)" stroke-width="2"/>
+    <text x="210" y="136" text-anchor="middle" fill="var(--fg)">8%</text>
     <text x="210" y="208" text-anchor="middle" fill="var(--fg-muted)">2</text>
-    <rect x="256" y="100" width="44" height="90" fill="var(--surface-3)" stroke="var(--border)" stroke-width="2"/>
-    <text x="278" y="94" text-anchor="middle" fill="var(--fg)">15%</text>
+    <rect x="256" y="106" width="44" height="84" fill="var(--surface-3)" stroke="var(--border)" stroke-width="2"/>
+    <text x="278" y="100" text-anchor="middle" fill="var(--fg)">14%</text>
     <text x="278" y="208" text-anchor="middle" fill="var(--fg-muted)">5</text>
-    <rect x="324" y="70" width="44" height="120" fill="var(--surface-3)" stroke="var(--border)" stroke-width="2"/>
-    <text x="346" y="64" text-anchor="middle" fill="var(--fg)">20%</text>
+    <rect x="324" y="76" width="44" height="114" fill="var(--surface-3)" stroke="var(--border)" stroke-width="2"/>
+    <text x="346" y="70" text-anchor="middle" fill="var(--fg)">19%</text>
     <text x="346" y="208" text-anchor="middle" fill="var(--fg-muted)">10</text>
   </g>
   <g data-cue="worst" font-family="var(--font-mono)" font-size="12">
@@ -190,7 +190,7 @@ Seeded simulation, 4,000 A/A tests per bar (both groups identical, so every "win
 ```
 
 ```narrate
-Both groups in this simulation are identical, so every win is a false alarm. [[promise]] The test promises five percent false alarms. [[bars]] With one look that is what you get. With two looks it is nine percent, with five looks fifteen, with ten looks twenty. [[worst]] Check twenty times and about one test in four crowns a winner that is not real.
+Both groups in this simulation are identical, so every win is a false alarm. [[promise]] The test promises five percent false alarms. [[bars]] With one look that is what you get. With two looks it is about eight percent, with five looks fourteen, with ten looks nineteen. [[worst]] Check twenty times and about one test in four crowns a winner that is not real.
 ```
 
 > **Why:** committing to a sample size in advance removes the problem. Evan Miller: "Committing to a sample size completely mitigates the problem described here."

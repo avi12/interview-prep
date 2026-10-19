@@ -112,6 +112,14 @@ def test_a_small_lift_on_small_groups_is_not_significant_and_the_interval_covers
     assert result.ci_low < 0 < result.ci_high
 
 
+@pytest.mark.parametrize("confidence", [0.80, 0.90, 0.99])
+def test_interval_uses_the_critical_value_of_the_requested_confidence(confidence):
+    result = ab.ab_test(**SHOP, confidence=confidence)
+    low, high = scipy_interval(**SHOP, confidence=confidence)
+    assert result.ci_low == pytest.approx(low, abs=1e-9)
+    assert result.ci_high == pytest.approx(high, abs=1e-9)
+
+
 def test_a_higher_confidence_level_gives_a_wider_interval():
     narrow = ab.ab_test(**SHOP, confidence=0.90)
     wide = ab.ab_test(**SHOP, confidence=0.99)

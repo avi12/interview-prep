@@ -38,8 +38,8 @@ A metric is a formula plus a denominator. Take a shop with one thousand visitors
 
 - **Active** means one named action in the window. Say which: opened the app, played a video, bought?
 - **DAU** (daily active users): distinct active people on one day
-- **MAU** (monthly active users): distinct active people in 30 days
-- **Stickiness** = DAU / MAU. Of my monthly users, what share show up on a typical day?
+- **MAU** (monthly active users): distinct active people in a month. Say which: the last 30 days or the calendar month
+- **Stickiness** = average DAU / MAU. Of my monthly users, what share show up on a typical day?
 
 ```sql
 SELECT event_date, COUNT(DISTINCT user_id) AS dau

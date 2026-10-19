@@ -23,7 +23,7 @@ Five salaries, in thousands: `40, 42, 45, 48, 400`.
 - **Median**: sort, take the middle one (for an even count, average the two middle ones). Here 45
 - **Mode**: the most frequent value. There can be several
 
-The mean is higher than four of the five people. One extreme value dragged it. On right-skewed data like pay, the mean is usually above the median.
+The mean is higher than four of the five people. One extreme value dragged it. On right-skewed data (a long tail of big values) like pay, the mean is usually above the median.
 
 > **Why:** say "median" when the data has a long tail (pay, prices, delivery times). Say "mean" when you need the total back, like revenue per user times users.
 
@@ -63,7 +63,7 @@ Five salaries, in thousands. [[bars]] Four people earn around forty to forty eig
 |---|---|---|
 | Range | max minus min | a lot |
 | Standard deviation | typical distance from the mean | yes, distances are squared |
-| IQR | width of the middle half, Q3 minus Q1 | no |
+| IQR | width of the middle half: Q3 minus Q1, the 75th and 25th percentiles | no |
 
 **Sample or population?** Divide the squared distances by `n - 1` when your data is a sample (almost always). Divide by `n` only if you hold the whole population.
 
@@ -172,7 +172,7 @@ Here is a box plot of delivery days. [[box]] The box spans the middle half of th
 
 > **Why:** quartiles ignore the extremes, so an outlier cannot hide itself by stretching the yardstick.
 
-> **Not this:** "flag anything beyond 3 standard deviations". The 18 inflates the mean and the standard deviation, so it sits only 2.9 deviations out and escapes. With 12 values, nothing can ever be further than 3.2.
+> **Not this:** "flag anything beyond 3 standard deviations". The 18 inflates the mean and the standard deviation, so it sits only 2.9 sample deviations out and escapes. With 12 values, nothing can ever be further than 3.2.
 
 > **Trap:** flagged does not mean wrong. Look at it first: typo, test order, or a real big customer?
 

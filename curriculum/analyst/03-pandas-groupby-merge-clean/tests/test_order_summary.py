@@ -71,6 +71,18 @@ def test_a_customer_listed_twice_does_not_double_the_revenue():
     assert result["order_count"].sum() == 2
 
 
+def test_a_customer_listed_twice_keeps_the_first_segment():
+    orders, customers = make_frames([(1, 7, "10")], [(7, "retail"), (7, "smb")])
+    assert summarize_orders(orders, customers)["segment"].tolist() == ["retail"]
+
+
+def test_an_order_id_listed_twice_keeps_the_first_row():
+    orders, customers = make_frames([(1, 1, "10"), (1, 1, "99")], [(1, "retail")])
+    row = summarize_orders(orders, customers).iloc[0]
+    assert row["order_count"] == 1
+    assert row["revenue"] == 10
+
+
 def test_text_that_is_not_a_number_is_dropped_not_counted_as_zero():
     orders, customers = make_frames([(1, 1, "10"), (2, 1, "oops"), (3, 1, None)], [(1, "retail")])
     row = summarize_orders(orders, customers).iloc[0]
