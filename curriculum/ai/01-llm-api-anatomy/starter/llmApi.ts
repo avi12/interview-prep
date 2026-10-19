@@ -1,0 +1,35 @@
+import type { Message, MessageRequest, MessageResponse, MessagesClient, Usage } from "#kit/fakeModel.ts";
+
+export type Prices = {
+  inputPerMillion: number;
+  outputPerMillion: number;
+  cacheWritePerMillion: number;
+  cacheReadPerMillion: number;
+};
+
+type RequestInput = {
+  model: string;
+  system?: string;
+  history?: Message[];
+  userText: string;
+  maxTokens: number;
+  stopSequences?: string[];
+};
+
+const TOKENS_PER_MILLION = 1_000_000;
+
+export function buildRequest({ model, system, history = [], userText, maxTokens, stopSequences = [] }: RequestInput): MessageRequest {
+  return { model, max_tokens: maxTokens, messages: [] };
+}
+
+export function readResponse(response: MessageResponse) {
+  return { text: "", stopReason: response.stop_reason, isTruncated: false };
+}
+
+export function costOf({ usage, prices }: { usage: Usage; prices: Prices }) {
+  return 0;
+}
+
+export async function ask({ client, prices, ...requestInput }: RequestInput & { client: MessagesClient; prices: Prices }) {
+  return { text: "", stopReason: "", isTruncated: false, costUsd: 0 };
+}
