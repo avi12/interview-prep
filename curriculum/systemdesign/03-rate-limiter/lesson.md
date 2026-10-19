@@ -19,7 +19,7 @@ sources:
 A rate limiter says: **no more than N requests per client per time window**. It stops one noisy client from hurting everyone, and survives bugs like a retry loop.
 
 - Count by a **key**: user id, API key or IP
-- Put it at the **gateway**, before the app servers
+- Put it at the **gateway** (the front door), before the app servers
 - Answer with HTTP `429` and a `Retry-After` header
 
 Stripe calls the per-user request limiter "by far the most important one".
@@ -69,7 +69,7 @@ Start with the client on the left. [[client]] Every request first meets [[gatewa
 
 ## Fixed window: simple, with a hole
 
-Count requests per clock window, for example per minute. One counter per client. When the minute changes, the counter resets. In Redis this is `INCR` plus `EXPIRE`.
+Count requests per clock window, for example per minute. One counter per client. When the minute changes, the counter resets. In Redis (a fast in-memory store) this is `INCR` plus `EXPIRE`.
 
 The hole: a client sends 10 requests at second 59 and 10 more at second 60. Each window sees only 10, yet **20 landed in two seconds**.
 
@@ -363,7 +363,7 @@ The fix is to send the whole decision to Redis as one script. [[send]] Both gate
 
 Open `rateLimiter.ts` and implement `createRateLimiter({ capacity, refillPerSecond, store, now })`. It returns `{ check(key) }`.
 
-- `check` returns `{ isAllowed, remaining, retryAfterMs }`. A new key starts with a **full** bucket
+- `check` returns `{ isAllowed, remaining, retryAfterMs }`. `remaining` counts whole tokens, and `retryAfterMs` rounds up. A new key starts with a **full** bucket
 - Refill lazily and keep fractions of a token. Ignore a clock that moves backwards
 - Call `store.update(key, change)` **once** per check. `change(previous)` returns `{ state, decision }`
 - If the store throws, **fail open**

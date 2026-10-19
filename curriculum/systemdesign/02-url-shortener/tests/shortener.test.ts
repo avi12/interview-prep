@@ -1,16 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import type { HashInput, UrlStore } from "../starter/shortener.ts";
 
-type Store = {
-  get: (code: string) => string | undefined;
-  setIfAbsent: (code: string, longUrl: string) => boolean;
-};
-type HashInput = { longUrl: string; attempt: number };
 type Module = {
   encodeBase62: (id: number) => string;
   decodeBase62: (code: string) => number;
   sha256Hash: (input: HashInput) => number;
-  shorten: (input: { longUrl: string; store: Store; hash?: (input: HashInput) => number }) => string;
+  shorten: (input: { longUrl: string; store: UrlStore; hash?: (input: HashInput) => number }) => string;
 };
 
 const { encodeBase62, decodeBase62, shorten, sha256Hash } = await loadImpl<Module>({
@@ -173,8 +169,7 @@ describe("shorten", () => {
       store.setIfAbsent(encodeBase62(FIRST_COLLIDING_NUMBER), "https://other.example");
       const { hash, calls } = scriptedHash({ [urlA]: [FIRST_COLLIDING_NUMBER] });
       expect(() => shorten({ longUrl: urlA, store, hash })).toThrow();
-      expect(calls.length).toBeGreaterThan(1);
-      expect(calls.length).toBeLessThanOrEqual(MAX_ATTEMPTS);
+      expect(calls.length).toBe(MAX_ATTEMPTS);
     });
   });
 });

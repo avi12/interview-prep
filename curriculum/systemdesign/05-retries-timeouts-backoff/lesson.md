@@ -20,7 +20,7 @@ sources:
 
 A service slows down. Clients time out and **retry**. Now it carries the original load plus the retries, so it slows down more. That loop is a **retry storm**.
 
-It multiplies with depth. If every layer tries 3 times, one click becomes 27 calls on the database, three layers down.
+It multiplies with depth. If each of three layers tries 3 times, one click becomes 27 calls on the database.
 
 - Retry at **one layer**, close to the user
 - Lower layers fail fast and answer "do not retry"
@@ -30,9 +30,9 @@ It multiplies with depth. If every layer tries 3 times, one click becomes 27 cal
 <g data-cue="client">
 <rect x="10" y="36" width="124" height="60" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
 <text x="72" y="62.6" font-size="13" fill="var(--fg)" text-anchor="middle">Client</text>
-<text x="72" y="78.6" font-size="11" fill="var(--fg-muted)" text-anchor="middle">1 request</text>
+<text x="72" y="78.6" font-size="11" fill="var(--fg-muted)" text-anchor="middle">tries 3 times</text>
 <text x="72" y="150" font-size="32" fill="var(--fg)" text-anchor="middle" font-weight="700">1</text>
-<text x="72" y="172" font-size="12" fill="var(--fg-muted)" text-anchor="middle">attempts here</text>
+<text x="72" y="172" font-size="12" fill="var(--fg-muted)" text-anchor="middle">user click</text>
 </g>
 <g data-cue="api">
 <path d="M134 66 L166 66" fill="none" stroke="var(--danger)" stroke-width="2"/>
@@ -69,7 +69,7 @@ It multiplies with depth. If every layer tries 3 times, one click becomes 27 cal
 ```
 
 ```narrate
-Start with one request. [[client]] A client sends a single request. [[api]] The A P I tries up to three times, so three calls go down. [[orders]] The orders service also tries three times for each of those, so nine calls arrive. [[db]] By the database it is twenty seven, and the database is the one that is already struggling.
+Start with one click. [[client]] The client sends the request and tries up to three times. [[api]] So the A P I sees three calls, and it also tries three times for each of them. [[orders]] That means nine calls reach the orders service, which tries three times for each of those as well. [[db]] By the database it is twenty seven, and the database is the one that is already struggling.
 ```
 
 > **Why:** retries are selfish. They spend the server's time to raise your own chance of success. Under overload they keep the load high and delay recovery.
@@ -83,7 +83,7 @@ Every remote call needs a **timeout**. With none, one slow dependency ties up ev
 - Too high: threads wait, queues fill
 - Too low: healthy calls fail and cause more retries
 
-AWS picks one like this: choose an acceptable false-timeout rate, such as 0.1 percent, then use the dependency's matching latency, its **p99.9**, plus a little padding.
+AWS picks one like this: choose an acceptable false-timeout rate, such as 0.1 percent, then use the dependency's matching latency, its **p99.9** (the time 99.9 percent of calls beat), plus a little padding.
 
 Then pass the **remaining time** down. Google SRE calls this deadline propagation.
 
@@ -192,7 +192,7 @@ A retry runs the request **again**. Is that safe?
 
 The client makes one unique key per operation and re-sends it on every retry. The server saves the result per key and replies with the saved result.
 
-Retry only **transient** errors: timeouts, 503, 429 (obey `Retry-After`). Never 400, 401 or 404.
+Retry only **transient** (temporary) errors: timeouts, 429 (obey `Retry-After`), 502, 503 and 504. Never 400, 401 or 404.
 
 ```svg The retry carries the same key, so the server returns the saved result
 <svg viewBox="0 0 640 332" role="img" aria-label="The response is lost, the client retries with the same key, and the server returns the saved result instead of charging twice" font-family="var(--font-mono)" font-size="13">

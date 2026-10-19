@@ -1,13 +1,12 @@
-import time
-
 from impl import load_impl
+from limits import Stopwatch
 
 LRUCache = load_impl(__file__, "lru_cache.py").LRUCache
 
 MISSING = -1
 BIG_CAPACITY = 50_000
 OPERATION_COUNT = 200_000
-TIME_LIMIT_SECONDS = 2.0
+TIME_LIMIT_SECONDS = 3.0
 CHECK_EVERY = 1000
 HOT_KEYS = 10
 PUT_EVERY = 4
@@ -90,24 +89,28 @@ def test_never_holds_more_than_its_capacity():
     assert all(cache.get(key) == key * 2 for key in range(900, 1000))
 
 
-def assert_within_time(started_at):
-    elapsed = time.perf_counter() - started_at
+def assert_within_time(stopwatch):
+    elapsed = stopwatch.elapsed_seconds()
     assert elapsed < TIME_LIMIT_SECONDS, f"too slow: {elapsed:.1f}s, get and put should be O(1)"
 
 
 def test_operations_stay_fast_on_a_large_cache():
     cache = LRUCache(BIG_CAPACITY)
-    started_at = time.perf_counter()
+    stopwatch = Stopwatch()
     for key in range(BIG_CAPACITY):
         cache.put(key, key)
         if key % CHECK_EVERY == 0:
-            assert_within_time(started_at)
+            assert_within_time(stopwatch)
+    for key in range(BIG_CAPACITY):
+        assert cache.get(key) == key
+        if key % CHECK_EVERY == 0:
+            assert_within_time(stopwatch)
     for step in range(OPERATION_COUNT):
         if step % PUT_EVERY == PUT_EVERY - 1:
             cache.put(BIG_CAPACITY + step, step)
         else:
             cache.get(BIG_CAPACITY - 1 - step % HOT_KEYS)
         if step % CHECK_EVERY == 0:
-            assert_within_time(started_at)
-    assert_within_time(started_at)
+            assert_within_time(stopwatch)
+    assert_within_time(stopwatch)
     assert cache.get(BIG_CAPACITY - 1) == BIG_CAPACITY - 1

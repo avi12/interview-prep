@@ -278,7 +278,7 @@ Walk the design once and look for trouble:
 
 Then close in three sentences: what you built, the main trade-off you chose, and what you would do next.
 
-> **Trap:** going silent when asked "what would break?". Say it: "The database is a single point of failure. A replica fixes it. The cost is that reads may be slightly stale."
+> **Trap:** going silent when asked "what would break?". Say it: "The database is a single point of failure. A replica (a live copy) fixes it. The cost is that reads may be slightly stale."
 
 ```quiz
 q: The interviewer says "design a chat app". What is your first move?

@@ -190,7 +190,7 @@ Fixes:
 
 - **Lock**: one request rebuilds, the others wait or get the old value
 - **Refresh early**: a job renews the key before it expires
-- **Jitter** the TTLs so keys do not expire together
+- **Jitter** the TTLs so many keys do not expire together (it does not help one hot key)
 
 ```svg A lock turns 1,000 identical queries into one
 <svg viewBox="0 0 640 236" role="img" aria-label="Cache stampede: 1,000 requests all rebuild an expired key. The fix lets one request rebuild it" font-family="var(--font-mono)" font-size="13">
@@ -258,14 +258,14 @@ A cache has a size limit. When it is full, a policy picks who goes.
 | Random | Any key | All keys are used about equally |
 | TTL-first | Soonest to expire | You set TTLs on purpose |
 
-Redis recommends `allkeys-lru` as the default. It does not track exact order. It **samples** about 5 keys and drops the oldest of them. That is nearly as good, and cheaper.
+The Redis docs call `allkeys-lru` a good default when you have no reason to pick another. Redis does not track exact order. It **samples** a few keys (5 by default) and drops the least recently used of them. That is nearly as good, and uses less memory.
 
 > **Why:** LRU bets that what was used lately will be used again. Real traffic is lumpy, a few hot keys, so the bet usually pays.
 
 > **Not this:** evict the key that was inserted first. A key that is hot all day would still be thrown out.
 
 ```narrate
-When the cache is full, a policy chooses who leaves. Least recently used is the usual default, because real traffic is lumpy and a few keys are very hot. Least frequently used suits stable popularity. Random works when everything is used about equally. Redis does not even keep exact order. It samples a few keys and removes the oldest of those, which is nearly as good and much cheaper.
+When the cache is full, a policy chooses who leaves. Least recently used is the usual default, because real traffic is lumpy and a few keys are very hot. Least frequently used suits stable popularity. Random works when everything is used about equally. Redis does not even keep exact order. It samples a few keys and removes the least recently used of those, which is nearly as good and uses less memory.
 ```
 
 ## How an LRU stays O(1)

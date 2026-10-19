@@ -169,9 +169,9 @@ why: The write went to the primary, but the read hit a replica that had not caug
 
 When one primary cannot take the writes or hold the data, split the rows across servers by a **shard key**. Each shard has the same schema and its own rows.
 
-A good key is **immutable**, has **high cardinality**, spreads load evenly, and matches your most common query.
+A good key is **immutable** (never changes), has **high cardinality** (many different values), spreads load evenly, and matches your most common query.
 
-A bad key **only grows**, like an auto-increment id or a timestamp. Every new row lands on the newest shard, a hot shard.
+A bad key **only grows**, like an auto-increment id or a timestamp. With range sharding, every new row lands on the newest shard, a hot shard.
 
 | Strategy | Good for | Watch out |
 |---|---|---|
@@ -340,7 +340,7 @@ why: A key stays put only if key mod 3 equals key mod 4. That holds for just 3 o
 
 ## CAP in plain words
 
-When a **network split** cuts two replicas off from each other, a read at one of them has two honest answers:
+**CAP** names three properties: Consistency, Availability and Partition tolerance. When a **network split** cuts two replicas off from each other, a read at one of them has two honest answers:
 
 - **Refuse** (stay consistent): never wrong, sometimes unavailable
 - **Answer** (stay available): always responds, maybe with stale data

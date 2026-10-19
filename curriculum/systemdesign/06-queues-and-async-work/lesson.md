@@ -16,11 +16,11 @@ sources:
 
 Some work is slow or flaky: sending an email, resizing an image, calling an LLM. If the user waits, pages get slow, and fail when the helper is down.
 
-With a **queue**, the API writes a message and answers at once (`202 Accepted`). A **worker** picks the message up later.
+With a **queue**, the API writes a message and answers at once (`202 Accepted`). A **worker** picks it up later and sends an **ack** (a "done" signal) when finished.
 
-- The API keeps working even if the workers are down
+- The API keeps working if workers are down
 - You scale workers on their own
-- The cost: no instant result, and one more thing to run
+- The cost: no instant result, one more thing to run
 
 ```svg The user gets an answer before the slow job even starts
 <svg viewBox="0 0 640 294" role="img" aria-label="With a queue the API answers at once and a worker does the slow job later" font-family="var(--font-mono)" font-size="13">
@@ -75,7 +75,7 @@ A user signs up. [[request]] The client posts to the A P I. [[enqueue]] The A P 
 
 > **Why:** a queue turns "must finish now" into "must finish soon". That is far easier to keep reliable.
 
-> **Not this:** a queue for something the caller needs right now, like a login check. A queue is one-way, so call the service directly.
+> **Not this:** a queue for something the caller needs right now, like a login check. Call the service directly.
 
 ## A queue levels the load
 
@@ -136,9 +136,9 @@ Read the chart from the top. [[burst]] Requests arrive in bursts, with quiet gap
 |---|---|
 | At-most-once | A message can be **lost** |
 | At-least-once | A message can arrive **twice** |
-| Exactly-once | Not something a network gives you |
+| Exactly-once | Not something a network gives you. In practice: at-least-once plus a consumer that ignores repeats |
 
-SQS standard queues deliver **at least once**. More than one copy might arrive, and order is best effort. A worker may finish the job and crash before it acks, so the queue cannot know.
+Amazon SQS (a queue service) standard queues deliver **at least once**. More than one copy might arrive, and order is best effort. A worker may finish the job and crash before it acks, so the queue cannot know.
 
 The fix is not in the queue. It is in the consumer: make a repeat **harmless**.
 
@@ -240,10 +240,10 @@ Follow message one. [[receive]] Worker A receives it, and the queue hides it for
 
 A **poison message** fails every time: bad data, or a bug. Without a limit it loops forever and wastes workers.
 
-After a set number of receives, the queue moves it to the **dead-letter queue (DLQ)**. A person looks, fixes the bug, and **redrives** it.
+After a set number of receives, the queue moves it to the **dead-letter queue (DLQ)**. A person looks, fixes the bug, and **redrives** it (sends it back).
 
 - **Ack**: done, delete it
-- **Nack**: "I could not do this", make it visible again now
+- **Nack**: "I could not do this", make it visible again now (SQS has no nack call: set the visibility timeout to 0)
 - Alarm on the DLQ depth, and keep its retention longer than the main queue
 
 ```svg Every message ends in one of two places: deleted, or parked for a human

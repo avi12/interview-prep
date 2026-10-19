@@ -1,17 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import { createSeededRandom } from "#kit/random.ts";
+import type { BackoffInput, RetryOptions } from "../starter/retry.ts";
 
-type RetryOptions<T> = {
-  operation: (attempt: number) => Promise<T>;
-  isRetryable: (error: unknown) => boolean;
-  maxAttempts: number;
-  baseDelayMs: number;
-  maxDelayMs: number;
-  sleep: (ms: number) => Promise<void>;
-  random: () => number;
-};
 type Module = {
-  backoffDelayMs: (input: { retryIndex: number; baseDelayMs: number; maxDelayMs: number; random: () => number }) => number;
+  backoffDelayMs: (input: BackoffInput) => number;
   retry: <T>(options: RetryOptions<T>) => Promise<T>;
 };
 
@@ -19,19 +12,8 @@ const { backoffDelayMs, retry } = await loadImpl<Module>({ testUrl: import.meta.
 
 const BASE_DELAY_MS = 100;
 const MAX_DELAY_MS = 1000;
-const LCG_MULTIPLIER = 1664525;
-const LCG_INCREMENT = 1013904223;
-const LCG_MODULUS = 2 ** 32;
 const SAMPLE_COUNT = 200;
 const SEED = 42;
-
-const seededRandom = (seed: number) => {
-  let state = seed;
-  return () => {
-    state = (state * LCG_MULTIPLIER + LCG_INCREMENT) % LCG_MODULUS;
-    return state / LCG_MODULUS;
-  };
-};
 
 const ALWAYS_MAX = () => 1;
 const ALWAYS_HALF = () => 0.5;
@@ -77,6 +59,11 @@ describe("backoffDelayMs", () => {
     expect(delay(20, ALWAYS_MAX)).toBe(MAX_DELAY_MS);
   });
 
+  it("applies the cap before the jitter, so a late retry still waits a random share of the cap", () => {
+    expect(delay(6, ALWAYS_HALF)).toBe(MAX_DELAY_MS / 2);
+    expect(delay(6, () => 0.25)).toBe(MAX_DELAY_MS / 4);
+  });
+
   it("picks a random point between zero and the ceiling (full jitter)", () => {
     expect(delay(0, ALWAYS_ZERO)).toBe(0);
     expect(delay(0, ALWAYS_HALF)).toBe(50);
@@ -84,7 +71,7 @@ describe("backoffDelayMs", () => {
   });
 
   it("spreads delays out: with a seeded generator they differ and stay inside the ceiling", () => {
-    const random = seededRandom(SEED);
+    const random = createSeededRandom(SEED);
     const delays = Array.from({ length: SAMPLE_COUNT }, () => delay(3, random));
     expect(delays.every(value => value >= 0 && value <= 800)).toBe(true);
     expect(new Set(delays).size).toBeGreaterThan(SAMPLE_COUNT / 2);

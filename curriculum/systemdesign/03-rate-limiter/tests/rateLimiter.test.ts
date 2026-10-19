@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import type { BucketStore, Decision } from "../starter/rateLimiter.ts";
 
-type BucketState = { tokens: number; refilledAtMs: number };
-type Decision = { isAllowed: boolean; remaining: number; retryAfterMs: number };
-type Change = (previous: BucketState | undefined) => { state: BucketState; decision: Decision };
-type BucketStore = { update: (key: string, change: Change) => Decision };
 type Module = {
   createInMemoryStore: () => BucketStore;
   createRateLimiter: (input: {
@@ -83,6 +80,22 @@ describe("token bucket limiter", () => {
     const { limiter } = setup({ capacity: 1, refillPerSecond: 0.5 });
     limiter.check("user-1");
     expect(limiter.check("user-1").retryAfterMs).toBe(2000);
+  });
+
+  it("rounds the wait up, so retrying after it always succeeds", () => {
+    const { limiter, clock } = setup({ capacity: 1, refillPerSecond: 3 });
+    limiter.check("user-1");
+    const denied = limiter.check("user-1");
+    expect(denied.retryAfterMs).toBe(334);
+    clock.advance(denied.retryAfterMs);
+    expect(limiter.check("user-1").isAllowed).toBe(true);
+  });
+
+  it("reports remaining as whole tokens, even when the bucket holds a fraction", () => {
+    const { limiter, clock } = setup({ capacity: 3, refillPerSecond: 1 });
+    countAllowed({ limiter, key: "user-1", attempts: 3 });
+    clock.advance(1.5 * SECOND_MS);
+    expect(limiter.check("user-1")).toMatchObject({ isAllowed: true, remaining: 0 });
   });
 
   it("keeps partial tokens between denied requests", () => {

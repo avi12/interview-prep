@@ -74,6 +74,15 @@ def test_the_message_stays_hidden_until_the_visibility_timeout_passes():
     assert queue.receive() is not None
 
 
+def test_the_timeout_counts_from_the_receive_not_from_the_send():
+    queue, clock = make_queue()
+    queue.send("job")
+    clock.advance(JUST_AFTER_TIMEOUT * 10)
+    queue.receive()
+    clock.advance(JUST_BEFORE_TIMEOUT)
+    assert queue.receive() is None
+
+
 def test_an_unacked_message_comes_back_with_a_higher_receive_count():
     queue, clock = make_queue()
     message_id = queue.send("job")
@@ -155,6 +164,15 @@ def test_a_message_that_always_times_out_also_ends_up_in_the_dead_letters():
         clock.advance(JUST_AFTER_TIMEOUT)
     assert queue.receive() is None
     assert [message.id for message in queue.dead_letters] == [message_id]
+
+
+def test_a_message_that_is_being_processed_is_not_dead_lettered_early():
+    queue, _ = make_queue(max_receives=1)
+    message_id = queue.send("job")
+    queue.receive()
+    assert queue.receive() is None
+    assert queue.dead_letters == []
+    assert queue.ack(message_id) is True
 
 
 def test_a_poison_message_does_not_block_healthy_messages():

@@ -97,7 +97,7 @@ Two flows share one store. [[docs]] On the ingest side we start from the company
 
 ## Ingest: chunk, embed, store
 
-Read the documents, cut them into **chunks**, turn each chunk into an **embedding**, and save chunk, vector and **metadata** in a vector store.
+Read the documents, cut them into **chunks**, turn each chunk into an **embedding** (a list of numbers that captures meaning), and save chunk, vector and **metadata** in a **vector store** (a database that finds the nearest vectors fast).
 
 Chunk size is a trade-off. Small chunks (128 to 256 tokens) are precise. Larger ones (512 to 1,024) keep more context. Start simple, test on real questions, then adjust.
 

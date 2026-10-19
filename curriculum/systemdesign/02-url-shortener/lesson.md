@@ -9,6 +9,7 @@ sources:
   - https://www.hellointerview.com/learn/system-design/problem-breakdowns/bitly
   - https://github.com/donnemartin/system-design-primer
   - https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Redirections
+  - https://www.rfc-editor.org/rfc/rfc9110.html#name-301-moved-permanently
   - https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/Strategies.html
 ---
 
@@ -29,7 +30,7 @@ This is the classic first design question. You need two calls: create a short li
 
 ## How long must the code be?
 
-Short codes are **numbers written in base 62**: the digits, then A to Z, then a to z. Base64 adds `+` and `/`, which break inside URLs.
+Short codes are **numbers written in base 62**: the digits, then A to Z, then a to z. Standard base64 adds `+` and `/`, which are not safe inside a URL path.
 
 | Characters | Codes (62 to the n) |
 |---|---|
@@ -38,7 +39,7 @@ Short codes are **numbers written in base 62**: the digits, then A to Z, then a 
 | 7 | 3.5 trillion |
 | 8 | 218 trillion |
 
-For 1 billion links, 6 characters fit. Most designs choose 7 for headroom.
+For 1 billion links, 6 characters fit. Many designs choose 7 for headroom.
 
 ```svg Encoding turns a number into digits by dividing by 62 and keeping each remainder
 <svg viewBox="0 0 640 244" role="img" aria-label="Encoding 1000 in base 62 by dividing by 62 and keeping the remainders" font-family="var(--font-mono)" font-size="13">
@@ -80,7 +81,7 @@ For 1 billion links, 6 characters fit. Most designs choose 7 for headroom.
 A short code is just a number written with sixty two symbols instead of ten. To encode one thousand, [[first]] divide by sixty two. You get sixteen, with a remainder of eight, so the last digit is eight. [[second]] Now divide sixteen by sixty two. The quotient is zero and the remainder is sixteen, which is the capital letter G. [[result]] Read the digits from last to first, and the code is capital G, then eight.
 ```
 
-> **Not this:** hex or base64 codes. Hex needs 10 characters to reach 1 trillion. Base64 has two symbols that need escaping in a URL.
+> **Not this:** hex or standard base64 codes. Hex needs 10 characters to reach 1 trillion. Standard base64 has two symbols that need escaping in a URL. (Base64url swaps them for `-` and `_` and works, but base62 is plainer to read and type.)
 
 ```quiz
 q: You expect 1 billion short links. What is the smallest code length that can hold them all in base 62?
@@ -227,7 +228,7 @@ Two different URLs can land on the same code. At 1 billion links, about 1 in 3,5
 Watch a collision. [[request]] A client posts a long address. [[first]] The app hashes it with attempt zero and asks the store to insert the code, but only if it is absent. [[taken]] The store says this code belongs to another address. [[second]] So the app hashes again with attempt one, gets a new code, and the insert succeeds. [[done]] The client receives the short link.
 ```
 
-> **Trap:** check first, then insert. Two servers check at the same moment, both see "free", both insert, and one silently overwrites the other. Let one atomic insert decide.
+> **Trap:** check first, then insert. Two servers check at the same moment, both see "free", both insert, and one silently overwrites the other. Let one atomic insert (a single step nobody can interrupt) decide.
 
 ## Reads: the redirect path
 
@@ -236,7 +237,7 @@ With 1,000 reads per write, almost every click should be answered **from memory*
 | Redirect | Browser behavior | You keep |
 |---|---|---|
 | `301` permanent | May cache it, later clicks skip you | Speed, but no click counts or changes |
-| `302` temporary | Asks you every time | Control: count, change, expire |
+| `302` temporary | Not cached unless you allow it | Control: count, change, expire |
 
 ```svg The first click fills the cache. Every later click skips the database
 <svg viewBox="0 0 640 338" role="img" aria-label="A redirect read: cache miss goes to the database, the next click is a cache hit" font-family="var(--font-mono)" font-size="13">
