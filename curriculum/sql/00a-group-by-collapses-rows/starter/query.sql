@@ -1,0 +1,2 @@
+SELECT department
+FROM employees;
