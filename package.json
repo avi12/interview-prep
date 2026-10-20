@@ -17,6 +17,7 @@
     "narrate": "node scripts/narrate-lessons.ts",
     "verify": "node scripts/verify.ts",
     "start": "node scripts/start.ts",
+    "dev": "node scripts/dev.ts",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.solutions.json"
   },
   "dependencies": {

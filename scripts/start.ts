@@ -1,6 +1,6 @@
 import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { resolve } from "node:path";
 import { writeFileDeep } from "#scripts/lib/files.ts";
 import { ROOT } from "#scripts/lib/paths.ts";
@@ -25,6 +25,8 @@ const SERVER_ONLY_SETTINGS = {
 const SERVER_PROCESS_NEEDLES = ["--server-data-dir", SERVER_DATA_DIR];
 const TOKEN_FILE = resolve(SERVER_DATA_DIR, "connection-token");
 const isOpeningBrowser = !process.argv.includes("--no-open");
+const isDev = process.argv.includes("--dev");
+const EXTENSION_FOLDER_PATTERN = /^avi12\.interview-prep-/;
 
 const toUrlPath = (path: string) => `/${path.replaceAll("\\", "/")}`;
 
@@ -55,6 +57,17 @@ if (!isBuilt) process.exit(1);
 
 installExtension(`"${VSIX_PATH}"`);
 for (const extension of RECOMMENDED_EXTENSIONS) installExtension(extension);
+
+const linkExtensionToSource = () => {
+  const extensionsDir = resolve(SERVER_DATA_DIR, "extensions");
+  for (const name of readdirSync(extensionsDir).filter(entry => EXTENSION_FOLDER_PATTERN.test(entry))) {
+    const installedPath = resolve(extensionsDir, name);
+    rmSync(installedPath, { recursive: true, force: true });
+    symlinkSync(EXTENSION_DIR, installedPath, "junction");
+  }
+};
+
+if (isDev) linkExtensionToSource();
 
 const readOrCreateToken = () => {
   if (existsSync(TOKEN_FILE)) return readFileSync(TOKEN_FILE, "utf8").trim();
