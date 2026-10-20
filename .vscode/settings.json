@@ -13,7 +13,30 @@
   "files.exclude": {
     "**/solution": true,
     "**/__pycache__": true,
-    "**/.git": true
+    "**/.git": true,
+    ".claude": true,
+    ".progress": true,
+    ".vscode": true,
+    ".vscode-server": true,
+    "apps": true,
+    "assets": true,
+    "curriculum": true,
+    "dist": true,
+    "node_modules": true,
+    "research": true,
+    "scripts": true,
+    ".gitattributes": true,
+    ".gitignore": true,
+    "CLAUDE.md": true,
+    "package.json": true,
+    "pnpm-lock.yaml": true,
+    "pnpm-workspace.yaml": true,
+    "README.md": true,
+    "requirements.txt": true,
+    "tsconfig.json": true,
+    "tsconfig.solutions.json": true,
+    "vitest.config.ts": true,
+    "continue-*.md": true
   },
   "search.exclude": {
     "**/solution": true,
@@ -27,5 +50,8 @@
   "interviewPrep.autoOpenNextLesson": true,
   "python.analysis.extraPaths": [
     "curriculum/_kit"
-  ]
+  ],
+  "workbench.activityBar.location": "hidden",
+  "explorer.openEditors.visible": 0,
+  "breadcrumbs.enabled": false
 }
