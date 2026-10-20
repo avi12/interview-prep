@@ -53,5 +53,6 @@
   ],
   "workbench.activityBar.location": "hidden",
   "explorer.openEditors.visible": 0,
-  "breadcrumbs.enabled": false
+  "breadcrumbs.enabled": false,
+  "interviewPrep.hotReload": true
 }

@@ -111,6 +111,11 @@
           ],
           "default": "all",
           "description": "Show only the lessons that matter for this role"
+        },
+        "interviewPrep.hotReload": {
+          "type": "boolean",
+          "default": false,
+          "description": "Refresh lessons and reload the extension when their built files change (used by pnpm dev)"
         }
       }
     },

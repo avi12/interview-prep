@@ -1,6 +1,8 @@
-import { build } from "esbuild";
+import { context } from "esbuild";
 
-await build({
+const isWatching = process.argv.includes("--watch");
+
+const bundle = await context({
   entryPoints: ["src/extension.ts"],
   outfile: "dist/extension.js",
   bundle: true,
@@ -12,3 +14,9 @@ await build({
   sourcemap: true,
   minify: false
 });
+
+if (isWatching) await bundle.watch();
+else {
+  await bundle.rebuild();
+  await bundle.dispose();
+}

@@ -2,6 +2,7 @@ import { relative, resolve, sep } from "node:path";
 import * as vscode from "vscode";
 import { LESSON_ID_SEGMENTS, WORK_DIR_NAME } from "@scripts/lib/layout.ts";
 import { DONE_COMMAND, PanelAction } from "@scripts/lib/panel.ts";
+import { watchForChanges } from "@/hotReload.ts";
 import { findLesson, findNextLesson } from "@/lessonData.ts";
 import { ensureExerciseFiles, onTestsFinished, runLessonCli, runTestsInTerminal } from "@/lessonCli.ts";
 import { showLesson } from "@/lessonPanel.ts";
@@ -48,11 +49,9 @@ export function activate(context: vscode.ExtensionContext) {
     await openNextLesson();
   };
 
-  const openLesson = async (id: string) => {
+  const showLessonPanel = (id: string) => {
     const lesson = findLesson({ root, id });
     if (!lesson) return vscode.window.showErrorMessage(`No lesson ${id}. Run: pnpm build`);
-    openLessonId = id;
-    if (lesson.hasExercise) await openExercise(id);
     showLesson({
       root,
       lesson,
@@ -64,6 +63,14 @@ export function activate(context: vscode.ExtensionContext) {
         if (action === PanelAction.markDone) markDone(id);
       }
     });
+  };
+
+  const openLesson = async (id: string) => {
+    const lesson = findLesson({ root, id });
+    if (!lesson) return showLessonPanel(id);
+    openLessonId = id;
+    if (lesson.hasExercise) await openExercise(id);
+    showLessonPanel(id);
   };
 
   const openNextLesson = async () => {
@@ -93,6 +100,14 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(Command.markDone, () => markDone(activeLessonId())),
     vscode.commands.registerCommand(Command.askClaude, askClaude),
     vscode.commands.registerCommand(Command.refresh, () => tree.refresh()),
+    ...watchForChanges({
+      root,
+      extensionPath: context.extensionPath,
+      onLessonsChanged: () => {
+        tree.refresh();
+        if (openLessonId) showLessonPanel(openLessonId);
+      }
+    }),
     vscode.workspace.onDidChangeConfiguration(e => e.affectsConfiguration("interviewPrep.role") && tree.refresh()),
     onTestsFinished(({ id, isPass }) => {
       tree.refresh();
