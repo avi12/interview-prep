@@ -34,6 +34,7 @@ const isBlind = (session: Session) => session.state === LiveState.LIVE && sessio
 export const sessionText = (session: Session) => {
   if (session.state === LiveState.FAILED) return session.detail || STATE_TEXT[LiveState.FAILED];
   if (isBlind(session)) return HIDDEN_TEXT;
+  if (session.state === LiveState.LIVE) return `${STATE_TEXT[session.state]} (${session.frames} pictures sent)`;
   return STATE_TEXT[session.state];
 };
 

@@ -13,7 +13,8 @@ const sessionSchema = z.object({
   isBooted: z.boolean(),
   state: z.enum(LiveState),
   detail: z.string(),
-  sight: z.enum(Sight)
+  sight: z.enum(Sight),
+  frames: z.number()
 });
 
 export type Session = z.infer<typeof sessionSchema>;

@@ -181,6 +181,22 @@ const observable = (value: unknown) => ({
   }
 });
 
+const focusedTabState = () => ({ hasFocus: { tabData: bridge.focusedTab } });
+
+const focusedTabSubscribers = new Set<Subscriber>();
+
+const focusedTabObservable = () => ({
+  subscribe(change: Subscriber) {
+    focusedTabSubscribers.add(change);
+    notify({ subscriber: change, value: focusedTabState() });
+    return { unsubscribe: () => focusedTabSubscribers.delete(change) };
+  }
+});
+
+const announceFocusedTab = () => {
+  for (const subscriber of focusedTabSubscribers) notify({ subscriber, value: focusedTabState() });
+};
+
 const resolved = (value: unknown) => () => Promise.resolve(value);
 const captions = observable(true);
 
@@ -199,7 +215,7 @@ const host: Json = {
   }),
   getPanelState: () => observable(PANEL_STATE),
   panelActive: () => observable(true),
-  getFocusedTabStateV2: () => observable({ hasFocus: { tabData: bridge.focusedTab } }),
+  getFocusedTabStateV2: focusedTabObservable,
   getContextFromFocusedTab: () => Promise.resolve({ tabData: bridge.focusedTab }),
   captureScreenshot: () => captureFrame(),
   async getContextFromTab(_tabId: unknown, options?: { viewportScreenshot?: boolean }) {
@@ -505,6 +521,7 @@ const watchUnavailable = () => {
 
 const activate = ({ title, url }: Activation) => {
   bridge.focusedTab = { ...bridge.focusedTab, title, url: url || location.origin };
+  announceFocusedTab();
   if (bridge.isActivated) return;
   bridge.isActivated = true;
   patchVisibility();

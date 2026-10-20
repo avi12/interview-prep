@@ -140,7 +140,8 @@ const openSession = async (): Promise<StartResult> => {
     isBooted: false,
     state: LiveState.OPENING,
     detail: "",
-    sight: Sight.UNKNOWN
+    sight: Sight.UNKNOWN,
+    frames: 0
   });
   return { isStarted: true, detail: "" };
 };
@@ -197,7 +198,7 @@ export const installLive = () => {
     const session = await glicSession(sender.tab);
     if (!session) return null;
     const { sight, frame } = await captureVscode(session.vscodeTab);
-    if (sight !== session.sight) await updateSession({ sight });
+    await updateSession({ sight, frames: session.frames + (frame ? 1 : 0) });
     return frame;
   });
 
