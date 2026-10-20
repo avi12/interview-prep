@@ -263,15 +263,21 @@ const tryBootstrap = () => {
   for (const handler of bootstrapHandlers) notify({ subscriber: handler as Subscriber, value: bootstrapEvent() });
 };
 
+type AddEventListener = typeof EventTarget.prototype.addEventListener;
+
+const remembered = (add: AddEventListener): AddEventListener =>
+  function (this: EventTarget, type, listener, options) {
+    const isWindowMessage = this === window && type === "message" && typeof listener === "function";
+    if (isWindowMessage && !bootstrapHandlers.includes(listener)) bootstrapHandlers.push(listener);
+    return add.call(this, type, listener, options);
+  };
+
 const captureBootstrapListeners = () => {
-  const originalAdd = EventTarget.prototype.addEventListener;
+  EventTarget.prototype.addEventListener = remembered(EventTarget.prototype.addEventListener);
   Object.defineProperty(window, "addEventListener", {
     configurable: true,
     writable: true,
-    value(type: string, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions) {
-      if (type === "message" && typeof listener === "function") bootstrapHandlers.push(listener);
-      originalAdd.call(window, type, listener, options);
-    }
+    value: remembered(window.addEventListener)
   });
 };
 
