@@ -6,8 +6,11 @@ import { readLessons, readStudyOrders, readTracks } from "#scripts/lib/lessons.t
 import { withCachedNarration } from "#scripts/lib/narration-cache.ts";
 import { renderLesson } from "#scripts/lib/render.ts";
 
+const RM_MAX_RETRIES = 5;
+const RM_RETRY_DELAY_MS = 100;
+
 const lessons = readLessons();
-rmSync(LESSONS_DIST_DIR, { recursive: true, force: true });
+rmSync(LESSONS_DIST_DIR, { recursive: true, force: true, maxRetries: RM_MAX_RETRIES, retryDelay: RM_RETRY_DELAY_MS });
 
 const narratedIds = new Set<string>();
 for (const lesson of lessons) {
