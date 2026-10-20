@@ -9,6 +9,7 @@ import { showLesson } from "@/lessonPanel.ts";
 import { Command, LessonTree } from "@/lessonTree.ts";
 
 const CLAUDE_TERMINAL_NAME = "Claude tutor";
+const SHOW_LESSONS_COMMAND = "workbench.view.extension.interviewPrep";
 
 const lessonIdOfFile = ({ root, file }: { root: string; file: string }) => {
   const segments = relative(resolve(root, WORK_DIR_NAME), file).split(sep);
@@ -118,4 +119,5 @@ export function activate(context: vscode.ExtensionContext) {
 
   const isAutoOpenEnabled = vscode.workspace.getConfiguration("interviewPrep").get<boolean>("autoOpenNextLesson", true);
   if (isAutoOpenEnabled) openNextLesson();
+  vscode.commands.executeCommand(SHOW_LESSONS_COMMAND);
 }

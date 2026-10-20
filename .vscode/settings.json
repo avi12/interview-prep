@@ -1,8 +1,8 @@
 {
   "workbench.startupEditor": "none",
   "window.autoDetectColorScheme": true,
-  "workbench.preferredDarkColorTheme": "Default Dark Modern",
-  "workbench.preferredLightColorTheme": "Default Light Modern",
+  "workbench.preferredDarkColorTheme": "Dark Modern",
+  "workbench.preferredLightColorTheme": "Light Modern",
   "chat.disableAIFeatures": true,
   "editor.fontSize": 15,
   "editor.minimap.enabled": false,
@@ -54,5 +54,6 @@
   "workbench.activityBar.location": "hidden",
   "explorer.openEditors.visible": 0,
   "breadcrumbs.enabled": false,
-  "interviewPrep.hotReload": true
+  "interviewPrep.hotReload": true,
+  "workbench.secondarySideBar.defaultVisibility": "hidden"
 }

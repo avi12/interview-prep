@@ -18,7 +18,7 @@
   ],
   "contributes": {
     "views": {
-      "explorer": [
+      "interviewPrep": [
         {
           "id": "interviewPrep.lessons",
           "name": "Lessons"
@@ -124,7 +124,16 @@
         "type": "interviewPrep",
         "properties": {}
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "interviewPrep",
+          "title": "Interview Prep",
+          "icon": "media/icon.svg"
+        }
+      ]
+    }
   },
   "scripts": {
     "build": "node esbuild.mjs",
