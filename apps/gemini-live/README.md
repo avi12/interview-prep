@@ -18,7 +18,7 @@ You also need to be signed in to Google in that Chrome, so the Gemini window can
 ## Use
 
 1. `pnpm start` at the repo root. It prints the VS Code URL (`http://127.0.0.1:8765/?tkn=...`) and opens your default browser. If that is not the Chrome with the extension, run `pnpm start --no-open` and paste the URL into Chrome yourself.
-2. Open the extension popup. Start is disabled until a tab on `http://127.0.0.1:8765` exists.
+2. A **Start voice tutor** button now sits at the bottom right of the VS Code page itself, with the tutor's status beside it. The popup does the same and also holds the language. Start is refused until a tab on `http://127.0.0.1:8765` exists.
 3. Pick the tutor language (English by default, Hebrew optional). It applies to the next session.
 4. Press Start. Allow the microphone in the Gemini window when Chrome asks.
 5. Talk. Keep the VS Code tab in front in its window: Gemini only gets a picture while that tab is the visible one. The popup says so when it is not.

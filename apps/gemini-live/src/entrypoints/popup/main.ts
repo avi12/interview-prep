@@ -1,41 +1,15 @@
 import { browser } from "wxt/browser";
 import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
 import { LANGUAGE_LABEL, languageSchema } from "@/lib/language.ts";
-import { isRunning, LiveState, Sight } from "@/lib/live-state.ts";
+import { isRunning } from "@/lib/live-state.ts";
+import { sessionText, sessionTone } from "@/lib/live-status.ts";
 import { parseSession, sessionItem, type Session } from "@/lib/session.ts";
 import { loadLanguage, saveLanguage } from "@/lib/settings.ts";
 import { findVscodeTab, VSCODE_ORIGIN } from "@/lib/vscode.ts";
 import "./style.css";
 
-const Tone = {
-  OK: "ok",
-  WARN: "warn",
-  DANGER: "danger",
-  IDLE: "idle"
-} as const;
-type Tone = (typeof Tone)[keyof typeof Tone];
-
 const IDLE = "idle";
 
-const STATE_TEXT: Record<LiveState, string> = {
-  [LiveState.OPENING]: "Opening the Gemini window",
-  [LiveState.BRIEFING]: "Briefing your tutor",
-  [LiveState.LIVE]: "Gemini is listening and watching your VS Code",
-  [LiveState.PAUSED]: "Gemini paused, bringing it back",
-  [LiveState.RECONNECTING]: "Gemini dropped, reconnecting",
-  [LiveState.FAILED]: "Gemini could not start"
-};
-
-const STATE_TONE: Record<LiveState, Tone> = {
-  [LiveState.OPENING]: Tone.WARN,
-  [LiveState.BRIEFING]: Tone.WARN,
-  [LiveState.LIVE]: Tone.OK,
-  [LiveState.PAUSED]: Tone.WARN,
-  [LiveState.RECONNECTING]: Tone.WARN,
-  [LiveState.FAILED]: Tone.DANGER
-};
-
-const HIDDEN_TEXT = "Gemini is listening but cannot see VS Code, bring its tab to the front";
 const READY_TEXT = "Ready when you are";
 const NEEDS_VSCODE_TEXT = `Open VS Code at ${VSCODE_ORIGIN} to begin`;
 
@@ -65,22 +39,13 @@ const isStartable = () => view.isVscodeOpen && !isSessionRunning();
 const statusText = () => {
   const { session } = view;
   if (!session) return view.isVscodeOpen ? READY_TEXT : NEEDS_VSCODE_TEXT;
-  if (session.state === LiveState.FAILED) return session.detail || STATE_TEXT[LiveState.FAILED];
-  if (session.state === LiveState.LIVE && session.sight === Sight.HIDDEN) return HIDDEN_TEXT;
-  return STATE_TEXT[session.state];
-};
-
-const tone = () => {
-  const { session } = view;
-  if (!session) return Tone.IDLE;
-  if (session.state === LiveState.LIVE && session.sight === Sight.HIDDEN) return Tone.WARN;
-  return STATE_TONE[session.state];
+  return sessionText(session);
 };
 
 const render = () => {
   elApp.dataset.state = view.session?.state ?? IDLE;
   elChip.textContent = view.session?.state ?? IDLE;
-  elChip.dataset.tone = tone();
+  elChip.dataset.tone = sessionTone(view.session);
   elStatus.textContent = statusText();
   elNote.textContent = view.note;
   elStart.disabled = !isStartable();

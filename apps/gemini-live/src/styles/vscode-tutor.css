@@ -1,0 +1,44 @@
+.ip-tutor-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 36px;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 420px;
+  padding: 6px 8px;
+  border: 1px solid var(--vscode-widget-border, currentColor);
+  background: var(--vscode-editorWidget-background, canvas);
+  color: var(--vscode-editorWidget-foreground, canvastext);
+  font: 12px var(--vscode-font-family, system-ui);
+
+  &[data-tone="ok"] {
+    border-color: var(--vscode-testing-iconPassed, green);
+  }
+
+  &[data-tone="warn"] {
+    border-color: var(--vscode-editorWarning-foreground, orange);
+  }
+
+  &[data-tone="danger"] {
+    border-color: var(--vscode-editorError-foreground, red);
+  }
+
+  & .ip-tutor {
+    padding: 4px 10px;
+    border: 0;
+    background: var(--vscode-button-background, highlight);
+    color: var(--vscode-button-foreground, highlighttext);
+    font: inherit;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--vscode-button-hoverBackground, highlight);
+    }
+  }
+
+  & .ip-tutor-status[hidden] {
+    display: none;
+  }
+}
