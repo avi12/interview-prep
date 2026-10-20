@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { isPassed } from "@scripts/lib/study.ts";
+import { isPassed, nextUnpassedId } from "@scripts/lib/study.ts";
 import { readCourse } from "@/lessonData.ts";
 
 export const Command = {
@@ -12,7 +12,7 @@ export const Command = {
   refresh: "interviewPrep.refresh"
 } as const;
 
-type Node = { kind: "track"; id: string } | { kind: "lesson"; id: string };
+type Node = { id: string };
 
 export class LessonTree implements vscode.TreeDataProvider<Node> {
   private readonly changeEmitter = new vscode.EventEmitter<void>();
@@ -29,35 +29,18 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
   }
 
   getChildren(node?: Node) {
-    const { tracks, lessons } = readCourse(this.root);
-    if (!node) return tracks.filter(track => lessons.some(l => l.track === track.id)).map((track): Node => ({ kind: "track", id: track.id }));
-    if (node.kind === "lesson") return [];
-    return lessons.filter(lesson => lesson.track === node.id).map((lesson): Node => ({ kind: "lesson", id: lesson.id }));
+    if (node) return [];
+    return readCourse(this.root).lessons.map(({ id }): Node => ({ id }));
   }
 
-  getTreeItem(node: Node) {
-    if (node.kind === "track") return this.trackItem(node.id);
-    return this.lessonItem(node.id);
-  }
-
-  private trackItem(id: string) {
-    const { tracks, lessons, progress } = readCourse(this.root);
-    const track = tracks.find(candidate => candidate.id === id);
-    const inTrack = lessons.filter(lesson => lesson.track === id);
-    const passedCount = inTrack.filter(lesson => isPassed({ progress, id: lesson.id })).length;
-    const item = new vscode.TreeItem(track?.title ?? id, vscode.TreeItemCollapsibleState.Collapsed);
-    item.description = `${passedCount}/${inTrack.length}`;
-    item.tooltip = track?.blurb;
-    return item;
-  }
-
-  private lessonItem(id: string) {
-    const { lessons, progress } = readCourse(this.root);
+  getTreeItem({ id }: Node) {
+    const { lessons, order, progress } = readCourse(this.root);
     const lesson = lessons.find(l => l.id === id);
     const isDone = isPassed({ progress, id });
+    const isNext = id === nextUnpassedId({ order, progress });
     const item = new vscode.TreeItem(lesson?.title ?? id, vscode.TreeItemCollapsibleState.None);
-    item.iconPath = new vscode.ThemeIcon(isDone ? "pass-filled" : lesson?.hasExercise ? "circle-large-outline" : "book");
-    item.description = `${lesson?.minutes ?? "?"} min${lesson?.isNarrated ? " - voice" : ""}`;
+    item.iconPath = new vscode.ThemeIcon(isDone ? "pass-filled" : isNext ? "arrow-circle-right" : lesson?.hasExercise ? "circle-large-outline" : "book");
+    item.description = isNext ? "next" : `${lesson?.minutes ?? "?"} min`;
     item.command = { command: Command.openLesson, title: "Open lesson", arguments: [id] };
     return item;
   }

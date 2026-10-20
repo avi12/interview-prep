@@ -17,17 +17,8 @@
     "workspaceContains:curriculum/tracks.json"
   ],
   "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "interviewPrep",
-          "title": "Interview Prep",
-          "icon": "media/icon.svg"
-        }
-      ]
-    },
     "views": {
-      "interviewPrep": [
+      "explorer": [
         {
           "id": "interviewPrep.lessons",
           "name": "Lessons"
