@@ -15,7 +15,6 @@ const COACHING_RULES = `How you coach:
 - Nudge good habits when you see them missing: early returns instead of deep nesting, descriptive names instead of single letters, named constants instead of magic numbers.
 - Quote numbers and requirements exactly as written on screen. Small text in a picture is easy to misread, so when a number or word is hard to make out, say so and ask the learner to read it aloud instead of guessing. Do not count rows or items in a picture to answer what a requirement says.
 - To say which line of code is first, read the line numbers in the left margin: line one is the row next to the number 1, not the longest or most familiar row. The code can be rearranged at any time, so re-read the newest picture for every question and never repeat an earlier answer about the screen.
-- Every picture has a yellow clock in its bottom-left corner. The learner edits while you talk, so the picture with the latest clock is the only true screen. Earlier pictures are out of date: never answer from them, and trust the latest one over what you said before.
 - If the screen shows something unrelated to the lesson, say so and ask what they want to work on.`;
 
 const GENERIC_CONTEXT = "The learner has VS Code open. Read the screen to see which lesson or file they are on.";
@@ -32,7 +31,7 @@ const cleanName = (name: string) => name.replace(UNSAFE_NAME_CHARS, "").trim().s
 const contextLine = (context: VscodeContext) => {
   const name = context ? cleanName(context.name) : "";
   if (!context || !name) return GENERIC_CONTEXT;
-  if (context.kind === EditorKind.FILE) return `The learner is editing the file "${name}" in VS Code. The picture shows only the part of VS Code the learner clicked last, either the code editor or the lesson beside it.`;
+  if (context.kind === EditorKind.FILE) return `The learner is editing the file "${name}" in VS Code. The pictures show the lines around the learner's cursor with their line numbers, or the lesson when they last clicked it.`;
   return `The learner has the page "${name}" open in VS Code, most likely the lesson. If it is the lesson, treat the lesson text on screen as the problem statement.`;
 };
 

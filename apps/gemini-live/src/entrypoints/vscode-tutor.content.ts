@@ -1,12 +1,12 @@
 import { defineContentScript } from "#imports";
 import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
+import { focusRect } from "@/lib/focus-rect.ts";
 import { isRunning } from "@/lib/live-state.ts";
 import { sessionText, sessionTone, Tone } from "@/lib/live-status.ts";
 import { parseSession, sessionItem, type Session } from "@/lib/session.ts";
 import { VSCODE_ORIGIN } from "@/lib/vscode.ts";
 import "@/styles/vscode-tutor.css";
 
-const ACTIVE_EDITOR_GROUP = ".editor-group-container.active";
 const START_LABEL = "Start voice tutor";
 const STOP_LABEL = "Stop voice tutor";
 
@@ -53,12 +53,7 @@ export default defineContentScript({
       panel.dataset.tone = Tone.DANGER;
     };
 
-    extensionMessenger.onMessage(ExtensionMessage.VSCODE_FOCUS_RECT, () => {
-      const group = document.querySelector(ACTIVE_EDITOR_GROUP);
-      if (!group) return null;
-      const { left, top, width, height } = group.getBoundingClientRect();
-      return { left, top, width, height, viewportWidth: window.innerWidth };
-    });
+    extensionMessenger.onMessage(ExtensionMessage.VSCODE_FOCUS_RECT, focusRect);
 
     button.addEventListener("click", toggle);
     sessionItem.watch(raw => {
