@@ -1,11 +1,10 @@
 import { defineContentScript } from "#imports";
 import { browser } from "wxt/browser";
 import { bridgeMessenger, BridgeMessage } from "@/lib/bridge-channel.ts";
-import { GLIC_URL, type Activation } from "@/lib/bridge-vocab.ts";
+import { GLIC_URL, GlicCommand, GlicReport, type Activation } from "@/lib/bridge-vocab.ts";
 import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
 import { promptClipPath } from "@/lib/prompt-clip.ts";
 import { loadLanguage } from "@/lib/settings.ts";
-import { within } from "@/lib/within.ts";
 
 /*
  * Beside the bridge, in the extension's world: only this world reaches the worker, and
@@ -13,7 +12,6 @@ import { within } from "@/lib/within.ts";
  * this tab was opened for a session before it lets the bridge take the page over.
  */
 
-const CALL_TIMEOUT_MS = 60_000;
 const HELLO_TRIES = 5;
 const HELLO_GAP_MS = 400;
 
@@ -45,15 +43,18 @@ export default defineContentScript({
       browser.runtime.getURL(promptClipPath({ event: data.event, language: await loadLanguage() }))
     );
     bridgeMessenger.onMessage(BridgeMessage.TUTOR_VIEW, () => extensionMessenger.sendMessage(ExtensionMessage.GLIC_TUTOR_VIEW).catch(() => null));
-    bridgeMessenger.onMessage(BridgeMessage.REPORT, ({ data }) => {
-      void extensionMessenger.sendMessage(ExtensionMessage.GLIC_REPORT, data).catch(() => {});
-    });
+    const toWorker = (sending: Promise<void>) => void sending.catch(() => {});
+    bridgeMessenger.onMessage(GlicReport.BOOTED, () => toWorker(extensionMessenger.sendMessage(GlicReport.BOOTED)));
+    bridgeMessenger.onMessage(GlicReport.READY, () => toWorker(extensionMessenger.sendMessage(GlicReport.READY)));
+    bridgeMessenger.onMessage(GlicReport.STATE, ({ data }) => toWorker(extensionMessenger.sendMessage(GlicReport.STATE, data)));
+    bridgeMessenger.onMessage(GlicReport.FAILED, ({ data }) => toWorker(extensionMessenger.sendMessage(GlicReport.FAILED, data)));
     extensionMessenger.onMessage(ExtensionMessage.GLIC_RETITLE, ({ data }) => {
       if (activation) activate(data);
     });
-    extensionMessenger.onMessage(ExtensionMessage.GLIC_CALL, ({ data }) =>
-      within({ ms: CALL_TIMEOUT_MS, promise: bridgeMessenger.sendMessage(BridgeMessage.CALL, data), fallback: null })
-    );
+    extensionMessenger.onMessage(GlicCommand.START_LIVE, () => bridgeMessenger.sendMessage(GlicCommand.START_LIVE));
+    extensionMessenger.onMessage(GlicCommand.STOP_LIVE, () => bridgeMessenger.sendMessage(GlicCommand.STOP_LIVE));
+    extensionMessenger.onMessage(GlicCommand.BEGIN_TEXT, () => bridgeMessenger.sendMessage(GlicCommand.BEGIN_TEXT));
+    extensionMessenger.onMessage(GlicCommand.SUBMIT, () => bridgeMessenger.sendMessage(GlicCommand.SUBMIT));
 
     const owned = await askWorkerWhoOwnsTab();
     if (owned) activate(owned);

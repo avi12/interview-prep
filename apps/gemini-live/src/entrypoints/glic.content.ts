@@ -5,8 +5,7 @@ import { annotatedPageContent, byteStream } from "@/lib/page-content.ts";
 import { PromptEvent } from "@/lib/prompt-clip.ts";
 import { installBidi } from "@/lib/bidi.ts";
 import { bridgeMessenger, BridgeMessage } from "@/lib/bridge-channel.ts";
-import type { BridgeReport } from "@/lib/bridge-report.ts";
-import { BridgeCall, BridgeFailure, BridgeUp, GLIC_URL, GlicState, type Activation, type Frame } from "@/lib/bridge-vocab.ts";
+import { BridgeFailure, GLIC_URL, GlicCommand, GlicReport, GlicState, type Activation, type Frame } from "@/lib/bridge-vocab.ts";
 import { within } from "@/lib/within.ts";
 
 /*
@@ -134,14 +133,12 @@ const bridge = {
 
 const bootstrapHandlers: EventListener[] = [];
 
-const report = (message: BridgeReport) => {
-  void bridgeMessenger.sendMessage(BridgeMessage.REPORT, message).catch(() => {});
-};
+const report = (sending: Promise<void>) => void sending.catch(() => {});
 
 const setState = (state: GlicState) => {
   if (bridge.lastState === state) return;
   bridge.lastState = state;
-  report({ kind: BridgeUp.STATE, state });
+  report(bridgeMessenger.sendMessage(GlicReport.STATE, state));
 };
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -169,7 +166,7 @@ const isSignedOut = () => {
   return SIGN_IN.test(pageText()) && !findButton(Button.GO_LIVE);
 };
 
-const reportFailure = (failure: BridgeFailure) => report({ kind: BridgeUp.ERROR, failure });
+const reportFailure = (failure: BridgeFailure) => report(bridgeMessenger.sendMessage(GlicReport.FAILED, failure));
 
 const reportStartFailure = (fallback: BridgeFailure) => reportFailure(isSignedOut() ? BridgeFailure.SIGNED_OUT : fallback);
 
@@ -296,7 +293,7 @@ const registry = {
       .then(() => client.initialize(host))
       .then(() => {
         bridge.isBooted = true;
-        report({ kind: BridgeUp.BOOTED });
+        report(bridgeMessenger.sendMessage(GlicReport.BOOTED));
         setTimeout(() => notify({ subscriber: state => client.notifyPanelWillOpen?.(state), value: PANEL_STATE }), 0);
       })
 };
@@ -517,7 +514,7 @@ const startLive = () => {
       clearInterval(bridge.startTimer);
       bridge.lastLive = Date.now();
       bridge.isBrokenReported = false;
-      report({ kind: BridgeUp.READY });
+      report(bridgeMessenger.sendMessage(GlicReport.READY));
       setState(GlicState.LISTENING);
       bridge.monitorTimer ??= setInterval(monitorTick, MONITOR_POLL_MS);
       return;
@@ -595,13 +592,6 @@ const submitAndRead = async () => {
   return false;
 };
 
-const calls: Record<BridgeCall, () => unknown> = {
-  [BridgeCall.START]: startLive,
-  [BridgeCall.STOP]: stopLive,
-  [BridgeCall.BEGIN_TEXT]: beginText,
-  [BridgeCall.SUBMIT]: submitAndRead
-};
-
 const watchBoot = () => {
   let tries = 0;
   const bootTimer = setInterval(() => {
@@ -645,10 +635,10 @@ export default defineContentScript({
     installBidi();
     captureBootstrapListeners();
     bridgeMessenger.onMessage(BridgeMessage.ACTIVATE, ({ data }) => activate(data));
-    bridgeMessenger.onMessage(BridgeMessage.CALL, async ({ data }) => {
-      const run = calls[data.name];
-      return run ? await Promise.resolve(run()).catch(() => null) : null;
-    });
+    bridgeMessenger.onMessage(GlicCommand.START_LIVE, startLive);
+    bridgeMessenger.onMessage(GlicCommand.STOP_LIVE, stopLive);
+    bridgeMessenger.onMessage(GlicCommand.BEGIN_TEXT, beginText);
+    bridgeMessenger.onMessage(GlicCommand.SUBMIT, submitAndRead);
     void bridgeMessenger
       .sendMessage(BridgeMessage.PRESENT)
       .then(activation => activation && activate(activation))

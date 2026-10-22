@@ -1,21 +1,5 @@
 export const GLIC_URL = "https://gemini.google.com/glic";
 
-export const BridgeUp = {
-  BOOTED: "booted",
-  READY: "ready",
-  STATE: "state",
-  ERROR: "error"
-} as const;
-export type BridgeUp = (typeof BridgeUp)[keyof typeof BridgeUp];
-
-export const BridgeCall = {
-  START: "start",
-  STOP: "stop",
-  BEGIN_TEXT: "beginText",
-  SUBMIT: "submitAndRead"
-} as const;
-export type BridgeCall = (typeof BridgeCall)[keyof typeof BridgeCall];
-
 export const GlicState = {
   IDLE: "idle",
   LISTENING: "listening",
@@ -31,6 +15,36 @@ export const BridgeFailure = {
   LIVE_DID_NOT_START: "live-did-not-start"
 } as const;
 export type BridgeFailure = (typeof BridgeFailure)[keyof typeof BridgeFailure];
+
+export const GlicCommand = {
+  START_LIVE: "glicStartLive",
+  STOP_LIVE: "glicStopLive",
+  BEGIN_TEXT: "glicBeginText",
+  SUBMIT: "glicSubmit"
+} as const;
+export type GlicCommand = (typeof GlicCommand)[keyof typeof GlicCommand];
+
+export interface GlicCommandMap {
+  [GlicCommand.START_LIVE](): boolean;
+  [GlicCommand.STOP_LIVE](): boolean;
+  [GlicCommand.BEGIN_TEXT](): boolean;
+  [GlicCommand.SUBMIT](): boolean;
+}
+
+export const GlicReport = {
+  BOOTED: "glicBooted",
+  READY: "glicReady",
+  STATE: "glicState",
+  FAILED: "glicFailed"
+} as const;
+export type GlicReport = (typeof GlicReport)[keyof typeof GlicReport];
+
+export interface GlicReportMap {
+  [GlicReport.BOOTED](): void;
+  [GlicReport.READY](): void;
+  [GlicReport.STATE](data: GlicState): void;
+  [GlicReport.FAILED](data: BridgeFailure): void;
+}
 
 export interface Activation {
   title: string;

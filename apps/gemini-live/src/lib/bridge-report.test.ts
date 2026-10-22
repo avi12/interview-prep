@@ -1,27 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { bridgeReportSchema } from "./bridge-report.ts";
-import { BridgeFailure, BridgeUp, GlicState } from "./bridge-vocab.ts";
+import { bridgeFailureSchema, glicStateSchema } from "./bridge-report.ts";
+import { BridgeFailure, GlicState } from "./bridge-vocab.ts";
 
-describe("bridgeReportSchema", () => {
-  it("accepts every report the bridge sends", () => {
-    const reports = [
-      { kind: BridgeUp.BOOTED },
-      { kind: BridgeUp.READY },
-      { kind: BridgeUp.STATE, state: GlicState.LISTENING },
-      { kind: BridgeUp.ERROR, failure: BridgeFailure.LIVE_BROKE }
-    ];
-    for (const report of reports) expect(bridgeReportSchema.safeParse(report).success).toBe(true);
+describe("bridge report payloads", () => {
+  it("accepts every state and failure the bridge reports", () => {
+    for (const state of Object.values(GlicState)) expect(glicStateSchema.safeParse(state).success).toBe(true);
+    for (const failure of Object.values(BridgeFailure)) expect(bridgeFailureSchema.safeParse(failure).success).toBe(true);
   });
 
   it("refuses what a page script could forge", () => {
-    const forged = [
-      { kind: "run", code: "alert(1)" },
-      { kind: BridgeUp.STATE, state: "dancing" },
-      { kind: BridgeUp.ERROR, failure: "anything I like" },
-      { kind: BridgeUp.ERROR },
-      "booted",
-      null
-    ];
-    for (const report of forged) expect(bridgeReportSchema.safeParse(report).success).toBe(false);
+    for (const forged of ["dancing", "anything I like", { kind: "run", code: "alert(1)" }, null]) {
+      expect(glicStateSchema.safeParse(forged).success).toBe(false);
+      expect(bridgeFailureSchema.safeParse(forged).success).toBe(false);
+    }
   });
 });

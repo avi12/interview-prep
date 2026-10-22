@@ -1,7 +1,7 @@
 import { browser } from "wxt/browser";
 import { buildBrief } from "./brief.ts";
-import { bridgeReportSchema, type BridgeReport } from "./bridge-report.ts";
-import { BridgeCall, BridgeFailure, BridgeUp, GLIC_URL, GlicState } from "./bridge-vocab.ts";
+import { bridgeFailureSchema, glicStateSchema } from "./bridge-report.ts";
+import { BridgeFailure, GLIC_URL, GlicCommand, GlicReport, GlicState } from "./bridge-vocab.ts";
 import { captureVscode } from "./capture.ts";
 import { fetchTutorView } from "./fetch-tutor-view.ts";
 import { ExtensionMessage, extensionMessenger, type StartResult } from "./extension-channel.ts";
@@ -49,12 +49,8 @@ const refused = (detail: string): StartResult => ({ isStarted: false, detail });
 
 const tell = ({ state, detail = "" }: { state: LiveState; detail?: string }) => updateSession({ state, detail });
 
-const call = <T>({ session, name }: { session: Session; name: BridgeCall }) =>
-  within({
-    ms: CALL_TIMEOUT_MS,
-    promise: extensionMessenger.sendMessage(ExtensionMessage.GLIC_CALL, { name }, session.glicTab),
-    fallback: null
-  }) as Promise<T | null>;
+const command = ({ session, name }: { session: Session; name: GlicCommand }) =>
+  within({ ms: CALL_TIMEOUT_MS, promise: extensionMessenger.sendMessage(name, undefined, session.glicTab), fallback: null });
 
 const closeWindow = (windowId: number) => browser.windows.remove(windowId).catch(() => {});
 
@@ -78,7 +74,7 @@ const briefTutor = async () => {
   const session = await loadSession();
   if (!session?.brief || !session.isBooted) return;
   await updateSession({ brief: "", state: LiveState.BRIEFING, detail: "" });
-  const isTextBoxReady = await call<boolean>({ session, name: BridgeCall.BEGIN_TEXT });
+  const isTextBoxReady = await command({ session, name: GlicCommand.BEGIN_TEXT });
   if (!isTextBoxReady) return tell({ state: LiveState.FAILED, detail: Text.NO_TEXT_BOX });
   try {
     await typeText({ tabId: session.glicTab, text: session.brief });
@@ -86,9 +82,9 @@ const briefTutor = async () => {
     const reason = error instanceof Error ? error.message : String(error);
     return tell({ state: LiveState.FAILED, detail: `${Text.TYPING_FAILED}: ${reason}` });
   }
-  await call({ session, name: BridgeCall.SUBMIT });
+  await command({ session, name: GlicCommand.SUBMIT });
   await borrowFocus(session);
-  await call({ session, name: BridgeCall.START });
+  await command({ session, name: GlicCommand.START_LIVE });
 };
 
 const restart = async (session: Session) => {
@@ -108,23 +104,23 @@ const fail = async ({ session, failure }: { session: Session; failure: BridgeFai
   await tell({ state: LiveState.FAILED, detail: FAILURE_TEXT[failure] });
 };
 
-const fromBridge = async ({ session, report }: { session: Session; report: BridgeReport }) => {
-  if (report.kind === BridgeUp.BOOTED) {
-    await updateSession({ isBooted: true });
-    void (session.brief ? briefTutor() : borrowFocus(session).then(() => call({ session, name: BridgeCall.START })));
-    return;
-  }
-  if (report.kind === BridgeUp.READY) {
-    await tell({ state: LiveState.LIVE });
-    return returnFocus(session);
-  }
-  if (report.kind === BridgeUp.ERROR) return fail({ session, failure: report.failure });
+const onBooted = async (session: Session) => {
+  await updateSession({ isBooted: true });
+  void (session.brief ? briefTutor() : borrowFocus(session).then(() => command({ session, name: GlicCommand.START_LIVE })));
+};
+
+const onReady = async (session: Session) => {
+  await tell({ state: LiveState.LIVE });
+  await returnFocus(session);
+};
+
+const onState = async ({ session, state }: { session: Session; state: GlicState }) => {
   if (session.state === LiveState.BRIEFING) return;
-  if (report.state === GlicState.LISTENING) {
+  if (state === GlicState.LISTENING) {
     await tell({ state: LiveState.LIVE });
     return returnFocus(session);
   }
-  if (report.state === GlicState.RESUMING) {
+  if (state === GlicState.RESUMING) {
     await borrowFocus(session);
     return tell({ state: LiveState.PAUSED });
   }
@@ -191,7 +187,7 @@ const startSession = async (): Promise<StartResult> => {
 const stopSession = async () => {
   const session = await loadSession();
   if (!session) return;
-  await call({ session, name: BridgeCall.STOP });
+  await command({ session, name: GlicCommand.STOP_LIVE });
   await clearSession();
   await closeWindow(session.glicWindow);
 };
@@ -234,11 +230,26 @@ export const installLive = () => {
     return session ? fetchTutorView() : null;
   });
 
-  extensionMessenger.onMessage(ExtensionMessage.GLIC_REPORT, async ({ data, sender }) => {
-    const parsedReport = bridgeReportSchema.safeParse(data);
-    if (!parsedReport.success) return;
+  extensionMessenger.onMessage(GlicReport.BOOTED, async ({ sender }) => {
     const session = await glicSession(sender.tab);
-    if (session) await fromBridge({ session, report: parsedReport.data });
+    if (session) await onBooted(session);
+  });
+
+  extensionMessenger.onMessage(GlicReport.READY, async ({ sender }) => {
+    const session = await glicSession(sender.tab);
+    if (session) await onReady(session);
+  });
+
+  extensionMessenger.onMessage(GlicReport.STATE, async ({ data, sender }) => {
+    const state = glicStateSchema.safeParse(data);
+    const session = state.success ? await glicSession(sender.tab) : null;
+    if (session && state.success) await onState({ session, state: state.data });
+  });
+
+  extensionMessenger.onMessage(GlicReport.FAILED, async ({ data, sender }) => {
+    const failure = bridgeFailureSchema.safeParse(data);
+    const session = failure.success ? await glicSession(sender.tab) : null;
+    if (session && failure.success) await fail({ session, failure: failure.data });
   });
 
   browser.windows.onRemoved.addListener(async windowId => {
