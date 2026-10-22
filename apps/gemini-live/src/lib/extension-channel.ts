@@ -9,13 +9,22 @@ export const ExtensionMessage = {
   GLIC_CAPTURE: "glicCapture",
   GLIC_REPORT: "glicReport",
   GLIC_CALL: "glicCall",
-  GLIC_RETITLE: "glicRetitle"
+  GLIC_RETITLE: "glicRetitle",
+  VSCODE_FOCUS_RECT: "vscodeFocusRect"
 } as const;
 
 interface GlicHello {
   isMine: boolean;
   title: string;
   url: string;
+}
+
+export interface FocusRect {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  viewportWidth: number;
 }
 
 export interface StartResult {
@@ -31,6 +40,7 @@ interface ExtensionProtocolMap {
   [ExtensionMessage.GLIC_REPORT](data: BridgeReport): void;
   [ExtensionMessage.GLIC_CALL](data: { name: BridgeCall }): unknown;
   [ExtensionMessage.GLIC_RETITLE](data: Activation): void;
+  [ExtensionMessage.VSCODE_FOCUS_RECT](): FocusRect | null;
 }
 
 export const extensionMessenger = defineExtensionMessaging<ExtensionProtocolMap>();

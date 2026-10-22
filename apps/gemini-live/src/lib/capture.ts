@@ -1,5 +1,6 @@
 import { browser } from "wxt/browser";
 import type { Frame } from "./bridge-vocab.ts";
+import { ExtensionMessage, extensionMessenger, type FocusRect } from "./extension-channel.ts";
 import { Sight } from "./live-state.ts";
 import { isVscodeUrl } from "./vscode.ts";
 
@@ -12,6 +13,8 @@ const BASE64_CHUNK_BYTES = 0x8000;
 const STAMP_HEIGHT_RATIO = 0.022;
 const STAMP_BACKGROUND = "#000000";
 const STAMP_COLOR = "#ffff00";
+const BORDER_COLORS = ["#ff0055", "#00d5ff", "#7dff00", "#ffb000"];
+const BORDER_HEIGHT_RATIO = 0.012;
 const MINIMIZED = "minimized";
 
 interface Capture {
@@ -38,16 +41,36 @@ const stampClock = ({ context, width, height }: { context: OffscreenCanvasRender
   context.fillText(label, fontSize / 2, height - fontSize * 0.45);
 };
 
-const fitFrame = async (dataUrl: string): Promise<Frame> => {
+const drawBorder = ({ context, width, height }: { context: OffscreenCanvasRenderingContext2D; width: number; height: number }) => {
+  const thickness = Math.round(height * BORDER_HEIGHT_RATIO);
+  context.strokeStyle = BORDER_COLORS.at(Math.floor(Date.now() / 1000) % BORDER_COLORS.length) ?? STAMP_COLOR;
+  context.lineWidth = thickness * 2;
+  context.strokeRect(0, 0, width, height);
+};
+
+const cropOf = ({ bitmap, rect }: { bitmap: ImageBitmap; rect: FocusRect | null }) => {
+  const whole = { x: 0, y: 0, width: bitmap.width, height: bitmap.height };
+  if (!rect || rect.width <= 0 || rect.height <= 0) return whole;
+  const pixelsPerCssPixel = bitmap.width / rect.viewportWidth;
+  const x = Math.max(0, Math.round(rect.left * pixelsPerCssPixel));
+  const y = Math.max(0, Math.round(rect.top * pixelsPerCssPixel));
+  const width = Math.min(bitmap.width - x, Math.round(rect.width * pixelsPerCssPixel));
+  const height = Math.min(bitmap.height - y, Math.round(rect.height * pixelsPerCssPixel));
+  return width > 0 && height > 0 ? { x, y, width, height } : whole;
+};
+
+const fitFrame = async ({ dataUrl, rect }: { dataUrl: string; rect: FocusRect | null }): Promise<Frame> => {
   const bitmap = await createImageBitmap(await (await fetch(dataUrl)).blob());
-  const scale = Math.min(1, MAX_FRAME_WIDTH / bitmap.width);
-  const width = Math.round(bitmap.width * scale);
-  const height = Math.round(bitmap.height * scale);
+  const crop = cropOf({ bitmap, rect });
+  const scale = Math.min(1, MAX_FRAME_WIDTH / crop.width);
+  const width = Math.round(crop.width * scale);
+  const height = Math.round(crop.height * scale);
   const canvas = new OffscreenCanvas(width, height);
   const context = canvas.getContext("2d");
   if (!context) throw new Error("no 2d context for the frame");
-  context.drawImage(bitmap, 0, 0, width, height);
+  context.drawImage(bitmap, crop.x, crop.y, crop.width, crop.height, 0, 0, width, height);
   bitmap.close();
+  drawBorder({ context, width, height });
   stampClock({ context, width, height });
   const resized = await canvas.convertToBlob({ type: JPEG_MIME, quality: RESIZE_JPEG_QUALITY });
   return { base64: bytesToBase64(new Uint8Array(await resized.arrayBuffer())), mimeType: JPEG_MIME, width, height };
@@ -63,7 +86,8 @@ const grab = async (tabId: number): Promise<Capture> => {
   if (!vscodeWindow || vscodeWindow.state === MINIMIZED) return HIDDEN;
   const dataUrl = await browser.tabs.captureVisibleTab(tab.windowId, { format: "jpeg", quality: CAPTURE_JPEG_QUALITY }).catch(() => null);
   if (!dataUrl) return last?.tabId === tabId ? last.capture : HIDDEN;
-  return { sight: Sight.SEEING, frame: await fitFrame(dataUrl) };
+  const rect = await extensionMessenger.sendMessage(ExtensionMessage.VSCODE_FOCUS_RECT, undefined, tabId).catch(() => null);
+  return { sight: Sight.SEEING, frame: await fitFrame({ dataUrl, rect }) };
 };
 
 export const captureVscode = async (tabId: number) => {

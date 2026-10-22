@@ -6,6 +6,7 @@ import { parseSession, sessionItem, type Session } from "@/lib/session.ts";
 import { VSCODE_ORIGIN } from "@/lib/vscode.ts";
 import "@/styles/vscode-tutor.css";
 
+const ACTIVE_EDITOR_GROUP = ".editor-group-container.active";
 const START_LABEL = "Start voice tutor";
 const STOP_LABEL = "Stop voice tutor";
 
@@ -51,6 +52,13 @@ export default defineContentScript({
       status.textContent = result.detail;
       panel.dataset.tone = Tone.DANGER;
     };
+
+    extensionMessenger.onMessage(ExtensionMessage.VSCODE_FOCUS_RECT, () => {
+      const group = document.querySelector(ACTIVE_EDITOR_GROUP);
+      if (!group) return null;
+      const { left, top, width, height } = group.getBoundingClientRect();
+      return { left, top, width, height, viewportWidth: window.innerWidth };
+    });
 
     button.addEventListener("click", toggle);
     sessionItem.watch(raw => {

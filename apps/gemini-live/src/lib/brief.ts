@@ -32,7 +32,7 @@ const cleanName = (name: string) => name.replace(UNSAFE_NAME_CHARS, "").trim().s
 const contextLine = (context: VscodeContext) => {
   const name = context ? cleanName(context.name) : "";
   if (!context || !name) return GENERIC_CONTEXT;
-  if (context.kind === EditorKind.FILE) return `The learner is editing the file "${name}" in VS Code. The lesson text sits in the panel beside the editor.`;
+  if (context.kind === EditorKind.FILE) return `The learner is editing the file "${name}" in VS Code. The picture shows only the part of VS Code the learner clicked last, either the code editor or the lesson beside it.`;
   return `The learner has the page "${name}" open in VS Code, most likely the lesson. If it is the lesson, treat the lesson text on screen as the problem statement.`;
 };
 
