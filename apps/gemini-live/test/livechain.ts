@@ -53,7 +53,8 @@ const GREEN = [0, 255, 0];
 const LIVE_TIMEOUT_FLAG_COUNT = 4;
 const BRIEF_TIMEOUT_MS = 120_000;
 const BOOT_REPORT_MS = 17_000;
-const MIC_KEY_CODE = 124;
+const MIC_KEY_CODE = 123;
+const CdpModifier = { ALT: 1, CTRL: 2, SHIFT: 8 } as const;
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const targets = async (): Promise<any[]> => (await fetch(`${BASE}/json/list`)).json();
@@ -238,7 +239,10 @@ check({ name: "worker state lives in storage.local", ok: stored?.state === "live
 
 // ---- the mic key in VS Code unmutes, and pressing it again mutes ----
 const pressMicKey = async () => {
-  for (const type of ["rawKeyDown", "keyUp"]) await vscode.send("Input.dispatchKeyEvent", { type, key: MIC_KEY, code: MIC_KEY, windowsVirtualKeyCode: MIC_KEY_CODE });
+  const modifiers = (MIC_KEY.isAlt ? CdpModifier.ALT : 0) | (MIC_KEY.isCtrl ? CdpModifier.CTRL : 0) | (MIC_KEY.isShift ? CdpModifier.SHIFT : 0);
+  for (const type of ["rawKeyDown", "keyUp"]) {
+    await vscode.send("Input.dispatchKeyEvent", { type, modifiers, key: MIC_KEY.code, code: MIC_KEY.code, windowsVirtualKeyCode: MIC_KEY_CODE });
+  }
 };
 await pressMicKey();
 check({ name: "the mic key unmutes: popup says listening and watching", ok: !!(await statusIncludes("listening and watching")), detail: await status() });

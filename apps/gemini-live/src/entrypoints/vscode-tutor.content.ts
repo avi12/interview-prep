@@ -28,7 +28,7 @@ const createPanel = () => {
   panel.className = "ip-tutor-panel";
   const button = createButton("ip-tutor");
   const mic = createButton("ip-tutor ip-tutor-mic");
-  mic.title = `Mute or unmute your mic (${MIC_KEY})`;
+  mic.title = `Mute or unmute your mic (${MIC_KEY.label})`;
   const status = document.createElement("span");
   status.className = "ip-tutor-status";
   panel.append(status, mic, button);
