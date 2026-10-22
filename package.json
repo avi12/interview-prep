@@ -18,7 +18,10 @@
     "verify": "node scripts/verify.ts",
     "start": "node scripts/start.ts",
     "dev": "node scripts/dev.ts",
-    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.solutions.json"
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.solutions.json",
+    "fallow": "fallow audit --base HEAD",
+    "dev:lint": "pnpm fallow && pnpm -C apps/gemini-live run lint",
+    "prepare": "simple-git-hooks"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.10",
@@ -29,7 +32,20 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "fallow": "2.103.0",
+    "lint-staged": "^17.6.0",
+    "simple-git-hooks": "^2.14.0",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "apps/gemini-live/**/*.{ts,svelte}": [
+      "pnpm -C apps/gemini-live exec oxlint --fix -c .oxlintrc.fix.json",
+      "pnpm -C apps/gemini-live exec eslint --fix",
+      "pnpm -C apps/gemini-live exec oxlint"
+    ]
   }
 }

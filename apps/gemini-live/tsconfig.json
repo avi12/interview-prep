@@ -1,8 +1,15 @@
 {
-  "extends": "./.wxt/tsconfig.json",
+  "extends": [
+    "@tsconfig/svelte/tsconfig.json",
+    "./.wxt/tsconfig.json"
+  ],
   "compilerOptions": {
     "strict": true,
     "allowImportingTsExtensions": true,
-    "types": ["node", "w3c-web-hid"]
+    "types": [
+      "svelte",
+      "node",
+      "w3c-web-hid"
+    ]
   }
 }
