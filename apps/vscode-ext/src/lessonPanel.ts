@@ -1,13 +1,16 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import * as vscode from "vscode";
-import type { PanelActionName } from "@scripts/lib/panel.ts";
+import { PanelAction, type PanelActionName } from "@scripts/lib/panel.ts";
 import type { LessonEntry } from "@/lessonData.ts";
 
 const VIEW_TYPE = "interviewPrep.lesson";
 
 let panel: vscode.WebviewPanel | undefined;
 let messageSubscription: vscode.Disposable | undefined;
+let viewingSection = "";
+
+export const lessonPanelState = () => ({ isActive: panel?.active ?? false, section: viewingSection });
 
 export const showLesson = ({
   root,
@@ -26,8 +29,12 @@ export const showLesson = ({
     panel.onDidDispose(() => (panel = undefined));
   }
   panel.title = lesson.title;
+  viewingSection = "";
   panel.webview.html = html;
   panel.reveal(viewColumn, true);
   messageSubscription?.dispose();
-  messageSubscription = panel.webview.onDidReceiveMessage(({ action }: { action: PanelActionName }) => onAction(action));
+  messageSubscription = panel.webview.onDidReceiveMessage(({ action, section }: { action: PanelActionName; section?: string }) => {
+    if (action !== PanelAction.viewing) return onAction(action);
+    viewingSection = section ?? "";
+  });
 };

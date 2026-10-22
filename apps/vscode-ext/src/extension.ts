@@ -7,9 +7,11 @@ import { findLesson, findNextLesson } from "@/lessonData.ts";
 import { ensureExerciseFiles, onTestsFinished, runLessonCli, runTestsInTerminal } from "@/lessonCli.ts";
 import { showLesson } from "@/lessonPanel.ts";
 import { Command, LessonTree } from "@/lessonTree.ts";
+import { serveTutorView } from "@/tutorView.ts";
 
 const CLAUDE_TERMINAL_NAME = "Claude tutor";
 const SHOW_LESSONS_COMMAND = "workbench.view.extension.interviewPrep";
+const FILE_SCHEME = "file";
 
 const lessonIdOfFile = ({ root, file }: { root: string; file: string }) => {
   const segments = relative(resolve(root, WORK_DIR_NAME), file).split(sep);
@@ -85,6 +87,20 @@ export function activate(context: vscode.ExtensionContext) {
     return (file && lessonIdOfFile({ root, file })) ?? openLessonId;
   };
 
+  const isFileEditor = (editor: vscode.TextEditor | undefined) => editor?.document.uri.scheme === FILE_SCHEME;
+
+  const lessonEditor = () => {
+    const active = vscode.window.activeTextEditor;
+    if (active && isFileEditor(active)) return active;
+    const id = activeLessonId();
+    return vscode.window.visibleTextEditors.find(editor => isFileEditor(editor) && lessonIdOfFile({ root, file: editor.document.uri.fsPath }) === id);
+  };
+
+  const activeLesson = () => {
+    const id = activeLessonId();
+    return id ? findLesson({ root, id }) : undefined;
+  };
+
   const askClaude = () => {
     const terminal = vscode.window.terminals.find(t => t.name === CLAUDE_TERMINAL_NAME) ?? vscode.window.createTerminal({ name: CLAUDE_TERMINAL_NAME, cwd: root });
     terminal.show();
@@ -101,6 +117,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(Command.markDone, () => markDone(activeLessonId())),
     vscode.commands.registerCommand(Command.askClaude, askClaude),
     vscode.commands.registerCommand(Command.refresh, () => tree.refresh()),
+    serveTutorView({ root, lesson: activeLesson, editor: lessonEditor }),
     ...watchForChanges({
       root,
       extensionPath: context.extensionPath,
