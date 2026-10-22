@@ -2,7 +2,8 @@ export const PanelAction = {
   runTests: "runTests",
   openExercise: "openExercise",
   resetExercise: "resetExercise",
-  markDone: "markDone"
+  markDone: "markDone",
+  viewing: "viewing"
 } as const;
 
 export type PanelActionName = (typeof PanelAction)[keyof typeof PanelAction];
