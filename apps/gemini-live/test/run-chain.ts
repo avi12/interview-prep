@@ -11,11 +11,13 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node
 import { createServer } from "node:http";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { TUTOR_VIEW_PATH } from "../../../scripts/lib/tutor-view.ts";
 
 const PACKAGE_DIR = resolve(import.meta.dirname, "..");
 const VSCODE_PORT = Number(process.env.CHAIN_VSCODE_PORT ?? 18765);
 const DEBUG_PORT = Number(process.env.CHAIN_DEBUG_PORT ?? 19333);
 const VSCODE_ORIGIN = `http://127.0.0.1:${VSCODE_PORT}`;
+const UNSERVED_TUTOR_VIEW_URL = `http://127.0.0.1:${VSCODE_PORT + 1}${TUTOR_VIEW_PATH}`;
 const OUT_DIR = ".output-test";
 const EXTENSION_DIR = resolve(PACKAGE_DIR, OUT_DIR, "chrome-mv3");
 const WINDOW_SIZE = "2000,1200";
@@ -51,7 +53,7 @@ const build = spawnSync("pnpm exec wxt build", {
   cwd: PACKAGE_DIR,
   shell: true,
   encoding: "utf8",
-  env: { ...process.env, VSCODE_ORIGIN, WXT_OUT_DIR: OUT_DIR }
+  env: { ...process.env, VSCODE_ORIGIN, TUTOR_VIEW_URL: UNSERVED_TUTOR_VIEW_URL, WXT_OUT_DIR: OUT_DIR }
 });
 if (build.status !== 0) {
   console.log(build.stdout, build.stderr);

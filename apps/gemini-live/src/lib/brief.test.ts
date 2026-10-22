@@ -7,19 +7,21 @@ import { EditorKind } from "./vscode-title.ts";
 const lesson = { kind: EditorKind.LESSON, name: "Two Sum" };
 
 describe("buildBrief", () => {
-  it("sets the coach role and the habits to nudge", () => {
+  it("sets the teacher role and the habits to nudge", () => {
     const brief = buildBrief({ context: lesson, language: Language.ENGLISH });
-    for (const phrase of ["patient interview coach", "Socratic", "WHY this approach", "Never type or dictate", "early returns", "descriptive names", "named constants"]) {
+    for (const phrase of ["patient teacher", "Socratic", "WHY this approach", "Never type or dictate", "early returns", "descriptive names", "named constants"]) {
       expect(brief).toContain(phrase);
     }
   });
 
-  it("tells Gemini to quote requirements exactly and ask when text is unclear", () => {
-    expect(buildBrief({ context: lesson, language: Language.ENGLISH })).toContain("Quote numbers and requirements exactly");
+  it("tells Gemini to trust the page content and re-read it before every answer", () => {
+    const brief = buildBrief({ context: lesson, language: Language.ENGLISH });
+    expect(brief).toContain("Trust the page content");
+    expect(brief).toContain("read the newest page content again before every answer");
   });
 
-  it("tells Gemini to find line one by the line numbers and re-read each time", () => {
-    expect(buildBrief({ context: lesson, language: Language.ENGLISH })).toContain("next to the number 1");
+  it("keeps the hints and quiz answers for the teacher only", () => {
+    expect(buildBrief({ context: lesson, language: Language.ENGLISH })).toContain("Never read them out");
   });
 
   it("names the lesson page the learner has open", () => {

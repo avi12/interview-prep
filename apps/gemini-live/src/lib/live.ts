@@ -3,6 +3,7 @@ import { buildBrief } from "./brief.ts";
 import { bridgeReportSchema, type BridgeReport } from "./bridge-report.ts";
 import { BridgeCall, BridgeFailure, BridgeUp, GLIC_URL, GlicState } from "./bridge-vocab.ts";
 import { captureVscode } from "./capture.ts";
+import { fetchTutorView } from "./fetch-tutor-view.ts";
 import { ExtensionMessage, extensionMessenger, type StartResult } from "./extension-channel.ts";
 import { LiveState, Sight } from "./live-state.ts";
 import { clearSession, loadSession, saveSession, updateSession, type Session } from "./session.ts";
@@ -226,6 +227,11 @@ export const installLive = () => {
     const { sight, frame } = await captureVscode(session.vscodeTab);
     await updateSession({ sight, frames: session.frames + (frame ? 1 : 0) });
     return frame;
+  });
+
+  extensionMessenger.onMessage(ExtensionMessage.GLIC_TUTOR_VIEW, async ({ sender }) => {
+    const session = await glicSession(sender.tab);
+    return session ? fetchTutorView() : null;
   });
 
   extensionMessenger.onMessage(ExtensionMessage.GLIC_REPORT, async ({ data, sender }) => {

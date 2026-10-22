@@ -1,5 +1,6 @@
 import { defineExtensionMessaging } from "@webext-core/messaging";
 import type { BridgeReport } from "./bridge-report.ts";
+import type { TutorView } from "@scripts/lib/tutor-view.ts";
 import type { Activation, BridgeCall, Frame } from "./bridge-vocab.ts";
 
 export const ExtensionMessage = {
@@ -10,6 +11,7 @@ export const ExtensionMessage = {
   GLIC_REPORT: "glicReport",
   GLIC_CALL: "glicCall",
   GLIC_RETITLE: "glicRetitle",
+  GLIC_TUTOR_VIEW: "glicTutorView",
   VSCODE_FOCUS_RECT: "vscodeFocusRect"
 } as const;
 
@@ -40,6 +42,7 @@ interface ExtensionProtocolMap {
   [ExtensionMessage.GLIC_REPORT](data: BridgeReport): void;
   [ExtensionMessage.GLIC_CALL](data: { name: BridgeCall }): unknown;
   [ExtensionMessage.GLIC_RETITLE](data: Activation): void;
+  [ExtensionMessage.GLIC_TUTOR_VIEW](): TutorView | null;
   [ExtensionMessage.VSCODE_FOCUS_RECT](): FocusRect | null;
 }
 

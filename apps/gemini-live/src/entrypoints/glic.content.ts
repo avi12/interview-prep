@@ -1,4 +1,6 @@
 import { defineContentScript } from "#imports";
+import type { TutorView } from "@scripts/lib/tutor-view.ts";
+import { annotatedPageContent, byteStream } from "@/lib/page-content.ts";
 import { installBidi } from "@/lib/bidi.ts";
 import { bridgeMessenger, BridgeMessage } from "@/lib/bridge-channel.ts";
 import type { BridgeReport } from "@/lib/bridge-report.ts";
@@ -63,6 +65,9 @@ const START_POLL_MS = 300;
 const MAX_START_TRIES = 100;
 const MONITOR_POLL_MS = 300;
 const SCREEN_NUDGE_MS = 1000;
+const VIEW_POLL_MS = 1000;
+const VIEW_QUIET_MS = 1200;
+const VIEW_TIMEOUT_MS = 2000;
 const FRAME_TIMEOUT_MS = 3000;
 const RESUME_GAP_MS = 2000;
 const MAX_RESUME_TRIES = 5;
@@ -104,6 +109,10 @@ const bridge = {
   lastTryAgain: 0,
   lastNudge: 0,
   nudges: 0,
+  latestView: null as TutorView | null,
+  latestViewAt: 0,
+  sharedVersion: "",
+  isViewPending: false,
   monitorTimer: undefined as Timer,
   startTimer: undefined as Timer,
   focusedTab: {
@@ -202,6 +211,19 @@ const announceFocusedTab = () => {
   for (const subscriber of focusedTabSubscribers) notify({ subscriber, value: focusedTabState() });
 };
 
+interface ContextOptions {
+  viewportScreenshot?: boolean;
+  annotatedPageContent?: boolean;
+}
+
+const tabContext = (options?: ContextOptions): Json => {
+  const tabData = currentTabData();
+  const view = bridge.latestView;
+  if (!options?.annotatedPageContent || !view) return { tabData };
+  const bytes = annotatedPageContent({ title: view.title, url: String(bridge.focusedTab.url), blocks: view.blocks });
+  return { tabData, annotatedPageData: { annotatedPageContent: byteStream(bytes) } };
+};
+
 const resolved = (value: unknown) => () => Promise.resolve(value);
 const captions = observable(true);
 
@@ -221,10 +243,10 @@ const host: Json = {
   getPanelState: () => observable(PANEL_STATE),
   panelActive: () => observable(true),
   getFocusedTabStateV2: focusedTabObservable,
-  getContextFromFocusedTab: () => Promise.resolve({ tabData: currentTabData() }),
+  getContextFromFocusedTab: (options?: ContextOptions) => Promise.resolve(tabContext(options)),
   captureScreenshot: () => captureFrame(),
-  async getContextFromTab(_tabId: unknown, options?: { viewportScreenshot?: boolean }) {
-    const context: Json = { tabData: currentTabData() };
+  async getContextFromTab(_tabId: unknown, options?: ContextOptions) {
+    const context = tabContext(options);
     if (!options?.viewportScreenshot) return context;
     const shot = await captureFrame();
     if (!shot) return context;
@@ -365,14 +387,43 @@ const tryAgainButton = () =>
     `${button.getAttribute("aria-label") ?? ""} ${button.textContent ?? ""}`.includes(Button.TRY_AGAIN)
   );
 
+const shareScreen = (now: number) => {
+  bridge.lastNudge = now;
+  bridge.nudges++;
+  announceFocusedTab();
+};
+
+const shareWhenSettled = (now: number) => {
+  const view = bridge.latestView;
+  if (!view) {
+    if (now - bridge.lastNudge >= SCREEN_NUDGE_MS) shareScreen(now);
+    return;
+  }
+  const isNew = view.version !== bridge.sharedVersion;
+  if (!isNew || now - bridge.latestViewAt < VIEW_QUIET_MS) return;
+  bridge.sharedVersion = view.version;
+  shareScreen(now);
+};
+
+const pollTutorView = async () => {
+  if (bridge.isViewPending) return;
+  bridge.isViewPending = true;
+  const view = await within({ ms: VIEW_TIMEOUT_MS, promise: bridgeMessenger.sendMessage(BridgeMessage.TUTOR_VIEW), fallback: null }).catch(() => null);
+  bridge.isViewPending = false;
+  if (!view) {
+    bridge.latestView = null;
+    return;
+  }
+  if (view.version === bridge.latestView?.version) return;
+  if (!bridge.latestView) bridge.sharedVersion = view.version;
+  bridge.latestView = view;
+  bridge.latestViewAt = Date.now();
+};
+
 const monitorTick = () => {
   if (!bridge.isActive) return;
   const now = Date.now();
-  if (now - bridge.lastNudge >= SCREEN_NUDGE_MS) {
-    bridge.lastNudge = now;
-    bridge.nudges++;
-    announceFocusedTab();
-  }
+  shareWhenSettled(now);
   const isWrong = pageSays(Phrase.WENT_WRONG);
   if (findButton(Button.PAUSE_LIVE) && !isWrong) {
     bridge.lastLive = now;
@@ -534,6 +585,8 @@ const activate = ({ title, url }: Activation) => {
   announceFocusedTab();
   if (bridge.isActivated) return;
   bridge.isActivated = true;
+  setInterval(pollTutorView, VIEW_POLL_MS);
+  void pollTutorView();
   patchVisibility();
   patchMic();
   (window as unknown as { internalAutoGlicBoot?: () => unknown }).internalAutoGlicBoot = () => registry;

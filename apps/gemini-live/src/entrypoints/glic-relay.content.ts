@@ -38,6 +38,7 @@ export default defineContentScript({
 
     bridgeMessenger.onMessage(BridgeMessage.PRESENT, () => activation);
     bridgeMessenger.onMessage(BridgeMessage.CAPTURE, () => extensionMessenger.sendMessage(ExtensionMessage.GLIC_CAPTURE).catch(() => null));
+    bridgeMessenger.onMessage(BridgeMessage.TUTOR_VIEW, () => extensionMessenger.sendMessage(ExtensionMessage.GLIC_TUTOR_VIEW).catch(() => null));
     bridgeMessenger.onMessage(BridgeMessage.REPORT, ({ data }) => {
       void extensionMessenger.sendMessage(ExtensionMessage.GLIC_REPORT, data).catch(() => {});
     });
