@@ -6,6 +6,7 @@ import { captureVscode } from "./capture.ts";
 import { fetchTutorView } from "./fetch-tutor-view.ts";
 import { ExtensionMessage, extensionMessenger, type StartResult } from "./extension-channel.ts";
 import { isRunning, LiveState, Sight } from "./live-state.ts";
+import { openMicKeys, watchMicKeys } from "./mic-key.ts";
 import { clearSession, loadSession, saveSession, updateSession, type Session } from "./session.ts";
 import { loadLanguage } from "./settings.ts";
 import { typeText } from "./typing.ts";
@@ -222,6 +223,8 @@ export const installLive = () => {
   extensionMessenger.onMessage(ExtensionMessage.LIVE_START, startSession);
   extensionMessenger.onMessage(ExtensionMessage.LIVE_STOP, stopSession);
   extensionMessenger.onMessage(ExtensionMessage.MIC_TOGGLE, toggleMic);
+  extensionMessenger.onMessage(ExtensionMessage.MIC_KEY_GRANTED, () => openMicKeys(toggleMic));
+  watchMicKeys(toggleMic);
 
   extensionMessenger.onMessage(ExtensionMessage.GLIC_HELLO, async ({ sender }) => {
     const session = await glicSession(sender.tab);

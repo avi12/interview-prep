@@ -1,5 +1,5 @@
 import { LiveState, Sight } from "./live-state.ts";
-import { MIC_KEY } from "./mic-key.ts";
+import { MIC_KEY_LABEL } from "./mic-key.ts";
 import type { Session } from "./session.ts";
 
 export const Tone = {
@@ -40,8 +40,8 @@ const STATE_TONE: Record<LiveState, Tone> = {
 const HIDDEN_TEXT = "Gemini is listening but cannot see VS Code, bring its tab to the front";
 const HIDDEN_LABEL = "Tutor can't see VS Code";
 
-const MUTED_TEXT = `Gemini is watching your VS Code with your mic muted, press ${MIC_KEY.label} to talk`;
-const MUTED_LABEL = `Tutor muted, ${MIC_KEY.label} to talk`;
+const MUTED_TEXT = `Gemini is watching your VS Code with your mic muted, press ${MIC_KEY_LABEL} to talk`;
+const MUTED_LABEL = `Tutor muted, ${MIC_KEY_LABEL} to talk`;
 
 const isBlind = (session: Session) => session.state === LiveState.LIVE && session.sight === Sight.HIDDEN;
 

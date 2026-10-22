@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@types/w3c-web-hid": "^1.0.7",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0",
     "wxt": "^0.21.4"

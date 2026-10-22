@@ -2,7 +2,7 @@ import { defineContentScript } from "#imports";
 import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
 import { focusRect } from "@/lib/focus-rect.ts";
 import { isRunning } from "@/lib/live-state.ts";
-import { MIC_KEY, onMicKey } from "@/lib/mic-key.ts";
+import { MIC_KEY_LABEL } from "@/lib/mic-key.ts";
 import { sessionLabel, sessionText, sessionTone, Tone } from "@/lib/live-status.ts";
 import { parseSession, sessionItem, type Session } from "@/lib/session.ts";
 import { VSCODE_ORIGIN } from "@/lib/vscode.ts";
@@ -28,7 +28,7 @@ const createPanel = () => {
   panel.className = "ip-tutor-panel";
   const button = createButton("ip-tutor");
   const mic = createButton("ip-tutor ip-tutor-mic");
-  mic.title = `Mute or unmute your mic (${MIC_KEY.label})`;
+  mic.title = `Mute or unmute your mic (${MIC_KEY_LABEL})`;
   const status = document.createElement("span");
   status.className = "ip-tutor-status";
   panel.append(status, mic, button);
@@ -81,7 +81,6 @@ export default defineContentScript({
     const toggleMic = () => void extensionMessenger.sendMessage(ExtensionMessage.MIC_TOGGLE).catch(() => {});
     button.addEventListener("click", toggle);
     mic.addEventListener("click", toggleMic);
-    onMicKey(toggleMic);
     sessionItem.watch(raw => {
       session = parseSession(raw);
       render();

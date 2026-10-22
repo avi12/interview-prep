@@ -3,6 +3,6 @@
   "compilerOptions": {
     "strict": true,
     "allowImportingTsExtensions": true,
-    "types": ["node"]
+    "types": ["node", "w3c-web-hid"]
   }
 }

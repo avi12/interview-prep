@@ -2,6 +2,7 @@ import { browser } from "wxt/browser";
 import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
 import { LANGUAGE_LABEL, languageSchema } from "@/lib/language.ts";
 import { isRunning } from "@/lib/live-state.ts";
+import { hasMicKey, MIC_KEY_LABEL, requestMicKey } from "@/lib/mic-key.ts";
 import { sessionText, sessionTone } from "@/lib/live-status.ts";
 import { parseSession, sessionItem, type Session } from "@/lib/session.ts";
 import { loadLanguage, saveLanguage } from "@/lib/settings.ts";
@@ -12,6 +13,9 @@ const IDLE = "idle";
 
 const READY_TEXT = "Ready when you are";
 const NEEDS_VSCODE_TEXT = `Open VS Code at ${VSCODE_ORIGIN} to begin`;
+const CONNECT_MIC_KEY_TEXT = `Connect the ${MIC_KEY_LABEL} key`;
+const MIC_KEY_CONNECTED_TEXT = `${MIC_KEY_LABEL} toggles your mic`;
+const MIC_KEY_HINT_TEXT = "Pick the ROCCAT keyboard in the list Chrome shows";
 
 const required = <T extends Element>(selector: string) => {
   const element = document.querySelector<T>(selector);
@@ -26,10 +30,13 @@ const elNote = required<HTMLElement>("#note");
 const elLanguage = required<HTMLSelectElement>("#language");
 const elStart = required<HTMLButtonElement>("#start");
 const elStop = required<HTMLButtonElement>("#stop");
+const elMicKey = required<HTMLButtonElement>("#mic-key");
+const elMicKeyNote = required<HTMLElement>("#mic-key-note");
 
 const view = {
   session: null as Session | null,
   isVscodeOpen: false,
+  hasMicKey: false,
   note: ""
 };
 
@@ -50,6 +57,9 @@ const render = () => {
   elNote.textContent = view.note;
   elStart.disabled = !isStartable();
   elStop.hidden = !view.session;
+  elMicKey.textContent = view.hasMicKey ? MIC_KEY_CONNECTED_TEXT : CONNECT_MIC_KEY_TEXT;
+  elMicKey.disabled = view.hasMicKey;
+  elMicKeyNote.textContent = view.hasMicKey ? "" : MIC_KEY_HINT_TEXT;
 };
 
 const refreshVscode = async () => {
@@ -71,6 +81,12 @@ const stop = async () => {
   await extensionMessenger.sendMessage(ExtensionMessage.LIVE_STOP);
 };
 
+const connectMicKey = async () => {
+  view.hasMicKey = await requestMicKey().catch(() => false);
+  render();
+  if (view.hasMicKey) await extensionMessenger.sendMessage(ExtensionMessage.MIC_KEY_GRANTED);
+};
+
 const fillLanguages = async () => {
   for (const [value, label] of Object.entries(LANGUAGE_LABEL)) elLanguage.append(new Option(label, value));
   elLanguage.value = await loadLanguage();
@@ -78,6 +94,7 @@ const fillLanguages = async () => {
 
 elStart.addEventListener("click", start);
 elStop.addEventListener("click", stop);
+elMicKey.addEventListener("click", connectMicKey);
 elLanguage.addEventListener("change", () => {
   const parsedLanguage = languageSchema.safeParse(elLanguage.value);
   if (parsedLanguage.success) void saveLanguage(parsedLanguage.data);
@@ -90,5 +107,6 @@ sessionItem.watch(raw => {
 for (const event of [browser.tabs.onCreated, browser.tabs.onRemoved, browser.tabs.onUpdated]) event.addListener(refreshVscode);
 
 view.session = parseSession(await sessionItem.getValue());
+view.hasMicKey = await hasMicKey();
 await fillLanguages();
 await refreshVscode();

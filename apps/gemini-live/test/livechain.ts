@@ -25,7 +25,6 @@
 import { readFileSync } from "node:fs";
 import { buildBrief } from "../src/lib/brief.ts";
 import { Language } from "../src/lib/language.ts";
-import { MIC_KEY } from "../src/lib/mic-key.ts";
 import { oneLine } from "../src/lib/text.ts";
 import { parseVscodeTitle } from "../src/lib/vscode-title.ts";
 import { connect, type Cdp } from "./cdp.ts";
@@ -53,8 +52,6 @@ const GREEN = [0, 255, 0];
 const LIVE_TIMEOUT_FLAG_COUNT = 4;
 const BRIEF_TIMEOUT_MS = 120_000;
 const BOOT_REPORT_MS = 17_000;
-const MIC_KEY_CODE = 123;
-const CdpModifier = { ALT: 1, CTRL: 2, SHIFT: 8 } as const;
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const targets = async (): Promise<any[]> => (await fetch(`${BASE}/json/list`)).json();
@@ -237,19 +234,15 @@ check({ name: "popup: went through opening, briefing, live in order", ok: order.
 const stored = await storedSession();
 check({ name: "worker state lives in storage.local", ok: stored?.state === "live" && stored.sight === "seeing", detail: stored ? `${stored.state}/${stored.sight}` : "no row" });
 
-// ---- the mic key in VS Code unmutes, and pressing it again mutes ----
-const pressMicKey = async () => {
-  const modifiers = (MIC_KEY.isAlt ? CdpModifier.ALT : 0) | (MIC_KEY.isCtrl ? CdpModifier.CTRL : 0) | (MIC_KEY.isShift ? CdpModifier.SHIFT : 0);
-  for (const type of ["rawKeyDown", "keyUp"]) {
-    await vscode.send("Input.dispatchKeyEvent", { type, modifiers, key: MIC_KEY.code, code: MIC_KEY.code, windowsVirtualKeyCode: MIC_KEY_CODE });
-  }
-};
-await pressMicKey();
-check({ name: "the mic key unmutes: popup says listening and watching", ok: !!(await statusIncludes("listening and watching")), detail: await status() });
+// ---- the chip's mic button unmutes, and pressing it again mutes ----
+const pressMicButton = () => vscode.ev(`document.querySelector(".ip-tutor-mic").click()`);
+await until({ get: () => vscode.ev(`!!document.querySelector(".ip-tutor-mic")`), ms: 60_000 });
+await pressMicButton();
+check({ name: "the mic button unmutes: popup says listening and watching", ok: !!(await statusIncludes("listening and watching")), detail: await status() });
 check({ name: "...and the session keeps it", ok: (await storedSession())?.isMicOpen === true });
-await pressMicKey();
+await pressMicButton();
 check({ name: "pressed again: muted", ok: !!(await statusIncludes("mic muted")) && (await storedSession())?.isMicOpen === false });
-await pressMicKey();
+await pressMicButton();
 
 const wasPaused = async () => {
   const entries = await logOf(glic);
