@@ -354,8 +354,8 @@ const markBroken = () => {
 
 const resume = () => {
   const now = Date.now();
-  if (now - bridge.lastResume < RESUME_GAP_MS * (bridge.resumeTries + 1)) return;
-  if (++bridge.resumeTries > MAX_RESUME_TRIES) return markBroken();
+  if (now - bridge.lastResume < RESUME_GAP_MS * Math.min(bridge.resumeTries + 1, MAX_RESUME_TRIES)) return;
+  bridge.resumeTries++;
   bridge.lastResume = now;
   clickButton(...RESUME_BUTTONS);
 };
@@ -390,7 +390,7 @@ const monitorTick = () => {
     bridge.lastTryAgain = now;
     retry.click();
   }
-  if (now - bridge.lastLive > BROKEN_AFTER_MS) markBroken();
+  if (isWrong && now - bridge.lastLive > BROKEN_AFTER_MS) markBroken();
 };
 
 const advanceToLive = () => {
