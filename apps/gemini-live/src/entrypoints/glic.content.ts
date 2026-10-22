@@ -62,6 +62,7 @@ const UNAVAILABLE_POLL_MS = 500;
 const START_POLL_MS = 300;
 const MAX_START_TRIES = 100;
 const MONITOR_POLL_MS = 300;
+const SCREEN_NUDGE_MS = 1000;
 const FRAME_TIMEOUT_MS = 3000;
 const RESUME_GAP_MS = 2000;
 const MAX_RESUME_TRIES = 5;
@@ -101,6 +102,8 @@ const bridge = {
   resumeTries: 0,
   lastLive: 0,
   lastTryAgain: 0,
+  lastNudge: 0,
+  nudges: 0,
   monitorTimer: undefined as Timer,
   startTimer: undefined as Timer,
   focusedTab: {
@@ -181,7 +184,9 @@ const observable = (value: unknown) => ({
   }
 });
 
-const focusedTabState = () => ({ hasFocus: { tabData: bridge.focusedTab } });
+const currentTabData = () => ({ ...bridge.focusedTab, tabId: `${TAB_ID}-${bridge.nudges}` });
+
+const focusedTabState = () => ({ hasFocus: { tabData: currentTabData() } });
 
 const focusedTabSubscribers = new Set<Subscriber>();
 
@@ -216,10 +221,10 @@ const host: Json = {
   getPanelState: () => observable(PANEL_STATE),
   panelActive: () => observable(true),
   getFocusedTabStateV2: focusedTabObservable,
-  getContextFromFocusedTab: () => Promise.resolve({ tabData: bridge.focusedTab }),
+  getContextFromFocusedTab: () => Promise.resolve({ tabData: currentTabData() }),
   captureScreenshot: () => captureFrame(),
   async getContextFromTab(_tabId: unknown, options?: { viewportScreenshot?: boolean }) {
-    const context: Json = { tabData: bridge.focusedTab };
+    const context: Json = { tabData: currentTabData() };
     if (!options?.viewportScreenshot) return context;
     const shot = await captureFrame();
     if (!shot) return context;
@@ -363,6 +368,11 @@ const tryAgainButton = () =>
 const monitorTick = () => {
   if (!bridge.isActive) return;
   const now = Date.now();
+  if (now - bridge.lastNudge >= SCREEN_NUDGE_MS) {
+    bridge.lastNudge = now;
+    bridge.nudges++;
+    announceFocusedTab();
+  }
   const isWrong = pageSays(Phrase.WENT_WRONG);
   if (findButton(Button.PAUSE_LIVE) && !isWrong) {
     bridge.lastLive = now;
