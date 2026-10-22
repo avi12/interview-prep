@@ -1,5 +1,6 @@
 import { cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
+import { LESSON_TESTS_DIR_NAME } from "#scripts/lib/layout.ts";
 import { CURRICULUM_DIR, DIST_DIR, KIT_DIR_NAME, ROOT } from "#scripts/lib/paths.ts";
 import { runWithTimeout } from "#scripts/lib/process.ts";
 import { Lang } from "#scripts/lib/schema.ts";
@@ -30,7 +31,7 @@ export const prepareSolutionDir = (lesson: Lesson) => {
 };
 
 const commandFor = (lesson: Lesson) => {
-  const testsDir = resolve(lesson.dir, "tests");
+  const testsDir = resolve(lesson.dir, LESSON_TESTS_DIR_NAME);
   if (lesson.meta.lang === Lang.py) {
     return { command: "python", args: ["-m", "pytest", "-q", "--tb=short", "-p", "no:cacheprovider", testsDir] };
   }

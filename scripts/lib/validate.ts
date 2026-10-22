@@ -1,6 +1,7 @@
 import { existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Token } from "marked";
+import { LESSON_TESTS_DIR_NAME } from "#scripts/lib/layout.ts";
 import type { Card, Lesson } from "#scripts/lib/lessons.ts";
 import { EXERCISE_CARD_TITLE } from "#scripts/lib/schema.ts";
 
@@ -64,7 +65,7 @@ export const lessonProblems = (lesson: Lesson) => {
   if (meta.files.length === 0) problems.push("frontmatter needs files: [...]");
   if (!hasFiles({ dir: resolve(lesson.dir, "starter"), files: meta.files })) problems.push("starter/ is missing a listed file");
   if (!hasFiles({ dir: resolve(lesson.dir, "solution"), files: meta.files })) problems.push("solution/ is missing a listed file");
-  const testsDir = resolve(lesson.dir, "tests");
+  const testsDir = resolve(lesson.dir, LESSON_TESTS_DIR_NAME);
   if (!existsSync(testsDir) || readdirSync(testsDir).length === 0) problems.push("tests/ is empty");
   return problems;
 };

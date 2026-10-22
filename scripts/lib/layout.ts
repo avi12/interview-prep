@@ -6,3 +6,4 @@ export const LAST_TEST_RELATIVE_PATH = ".progress/last-test.json";
 export const INDEX_RELATIVE_PATH = `${DIST_DIR_NAME}/index.json`;
 export const LESSON_CLI_RELATIVE_PATH = "scripts/lesson.ts";
 export const LESSON_ID_SEGMENTS = 2;
+export const LESSON_TESTS_DIR_NAME = "tests";

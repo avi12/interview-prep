@@ -1,4 +1,7 @@
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import type { Token } from "marked";
+import { LESSON_TESTS_DIR_NAME } from "#scripts/lib/layout.ts";
 import type { Block, Lesson } from "#scripts/lib/lessons.ts";
 import { EXERCISE_CARD_TITLE } from "#scripts/lib/schema.ts";
 import { tutorHeading as heading, tutorParagraph as paragraph, type TutorBlock } from "#scripts/lib/tutor-view.ts";
@@ -24,6 +27,19 @@ const blockNotes = ({ block, hintNumber }: { block: Block; hintNumber: number })
   return text ? [paragraph(text)] : [];
 };
 
+const testNotes = (lesson: Lesson): TutorBlock[] => {
+  const testsDir = resolve(lesson.dir, LESSON_TESTS_DIR_NAME);
+  if (!existsSync(testsDir)) return [];
+  const files = readdirSync(testsDir, { withFileTypes: true })
+    .filter(entry => entry.isFile() && !entry.name.startsWith("_") && !entry.name.startsWith("."))
+    .map(entry => entry.name);
+  return [
+    heading("The tests that check the learner's code, for you only: use them to understand a failure and to guide, never read the expected values out as the answer"),
+    ...files.map(name => paragraph(`${name}:
+${readFileSync(resolve(testsDir, name), "utf8").trim()}`))
+  ];
+};
+
 export const tutorNotes = (lesson: Lesson): TutorBlock[] => {
   const notes = [heading(`Lesson: ${lesson.meta.title}`)];
   for (const card of lesson.cards) {
@@ -34,5 +50,6 @@ export const tutorNotes = (lesson: Lesson): TutorBlock[] => {
       notes.push(...blockNotes({ block, hintNumber }));
     }
   }
+  notes.push(...testNotes(lesson));
   return notes;
 };
