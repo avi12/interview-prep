@@ -2,8 +2,8 @@ import { resolve } from "node:path";
 import { findLesson, readLessons, readStudyOrders, readTracks } from "#scripts/lib/lessons.ts";
 import { DONE_COMMAND } from "#scripts/lib/panel.ts";
 import { ALL_ROLES } from "#scripts/lib/path.ts";
-import { readProgress, recordAttempt } from "#scripts/lib/progress.ts";
-import { ensureWorkCopy, prepareSolutionDir, resetWorkCopy, runTests } from "#scripts/lib/run.ts";
+import { readProgress, recordAttempt, recordLastTest } from "#scripts/lib/progress.ts";
+import { ensureWorkCopy, prepareSolutionDir, resetWorkCopy, runQuiet } from "#scripts/lib/run.ts";
 import { isPassed, nextUnpassedId } from "#scripts/lib/study.ts";
 
 const [command, idArgument, ...flags] = process.argv.slice(2);
@@ -36,8 +36,12 @@ const testLesson = async (id: string) => {
   if (!lesson.hasExercise) return console.log("Reading lesson, no tests");
   ensureWorkCopy(lesson);
   const implDir = isSolutionRequested ? prepareSolutionDir(lesson) : lesson.workDir;
-  const isPass = await runTests({ lesson, implDir });
-  if (!isSolutionRequested) recordAttempt({ id: lesson.id, isPass });
+  const { isPass, output } = await runQuiet({ lesson, implDir });
+  console.log(output);
+  if (!isSolutionRequested) {
+    recordAttempt({ id: lesson.id, isPass });
+    recordLastTest({ id: lesson.id, isPass, output });
+  }
   console.log(isPass ? "\nPASS - next lesson: pnpm lesson next" : "\nNot yet - read the first failing test, fix one thing, run again");
   process.exitCode = isPass ? 0 : 1;
 };

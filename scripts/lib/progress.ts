@@ -1,6 +1,15 @@
 import { writeFileDeep, readJsonFile } from "#scripts/lib/files.ts";
-import { PROGRESS_FILE } from "#scripts/lib/paths.ts";
+import { LAST_TEST_FILE, PROGRESS_FILE } from "#scripts/lib/paths.ts";
 import { progressSchema } from "#scripts/lib/schema.ts";
+
+const MAX_TEST_OUTPUT_CHARS = 4000;
+const ANSI_ESCAPE = /\u001b\[[0-9;]*m/g;
+
+export const recordLastTest = ({ id, isPass, output }: { id: string; isPass: boolean; output: string }) =>
+  writeFileDeep({
+    path: LAST_TEST_FILE,
+    content: JSON.stringify({ id, isPass, at: new Date().toISOString(), output: output.replace(ANSI_ESCAPE, "").slice(-MAX_TEST_OUTPUT_CHARS) }, null, 2)
+  });
 
 export const readProgress = () => readJsonFile({ path: PROGRESS_FILE, schema: progressSchema, fallback: {} });
 

@@ -49,13 +49,6 @@ const timeoutMessage = (lesson: Lesson) =>
 
 const timeoutMsOf = (lesson: Lesson) => lesson.meta.timeoutSeconds * MS_PER_SECOND;
 
-export const runTests = async ({ lesson, implDir }: { lesson: Lesson; implDir: string }) => {
-  const { command, args } = commandFor(lesson);
-  const { status, isTimedOut } = await runWithTimeout({ command, args, cwd: ROOT, env: envFor(implDir), isInherited: true, timeoutMs: timeoutMsOf(lesson) });
-  if (isTimedOut) console.log(`\n${timeoutMessage(lesson)}`);
-  return status === 0 && !isTimedOut;
-};
-
 export const runQuiet = async ({ lesson, implDir }: { lesson: Lesson; implDir: string }) => {
   const { command, args } = commandFor(lesson);
   const { status, output, isTimedOut } = await runWithTimeout({ command, args, cwd: ROOT, env: envFor(implDir), timeoutMs: timeoutMsOf(lesson) });

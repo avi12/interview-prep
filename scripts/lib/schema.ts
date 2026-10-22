@@ -37,6 +37,13 @@ export const quizSchema = z.object({
   why: z.string()
 });
 
+export const lastTestSchema = z.object({
+  id: z.string(),
+  isPass: z.boolean(),
+  at: z.string(),
+  output: z.string()
+});
+
 export const progressSchema = z.record(
   z.string(),
   z.object({
