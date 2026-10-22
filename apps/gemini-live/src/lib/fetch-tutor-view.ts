@@ -7,7 +7,8 @@ const FETCH_TIMEOUT_MS = 800;
 export const tutorViewSchema: z.ZodType<TutorView> = z.object({
   version: z.string(),
   title: z.string(),
-  blocks: z.array(z.object({ kind: z.enum(TutorBlockKind), text: z.string() }))
+  blocks: z.array(z.object({ kind: z.enum(TutorBlockKind), text: z.string() })),
+  testRun: z.object({ at: z.string(), isPass: z.boolean() }).nullable()
 });
 
 export const fetchTutorView = async () => {

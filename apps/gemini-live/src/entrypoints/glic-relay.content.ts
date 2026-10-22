@@ -1,7 +1,10 @@
 import { defineContentScript } from "#imports";
+import { browser } from "wxt/browser";
 import { bridgeMessenger, BridgeMessage } from "@/lib/bridge-channel.ts";
 import { GLIC_URL, type Activation } from "@/lib/bridge-vocab.ts";
 import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
+import { promptClipPath } from "@/lib/prompt-clip.ts";
+import { loadLanguage } from "@/lib/settings.ts";
 import { within } from "@/lib/within.ts";
 
 /*
@@ -38,6 +41,9 @@ export default defineContentScript({
 
     bridgeMessenger.onMessage(BridgeMessage.PRESENT, () => activation);
     bridgeMessenger.onMessage(BridgeMessage.CAPTURE, () => extensionMessenger.sendMessage(ExtensionMessage.GLIC_CAPTURE).catch(() => null));
+    bridgeMessenger.onMessage(BridgeMessage.PROMPT_CLIP, async ({ data }) =>
+      browser.runtime.getURL(promptClipPath({ event: data.event, language: await loadLanguage() }))
+    );
     bridgeMessenger.onMessage(BridgeMessage.TUTOR_VIEW, () => extensionMessenger.sendMessage(ExtensionMessage.GLIC_TUTOR_VIEW).catch(() => null));
     bridgeMessenger.onMessage(BridgeMessage.REPORT, ({ data }) => {
       void extensionMessenger.sendMessage(ExtensionMessage.GLIC_REPORT, data).catch(() => {});

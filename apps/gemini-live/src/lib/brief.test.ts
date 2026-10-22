@@ -20,6 +20,12 @@ describe("buildBrief", () => {
     expect(brief).toContain("read the newest page content again before every answer");
   });
 
+  it("guides the learner to fix a failing test without giving the code", () => {
+    const brief = buildBrief({ context: lesson, language: Language.ENGLISH });
+    expect(brief).toContain("When the last test run failed, guide the learner to fix their code");
+    expect(brief).toContain("Do not give them the corrected code");
+  });
+
   it("keeps the hints and quiz answers for the teacher only", () => {
     expect(buildBrief({ context: lesson, language: Language.ENGLISH })).toContain("Never read them out");
   });

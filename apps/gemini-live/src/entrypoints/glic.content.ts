@@ -1,6 +1,8 @@
 import { defineContentScript } from "#imports";
-import type { TutorView } from "@scripts/lib/tutor-view.ts";
+import type { TutorTestRun, TutorView } from "@scripts/lib/tutor-view.ts";
+import { mixMicrophone, type MicMixer } from "@/lib/mic-mixer.ts";
 import { annotatedPageContent, byteStream } from "@/lib/page-content.ts";
+import { PromptEvent } from "@/lib/prompt-clip.ts";
 import { installBidi } from "@/lib/bidi.ts";
 import { bridgeMessenger, BridgeMessage } from "@/lib/bridge-channel.ts";
 import type { BridgeReport } from "@/lib/bridge-report.ts";
@@ -68,6 +70,8 @@ const SCREEN_NUDGE_MS = 1000;
 const VIEW_POLL_MS = 1000;
 const VIEW_QUIET_MS = 1200;
 const VIEW_TIMEOUT_MS = 2000;
+const PROMPT_SETTLE_MS = 2500;
+const PROMPT_QUIET_WAIT_MS = 10_000;
 const FRAME_TIMEOUT_MS = 3000;
 const RESUME_GAP_MS = 2000;
 const MAX_RESUME_TRIES = 5;
@@ -113,6 +117,9 @@ const bridge = {
   latestViewAt: 0,
   sharedVersion: "",
   isViewPending: false,
+  announcedTestAt: null as string | null,
+  isPrompting: false,
+  mixer: null as MicMixer | null,
   monitorTimer: undefined as Timer,
   startTimer: undefined as Timer,
   focusedTab: {
@@ -344,7 +351,13 @@ const patchMic = () => {
       if (video && !rest.audio) throw new DOMException("the camera is not shared", "NotAllowedError");
       if (!rest.audio) return getUserMedia(rest);
       const asked = rest.audio === true ? {} : rest.audio;
-      return getUserMedia({ ...rest, audio: { ...asked, ...MIC_QUALITY_CONSTRAINTS } as MediaTrackConstraints });
+      const microphone = await getUserMedia({ ...rest, audio: { ...asked, ...MIC_QUALITY_CONSTRAINTS } as MediaTrackConstraints });
+      try {
+        bridge.mixer = mixMicrophone(microphone);
+        return bridge.mixer.stream;
+      } catch {
+        return microphone;
+      }
     };
   } catch {
     /* frozen mediaDevices: the client captures with its own settings */
@@ -393,6 +406,33 @@ const shareScreen = (now: number) => {
   announceFocusedTab();
 };
 
+const testRunEvent = (run: TutorTestRun) => (run.isPass ? PromptEvent.TEST_PASSED : PromptEvent.TEST_FAILED);
+
+const speakTestRun = async (run: TutorTestRun) => {
+  const { mixer } = bridge;
+  if (!mixer || bridge.isPrompting) return;
+  bridge.isPrompting = true;
+  try {
+    await sleep(PROMPT_SETTLE_MS);
+    const url = await within({ ms: VIEW_TIMEOUT_MS, promise: bridgeMessenger.sendMessage(BridgeMessage.PROMPT_CLIP, { event: testRunEvent(run) }), fallback: null });
+    if (!url) return;
+    const audio = await (await fetch(url)).arrayBuffer();
+    await waitFor({ predicate: () => mixer.isQuiet() || null, ms: PROMPT_QUIET_WAIT_MS });
+    await mixer.play(audio);
+  } catch {
+    /* a missing clip only costs the spoken nudge; the page content still has the run */
+  } finally {
+    bridge.isPrompting = false;
+  }
+};
+
+const announceNewTestRun = (view: TutorView) => {
+  const at = view.testRun?.at ?? "";
+  if (at === bridge.announcedTestAt) return;
+  bridge.announcedTestAt = at;
+  if (view.testRun) void speakTestRun(view.testRun);
+};
+
 const shareWhenSettled = (now: number) => {
   const view = bridge.latestView;
   if (!view) {
@@ -403,6 +443,7 @@ const shareWhenSettled = (now: number) => {
   if (!isNew || now - bridge.latestViewAt < VIEW_QUIET_MS) return;
   bridge.sharedVersion = view.version;
   shareScreen(now);
+  announceNewTestRun(view);
 };
 
 const pollTutorView = async () => {
@@ -416,6 +457,7 @@ const pollTutorView = async () => {
   }
   if (view.version === bridge.latestView?.version) return;
   if (!bridge.latestView) bridge.sharedVersion = view.version;
+  bridge.announcedTestAt ??= view.testRun?.at ?? "";
   bridge.latestView = view;
   bridge.latestViewAt = Date.now();
 };

@@ -1,6 +1,7 @@
 import { defineConfig } from "wxt";
 import { serverOrigin, tutorViewUrl } from "../../scripts/lib/server.ts";
 import { SCRIPTS_ALIAS } from "./aliases.ts";
+import { PROMPT_CLIP_GLOB } from "./src/lib/prompt-clip.ts";
 
 const vscodeOrigin = process.env.VSCODE_ORIGIN ?? serverOrigin();
 process.env.WXT_VSCODE_ORIGIN = vscodeOrigin;
@@ -16,6 +17,7 @@ export default defineConfig({
     name: "Interview Prep: Gemini Live tutor",
     description: "A voice tutor from Gemini Live that sees your VS Code tab and coaches you through the lesson",
     permissions: ["storage", "debugger"],
-    host_permissions: [`${vscodeOrigin}/*`, "https://gemini.google.com/*", HOST_PERMISSION_CAPTURE_VISIBLE_TAB_REQUIRES]
+    host_permissions: [`${vscodeOrigin}/*`, "https://gemini.google.com/*", HOST_PERMISSION_CAPTURE_VISIBLE_TAB_REQUIRES],
+    web_accessible_resources: [{ resources: [PROMPT_CLIP_GLOB], matches: ["https://gemini.google.com/*"] }]
   }
 });
