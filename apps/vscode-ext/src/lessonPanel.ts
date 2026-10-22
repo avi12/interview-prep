@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import * as vscode from "vscode";
-import { PanelAction, VIEWING_SCRIPT, type PanelActionName } from "@scripts/lib/panel.ts";
+import { PanelAction, VIEWING_SCRIPT, type PanelCommand, type PanelMessage } from "@scripts/lib/panel.ts";
 import type { LessonEntry } from "@/lessonData.ts";
 
 const VIEW_TYPE = "interviewPrep.lesson";
@@ -22,7 +22,7 @@ export const showLesson = ({
   root: string;
   lesson: LessonEntry;
   viewColumn: vscode.ViewColumn;
-  onAction: (action: PanelActionName) => void;
+  onAction: (action: PanelCommand) => void;
 }) => {
   const html = readFileSync(resolve(root, lesson.html), "utf8").replace(BODY_END, `<script>${VIEWING_SCRIPT}</script>${BODY_END}`);
   if (!panel) {
@@ -34,8 +34,8 @@ export const showLesson = ({
   panel.webview.html = html;
   panel.reveal(viewColumn, true);
   messageSubscription?.dispose();
-  messageSubscription = panel.webview.onDidReceiveMessage(({ action, section }: { action: PanelActionName; section?: string }) => {
-    if (action !== PanelAction.viewing) return onAction(action);
-    viewingSection = section ?? "";
+  messageSubscription = panel.webview.onDidReceiveMessage((message: PanelMessage) => {
+    if (message.action !== PanelAction.viewing) return onAction(message.action);
+    viewingSection = message.section;
   });
 };
