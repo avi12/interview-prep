@@ -13,8 +13,6 @@ const BASE64_CHUNK_BYTES = 0x8000;
 const STAMP_HEIGHT_RATIO = 0.022;
 const STAMP_BACKGROUND = "#000000";
 const STAMP_COLOR = "#ffff00";
-const BORDER_COLORS = ["#ff0055", "#00d5ff", "#7dff00", "#ffb000"];
-const BORDER_HEIGHT_RATIO = 0.012;
 const MINIMIZED = "minimized";
 
 interface Capture {
@@ -41,13 +39,6 @@ const stampClock = ({ context, width, height }: { context: OffscreenCanvasRender
   context.fillText(label, fontSize / 2, height - fontSize * 0.45);
 };
 
-const drawBorder = ({ context, width, height }: { context: OffscreenCanvasRenderingContext2D; width: number; height: number }) => {
-  const thickness = Math.round(height * BORDER_HEIGHT_RATIO);
-  context.strokeStyle = BORDER_COLORS.at(Math.floor(Date.now() / 1000) % BORDER_COLORS.length) ?? STAMP_COLOR;
-  context.lineWidth = thickness * 2;
-  context.strokeRect(0, 0, width, height);
-};
-
 const cropOf = ({ bitmap, rect }: { bitmap: ImageBitmap; rect: FocusRect | null }) => {
   const whole = { x: 0, y: 0, width: bitmap.width, height: bitmap.height };
   if (!rect || rect.width <= 0 || rect.height <= 0) return whole;
@@ -70,7 +61,6 @@ const fitFrame = async ({ dataUrl, rect }: { dataUrl: string; rect: FocusRect | 
   if (!context) throw new Error("no 2d context for the frame");
   context.drawImage(bitmap, crop.x, crop.y, crop.width, crop.height, 0, 0, width, height);
   bitmap.close();
-  drawBorder({ context, width, height });
   stampClock({ context, width, height });
   const resized = await canvas.convertToBlob({ type: JPEG_MIME, quality: RESIZE_JPEG_QUALITY });
   return { base64: bytesToBase64(new Uint8Array(await resized.arrayBuffer())), mimeType: JPEG_MIME, width, height };
