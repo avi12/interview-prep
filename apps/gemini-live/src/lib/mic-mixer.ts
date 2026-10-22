@@ -1,9 +1,12 @@
 const QUIET_RMS = 0.012;
 const SAMPLE_SIZE = 1024;
+const COMFORT_NOISE_LEVEL = 0.001;
+const GATE_RAMP_SECONDS = 0.01;
 
 export interface MicMixer {
   stream: MediaStream;
   isQuiet: () => boolean;
+  setOpen: (isOpen: boolean) => void;
   play: (audio: ArrayBuffer) => Promise<void>;
 }
 
@@ -13,14 +16,27 @@ const rms = (samples: Float32Array) => {
   return Math.sqrt(sum / samples.length);
 };
 
+const comfortNoise = (context: AudioContext) => {
+  const buffer = context.createBuffer(1, context.sampleRate, context.sampleRate);
+  const samples = buffer.getChannelData(0);
+  for (let index = 0; index < samples.length; index++) samples[index] = (Math.random() * 2 - 1) * COMFORT_NOISE_LEVEL;
+  const noise = context.createBufferSource();
+  noise.buffer = buffer;
+  noise.loop = true;
+  noise.start();
+  return noise;
+};
+
 export const mixMicrophone = (microphone: MediaStream): MicMixer => {
   const context = new AudioContext();
   const destination = context.createMediaStreamDestination();
   const source = context.createMediaStreamSource(microphone);
+  const gate = context.createGain();
   const analyser = context.createAnalyser();
   analyser.fftSize = SAMPLE_SIZE;
-  source.connect(destination);
+  source.connect(gate).connect(destination);
   source.connect(analyser);
+  comfortNoise(context).connect(destination);
   void context.resume();
 
   const [mixedTrack] = destination.stream.getAudioTracks();
@@ -33,8 +49,15 @@ export const mixMicrophone = (microphone: MediaStream): MicMixer => {
     };
   }
 
+  let isOpen = true;
+  const setOpen = (next: boolean) => {
+    isOpen = next;
+    gate.gain.setTargetAtTime(isOpen ? 1 : 0, context.currentTime, GATE_RAMP_SECONDS);
+  };
+
   const samples = new Float32Array(SAMPLE_SIZE);
   const isQuiet = () => {
+    if (!isOpen) return true;
     analyser.getFloatTimeDomainData(samples);
     return rms(samples) < QUIET_RMS;
   };
@@ -49,5 +72,5 @@ export const mixMicrophone = (microphone: MediaStream): MicMixer => {
     });
   };
 
-  return { stream: destination.stream, isQuiet, play };
+  return { stream: destination.stream, isQuiet, setOpen, play };
 };

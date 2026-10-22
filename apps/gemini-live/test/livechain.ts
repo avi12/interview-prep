@@ -25,6 +25,7 @@
 import { readFileSync } from "node:fs";
 import { buildBrief } from "../src/lib/brief.ts";
 import { Language } from "../src/lib/language.ts";
+import { MIC_KEY } from "../src/lib/mic-key.ts";
 import { oneLine } from "../src/lib/text.ts";
 import { parseVscodeTitle } from "../src/lib/vscode-title.ts";
 import { connect, type Cdp } from "./cdp.ts";
@@ -52,6 +53,7 @@ const GREEN = [0, 255, 0];
 const LIVE_TIMEOUT_FLAG_COUNT = 4;
 const BRIEF_TIMEOUT_MS = 120_000;
 const BOOT_REPORT_MS = 17_000;
+const MIC_KEY_CODE = 124;
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const targets = async (): Promise<any[]> => (await fetch(`${BASE}/json/list`)).json();
@@ -227,12 +229,23 @@ check({
 const tabData = await read<{ title: string; url: string } | null>({ cdp: glic, expression: "window.__tab", fallback: null });
 check({ name: "the shared tab carries the VS Code title and address", ok: tabData?.title === FILE_TITLE && tabData.url === vscodeOrigin, detail: tabData?.title ?? "" });
 
-check({ name: "popup: says Gemini is listening and watching", ok: !!(await statusIncludes("listening and watching")), detail: `${await chip()} / ${await status()}` });
+check({ name: "popup: says Gemini is watching with the mic muted", ok: !!(await statusIncludes("mic muted")), detail: `${await chip()} / ${await status()}` });
 const stateLog: string = await popup.ev(`JSON.stringify(window.__states)`);
-const order = ["Opening", "Briefing", "listening and watching"].map(word => stateLog.indexOf(word));
+const order = ["Opening", "Briefing", "mic muted"].map(word => stateLog.indexOf(word));
 check({ name: "popup: went through opening, briefing, live in order", ok: order.every(at => at >= 0) && (order[0] ?? 0) < (order[1] ?? 0) && (order[1] ?? 0) < (order[2] ?? 0) });
 const stored = await storedSession();
 check({ name: "worker state lives in storage.local", ok: stored?.state === "live" && stored.sight === "seeing", detail: stored ? `${stored.state}/${stored.sight}` : "no row" });
+
+// ---- the mic key in VS Code unmutes, and pressing it again mutes ----
+const pressMicKey = async () => {
+  for (const type of ["rawKeyDown", "keyUp"]) await vscode.send("Input.dispatchKeyEvent", { type, key: MIC_KEY, code: MIC_KEY, windowsVirtualKeyCode: MIC_KEY_CODE });
+};
+await pressMicKey();
+check({ name: "the mic key unmutes: popup says listening and watching", ok: !!(await statusIncludes("listening and watching")), detail: await status() });
+check({ name: "...and the session keeps it", ok: (await storedSession())?.isMicOpen === true });
+await pressMicKey();
+check({ name: "pressed again: muted", ok: !!(await statusIncludes("mic muted")) && (await storedSession())?.isMicOpen === false });
+await pressMicKey();
 
 const wasPaused = async () => {
   const entries = await logOf(glic);

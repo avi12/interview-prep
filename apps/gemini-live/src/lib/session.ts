@@ -11,6 +11,7 @@ const sessionSchema = z.object({
   briefing: z.string(),
   restarts: z.array(z.number()),
   isBooted: z.boolean(),
+  isMicOpen: z.boolean(),
   state: z.enum(LiveState),
   detail: z.string(),
   sight: z.enum(Sight),

@@ -20,7 +20,8 @@ export const GlicCommand = {
   START_LIVE: "glicStartLive",
   STOP_LIVE: "glicStopLive",
   BEGIN_TEXT: "glicBeginText",
-  SUBMIT: "glicSubmit"
+  SUBMIT: "glicSubmit",
+  SET_MIC: "glicSetMic"
 } as const;
 export type GlicCommand = (typeof GlicCommand)[keyof typeof GlicCommand];
 
@@ -29,6 +30,7 @@ export interface GlicCommandMap {
   [GlicCommand.STOP_LIVE](): boolean;
   [GlicCommand.BEGIN_TEXT](): boolean;
   [GlicCommand.SUBMIT](): boolean;
+  [GlicCommand.SET_MIC](data: boolean): void;
 }
 
 export const GlicReport = {

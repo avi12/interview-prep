@@ -2,6 +2,7 @@ import { defineContentScript } from "#imports";
 import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
 import { focusRect } from "@/lib/focus-rect.ts";
 import { isRunning } from "@/lib/live-state.ts";
+import { MIC_KEY, onMicKey } from "@/lib/mic-key.ts";
 import { sessionLabel, sessionText, sessionTone, Tone } from "@/lib/live-status.ts";
 import { parseSession, sessionItem, type Session } from "@/lib/session.ts";
 import { VSCODE_ORIGIN } from "@/lib/vscode.ts";
@@ -12,10 +13,12 @@ const MOUNT_POLL_MS = 250;
 const MOUNT_TRIES = 40;
 const START_LABEL = "Start voice tutor";
 const STOP_LABEL = "Stop voice tutor";
+const MUTE_LABEL = "Mute";
+const UNMUTE_LABEL = "Talk";
 
-const createButton = () => {
+const createButton = (className: string) => {
   const button = document.createElement("button");
-  button.className = "ip-tutor";
+  button.className = className;
   button.type = "button";
   return button;
 };
@@ -23,11 +26,13 @@ const createButton = () => {
 const createPanel = () => {
   const panel = document.createElement("div");
   panel.className = "ip-tutor-panel";
-  const button = createButton();
+  const button = createButton("ip-tutor");
+  const mic = createButton("ip-tutor ip-tutor-mic");
+  mic.title = `Mute or unmute your mic (${MIC_KEY})`;
   const status = document.createElement("span");
   status.className = "ip-tutor-status";
-  panel.append(status, button);
-  return { panel, button, status };
+  panel.append(status, mic, button);
+  return { panel, button, mic, status };
 };
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -45,12 +50,14 @@ export default defineContentScript({
   matches: [`${VSCODE_ORIGIN}/*`],
   runAt: "document_idle",
   main() {
-    const { panel, button, status } = createPanel();
+    const { panel, button, mic, status } = createPanel();
     let session: Session | null = null;
 
     const render = () => {
       const isLive = !!session && isRunning(session.state);
       button.textContent = isLive ? STOP_LABEL : START_LABEL;
+      mic.textContent = session?.isMicOpen ? MUTE_LABEL : UNMUTE_LABEL;
+      mic.hidden = !isLive;
       panel.dataset.tone = sessionTone(session);
       status.textContent = session ? sessionLabel(session) : "";
       panel.title = session ? sessionText(session) : "";
@@ -71,7 +78,10 @@ export default defineContentScript({
 
     extensionMessenger.onMessage(ExtensionMessage.VSCODE_FOCUS_RECT, focusRect);
 
+    const toggleMic = () => void extensionMessenger.sendMessage(ExtensionMessage.MIC_TOGGLE).catch(() => {});
     button.addEventListener("click", toggle);
+    mic.addEventListener("click", toggleMic);
+    onMicKey(toggleMic);
     sessionItem.watch(raw => {
       session = parseSession(raw);
       render();

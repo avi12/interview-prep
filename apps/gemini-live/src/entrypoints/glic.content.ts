@@ -118,6 +118,7 @@ const bridge = {
   isViewPending: false,
   announcedTestAt: null as string | null,
   isPrompting: false,
+  isMicOpen: false,
   mixer: null as MicMixer | null,
   monitorTimer: undefined as Timer,
   startTimer: undefined as Timer,
@@ -351,6 +352,7 @@ const patchMic = () => {
       const microphone = await getUserMedia({ ...rest, audio: { ...asked, ...MIC_QUALITY_CONSTRAINTS } as MediaTrackConstraints });
       try {
         bridge.mixer = mixMicrophone(microphone);
+        bridge.mixer.setOpen(bridge.isMicOpen);
         return bridge.mixer.stream;
       } catch {
         return microphone;
@@ -535,6 +537,11 @@ const stopLive = () => {
   return true;
 };
 
+const setMic = (isOpen: boolean) => {
+  bridge.isMicOpen = isOpen;
+  bridge.mixer?.setOpen(isOpen);
+};
+
 const waitFor = async <T>({ predicate, ms }: { predicate: () => T | null | undefined; ms: number }) => {
   const deadline = Date.now() + ms;
   while (Date.now() < deadline) {
@@ -639,6 +646,7 @@ export default defineContentScript({
     bridgeMessenger.onMessage(GlicCommand.STOP_LIVE, stopLive);
     bridgeMessenger.onMessage(GlicCommand.BEGIN_TEXT, beginText);
     bridgeMessenger.onMessage(GlicCommand.SUBMIT, submitAndRead);
+    bridgeMessenger.onMessage(GlicCommand.SET_MIC, ({ data }) => setMic(data));
     void bridgeMessenger
       .sendMessage(BridgeMessage.PRESENT)
       .then(activation => activation && activate(activation))

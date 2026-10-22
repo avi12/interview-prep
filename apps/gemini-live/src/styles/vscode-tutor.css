@@ -50,6 +50,11 @@
 
   & .ip-tutor {
     flex: none;
+
+    &[hidden] {
+      display: none;
+    }
+
     height: 18px;
     padding: 0 8px;
     border: 0;

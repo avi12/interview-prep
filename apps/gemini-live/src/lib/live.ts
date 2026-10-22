@@ -5,7 +5,7 @@ import { BridgeFailure, GLIC_URL, GlicCommand, GlicReport, GlicState } from "./b
 import { captureVscode } from "./capture.ts";
 import { fetchTutorView } from "./fetch-tutor-view.ts";
 import { ExtensionMessage, extensionMessenger, type StartResult } from "./extension-channel.ts";
-import { LiveState, Sight } from "./live-state.ts";
+import { isRunning, LiveState, Sight } from "./live-state.ts";
 import { clearSession, loadSession, saveSession, updateSession, type Session } from "./session.ts";
 import { loadLanguage } from "./settings.ts";
 import { typeText } from "./typing.ts";
@@ -51,6 +51,16 @@ const tell = ({ state, detail = "" }: { state: LiveState; detail?: string }) => 
 
 const command = ({ session, name }: { session: Session; name: GlicCommand }) =>
   within({ ms: CALL_TIMEOUT_MS, promise: extensionMessenger.sendMessage(name, undefined, session.glicTab), fallback: null });
+
+const sendMic = (session: Session) =>
+  within({ ms: CALL_TIMEOUT_MS, promise: extensionMessenger.sendMessage(GlicCommand.SET_MIC, session.isMicOpen, session.glicTab), fallback: null });
+
+const toggleMic = async () => {
+  const session = await loadSession();
+  if (!session || !isRunning(session.state)) return;
+  const next = await updateSession({ isMicOpen: !session.isMicOpen });
+  if (next) await sendMic(next);
+};
 
 const closeWindow = (windowId: number) => browser.windows.remove(windowId).catch(() => {});
 
@@ -111,6 +121,7 @@ const onBooted = async (session: Session) => {
 
 const onReady = async (session: Session) => {
   await tell({ state: LiveState.LIVE });
+  await sendMic(session);
   await returnFocus(session);
 };
 
@@ -161,6 +172,7 @@ const openSession = async (): Promise<StartResult> => {
     briefing: brief,
     restarts: [],
     isBooted: false,
+    isMicOpen: false,
     state: LiveState.OPENING,
     detail: "",
     sight: Sight.UNKNOWN,
@@ -209,6 +221,7 @@ const retitle = async ({ tabId, title }: { tabId: number; title: string }) => {
 export const installLive = () => {
   extensionMessenger.onMessage(ExtensionMessage.LIVE_START, startSession);
   extensionMessenger.onMessage(ExtensionMessage.LIVE_STOP, stopSession);
+  extensionMessenger.onMessage(ExtensionMessage.MIC_TOGGLE, toggleMic);
 
   extensionMessenger.onMessage(ExtensionMessage.GLIC_HELLO, async ({ sender }) => {
     const session = await glicSession(sender.tab);

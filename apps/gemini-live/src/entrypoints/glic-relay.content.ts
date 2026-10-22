@@ -4,6 +4,7 @@ import { bridgeMessenger, BridgeMessage } from "@/lib/bridge-channel.ts";
 import { GLIC_URL, GlicCommand, GlicReport, type Activation } from "@/lib/bridge-vocab.ts";
 import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
 import { promptClipPath } from "@/lib/prompt-clip.ts";
+import { onMicKey } from "@/lib/mic-key.ts";
 import { loadLanguage } from "@/lib/settings.ts";
 
 /*
@@ -55,6 +56,8 @@ export default defineContentScript({
     extensionMessenger.onMessage(GlicCommand.STOP_LIVE, () => bridgeMessenger.sendMessage(GlicCommand.STOP_LIVE));
     extensionMessenger.onMessage(GlicCommand.BEGIN_TEXT, () => bridgeMessenger.sendMessage(GlicCommand.BEGIN_TEXT));
     extensionMessenger.onMessage(GlicCommand.SUBMIT, () => bridgeMessenger.sendMessage(GlicCommand.SUBMIT));
+    extensionMessenger.onMessage(GlicCommand.SET_MIC, ({ data }) => bridgeMessenger.sendMessage(GlicCommand.SET_MIC, data));
+    onMicKey(() => toWorker(extensionMessenger.sendMessage(ExtensionMessage.MIC_TOGGLE)));
 
     const owned = await askWorkerWhoOwnsTab();
     if (owned) activate(owned);
