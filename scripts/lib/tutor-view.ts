@@ -6,10 +6,16 @@ export interface TutorBlock {
   text: string;
 }
 
+export interface TutorTestRun {
+  at: string;
+  isPass: boolean;
+}
+
 export interface TutorView {
   version: string;
   title: string;
   blocks: TutorBlock[];
+  testRun: TutorTestRun | null;
 }
 
 export const TUTOR_VIEW_PATH = "/tutor-view";

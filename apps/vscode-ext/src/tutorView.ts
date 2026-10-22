@@ -6,7 +6,7 @@ import { readJsonFile } from "@scripts/lib/files.ts";
 import { LAST_TEST_RELATIVE_PATH } from "@scripts/lib/layout.ts";
 import { lastTestSchema, tutorNotesSchema } from "@scripts/lib/schema.ts";
 import { SERVER_HOST, TUTOR_VIEW_PORT } from "@scripts/lib/server.ts";
-import { TUTOR_VIEW_PATH, tutorHeading, tutorParagraph, type TutorBlock, type TutorView } from "@scripts/lib/tutor-view.ts";
+import { TUTOR_VIEW_PATH, tutorHeading, tutorParagraph, type TutorBlock, type TutorTestRun, type TutorView } from "@scripts/lib/tutor-view.ts";
 import type { LessonEntry } from "@/lessonData.ts";
 import { lessonPanelState } from "@/lessonPanel.ts";
 
@@ -52,9 +52,14 @@ const codeBlocks = ({ root, editor }: { root: string; editor: vscode.TextEditor 
   ];
 };
 
-const testBlocks = ({ root, lessonId }: { root: string; lessonId: string }) => {
+const readLastTest = ({ root, lessonId }: { root: string; lessonId: string }) => {
   const lastTest = readJsonFile({ path: resolve(root, LAST_TEST_RELATIVE_PATH), schema: lastTestSchema.nullable(), fallback: null });
-  if (lastTest?.id !== lessonId) return [tutorHeading("Tests"), tutorParagraph("The learner has not run the tests for this lesson yet.")];
+  return lastTest?.id === lessonId ? lastTest : null;
+};
+
+const testBlocks = ({ root, lessonId }: { root: string; lessonId: string }) => {
+  const lastTest = readLastTest({ root, lessonId });
+  if (!lastTest) return [tutorHeading("Tests"), tutorParagraph("The learner has not run the tests for this lesson yet.")];
   const minutesAgo = Math.round((Date.now() - Date.parse(lastTest.at)) / MS_PER_MINUTE);
   const outcome = lastTest.isPass ? "Passed" : "Failed";
   return [tutorHeading(`Last test run: ${outcome}, ${minutesAgo} minutes ago`), tutorParagraph(lastTest.output.trim())];
@@ -75,8 +80,10 @@ export const buildTutorView = ({ root, lesson, editor }: ViewSources): TutorView
     ...(currentLesson ? lessonBlocks({ root, lesson: currentLesson }) : [])
   ];
   const title = currentLesson?.title ?? NO_LESSON_TITLE;
-  const version = createHash(VERSION_HASH).update(JSON.stringify({ title, blocks })).digest("hex");
-  return { version, title, blocks };
+  const lastTest = currentLesson ? readLastTest({ root, lessonId: currentLesson.id }) : null;
+  const testRun: TutorTestRun | null = lastTest ? { at: lastTest.at, isPass: lastTest.isPass } : null;
+  const version = createHash(VERSION_HASH).update(JSON.stringify({ title, blocks, testRun })).digest("hex");
+  return { version, title, blocks, testRun };
 };
 
 const viewBody = (sources: ViewSources) => {
