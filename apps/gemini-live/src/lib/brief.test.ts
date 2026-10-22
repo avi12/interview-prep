@@ -18,6 +18,10 @@ describe("buildBrief", () => {
     expect(buildBrief({ context: lesson, language: Language.ENGLISH })).toContain("Quote numbers and requirements exactly");
   });
 
+  it("tells Gemini to find line one by the line numbers and re-read each time", () => {
+    expect(buildBrief({ context: lesson, language: Language.ENGLISH })).toContain("next to the number 1");
+  });
+
   it("names the lesson page the learner has open", () => {
     expect(buildBrief({ context: lesson, language: Language.ENGLISH })).toContain('the page "Two Sum" open in VS Code, most likely the lesson');
   });
