@@ -10,9 +10,6 @@ const RESIZE_JPEG_QUALITY = 0.85;
 const MAX_FRAME_WIDTH = 2200;
 const MIN_CAPTURE_GAP_MS = 600;
 const BASE64_CHUNK_BYTES = 0x8000;
-const STAMP_HEIGHT_RATIO = 0.022;
-const STAMP_BACKGROUND = "#000000";
-const STAMP_COLOR = "#ffff00";
 const MINIMIZED = "minimized";
 
 interface Capture {
@@ -26,17 +23,6 @@ const bytesToBase64 = (bytes: Uint8Array) => {
   let binary = "";
   for (let i = 0; i < bytes.length; i += BASE64_CHUNK_BYTES) binary += String.fromCharCode(...bytes.subarray(i, i + BASE64_CHUNK_BYTES));
   return btoa(binary);
-};
-
-const stampClock = ({ context, width, height }: { context: OffscreenCanvasRenderingContext2D; width: number; height: number }) => {
-  const label = new Date().toLocaleTimeString("en-GB");
-  const fontSize = Math.round(height * STAMP_HEIGHT_RATIO);
-  context.font = `bold ${fontSize}px monospace`;
-  const boxWidth = context.measureText(label).width + fontSize;
-  context.fillStyle = STAMP_BACKGROUND;
-  context.fillRect(0, height - fontSize * 1.6, boxWidth, fontSize * 1.6);
-  context.fillStyle = STAMP_COLOR;
-  context.fillText(label, fontSize / 2, height - fontSize * 0.45);
 };
 
 const cropOf = ({ bitmap, rect }: { bitmap: ImageBitmap; rect: FocusRect | null }) => {
@@ -61,7 +47,6 @@ const fitFrame = async ({ dataUrl, rect }: { dataUrl: string; rect: FocusRect | 
   if (!context) throw new Error("no 2d context for the frame");
   context.drawImage(bitmap, crop.x, crop.y, crop.width, crop.height, 0, 0, width, height);
   bitmap.close();
-  stampClock({ context, width, height });
   const resized = await canvas.convertToBlob({ type: JPEG_MIME, quality: RESIZE_JPEG_QUALITY });
   return { base64: bytesToBase64(new Uint8Array(await resized.arrayBuffer())), mimeType: JPEG_MIME, width, height };
 };
