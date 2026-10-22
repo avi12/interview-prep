@@ -4,9 +4,9 @@ import { Sight } from "./live-state.ts";
 import { isVscodeUrl } from "./vscode.ts";
 
 const JPEG_MIME = "image/jpeg";
-const CAPTURE_JPEG_QUALITY = 70;
-const RESIZE_JPEG_QUALITY = 0.72;
-const MAX_FRAME_WIDTH = 1600;
+const CAPTURE_JPEG_QUALITY = 85;
+const RESIZE_JPEG_QUALITY = 0.85;
+const MAX_FRAME_WIDTH = 2200;
 const MIN_CAPTURE_GAP_MS = 400;
 const BASE64_CHUNK_BYTES = 0x8000;
 const DATA_URL_PREFIX = /^data:[^,]+,/;

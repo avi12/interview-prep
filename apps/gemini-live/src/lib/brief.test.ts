@@ -14,6 +14,10 @@ describe("buildBrief", () => {
     }
   });
 
+  it("tells Gemini to quote requirements exactly and ask when text is unclear", () => {
+    expect(buildBrief({ context: lesson, language: Language.ENGLISH })).toContain("Quote numbers and requirements exactly");
+  });
+
   it("names the lesson page the learner has open", () => {
     expect(buildBrief({ context: lesson, language: Language.ENGLISH })).toContain('the page "Two Sum" open in VS Code, most likely the lesson');
   });

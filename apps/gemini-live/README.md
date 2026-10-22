@@ -34,7 +34,7 @@ popup --LIVE_START--> worker --opens--> Gemini window (gemini.google.com/glic)
                        |        bridge (page world) <-DOM events-> relay (extension world)
                        |                     |
                        |<----- picture? -----+  Gemini asks its "browser host" about once a second
-              captureVisibleTab(VS Code tab) -> downscale to 1600px JPEG -> back to Gemini
+              captureVisibleTab(VS Code tab) -> downscale to 2200px JPEG -> back to Gemini
 ```
 
 - `src/entrypoints/glic.content.ts` is the bridge. It plays the browser host the Gemini web client expects, so the client runs Live itself and asks the bridge for pictures.
