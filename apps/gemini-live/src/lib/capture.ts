@@ -9,7 +9,9 @@ const RESIZE_JPEG_QUALITY = 0.85;
 const MAX_FRAME_WIDTH = 2200;
 const MIN_CAPTURE_GAP_MS = 600;
 const BASE64_CHUNK_BYTES = 0x8000;
-const DATA_URL_PREFIX = /^data:[^,]+,/;
+const STAMP_HEIGHT_RATIO = 0.022;
+const STAMP_BACKGROUND = "#000000";
+const STAMP_COLOR = "#ffff00";
 const MINIMIZED = "minimized";
 
 interface Capture {
@@ -25,21 +27,28 @@ const bytesToBase64 = (bytes: Uint8Array) => {
   return btoa(binary);
 };
 
+const stampClock = ({ context, width, height }: { context: OffscreenCanvasRenderingContext2D; width: number; height: number }) => {
+  const label = new Date().toLocaleTimeString("en-GB");
+  const fontSize = Math.round(height * STAMP_HEIGHT_RATIO);
+  context.font = `bold ${fontSize}px monospace`;
+  const boxWidth = context.measureText(label).width + fontSize;
+  context.fillStyle = STAMP_BACKGROUND;
+  context.fillRect(0, height - fontSize * 1.6, boxWidth, fontSize * 1.6);
+  context.fillStyle = STAMP_COLOR;
+  context.fillText(label, fontSize / 2, height - fontSize * 0.45);
+};
+
 const fitFrame = async (dataUrl: string): Promise<Frame> => {
   const bitmap = await createImageBitmap(await (await fetch(dataUrl)).blob());
-  const { width: sourceWidth, height: sourceHeight } = bitmap;
-  const scale = Math.min(1, MAX_FRAME_WIDTH / sourceWidth);
-  if (scale === 1) {
-    bitmap.close();
-    return { base64: dataUrl.replace(DATA_URL_PREFIX, ""), mimeType: JPEG_MIME, width: sourceWidth, height: sourceHeight };
-  }
-  const width = Math.round(sourceWidth * scale);
-  const height = Math.round(sourceHeight * scale);
+  const scale = Math.min(1, MAX_FRAME_WIDTH / bitmap.width);
+  const width = Math.round(bitmap.width * scale);
+  const height = Math.round(bitmap.height * scale);
   const canvas = new OffscreenCanvas(width, height);
   const context = canvas.getContext("2d");
   if (!context) throw new Error("no 2d context for the frame");
   context.drawImage(bitmap, 0, 0, width, height);
   bitmap.close();
+  stampClock({ context, width, height });
   const resized = await canvas.convertToBlob({ type: JPEG_MIME, quality: RESIZE_JPEG_QUALITY });
   return { base64: bytesToBase64(new Uint8Array(await resized.arrayBuffer())), mimeType: JPEG_MIME, width, height };
 };

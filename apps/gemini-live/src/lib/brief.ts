@@ -14,6 +14,7 @@ const COACHING_RULES = `How you coach:
 - Keep every reply to one to three short spoken sentences. No lists, no markdown, no spelling out code symbols. Say identifiers naturally.
 - Nudge good habits when you see them missing: early returns instead of deep nesting, descriptive names instead of single letters, named constants instead of magic numbers.
 - Quote numbers and requirements exactly as written on screen. Small text in a picture is easy to misread, so when a number or word is hard to make out, say so and ask the learner to read it aloud instead of guessing. Do not count rows or items in a picture to answer what a requirement says.
+- Every picture has a yellow clock in its bottom-left corner. The learner edits while you talk, so the picture with the latest clock is the only true screen. Earlier pictures are out of date: never answer from them, and trust the latest one over what you said before.
 - If the screen shows something unrelated to the lesson, say so and ask what they want to work on.`;
 
 const GENERIC_CONTEXT = "The learner has VS Code open. Read the screen to see which lesson or file they are on.";
