@@ -7,7 +7,7 @@ const JPEG_MIME = "image/jpeg";
 const CAPTURE_JPEG_QUALITY = 85;
 const RESIZE_JPEG_QUALITY = 0.85;
 const MAX_FRAME_WIDTH = 2200;
-const MIN_CAPTURE_GAP_MS = 400;
+const MIN_CAPTURE_GAP_MS = 600;
 const BASE64_CHUNK_BYTES = 0x8000;
 const DATA_URL_PREFIX = /^data:[^,]+,/;
 const MINIMIZED = "minimized";
@@ -44,6 +44,8 @@ const fitFrame = async (dataUrl: string): Promise<Frame> => {
   return { base64: bytesToBase64(new Uint8Array(await resized.arrayBuffer())), mimeType: JPEG_MIME, width, height };
 };
 
+let last: { tabId: number; at: number; capture: Capture } | null = null;
+
 const grab = async (tabId: number): Promise<Capture> => {
   const tab = await browser.tabs.get(tabId).catch(() => null);
   const isShowingVscode = tab?.active && isVscodeUrl(tab.url);
@@ -51,11 +53,9 @@ const grab = async (tabId: number): Promise<Capture> => {
   const vscodeWindow = await browser.windows.get(tab.windowId).catch(() => null);
   if (!vscodeWindow || vscodeWindow.state === MINIMIZED) return HIDDEN;
   const dataUrl = await browser.tabs.captureVisibleTab(tab.windowId, { format: "jpeg", quality: CAPTURE_JPEG_QUALITY }).catch(() => null);
-  if (!dataUrl) return HIDDEN;
+  if (!dataUrl) return last?.tabId === tabId ? last.capture : HIDDEN;
   return { sight: Sight.SEEING, frame: await fitFrame(dataUrl) };
 };
-
-let last: { tabId: number; at: number; capture: Capture } | null = null;
 
 export const captureVscode = async (tabId: number) => {
   if (last?.tabId === tabId && Date.now() - last.at < MIN_CAPTURE_GAP_MS) return last.capture;
