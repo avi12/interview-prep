@@ -1,10 +1,11 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import * as vscode from "vscode";
-import { PanelAction, type PanelActionName } from "@scripts/lib/panel.ts";
+import { PanelAction, VIEWING_SCRIPT, type PanelActionName } from "@scripts/lib/panel.ts";
 import type { LessonEntry } from "@/lessonData.ts";
 
 const VIEW_TYPE = "interviewPrep.lesson";
+const BODY_END = "</body>";
 
 let panel: vscode.WebviewPanel | undefined;
 let messageSubscription: vscode.Disposable | undefined;
@@ -23,7 +24,7 @@ export const showLesson = ({
   viewColumn: vscode.ViewColumn;
   onAction: (action: PanelActionName) => void;
 }) => {
-  const html = readFileSync(resolve(root, lesson.html), "utf8");
+  const html = readFileSync(resolve(root, lesson.html), "utf8").replace(BODY_END, `<script>${VIEWING_SCRIPT}</script>${BODY_END}`);
   if (!panel) {
     panel = vscode.window.createWebviewPanel(VIEW_TYPE, lesson.title, { viewColumn, preserveFocus: true }, { enableScripts: true, retainContextWhenHidden: true });
     panel.onDidDispose(() => (panel = undefined));
