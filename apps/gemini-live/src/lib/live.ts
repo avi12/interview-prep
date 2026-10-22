@@ -57,6 +57,22 @@ const call = <T>({ session, name }: { session: Session; name: BridgeCall }) =>
 
 const closeWindow = (windowId: number) => browser.windows.remove(windowId).catch(() => {});
 
+let hasBorrowedFocus = false;
+
+const focusWindow = (windowId: number) => browser.windows.update(windowId, { focused: true }).catch(() => {});
+
+const borrowFocus = async (session: Session) => {
+  hasBorrowedFocus = true;
+  await focusWindow(session.glicWindow);
+};
+
+const returnFocus = async (session: Session) => {
+  if (!hasBorrowedFocus) return;
+  hasBorrowedFocus = false;
+  const vscodeTab = await browser.tabs.get(session.vscodeTab).catch(() => null);
+  if (vscodeTab) await focusWindow(vscodeTab.windowId);
+};
+
 const briefTutor = async () => {
   const session = await loadSession();
   if (!session?.brief || !session.isBooted) return;
@@ -70,6 +86,7 @@ const briefTutor = async () => {
     return tell({ state: LiveState.FAILED, detail: `${Text.TYPING_FAILED}: ${reason}` });
   }
   await call({ session, name: BridgeCall.SUBMIT });
+  await borrowFocus(session);
   await call({ session, name: BridgeCall.START });
 };
 
@@ -93,14 +110,23 @@ const fail = async ({ session, failure }: { session: Session; failure: BridgeFai
 const fromBridge = async ({ session, report }: { session: Session; report: BridgeReport }) => {
   if (report.kind === BridgeUp.BOOTED) {
     await updateSession({ isBooted: true });
-    void (session.brief ? briefTutor() : call({ session, name: BridgeCall.START }));
+    void (session.brief ? briefTutor() : borrowFocus(session).then(() => call({ session, name: BridgeCall.START })));
     return;
   }
-  if (report.kind === BridgeUp.READY) return tell({ state: LiveState.LIVE });
+  if (report.kind === BridgeUp.READY) {
+    await tell({ state: LiveState.LIVE });
+    return returnFocus(session);
+  }
   if (report.kind === BridgeUp.ERROR) return fail({ session, failure: report.failure });
   if (session.state === LiveState.BRIEFING) return;
-  if (report.state === GlicState.LISTENING) return tell({ state: LiveState.LIVE });
-  if (report.state === GlicState.RESUMING) return tell({ state: LiveState.PAUSED });
+  if (report.state === GlicState.LISTENING) {
+    await tell({ state: LiveState.LIVE });
+    return returnFocus(session);
+  }
+  if (report.state === GlicState.RESUMING) {
+    await borrowFocus(session);
+    return tell({ state: LiveState.PAUSED });
+  }
 };
 
 const glicSession = async (tab: { id?: number } | undefined) => {
