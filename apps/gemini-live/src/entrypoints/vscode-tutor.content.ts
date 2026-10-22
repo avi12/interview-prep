@@ -2,11 +2,14 @@ import { defineContentScript } from "#imports";
 import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
 import { focusRect } from "@/lib/focus-rect.ts";
 import { isRunning } from "@/lib/live-state.ts";
-import { sessionText, sessionTone, Tone } from "@/lib/live-status.ts";
+import { sessionLabel, sessionText, sessionTone, Tone } from "@/lib/live-status.ts";
 import { parseSession, sessionItem, type Session } from "@/lib/session.ts";
 import { VSCODE_ORIGIN } from "@/lib/vscode.ts";
 import "@/styles/vscode-tutor.css";
 
+const WORKBENCH = ".monaco-workbench";
+const MOUNT_POLL_MS = 250;
+const MOUNT_TRIES = 40;
 const START_LABEL = "Start voice tutor";
 const STOP_LABEL = "Stop voice tutor";
 
@@ -23,8 +26,19 @@ const createPanel = () => {
   const button = createButton();
   const status = document.createElement("span");
   status.className = "ip-tutor-status";
-  panel.append(button, status);
+  panel.append(status, button);
   return { panel, button, status };
+};
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const mountInWorkbench = async (panel: HTMLElement) => {
+  for (let attempt = 0; attempt < MOUNT_TRIES; attempt++) {
+    const workbench = document.querySelector(WORKBENCH);
+    if (workbench) return workbench.append(panel);
+    await sleep(MOUNT_POLL_MS);
+  }
+  document.body.append(panel);
 };
 
 export default defineContentScript({
@@ -38,7 +52,8 @@ export default defineContentScript({
       const isLive = !!session && isRunning(session.state);
       button.textContent = isLive ? STOP_LABEL : START_LABEL;
       panel.dataset.tone = sessionTone(session);
-      status.textContent = session ? sessionText(session) : "";
+      status.textContent = session ? sessionLabel(session) : "";
+      panel.title = session ? sessionText(session) : "";
       status.hidden = !session;
     };
 
@@ -50,6 +65,7 @@ export default defineContentScript({
       if (result.isStarted) return;
       status.hidden = false;
       status.textContent = result.detail;
+      panel.title = result.detail;
       panel.dataset.tone = Tone.DANGER;
     };
 
@@ -65,6 +81,6 @@ export default defineContentScript({
       render();
     });
     render();
-    document.body.append(panel);
+    void mountInWorkbench(panel);
   }
 });

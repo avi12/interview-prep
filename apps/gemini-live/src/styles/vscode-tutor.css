@@ -1,44 +1,65 @@
 .ip-tutor-panel {
+  --tone: var(--vscode-disabledForeground, gray);
+
   position: fixed;
-  right: 16px;
-  bottom: 36px;
+  left: 50%;
+  bottom: 0;
+  translate: -50% 0;
   z-index: 2147483000;
   display: flex;
   align-items: center;
-  gap: 8px;
-  max-width: 420px;
-  padding: 6px 8px;
-  border: 1px solid var(--vscode-widget-border, currentColor);
-  background: var(--vscode-editorWidget-background, canvas);
-  color: var(--vscode-editorWidget-foreground, canvastext);
+  gap: 6px;
+  height: 22px;
+  max-width: min(480px, 40vw);
+  padding: 0 2px 0 8px;
+  background: var(--vscode-statusBar-background, canvas);
+  color: var(--vscode-statusBar-foreground, canvastext);
   font: 12px var(--vscode-font-family, system-ui);
 
+  &::before {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--tone);
+  }
+
   &[data-tone="ok"] {
-    border-color: var(--vscode-testing-iconPassed, green);
+    --tone: var(--vscode-testing-iconPassed, green);
   }
 
   &[data-tone="warn"] {
-    border-color: var(--vscode-editorWarning-foreground, orange);
+    --tone: var(--vscode-editorWarning-foreground, orange);
   }
 
   &[data-tone="danger"] {
-    border-color: var(--vscode-editorError-foreground, red);
+    --tone: var(--vscode-editorError-foreground, red);
+  }
+
+  & .ip-tutor-status {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &[hidden] {
+      display: none;
+    }
   }
 
   & .ip-tutor {
-    padding: 4px 10px;
+    flex: none;
+    height: 18px;
+    padding: 0 8px;
     border: 0;
-    background: var(--vscode-button-background, highlight);
-    color: var(--vscode-button-foreground, highlighttext);
+    background: var(--vscode-statusBarItem-prominentBackground, var(--vscode-button-background, highlight));
+    color: var(--vscode-statusBarItem-prominentForeground, var(--vscode-button-foreground, highlighttext));
     font: inherit;
     cursor: pointer;
 
     &:hover {
-      background: var(--vscode-button-hoverBackground, highlight);
+      background: var(--vscode-statusBarItem-prominentHoverBackground, var(--vscode-button-hoverBackground, highlight));
     }
-  }
-
-  & .ip-tutor-status[hidden] {
-    display: none;
   }
 }

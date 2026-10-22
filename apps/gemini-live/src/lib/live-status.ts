@@ -18,6 +18,15 @@ const STATE_TEXT: Record<LiveState, string> = {
   [LiveState.FAILED]: "Gemini could not start"
 };
 
+const STATE_LABEL: Record<LiveState, string> = {
+  [LiveState.OPENING]: "Tutor opening",
+  [LiveState.BRIEFING]: "Tutor getting ready",
+  [LiveState.LIVE]: "Tutor listening",
+  [LiveState.PAUSED]: "Tutor paused",
+  [LiveState.RECONNECTING]: "Tutor reconnecting",
+  [LiveState.FAILED]: "Tutor stopped"
+};
+
 const STATE_TONE: Record<LiveState, Tone> = {
   [LiveState.OPENING]: Tone.WARN,
   [LiveState.BRIEFING]: Tone.WARN,
@@ -28,6 +37,7 @@ const STATE_TONE: Record<LiveState, Tone> = {
 };
 
 const HIDDEN_TEXT = "Gemini is listening but cannot see VS Code, bring its tab to the front";
+const HIDDEN_LABEL = "Tutor can't see VS Code";
 
 const isBlind = (session: Session) => session.state === LiveState.LIVE && session.sight === Sight.HIDDEN;
 
@@ -37,6 +47,8 @@ export const sessionText = (session: Session) => {
   if (session.state === LiveState.LIVE) return `${STATE_TEXT[session.state]} (${session.frames} pictures sent)`;
   return STATE_TEXT[session.state];
 };
+
+export const sessionLabel = (session: Session) => (isBlind(session) ? HIDDEN_LABEL : STATE_LABEL[session.state]);
 
 export const sessionTone = (session: Session | null) => {
   if (!session) return Tone.IDLE;
