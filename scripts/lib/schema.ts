@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TutorBlockKind } from "./tutor-view.ts";
 
 export const Lang = { ts: "ts", py: "py", sql: "sql", none: "none" } as const;
 export const Role = { backend: "backend", analyst: "analyst", ai: "ai" } as const;
@@ -44,6 +45,8 @@ export const lastTestSchema = z.object({
   output: z.string()
 });
 
+export const tutorNotesSchema = z.array(z.object({ kind: z.enum(TutorBlockKind), text: z.string() }));
+
 export const progressSchema = z.record(
   z.string(),
   z.object({
@@ -66,7 +69,8 @@ export const lessonIndexSchema = z.object({
       files: z.array(z.string()),
       hasExercise: z.boolean(),
       isNarrated: z.boolean(),
-      html: z.string()
+      html: z.string(),
+      tutor: z.string()
     })
   )
 });
