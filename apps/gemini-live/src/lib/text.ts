@@ -1,1 +1,3 @@
-export const oneLine = (text: string) => text.replace(/\s+/g, " ").trim();
+export function oneLine(text: string) {
+  return text.replace(/\s+/g, " ").trim();
+}

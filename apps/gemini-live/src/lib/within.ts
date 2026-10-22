@@ -1,6 +1,10 @@
-export const within = <T, F>({ ms, promise, fallback }: { ms: number; promise: Promise<T>; fallback: F }) =>
-  new Promise<T | F>(resolve => {
-    const timer = setTimeout(() => resolve(fallback), ms);
+export function within<T, TFallback>({ timeoutMs, promise, fallback }: {
+  timeoutMs: number;
+  promise: Promise<T>;
+  fallback: TFallback;
+}) {
+  return new Promise<T | TFallback>(resolve => {
+    const timer = setTimeout(() => resolve(fallback), timeoutMs);
     promise.then(
       value => {
         clearTimeout(timer);
@@ -12,3 +16,4 @@ export const within = <T, F>({ ms, promise, fallback }: { ms: number; promise: P
       }
     );
   });
+}

@@ -14,5 +14,9 @@
   },
   "ignorePatterns": [
     "curriculum/**"
+  ],
+  "ignoreDependencies": [
+    "@electric-sql/pglite",
+    "postcss-html"
   ]
 }

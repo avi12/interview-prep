@@ -34,14 +34,26 @@ const LANGUAGE_RULE: Record<Language, string> = {
 
 const ACKNOWLEDGE = "Reply to this message with only the word Ready.";
 
-const cleanName = (name: string) => name.replace(UNSAFE_NAME_CHARS, "").trim().slice(0, MAX_NAME_CHARS);
+function cleanName(name: string) {
+  return name.replace(UNSAFE_NAME_CHARS, "").trim().slice(0, MAX_NAME_CHARS);
+}
 
-const contextLine = (context: VscodeContext) => {
+function contextLine(context: VscodeContext) {
   const name = context ? cleanName(context.name) : "";
-  if (!context || !name) return GENERIC_CONTEXT;
-  if (context.kind === EditorKind.FILE) return `The learner is editing the file "${name}" in VS Code.`;
-  return `The learner has the page "${name}" open in VS Code, most likely the lesson.`;
-};
+  if (!context || !name) {
+    return GENERIC_CONTEXT;
+  }
 
-export const buildBrief = ({ context, language }: { context: VscodeContext; language: Language }) =>
-  [ROLE, contextLine(context), SEEING, COACHING_RULES, LANGUAGE_RULE[language], ACKNOWLEDGE].join("\n");
+  if (context.kind === EditorKind.FILE) {
+    return `The learner is editing the file "${name}" in VS Code.`;
+  }
+
+  return `The learner has the page "${name}" open in VS Code, most likely the lesson.`;
+}
+
+export function buildBrief({ context, language }: {
+  context: VscodeContext;
+  language: Language;
+}) {
+  return [ROLE, contextLine(context), SEEING, COACHING_RULES, LANGUAGE_RULE[language], ACKNOWLEDGE].join("\n");
+}

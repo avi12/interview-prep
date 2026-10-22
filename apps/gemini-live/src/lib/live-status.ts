@@ -1,6 +1,6 @@
 import { LiveState, Sight } from "./live-state.ts";
 import { MIC_KEY_LABEL } from "./mic-key.ts";
-import type { Session } from "./session.ts";
+import type { Session } from "./session-schema.ts";
 
 export const Tone = {
   OK: "ok",
@@ -8,7 +8,7 @@ export const Tone = {
   DANGER: "danger",
   IDLE: "idle"
 } as const;
-export type Tone = (typeof Tone)[keyof typeof Tone];
+type Tone = (typeof Tone)[keyof typeof Tone];
 
 const STATE_TEXT: Record<LiveState, string> = {
   [LiveState.OPENING]: "Opening the Gemini window",
@@ -43,27 +43,58 @@ const HIDDEN_LABEL = "Tutor can't see VS Code";
 const MUTED_TEXT = `Gemini is watching your VS Code with your mic muted, press ${MIC_KEY_LABEL} to talk`;
 const MUTED_LABEL = `Tutor muted, ${MIC_KEY_LABEL} to talk`;
 
-const isBlind = (session: Session) => session.state === LiveState.LIVE && session.sight === Sight.HIDDEN;
+function isBlind(session: Session) {
+  return session.state === LiveState.LIVE && session.sight === Sight.HIDDEN;
+}
 
-const isMuted = (session: Session) => session.state === LiveState.LIVE && !session.isMicOpen;
+function isMuted(session: Session) {
+  return session.state === LiveState.LIVE && !session.isMicOpen;
+}
 
-export const sessionText = (session: Session) => {
-  if (session.state === LiveState.FAILED) return session.detail || STATE_TEXT[LiveState.FAILED];
-  if (isBlind(session)) return HIDDEN_TEXT;
-  if (isMuted(session)) return MUTED_TEXT;
-  if (session.state === LiveState.LIVE) return `${STATE_TEXT[session.state]} (${session.frames} pictures sent)`;
+export function sessionText(session: Session) {
+  if (session.state === LiveState.FAILED) {
+    return session.detail || STATE_TEXT[LiveState.FAILED];
+  }
+
+  if (isBlind(session)) {
+    return HIDDEN_TEXT;
+  }
+
+  if (isMuted(session)) {
+    return MUTED_TEXT;
+  }
+
+  if (session.state === LiveState.LIVE) {
+    return `${STATE_TEXT[session.state]} (${session.frames} pictures sent)`;
+  }
+
   return STATE_TEXT[session.state];
-};
+}
 
-export const sessionLabel = (session: Session) => {
-  if (isBlind(session)) return HIDDEN_LABEL;
-  if (isMuted(session)) return MUTED_LABEL;
+export function sessionLabel(session: Session) {
+  if (isBlind(session)) {
+    return HIDDEN_LABEL;
+  }
+
+  if (isMuted(session)) {
+    return MUTED_LABEL;
+  }
+
   return STATE_LABEL[session.state];
-};
+}
 
-export const sessionTone = (session: Session | null) => {
-  if (!session) return Tone.IDLE;
-  if (isBlind(session)) return Tone.WARN;
-  if (isMuted(session)) return Tone.IDLE;
+export function sessionTone(session: Session | null) {
+  if (!session) {
+    return Tone.IDLE;
+  }
+
+  if (isBlind(session)) {
+    return Tone.WARN;
+  }
+
+  if (isMuted(session)) {
+    return Tone.IDLE;
+  }
+
   return STATE_TONE[session.state];
-};
+}

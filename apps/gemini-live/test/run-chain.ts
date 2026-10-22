@@ -1,3 +1,4 @@
+import { TUTOR_VIEW_PATH } from "../../../scripts/lib/tutor-view.ts";
 /*
  * Builds the extension for a throwaway VS Code origin, serves a fake VS Code there, starts
  * Chrome for Testing with that build and a fresh profile, and runs livechain.ts against it.
@@ -7,11 +8,16 @@
  * Only the browser this script started is ever stopped, by its pid.
  */
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync
+} from "node:fs";
 import { createServer } from "node:http";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { TUTOR_VIEW_PATH } from "../../../scripts/lib/tutor-view.ts";
 
 const PACKAGE_DIR = resolve(import.meta.dirname, "..");
 const VSCODE_PORT = Number(process.env.CHAIN_VSCODE_PORT ?? 18765);
@@ -25,22 +31,30 @@ const BROWSER_READY_TRIES = 100;
 const BROWSER_READY_GAP_MS = 200;
 const PUPPETEER_CHROME_DIR = join(homedir(), ".cache", "puppeteer", "chrome");
 
-const chromeExecutable = () => {
-  if (process.env.CHROME_FOR_TESTING) return process.env.CHROME_FOR_TESTING;
-  if (!existsSync(PUPPETEER_CHROME_DIR)) return null;
+function chromeExecutable() {
+  if (process.env.CHROME_FOR_TESTING) {
+    return process.env.CHROME_FOR_TESTING;
+  }
+
+  if (!existsSync(PUPPETEER_CHROME_DIR)) {
+    return null;
+  }
+
   const builds = readdirSync(PUPPETEER_CHROME_DIR)
     .map(name => join(PUPPETEER_CHROME_DIR, name, "chrome-win64", "chrome.exe"))
     .filter(path => existsSync(path))
     .sort();
   return builds.at(-1) ?? null;
-};
+}
 
-const wait = (ms: number) => new Promise(resolveWait => setTimeout(resolveWait, ms));
+function wait(delayMs: number) {
+  return new Promise(resolveWait => setTimeout(resolveWait, delayMs));
+}
 
-const isBrowserUp = async () => {
+async function isBrowserUp() {
   const response = await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/version`).catch(() => null);
   return !!response?.ok;
-};
+}
 
 const chrome = chromeExecutable();
 if (!chrome) {
@@ -53,7 +67,12 @@ const build = spawnSync("pnpm exec wxt build", {
   cwd: PACKAGE_DIR,
   shell: true,
   encoding: "utf8",
-  env: { ...process.env, VSCODE_ORIGIN, TUTOR_VIEW_URL: UNSERVED_TUTOR_VIEW_URL, WXT_OUT_DIR: OUT_DIR }
+  env: {
+    ...process.env,
+    VSCODE_ORIGIN,
+    TUTOR_VIEW_URL: UNSERVED_TUTOR_VIEW_URL,
+    WXT_OUT_DIR: OUT_DIR
+  }
 });
 if (build.status !== 0) {
   console.log(build.stdout, build.stderr);
@@ -85,24 +104,38 @@ const browser = spawn(
   { stdio: "ignore" }
 );
 
-const stopBrowser = () => {
-  if (browser.pid) spawnSync("taskkill", ["/PID", String(browser.pid), "/T", "/F"], { stdio: "ignore" });
-};
+function stopBrowser() {
+  if (browser.pid) {
+    spawnSync("taskkill", ["/PID", String(browser.pid), "/T", "/F"], { stdio: "ignore" });
+  }
+}
 
 let exitCode = 1;
 try {
   let isUp = false;
   for (let attempt = 0; attempt < BROWSER_READY_TRIES && !isUp; attempt++) {
     isUp = await isBrowserUp();
-    if (!isUp) await wait(BROWSER_READY_GAP_MS);
+
+    if (!isUp) {
+      await wait(BROWSER_READY_GAP_MS);
+    }
   }
-  if (!isUp) throw new Error("Chrome for Testing did not open its debugging port");
+
+  if (!isUp) {
+    throw new Error("Chrome for Testing did not open its debugging port");
+  }
+
   const chain = spawn(process.execPath, [resolve(PACKAGE_DIR, "test", "livechain.ts"), String(DEBUG_PORT), VSCODE_ORIGIN], { stdio: "inherit" });
   exitCode = await new Promise<number>(resolveExit => chain.on("exit", code => resolveExit(code ?? 1)));
 } finally {
   stopBrowser();
   server.close();
   await wait(1000);
-  rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
+  rmSync(profile, {
+    recursive: true,
+    force: true,
+    maxRetries: 5,
+    retryDelay: 500
+  });
 }
 process.exit(exitCode);

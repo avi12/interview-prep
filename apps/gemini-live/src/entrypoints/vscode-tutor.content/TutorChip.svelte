@@ -3,7 +3,8 @@
   import { isRunning } from "@/lib/live-state.ts";
   import { sessionLabel, sessionText, sessionTone, Tone } from "@/lib/live-status.ts";
   import { MIC_KEY_LABEL } from "@/lib/mic-key.ts";
-  import { parseSession, type Session, sessionItem } from "@/lib/session.ts";
+  import { parseSession, type Session } from "@/lib/session-schema.ts";
+  import { sessionItem } from "@/lib/session.ts";
   import { onMount } from "svelte";
 
   const START_LABEL = "Start voice tutor";

@@ -12,34 +12,45 @@ const ROUND_DIRECTION_CSS = `
   }
 `;
 
-const captionLines = () => {
+function captionLines() {
   const lines = new Set<HTMLElement>();
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     const text = node.nodeValue ?? "";
     const parent = node.parentElement;
-    if (!CAPTION_LABEL.test(text) || !parent?.closest("captions-scroller")) continue;
+    if (!CAPTION_LABEL.test(text) || !parent?.closest("captions-scroller")) {
+      continue;
+    }
+
     const isLabelAlone = !text.replace(CAPTION_LABEL, "").trim();
     const line = isLabelAlone ? parent.parentElement : parent;
-    if (line && line.tagName !== CAPTIONS_TAG) lines.add(line);
+    if (line && line.tagName !== CAPTIONS_TAG) {
+      lines.add(line);
+    }
   }
   return lines;
-};
+}
 
-const directCaptions = () => {
+function directCaptions() {
   for (const line of captionLines()) {
     const rest = (line.textContent ?? "").replace(CAPTION_LABEL, "");
     const letter = FIRST_LETTER.exec(rest)?.[0];
     const direction = letter && HEBREW_LETTER.test(letter) ? "rtl" : "ltr";
-    if (line.dir !== direction) line.dir = direction;
+    if (line.dir !== direction) {
+      line.dir = direction;
+    }
   }
-};
+}
 
-export const installBidi = () => {
+export function installBidi() {
   const sheet = new CSSStyleSheet();
   sheet.replaceSync(ROUND_DIRECTION_CSS);
   document.adoptedStyleSheets.push(sheet);
   document.addEventListener("DOMContentLoaded", () => {
-    new MutationObserver(directCaptions).observe(document.body, { childList: true, subtree: true, characterData: true });
+    new MutationObserver(directCaptions).observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
   });
-};
+}

@@ -23,4 +23,6 @@ const RUNNING_STATES: ReadonlySet<LiveState> = new Set([
   LiveState.RECONNECTING
 ]);
 
-export const isRunning = (state: LiveState) => RUNNING_STATES.has(state);
+export function isRunning(state: LiveState) {
+  return RUNNING_STATES.has(state);
+}

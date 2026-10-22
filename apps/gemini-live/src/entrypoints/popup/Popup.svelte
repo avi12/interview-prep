@@ -4,7 +4,8 @@
   import { isRunning } from "@/lib/live-state.ts";
   import { sessionText, sessionTone } from "@/lib/live-status.ts";
   import { hasMicKey, MIC_KEY_LABEL, requestMicKey } from "@/lib/mic-key.ts";
-  import { parseSession, type Session, sessionItem } from "@/lib/session.ts";
+  import { parseSession, type Session } from "@/lib/session-schema.ts";
+  import { sessionItem } from "@/lib/session.ts";
   import { loadLanguage, saveLanguage } from "@/lib/settings.ts";
   import { findVscodeTab, VSCODE_ORIGIN } from "@/lib/vscode.ts";
   import { onMount } from "svelte";

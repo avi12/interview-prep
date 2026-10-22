@@ -1,6 +1,6 @@
-import { defineExtensionMessaging } from "@webext-core/messaging";
-import type { TutorView } from "@scripts/lib/tutor-view.ts";
 import type { Activation, Frame, GlicCommandMap, GlicReportMap } from "./bridge-vocab.ts";
+import type { TutorView } from "@scripts/lib/tutor-view.ts";
+import { defineExtensionMessaging } from "@webext-core/messaging";
 
 export const ExtensionMessage = {
   LIVE_START: "liveStart",

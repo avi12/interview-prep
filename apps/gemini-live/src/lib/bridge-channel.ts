@@ -1,7 +1,7 @@
-import { defineCustomEventMessaging } from "@webext-core/messaging/page";
-import type { TutorView } from "@scripts/lib/tutor-view.ts";
 import type { Activation, Frame, GlicCommandMap, GlicReportMap } from "./bridge-vocab.ts";
 import type { PromptEvent } from "./prompt-clip.ts";
+import type { TutorView } from "@scripts/lib/tutor-view.ts";
+import { defineCustomEventMessaging } from "@webext-core/messaging/page";
 
 export const BridgeMessage = {
   PRESENT: "present",
