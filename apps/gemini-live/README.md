@@ -15,6 +15,29 @@ Then in Chrome: `chrome://extensions`, turn on Developer mode, Load unpacked, pi
 
 You also need to be signed in to Google in that Chrome, so the Gemini window can start Live.
 
+## Develop
+
+```
+pnpm --filter @interview-prep/gemini-live dev
+```
+
+This builds a development copy into `.output/chrome-mv3-dev` and starts its own Chrome for Testing (the newest in `~/.cache/puppeteer/chrome`, or set `CHROME_FOR_TESTING`) with a profile of its own in `apps/gemini-live/.dev-profile`. It loads the extension there and opens VS Code: the full trainer URL when `pnpm start` has saved its token, otherwise just the origin. Sign in to Google once in that window; the profile keeps it. The extension id is the same as the installed one, so the mic key helper works there too.
+
+Every save under `src`, `public`, the config files or `scripts/lib` rebuilds, and the reload follows what the build actually changed:
+
+| The build changed | What reloads |
+| --- | --- |
+| the background or the manifest | the extension, then every VS Code and Gemini tab, because their content scripts lost the old extension |
+| a content script | only the tabs it runs in: VS Code for the chip, the Gemini window for the bridge and the relay |
+| the popup or another page file | the open popup pages |
+| nothing | nothing |
+
+Content scripts are never injected again into a live page: the bridge runs in the Gemini page's own world from the start, and the chip cannot be unmounted, so their tabs reload instead.
+
+A running session survives a reload of the extension: a development build keeps the session when the extension is updated. The Gemini window still reloads with the new code, so it is briefed again, as after Live breaks (a new conversation).
+
+Close the Chrome for Testing window or press Ctrl+C to stop.
+
 ## Use
 
 1. `pnpm start` at the repo root. It prints the VS Code URL (`http://127.0.0.1:8765/?tkn=...`) and opens your default browser. If that is not the Chrome with the extension, run `pnpm start --no-open` and paste the URL into Chrome yourself.
