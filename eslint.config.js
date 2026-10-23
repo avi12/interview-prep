@@ -256,27 +256,41 @@ const browserGlobals = {
   chrome: "readonly"
 };
 
-// Node globals belong only to tooling that actually runs under Node (the chain test driver
-// and config files). Browser/extension and Vite source must not see `process` - oxlint
-// enforces this via the matching env override.
-const nodeToolingFiles = ["test/**/*.ts", "scripts/**/*.ts", "aliases.ts", "extension-identity.ts", "**/*.config.ts", "**/*.config.js", "**/*.config.mjs"];
+// Everything in this repo runs under Node (scripts, the VS Code extension, the curriculum
+// kit, test drivers, configs) except the Gemini extension's sources, which run in the
+// browser and must not see `process` - oxlint enforces that through the matching override.
+const browserFiles = ["apps/gemini-live/src/**/*.ts"];
 
 export default [
   ...svelteEslint.configs["flat/recommended"],
-  globalIgnores([".svelte-check/", "node_modules/", ".output/", ".output-test/", ".wxt/"]),
+  globalIgnores([
+    "**/node_modules/",
+    "**/.svelte-check/",
+    "**/.output/",
+    "**/.output-test/",
+    "**/.wxt/",
+    "dist/",
+    "work/",
+    ".vscode-server/",
+    ".fallow/",
+    "apps/vscode-ext/dist/",
+    "curriculum/**",
+    "!curriculum/_kit/",
+    "!curriculum/_kit/**"
+  ]),
   {
     files: ["**/*.{ts,js,mjs}"],
     languageOptions: {
       parser: tsEslint.parser,
-      globals: browserGlobals
+      globals: globals.node
     },
     plugins: sharedPlugins,
     rules: tsStyleRules
   },
   {
-    files: nodeToolingFiles,
+    files: browserFiles,
     languageOptions: {
-      globals: globals.node
+      globals: browserGlobals
     }
   },
   {

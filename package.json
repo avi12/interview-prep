@@ -20,8 +20,10 @@
     "dev": "node scripts/dev.ts",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.solutions.json",
     "fallow": "fallow audit --base HEAD",
-    "dev:lint": "pnpm fallow && pnpm -C apps/gemini-live run lint",
-    "prepare": "simple-git-hooks"
+    "dev:lint": "pnpm fallow && pnpm lint",
+    "prepare": "simple-git-hooks",
+    "lint": "oxlint --type-aware --fix -c .oxlintrc.fix.json && eslint --fix && oxlint --type-aware",
+    "stylelint": "stylelint . --fix"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.10",
@@ -31,21 +33,40 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@stylistic/eslint-plugin": "^5.10.0",
     "@types/node": "^24.0.0",
+    "eslint": "^10.13.0",
+    "eslint-plugin-import-newlines": "^2.0.0",
+    "eslint-plugin-perfectionist": "^5.13.0",
+    "eslint-plugin-svelte": "^3.23.1",
+    "eslint-plugin-unused-imports": "^4.4.1",
     "fallow": "2.103.0",
+    "globals": "^17.13.0",
     "lint-staged": "^17.6.0",
+    "oxlint": "1.72.0",
+    "oxlint-tsgolint": "0.24.0",
+    "postcss": "^8.5.30",
+    "postcss-html": "^1.8.1",
     "simple-git-hooks": "^2.14.0",
+    "stylelint": "^17.16.0",
+    "stylelint-config-ccb": "^3.32.0",
+    "svelte": "^5.57.2",
+    "svelte-eslint-parser": "^1.9.0",
     "typescript": "^5.9.0",
+    "typescript-eslint": "^8.72.0",
     "vitest": "^3.2.0"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"
   },
   "lint-staged": {
-    "apps/gemini-live/**/*.{ts,svelte}": [
-      "pnpm -C apps/gemini-live exec oxlint --fix -c .oxlintrc.fix.json",
-      "pnpm -C apps/gemini-live exec eslint --fix",
-      "pnpm -C apps/gemini-live exec oxlint"
+    "*.{ts,js,mjs,svelte}": [
+      "oxlint --fix -c .oxlintrc.fix.json",
+      "eslint --fix --no-warn-ignored",
+      "oxlint"
+    ],
+    "*.{css,svelte}": [
+      "stylelint --fix --allow-empty-input"
     ]
   }
 }

@@ -4,10 +4,15 @@
   ],
   "customSyntax": "postcss-html",
   "ignoreFiles": [
-    "node_modules/**",
-    ".output/**",
-    ".output-test/**",
-    ".wxt/**",
+    "**/node_modules/**",
+    "**/.output/**",
+    "**/.output-test/**",
+    "**/.wxt/**",
+    "dist/**",
+    "work/**",
+    ".vscode-server/**",
+    "apps/vscode-ext/dist/**",
+    "curriculum/**",
     "**/*.svg"
   ],
   "rules": {
