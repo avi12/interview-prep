@@ -1,14 +1,30 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { loadImpl } from "#kit/impl.ts";
 import type { Session } from "../starter/sessions.ts";
+import { loadImpl } from "#kit/impl.ts";
+import {
+  afterEach,
+  describe,
+  expect,
+  it,
+  vi
+} from "vitest";
 
 type Module = {
   generateSessionId: () => string;
-  sessionCookie: (input: { sessionId: string; maxAgeSeconds: number }) => string;
-  createSessionManager: (input: { now: () => number; generateId: () => string; ttlMs: number }) => {
+  sessionCookie: (input: {
+    sessionId: string;
+    maxAgeSeconds: number;
+  }) => string;
+  createSessionManager: (input: {
+    now: () => number;
+    generateId: () => string;
+    ttlMs: number;
+  }) => {
     start: () => Session;
     get: (sessionId: string) => Session | undefined;
-    login: (input: { sessionId: string; userId: string }) => Session;
+    login: (input: {
+      sessionId: string;
+      userId: string;
+    }) => Session;
     destroy: (sessionId: string) => void;
   };
 };
@@ -29,7 +45,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const parseSetCookie = (header: string) => {
+function parseSetCookie(header: string) {
   const [pair, ...rawAttributes] = header.split(";").map(part => part.trim());
   const [name, ...valueParts] = pair.split("=");
   const attributes = new Map(
@@ -38,10 +54,14 @@ const parseSetCookie = (header: string) => {
       return [key.toLowerCase(), rest.join("=")] as const;
     })
   );
-  return { name, value: valueParts.join("="), attributes };
-};
+  return {
+    name,
+    value: valueParts.join("="),
+    attributes
+  };
+}
 
-const makeManager = () => {
+function makeManager() {
   let currentMs = START_MS;
   let idCounter = 0;
   const manager = createSessionManager({
@@ -49,11 +69,14 @@ const makeManager = () => {
     generateId: () => `session-${++idCounter}`,
     ttlMs: TTL_MS
   });
-  const advance = (ms: number) => {
-    currentMs += ms;
+  function advance(milliseconds: number) {
+    currentMs += milliseconds;
+  }
+  return {
+    manager,
+    advance
   };
-  return { manager, advance };
-};
+}
 
 describe("generateSessionId", () => {
   it("returns at least 128 bits of URL-safe text", () => {
@@ -83,7 +106,12 @@ describe("generateSessionId", () => {
 });
 
 describe("sessionCookie", () => {
-  const cookie = parseSetCookie(sessionCookie({ sessionId: "abc123", maxAgeSeconds: ONE_HOUR_SECONDS }));
+  const cookie = parseSetCookie(
+    sessionCookie({
+      sessionId: "abc123",
+      maxAgeSeconds: ONE_HOUR_SECONDS
+    })
+  );
 
   it("carries the session id under a __Host- prefixed name", () => {
     expect(cookie.name.startsWith("__Host-")).toBe(true);
@@ -112,7 +140,12 @@ describe("sessionCookie", () => {
   });
 
   it("keeps Max-Age=0, which is how a cookie is deleted", () => {
-    const deleted = parseSetCookie(sessionCookie({ sessionId: "other-id", maxAgeSeconds: 0 }));
+    const deleted = parseSetCookie(
+      sessionCookie({
+        sessionId: "other-id",
+        maxAgeSeconds: 0
+      })
+    );
     expect(deleted.value).toBe("other-id");
     expect(deleted.attributes.get("max-age")).toBe("0");
   });
@@ -122,7 +155,11 @@ describe("session manager", () => {
   it("starts an anonymous session that can be read back", () => {
     const { manager } = makeManager();
     const session = manager.start();
-    expect(session).toEqual({ id: "session-1", userId: null, expiresAt: START_MS + TTL_MS });
+    expect(session).toEqual({
+      id: "session-1",
+      userId: null,
+      expiresAt: START_MS + TTL_MS
+    });
     expect(manager.get("session-1")).toEqual(session);
   });
 
@@ -143,7 +180,10 @@ describe("session manager", () => {
   it("login gives a NEW session id and the old id stops working (session fixation)", () => {
     const { manager } = makeManager();
     const anonymous = manager.start();
-    const loggedIn = manager.login({ sessionId: anonymous.id, userId: "user-7" });
+    const loggedIn = manager.login({
+      sessionId: anonymous.id,
+      userId: "user-7"
+    });
     expect(loggedIn.id).not.toBe(anonymous.id);
     expect(loggedIn.userId).toBe("user-7");
     expect(manager.get(loggedIn.id)).toEqual(loggedIn);
@@ -152,7 +192,10 @@ describe("session manager", () => {
 
   it("never adopts an id chosen by the client at login", () => {
     const { manager } = makeManager();
-    const loggedIn = manager.login({ sessionId: "planted-by-attacker", userId: "user-7" });
+    const loggedIn = manager.login({
+      sessionId: "planted-by-attacker",
+      userId: "user-7"
+    });
     expect(loggedIn.id).not.toBe("planted-by-attacker");
     expect(manager.get("planted-by-attacker")).toBeUndefined();
   });
@@ -161,21 +204,33 @@ describe("session manager", () => {
     const { manager, advance } = makeManager();
     const anonymous = manager.start();
     advance(TTL_MS - 1);
-    const loggedIn = manager.login({ sessionId: anonymous.id, userId: "user-7" });
+    const loggedIn = manager.login({
+      sessionId: anonymous.id,
+      userId: "user-7"
+    });
     expect(loggedIn.expiresAt).toBe(START_MS + TTL_MS - 1 + TTL_MS);
   });
 
   it("destroy ends the session on the server, whatever the browser still holds", () => {
     const { manager } = makeManager();
-    const { id } = manager.login({ sessionId: "none", userId: "user-7" });
+    const { id } = manager.login({
+      sessionId: "none",
+      userId: "user-7"
+    });
     manager.destroy(id);
     expect(manager.get(id)).toBeUndefined();
   });
 
   it("keeps different users' sessions apart", () => {
     const { manager } = makeManager();
-    const first = manager.login({ sessionId: "none", userId: "alice" });
-    const second = manager.login({ sessionId: "none", userId: "bob" });
+    const first = manager.login({
+      sessionId: "none",
+      userId: "alice"
+    });
+    const second = manager.login({
+      sessionId: "none",
+      userId: "bob"
+    });
     expect(manager.get(first.id)?.userId).toBe("alice");
     expect(manager.get(second.id)?.userId).toBe("bob");
   });

@@ -1,5 +1,3 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
-
 export type JwtClaims = {
   iss?: string;
   sub?: string;
@@ -10,25 +8,25 @@ export type JwtClaims = {
   [claim: string]: unknown;
 };
 
-const ALGORITHM = "HS256";
-const HMAC_HASH = "sha256";
-const HEADER = { alg: ALGORITHM, typ: "JWT" };
-const SEGMENT_SEPARATOR = ".";
-const ENCODING = "base64url";
-const MIN_SECRET_BYTES = 32;
-const MS_PER_SECOND = 1000;
+export const ALGORITHM = "HS256";
+export const HMAC_HASH = "sha256";
+export const HEADER = {
+  alg: ALGORITHM,
+  typ: "JWT"
+};
+export const SEGMENT_SEPARATOR = ".";
+export const ENCODING = "base64url";
+export const MIN_SECRET_BYTES = 32;
+export const MS_PER_SECOND = 1000;
 
-export function signJwt({ claims, secret }: { claims: JwtClaims; secret: string }) {
+export function signJwt(_input: {
+  claims: JwtClaims;
+  secret: string;
+}) {
   return "";
 }
 
-export function verifyJwt({
-  token,
-  secret,
-  issuer,
-  audience,
-  now
-}: {
+export function verifyJwt(_input: {
   token: string;
   secret: string;
   issuer: string;
