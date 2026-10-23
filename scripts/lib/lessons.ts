@@ -183,7 +183,7 @@ function isSpecialFence(token: Token): token is Tokens.Code {
   return isCodeToken(token) && SPECIAL_FENCES.has(fenceName(token));
 }
 
-export function parseCards(body: string) {
+function parseCards(body: string) {
   const cards: Card[] = [];
   for (const token of marked.lexer(body)) {
     const isCardStart = token.type === "heading" && token.depth === CARD_HEADING_DEPTH;

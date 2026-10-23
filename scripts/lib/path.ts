@@ -14,7 +14,7 @@ function queuesByTrack(lessons: Orderable[]) {
   return queues;
 }
 
-export function buildOrder({ lessons, cycle }: {
+function buildOrder({ lessons, cycle }: {
   lessons: Orderable[];
   cycle: string[];
 }) {

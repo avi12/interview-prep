@@ -39,7 +39,7 @@ export const GlicReport = {
   STATE: "glicState",
   FAILED: "glicFailed"
 } as const;
-export type GlicReport = (typeof GlicReport)[keyof typeof GlicReport];
+type GlicReport = (typeof GlicReport)[keyof typeof GlicReport];
 
 export interface GlicReportMap {
   [GlicReport.BOOTED](): void;

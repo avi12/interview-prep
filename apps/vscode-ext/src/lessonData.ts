@@ -13,7 +13,7 @@ const EMPTY_INDEX: z.infer<typeof lessonIndexSchema> = {
   lessons: []
 };
 
-export function readIndex(root: string) {
+function readIndex(root: string) {
   return readJsonFile({
     path: resolve(root, INDEX_RELATIVE_PATH),
     schema: lessonIndexSchema,

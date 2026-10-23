@@ -3,8 +3,8 @@ import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 
-export const NARRATED_DIR = resolve(DIST_DIR, "narrated");
-export const NARRATION_INPUT_DIR = resolve(DIST_DIR, "narration-input");
+const NARRATED_DIR = resolve(DIST_DIR, "narrated");
+const NARRATION_INPUT_DIR = resolve(DIST_DIR, "narration-input");
 
 const STYLE_BLOCK_PATTERN = /<style>[\s\S]*?<\/style>/;
 
@@ -12,7 +12,7 @@ function fileSafe(id: string) {
   return id.replaceAll("/", "__");
 }
 
-export function narrationKey(html: string) {
+function narrationKey(html: string) {
   return createHash("sha1").update(html.replace(STYLE_BLOCK_PATTERN, "")).digest("hex").slice(0, 12);
 }
 

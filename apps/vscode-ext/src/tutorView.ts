@@ -136,7 +136,7 @@ function lessonBlocks({ root, lesson }: {
   ];
 }
 
-export function buildTutorView({ root, lesson, editor }: ViewSources): TutorView {
+function buildTutorView({ root, lesson, editor }: ViewSources): TutorView {
   const currentLesson = lesson();
   const currentEditor = editor();
   const blocks: TutorBlock[] = [

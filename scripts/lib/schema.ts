@@ -69,7 +69,7 @@ export const progressSchema = z.record(
   })
 );
 
-export const sqlTableSchema = z.object({
+const sqlTableSchema = z.object({
   name: z.string(),
   columns: z.array(
     z.object({
