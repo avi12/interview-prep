@@ -2,7 +2,7 @@ import { readJsonFile } from "@scripts/lib/files.ts";
 import { INDEX_RELATIVE_PATH, PROGRESS_RELATIVE_PATH } from "@scripts/lib/layout.ts";
 import { ALL_ROLES } from "@scripts/lib/path.ts";
 import { lessonIndexSchema, progressSchema } from "@scripts/lib/schema.ts";
-import { nextUnpassedId } from "@scripts/lib/study.ts";
+import { isPassed, nextUnpassedId } from "@scripts/lib/study.ts";
 import { resolve } from "node:path";
 import * as vscode from "vscode";
 import type { z } from "zod";
@@ -55,6 +55,16 @@ export function findLesson({ root, id }: {
   id: string;
 }) {
   return readIndex(root).lessons.find(lesson => lesson.id === id);
+}
+
+export function isLessonPassed({ root, id }: {
+  root: string;
+  id: string;
+}) {
+  return isPassed({
+    id,
+    progress: readProgress(root)
+  });
 }
 
 export function findNextLesson(root: string) {

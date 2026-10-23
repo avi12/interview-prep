@@ -1,6 +1,6 @@
 import { watchForChanges } from "@/hotReload.ts";
 import { ensureExerciseFiles, onTestsFinished, runLessonCli, runTestsInTerminal } from "@/lessonCli.ts";
-import { findLesson, findNextLesson } from "@/lessonData.ts";
+import { findLesson, findNextLesson, isLessonPassed } from "@/lessonData.ts";
 import { showLesson } from "@/lessonPanel.ts";
 import { Command, LessonTree } from "@/lessonTree.ts";
 import { showQueryResult } from "@/queryResult.ts";
@@ -104,6 +104,10 @@ function activateIn({ context, root }: {
       root,
       lesson,
       viewColumn: lesson.hasExercise ? vscode.ViewColumn.Two : vscode.ViewColumn.One,
+      isPassed: isLessonPassed({
+        root,
+        id
+      }),
       isScrolledToTop,
       onAction(action) {
         if (action === PanelAction.runTests) {
@@ -120,6 +124,10 @@ function activateIn({ context, root }: {
 
         if (action === PanelAction.markDone) {
           void markDone(id);
+        }
+
+        if (action === PanelAction.nextLesson) {
+          void openNextLesson();
         }
       }
     });
@@ -255,6 +263,14 @@ function activateIn({ context, root }: {
     vscode.workspace.onDidChangeConfiguration(e => e.affectsConfiguration("interviewPrep.role") && tree.refresh()),
     onTestsFinished(({ id, isPass }) => {
       tree.refresh();
+
+      if (isPass && id === openLessonId) {
+        void showLessonPanel({
+          id,
+          isScrolledToTop: false
+        });
+      }
+
       void showQueryResult({
         root,
         id

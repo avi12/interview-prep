@@ -3,6 +3,7 @@ import {
   PanelAction,
   type PanelCommand,
   panelMessageSchema,
+  PASSED_SCRIPT,
   SCROLL_TO_TOP_SCRIPT,
   VIEWING_SCRIPT
 } from "@scripts/lib/panel.ts";
@@ -13,12 +14,13 @@ import * as vscode from "vscode";
 const VIEW_TYPE = "interviewPrep.lesson";
 const BODY_END = "</body>";
 
-function panelHtml({ root, lesson, isScrolledToTop }: {
+function panelHtml({ root, lesson, isPassed, isScrolledToTop }: {
   root: string;
   lesson: LessonEntry;
+  isPassed: boolean;
   isScrolledToTop: boolean;
 }) {
-  const scripts = [VIEWING_SCRIPT, isScrolledToTop ? SCROLL_TO_TOP_SCRIPT : ""].join("\n");
+  const scripts = [VIEWING_SCRIPT, isPassed ? PASSED_SCRIPT : "", isScrolledToTop ? SCROLL_TO_TOP_SCRIPT : ""].join("\n");
   const openedAt = isScrolledToTop ? `<!-- opened ${Date.now()} -->` : "";
   return readFileSync(resolve(root, lesson.html), "utf8").replace(BODY_END, `<script>${scripts}</script>${openedAt}${BODY_END}`);
 }
@@ -38,18 +40,21 @@ export function showLesson({
   root,
   lesson,
   viewColumn,
+  isPassed,
   isScrolledToTop,
   onAction
 }: {
   root: string;
   lesson: LessonEntry;
   viewColumn: vscode.ViewColumn;
+  isPassed: boolean;
   isScrolledToTop: boolean;
   onAction: (action: PanelCommand) => void;
 }) {
   const html = panelHtml({
     root,
     lesson,
+    isPassed,
     isScrolledToTop
   });
   if (!panel) {

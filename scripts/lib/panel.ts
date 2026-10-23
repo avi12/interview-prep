@@ -5,6 +5,7 @@ export const PanelAction = {
   openExercise: "openExercise",
   resetExercise: "resetExercise",
   markDone: "markDone",
+  nextLesson: "nextLesson",
   viewing: "viewing"
 } as const;
 
@@ -12,7 +13,8 @@ const PANEL_COMMANDS = [
   PanelAction.runTests,
   PanelAction.openExercise,
   PanelAction.resetExercise,
-  PanelAction.markDone
+  PanelAction.markDone,
+  PanelAction.nextLesson
 ] as const;
 
 export const panelMessageSchema = z.union([
@@ -25,6 +27,8 @@ export const panelMessageSchema = z.union([
 
 export type PanelCommand = (typeof PANEL_COMMANDS)[number];
 
+const PASSED_CLASS = "is-passed";
+export const PASSED_SCRIPT = `document.documentElement.classList.add(${JSON.stringify(PASSED_CLASS)});`;
 export const SCROLL_TO_TOP_SCRIPT = `addEventListener("load", () => setTimeout(() => scrollTo(0, 0)));`;
 
 export const DONE_COMMAND = "done";

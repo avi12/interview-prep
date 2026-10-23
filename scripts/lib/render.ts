@@ -85,12 +85,15 @@ function renderQuiz({ quiz, id }: {
   return `<fieldset class="quiz"><legend>Quick check</legend><p class="quiz-q">${markdown.parseInline(quiz.q)}</p>${options}<p class="quiz-why">${markdown.parseInline(quiz.why)}</p></fieldset>`;
 }
 
-function actionButton({ action, label, isPrimary = false }: {
+function actionButton({ action, label, isPrimary = false, isShownAfterPass = false }: {
   action: string;
   label: string;
   isPrimary?: boolean;
+  isShownAfterPass?: boolean;
 }) {
-  return `<button class="btn"${isPrimary ? " data-variant=\"primary\"" : ""} data-needs-host data-action="${action}">${label}</button>`;
+  const variant = isPrimary ? " data-variant=\"primary\"" : "";
+  const afterPass = isShownAfterPass ? " data-needs-pass" : "";
+  return `<button class="btn"${variant}${afterPass} data-needs-host data-action="${action}">${label}</button>`;
 }
 
 function renderExerciseActions(lesson: Lesson) {
@@ -98,6 +101,11 @@ function renderExerciseActions(lesson: Lesson) {
     action: PanelAction.runTests,
     label: "Run my tests",
     isPrimary: true
+  })}${actionButton({
+    action: PanelAction.nextLesson,
+    label: "Next lesson",
+    isPrimary: true,
+    isShownAfterPass: true
   })}${actionButton({
     action: PanelAction.openExercise,
     label: "Open my file"

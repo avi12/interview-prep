@@ -228,6 +228,10 @@ body {
   display: inline-flex;
 }
 
+:root:not(.is-passed) .actions [data-needs-pass] {
+  display: none;
+}
+
 .sources {
   display: grid;
   gap: var(--s-2);
