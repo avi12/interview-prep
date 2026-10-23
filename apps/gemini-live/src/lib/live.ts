@@ -104,6 +104,22 @@ async function toggleMic() {
   }
 }
 
+async function isVscodeInFront(session: Session) {
+  const focusedWindow = await browser.windows.getLastFocused({ populate: true }).catch(() => null);
+  if (!focusedWindow?.focused) {
+    return false;
+  }
+
+  return !!focusedWindow.tabs?.some(tab => tab.active && tab.id === session.vscodeTab);
+}
+
+async function toggleMicFromKey() {
+  const session = await loadSession();
+  if (session && await isVscodeInFront(session)) {
+    await toggleMic();
+  }
+}
+
 function closeWindow(windowId: number) {
   return browser.windows.remove(windowId).catch(() => {});
 }
@@ -380,7 +396,7 @@ export function installLive() {
   extensionMessenger.onMessage(ExtensionMessage.LIVE_START, startSession);
   extensionMessenger.onMessage(ExtensionMessage.LIVE_STOP, stopSession);
   extensionMessenger.onMessage(ExtensionMessage.MIC_TOGGLE, toggleMic);
-  listenToMicKey(() => void toggleMic());
+  listenToMicKey(() => void toggleMicFromKey());
 
   extensionMessenger.onMessage(ExtensionMessage.GLIC_HELLO, async ({ sender }) => {
     const session = await glicSession(sender.tab);
