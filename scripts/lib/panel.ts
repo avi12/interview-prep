@@ -24,6 +24,8 @@ export type PanelMessage = {
 
 export type PanelCommand = Exclude<PanelActionName, typeof PanelAction.viewing>;
 
+export const SCROLL_TO_TOP_SCRIPT = `addEventListener("load", () => setTimeout(() => scrollTo(0, 0)));`;
+
 export const DONE_COMMAND = "done";
 
 export const VIEWING_SCRIPT = `

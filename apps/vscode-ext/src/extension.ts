@@ -88,7 +88,10 @@ function activateIn({ context, root }: {
     await openNextLesson();
   }
 
-  function showLessonPanel(id: string) {
+  function showLessonPanel({ id, isScrolledToTop }: {
+    id: string;
+    isScrolledToTop: boolean;
+  }) {
     const lesson = findLesson({
       root,
       id
@@ -101,6 +104,7 @@ function activateIn({ context, root }: {
       root,
       lesson,
       viewColumn: lesson.hasExercise ? vscode.ViewColumn.Two : vscode.ViewColumn.One,
+      isScrolledToTop,
       onAction(action) {
         if (action === PanelAction.runTests) {
           void runTests(id);
@@ -127,7 +131,10 @@ function activateIn({ context, root }: {
       id
     });
     if (!lesson) {
-      return showLessonPanel(id);
+      return showLessonPanel({
+        id,
+        isScrolledToTop: true
+      });
     }
 
     openLessonId = id;
@@ -136,7 +143,10 @@ function activateIn({ context, root }: {
       await openExercise(id);
     }
 
-    showLessonPanel(id);
+    showLessonPanel({
+      id,
+      isScrolledToTop: true
+    });
   }
 
   async function openNextLesson() {
@@ -235,7 +245,10 @@ function activateIn({ context, root }: {
         tree.refresh();
 
         if (openLessonId) {
-          void showLessonPanel(openLessonId);
+          void showLessonPanel({
+            id: openLessonId,
+            isScrolledToTop: false
+          });
         }
       }
     }),
