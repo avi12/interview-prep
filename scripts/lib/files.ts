@@ -1,6 +1,6 @@
+import type { z } from "#scripts/lib/zod.ts";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import type { z } from "zod";
 
 export function ensureParentDir(path: string) {
   return mkdirSync(dirname(path), { recursive: true });

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "#scripts/lib/zod.ts";
 
 export const PanelAction = {
   runTests: "runTests",

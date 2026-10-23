@@ -3,9 +3,9 @@ import { INDEX_RELATIVE_PATH, PROGRESS_RELATIVE_PATH } from "@scripts/lib/layout
 import { ALL_ROLES } from "@scripts/lib/path.ts";
 import { lessonIndexSchema, progressSchema } from "@scripts/lib/schema.ts";
 import { isPassed, nextUnpassedId } from "@scripts/lib/study.ts";
+import type { z } from "@scripts/lib/zod.ts";
 import { resolve } from "node:path";
 import * as vscode from "vscode";
-import type { z } from "zod";
 
 const EMPTY_INDEX: z.infer<typeof lessonIndexSchema> = {
   tracks: [],

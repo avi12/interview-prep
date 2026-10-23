@@ -1,5 +1,5 @@
 import { TutorBlockKind } from "./tutor-view.ts";
-import { z } from "zod";
+import { z } from "#scripts/lib/zod.ts";
 
 export const Lang = {
   ts: "ts",

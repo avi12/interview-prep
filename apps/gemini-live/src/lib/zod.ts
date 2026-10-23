@@ -1,5 +1,1 @@
-import * as z from "zod";
-
-z.config({ jitless: true });
-
-export { z };
+export { z } from "../../../../scripts/lib/zod.ts";

@@ -1,7 +1,7 @@
 import { QUERY_RESULTS_RELATIVE_DIR } from "#scripts/lib/layout.ts";
+import { z } from "#scripts/lib/zod.ts";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { z } from "zod";
 
 export const QUERY_RESULT_ENV = "QUERY_RESULT_FILE";
 const MAX_SHOWN_ROWS = 20;

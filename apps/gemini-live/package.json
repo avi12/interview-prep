@@ -20,8 +20,7 @@
     "mic-key:install": "node scripts/install-mic-key-host.ts"
   },
   "dependencies": {
-    "@webext-core/messaging": "^4.0.0",
-    "zod": "^4.0.0"
+    "@webext-core/messaging": "^4.0.0"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.1",

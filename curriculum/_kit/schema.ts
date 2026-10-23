@@ -1,7 +1,7 @@
 import { implPath } from "./impl.ts";
 import { PGlite } from "@electric-sql/pglite";
+import { z } from "#scripts/lib/zod.ts";
 import { readFileSync } from "node:fs";
-import { z } from "zod";
 
 const postgresErrorSchema = z.object({
   code: z.string().optional(),
