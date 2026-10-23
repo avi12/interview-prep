@@ -10,13 +10,15 @@ const bundle = await context({
   format: "cjs",
   target: "node20",
   external: ["vscode"],
-  alias: { "@scripts": "../../scripts", "@": "./src" },
+  alias: {
+    "@scripts": "../../scripts",
+    "@": "./src"
+  },
   sourcemap: true,
   minify: false
-});
-
-if (isWatching) await bundle.watch();
-else {
+});if (isWatching) {
+  await bundle.watch();
+} else {
   await bundle.rebuild();
   await bundle.dispose();
 }
