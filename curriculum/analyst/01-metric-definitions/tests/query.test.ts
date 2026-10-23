@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { runSeeded } from "#kit/db.ts";
+import { describe, expect, it } from "vitest";
 
 const SCHEMA = `
 CREATE TABLE visitors (visitor_id int PRIMARY KEY, channel text NOT NULL);
@@ -23,7 +23,14 @@ INSERT INTO orders VALUES
 
 const NUMERIC_COLUMNS = ["conversion_rate"];
 
-const run = (seed: string) => runSeeded({ seed, testUrl: import.meta.url, file: "query.sql", numericColumns: NUMERIC_COLUMNS });
+function run(seed: string) {
+  return runSeeded({
+    seed,
+    testUrl: import.meta.url,
+    file: "query.sql",
+    numericColumns: NUMERIC_COLUMNS
+  });
+}
 
 describe("conversion rate by channel", () => {
   it("returns channel, visitor_count, buyer_count, conversion_rate", async () => {
@@ -34,24 +41,59 @@ describe("conversion rate by channel", () => {
   it("counts people, not orders: a repeat buyer counts once", async () => {
     const { rows } = await run(SHOP);
     const email = rows.find(row => row.channel === "email");
-    expect(email).toEqual({ channel: "email", visitor_count: 4, buyer_count: 2, conversion_rate: 0.5 });
+    expect(email).toEqual({
+      channel: "email",
+      visitor_count: 4,
+      buyer_count: 2,
+      conversion_rate: 0.5
+    });
   });
 
   it("keeps a channel with no buyers, at rate 0", async () => {
     const { rows } = await run(SHOP);
     expect(rows).toEqual([
-      { channel: "email", visitor_count: 4, buyer_count: 2, conversion_rate: 0.5 },
-      { channel: "search", visitor_count: 6, buyer_count: 1, conversion_rate: 0.167 },
-      { channel: "social", visitor_count: 3, buyer_count: 0, conversion_rate: 0 }
+      {
+        channel: "email",
+        visitor_count: 4,
+        buyer_count: 2,
+        conversion_rate: 0.5
+      },
+      {
+        channel: "search",
+        visitor_count: 6,
+        buyer_count: 1,
+        conversion_rate: 0.167
+      },
+      {
+        channel: "social",
+        visitor_count: 3,
+        buyer_count: 0,
+        conversion_rate: 0
+      }
     ]);
   });
 
   it("works on different data too (no hardcoding)", async () => {
     const { rows } = await run(STARTUP);
     expect(rows).toEqual([
-      { channel: "ads", visitor_count: 8, buyer_count: 3, conversion_rate: 0.375 },
-      { channel: "organic", visitor_count: 3, buyer_count: 1, conversion_rate: 0.333 },
-      { channel: "referral", visitor_count: 4, buyer_count: 0, conversion_rate: 0 }
+      {
+        channel: "ads",
+        visitor_count: 8,
+        buyer_count: 3,
+        conversion_rate: 0.375
+      },
+      {
+        channel: "organic",
+        visitor_count: 3,
+        buyer_count: 1,
+        conversion_rate: 0.333
+      },
+      {
+        channel: "referral",
+        visitor_count: 4,
+        buyer_count: 0,
+        conversion_rate: 0
+      }
     ]);
   });
 });
