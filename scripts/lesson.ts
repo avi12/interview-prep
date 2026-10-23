@@ -1,75 +1,108 @@
-import { resolve } from "node:path";
 import { findLesson, readLessons, readStudyOrders, readTracks } from "#scripts/lib/lessons.ts";
 import { DONE_COMMAND } from "#scripts/lib/panel.ts";
 import { ALL_ROLES } from "#scripts/lib/path.ts";
 import { readProgress, recordAttempt, recordLastTest } from "#scripts/lib/progress.ts";
 import { ensureWorkCopy, prepareSolutionDir, resetWorkCopy, runQuiet } from "#scripts/lib/run.ts";
 import { isPassed, nextUnpassedId } from "#scripts/lib/study.ts";
+import { resolve } from "node:path";
 
 const [command, idArgument, ...flags] = process.argv.slice(2);
 const isSolutionRequested = flags.includes("--solution");
 
-const listLessons = () => {
+function listLessons() {
   const progress = readProgress();
   const lessons = readLessons({ isStrict: false });
   for (const track of readTracks()) {
-    const inTrack = lessons.filter(l => l.track === track.id);
-    if (inTrack.length === 0) continue;
+    const inTrack = lessons.filter(lesson => lesson.track === track.id);
+    if (inTrack.length === 0) {
+      continue;
+    }
+
     console.log(`\n${track.title}`);
     for (const lesson of inTrack) {
-      const mark = isPassed({ id: lesson.id, progress }) ? "x" : " ";
+      const mark = isPassed({
+        id: lesson.id,
+        progress
+      }) ? "x" : " ";
       console.log(`  [${mark}] ${lesson.id}  (${lesson.meta.minutes} min, ${lesson.meta.lang})`);
     }
   }
-};
+}
 
-const openLesson = (id: string) => {
+function openLesson(id: string) {
   const lesson = findLesson(id);
-  if (!lesson.hasExercise) return console.log(`${lesson.id} is a reading lesson, nothing to code`);
+  if (!lesson.hasExercise) {
+    return console.log(`${lesson.id} is a reading lesson, nothing to code`);
+  }
+
   const isCreated = ensureWorkCopy(lesson);
   console.log(isCreated ? "Created your copy:" : "Your copy already exists:");
-  for (const file of lesson.meta.files) console.log(`  ${resolve(lesson.workDir, file)}`);
-};
+  for (const file of lesson.meta.files) {
+    console.log(`  ${resolve(lesson.workDir, file)}`);
+  }
+}
 
-const testLesson = async (id: string) => {
+async function testLesson(id: string) {
   const lesson = findLesson(id);
-  if (!lesson.hasExercise) return console.log("Reading lesson, no tests");
+  if (!lesson.hasExercise) {
+    return console.log("Reading lesson, no tests");
+  }
+
   ensureWorkCopy(lesson);
   const implDir = isSolutionRequested ? prepareSolutionDir(lesson) : lesson.workDir;
-  const { isPass, output } = await runQuiet({ lesson, implDir });
+  const { isPass, output } = await runQuiet({
+    lesson,
+    implDir
+  });
   console.log(output);
+
   if (!isSolutionRequested) {
-    recordAttempt({ id: lesson.id, isPass });
-    recordLastTest({ id: lesson.id, isPass, output });
+    recordAttempt({
+      id: lesson.id,
+      isPass
+    });
+    recordLastTest({
+      id: lesson.id,
+      isPass,
+      output
+    });
   }
+
   console.log(isPass ? "\nPASS - next lesson: pnpm lesson next" : "\nNot yet - read the first failing test, fix one thing, run again");
   process.exitCode = isPass ? 0 : 1;
-};
+}
 
-const markDone = (id: string) => {
+function markDone(id: string) {
   const lesson = findLesson(id);
   if (lesson.hasExercise) {
     console.log(`${lesson.id} has an exercise: pass its tests with pnpm lesson test ${lesson.id}`);
     process.exitCode = 1;
     return;
   }
-  recordAttempt({ id: lesson.id, isPass: true });
-  console.log("Marked done - next lesson: pnpm lesson next");
-};
 
-const resetLesson = (id: string) => {
+  recordAttempt({
+    id: lesson.id,
+    isPass: true
+  });
+  console.log("Marked done - next lesson: pnpm lesson next");
+}
+
+function resetLesson(id: string) {
   resetWorkCopy(findLesson(id));
   console.log("Reset to the starter");
-};
+}
 
-const showNext = () => {
+function showNext() {
   const progress = readProgress();
   const lessons = readLessons({ isStrict: false });
   const order = readStudyOrders(lessons)[idArgument ?? ALL_ROLES] ?? [];
-  const nextId = nextUnpassedId({ order, progress });
-  const next = lessons.find(l => l.id === nextId);
+  const nextId = nextUnpassedId({
+    order,
+    progress
+  });
+  const next = lessons.find(lesson => lesson.id === nextId);
   console.log(next ? `Next: ${next.id} - ${next.meta.title}` : "All lessons passed");
-};
+}
 
 const COMMANDS: Record<string, () => unknown> = {
   list: listLessons,
@@ -85,4 +118,5 @@ if (!handler) {
   console.log("Usage: pnpm lesson <list|open|test|reset|done> <lesson-id> [--solution]   |   pnpm lesson next [backend|analyst|ai]");
   process.exit(1);
 }
+
 await handler();

@@ -1,6 +1,13 @@
+import {
+  DIST_DIR_NAME,
+  INDEX_RELATIVE_PATH,
+  LAST_TEST_RELATIVE_PATH,
+  LESSONS_DIST_RELATIVE_DIR,
+  PROGRESS_RELATIVE_PATH,
+  WORK_DIR_NAME
+} from "#scripts/lib/layout.ts";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DIST_DIR_NAME, INDEX_RELATIVE_PATH, LAST_TEST_RELATIVE_PATH, LESSONS_DIST_RELATIVE_DIR, PROGRESS_RELATIVE_PATH, WORK_DIR_NAME } from "#scripts/lib/layout.ts";
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const CURRICULUM_DIR = resolve(ROOT, "curriculum");

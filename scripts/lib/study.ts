@@ -1,9 +1,21 @@
-import type { z } from "zod";
 import type { progressSchema } from "#scripts/lib/schema.ts";
+import type { z } from "zod";
 
 type Progress = z.infer<typeof progressSchema>;
 
-export const isPassed = ({ id, progress }: { id: string; progress: Progress }) => Boolean(progress[id]?.passedAt);
+export function isPassed({ id, progress }: {
+  id: string;
+  progress: Progress;
+}) {
+  return Boolean(progress[id]?.passedAt);
+}
 
-export const nextUnpassedId = ({ order, progress }: { order: readonly string[]; progress: Progress }) =>
-  order.find(id => !isPassed({ id, progress }));
+export function nextUnpassedId({ order, progress }: {
+  order: readonly string[];
+  progress: Progress;
+}) {
+  return order.find(id => !isPassed({
+    id,
+    progress
+  }));
+}

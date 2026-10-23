@@ -18,7 +18,9 @@ export interface PanelMessageMap {
   [PanelAction.viewing]: { section: string };
 }
 
-export type PanelMessage = { [Action in PanelActionName]: { action: Action } & PanelMessageMap[Action] }[PanelActionName];
+export type PanelMessage = {
+  [Action in PanelActionName]: { action: Action } & PanelMessageMap[Action];
+}[PanelActionName];
 
 export type PanelCommand = Exclude<PanelActionName, typeof PanelAction.viewing>;
 

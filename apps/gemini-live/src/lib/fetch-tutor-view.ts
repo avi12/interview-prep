@@ -14,7 +14,7 @@ const tutorViewSchema: z.ZodType<TutorView> = z.object({
     })
   ),
   testRun: z.object({
-    at: z.string(),
+    ranAt: z.string(),
     isPass: z.boolean()
   }).nullable()
 });

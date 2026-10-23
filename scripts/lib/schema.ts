@@ -1,8 +1,17 @@
-import { z } from "zod";
 import { TutorBlockKind } from "./tutor-view.ts";
+import { z } from "zod";
 
-export const Lang = { ts: "ts", py: "py", sql: "sql", none: "none" } as const;
-export const Role = { backend: "backend", analyst: "analyst", ai: "ai" } as const;
+export const Lang = {
+  ts: "ts",
+  py: "py",
+  sql: "sql",
+  none: "none"
+} as const;
+export const Role = {
+  backend: "backend",
+  analyst: "analyst",
+  ai: "ai"
+} as const;
 
 const MINUTES_MIN = 5;
 const MINUTES_MAX = 60;
@@ -45,7 +54,12 @@ export const lastTestSchema = z.object({
   output: z.string()
 });
 
-export const tutorNotesSchema = z.array(z.object({ kind: z.enum(TutorBlockKind), text: z.string() }));
+export const tutorNotesSchema = z.array(
+  z.object({
+    kind: z.enum(TutorBlockKind),
+    text: z.string()
+  })
+);
 
 export const progressSchema = z.record(
   z.string(),
@@ -57,7 +71,12 @@ export const progressSchema = z.record(
 
 export const sqlTableSchema = z.object({
   name: z.string(),
-  columns: z.array(z.object({ name: z.string(), type: z.string() }))
+  columns: z.array(
+    z.object({
+      name: z.string(),
+      type: z.string()
+    })
+  )
 });
 
 export const lessonIndexSchema = z.object({

@@ -1,4 +1,7 @@
-export const TutorBlockKind = { HEADING: "heading", PARAGRAPH: "paragraph" } as const;
+export const TutorBlockKind = {
+  HEADING: "heading",
+  PARAGRAPH: "paragraph"
+} as const;
 export type TutorBlockKind = (typeof TutorBlockKind)[keyof typeof TutorBlockKind];
 
 export interface TutorBlock {
@@ -7,7 +10,7 @@ export interface TutorBlock {
 }
 
 export interface TutorTestRun {
-  at: string;
+  ranAt: string;
   isPass: boolean;
 }
 
@@ -20,5 +23,15 @@ export interface TutorView {
 
 export const TUTOR_VIEW_PATH = "/tutor-view";
 
-export const tutorHeading = (text: string): TutorBlock => ({ kind: TutorBlockKind.HEADING, text });
-export const tutorParagraph = (text: string): TutorBlock => ({ kind: TutorBlockKind.PARAGRAPH, text });
+export function tutorHeading(text: string): TutorBlock {
+  return {
+    kind: TutorBlockKind.HEADING,
+    text
+  };
+}
+export function tutorParagraph(text: string): TutorBlock {
+  return {
+    kind: TutorBlockKind.PARAGRAPH,
+    text
+  };
+}

@@ -1,11 +1,11 @@
-import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
-import { setTimeout as sleep } from "node:timers/promises";
 import { ensureParentDir, writeFileDeep } from "#scripts/lib/files.ts";
 import { readLessons } from "#scripts/lib/lessons.ts";
 import { narratedInputPath, narratedPath, removeStaleNarrations } from "#scripts/lib/narration-cache.ts";
 import { renderLesson } from "#scripts/lib/render.ts";
+import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 
 const NARRATE_REPO = "C:/repositories/avi/reverse-engineer-edge-tts";
 const PARALLEL_JOBS = 1;
@@ -13,30 +13,52 @@ const MAX_ATTEMPTS = 4;
 const RETRY_DELAY_MS = 4000;
 const [, , ...filters] = process.argv;
 
-const toNativePath = (path: string) => path.replaceAll("\\", "/");
+function toNativePath(path: string) {
+  return path.replaceAll("\\", "/");
+}
 
-const narrate = ({ input, output }: { input: string; output: string }) =>
-  new Promise<boolean>(done => {
+function narrate({ input, output }: {
+  input: string;
+  output: string;
+}) {
+  return new Promise<boolean>(done => {
     const child = spawn("pnpm", ["--dir", NARRATE_REPO, "narrate", toNativePath(input), "--out", toNativePath(output)], {
       shell: true,
       stdio: ["ignore", "ignore", "inherit"]
     });
     child.on("exit", code => done(code === 0));
   });
+}
 
-const narrateWithRetry = async ({ input, output }: { input: string; output: string }) => {
+async function narrateWithRetry({ input, output }: {
+  input: string;
+  output: string;
+}) {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    if (await narrate({ input, output })) return true;
+    if (await narrate({
+      input,
+      output
+    })) {
+      return true;
+    }
+
     await sleep(RETRY_DELAY_MS * attempt);
   }
   return false;
-};
+}
 
 const pending = readLessons({ isStrict: false })
   .filter(lesson => filters.length === 0 || filters.some(filter => lesson.id.startsWith(filter)))
   .map(lesson => {
     const html = renderLesson(lesson);
-    return { id: lesson.id, html, output: narratedPath({ id: lesson.id, html }) };
+    return {
+      id: lesson.id,
+      html,
+      output: narratedPath({
+        id: lesson.id,
+        html
+      })
+    };
   })
   .filter(({ output }) => !existsSync(output));
 
@@ -45,17 +67,32 @@ console.log(`${pending.length} lessons need narration`);
 const queue = [...pending];
 let failureCount = 0;
 
-const worker = async () => {
+async function worker() {
   for (let job = queue.shift(); job; job = queue.shift()) {
     const input = narratedInputPath(job.id);
-    writeFileDeep({ path: input, content: job.html });
+    writeFileDeep({
+      path: input,
+      content: job.html
+    });
     ensureParentDir(job.output);
-    const isDone = await narrateWithRetry({ input, output: resolve(job.output) });
-    if (!isDone) failureCount++;
-    if (isDone) removeStaleNarrations({ id: job.id, keepPath: job.output });
+    const isDone = await narrateWithRetry({
+      input,
+      output: resolve(job.output)
+    });
+    if (!isDone) {
+      failureCount++;
+    }
+
+    if (isDone) {
+      removeStaleNarrations({
+        id: job.id,
+        keepPath: job.output
+      });
+    }
+
     console.log(`${isDone ? "narrated" : "FAILED  "} ${job.id}`);
   }
-};
+}
 
 await Promise.all(Array.from({ length: PARALLEL_JOBS }, worker));
 console.log(failureCount === 0 ? "Narration done. Run: pnpm build" : `${failureCount} lessons failed to narrate`);

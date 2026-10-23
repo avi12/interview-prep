@@ -660,7 +660,7 @@ async function speakTestRun(run: TutorTestRun) {
 }
 
 function announceNewTestRun(view: TutorView) {
-  const runAt = view.testRun?.at ?? "";
+  const runAt = view.testRun?.ranAt ?? "";
   if (runAt === bridge.announcedTestAt) {
     return;
   }
@@ -718,7 +718,7 @@ async function pollTutorView() {
     bridge.sharedVersion = view.version;
   }
 
-  bridge.announcedTestAt ??= view.testRun?.at ?? "";
+  bridge.announcedTestAt ??= view.testRun?.ranAt ?? "";
   bridge.latestView = view;
   bridge.latestViewAt = Date.now();
 }
