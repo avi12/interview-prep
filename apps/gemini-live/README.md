@@ -52,7 +52,7 @@ The client only pulls a new picture and page content when the shared tab's id ch
 - `src/entrypoints/glic-relay.content.ts` carries the bridge's reports to the worker and the worker's calls back.
 - `src/lib/live.ts` is the worker: session states (opening, briefing, live, paused, reconnecting, failed), the brief, reconnects, and the picture of the VS Code tab (`src/lib/capture.ts`).
 - The brief is typed into Gemini's text box with trusted key events through the `debugger` permission, because the box keeps Send disabled for anything else. It is the only text turn: the source project found that pausing Live for a second one leaves Live silent. Everything after it, including a new lesson, reaches Gemini as page content.
-- Worker state lives in `storage.local` (not `storage.session`), is validated with zod on every read, and is reset when the browser or the extension starts.
+- Worker state lives in `storage.local` (not `storage.session`), is validated with zod on every read, and is reset when the browser starts or the extension is installed or updated (a development build keeps it across its own reloads).
 - A paused Live (for example after a long silence) is resumed in the same conversation. Only Live breaking ("Something went wrong") is retried with Gemini's own Try again, then the Gemini window is reloaded and briefed again, up to three times in ten minutes.
 
 ## Tests

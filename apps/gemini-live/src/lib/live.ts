@@ -501,5 +501,12 @@ export function installLive() {
   });
 
   browser.runtime.onStartup.addListener(resetSession);
-  browser.runtime.onInstalled.addListener(resetSession);
+  browser.runtime.onInstalled.addListener(async ({ reason }) => {
+    const isDevReload = import.meta.env.DEV && reason === browser.runtime.OnInstalledReason.UPDATE;
+    if (isDevReload) {
+      return;
+    }
+
+    await resetSession();
+  });
 }
