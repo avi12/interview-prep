@@ -9,7 +9,7 @@
     "#imports": "./.wxt/types/imports-module.d.ts"
   },
   "scripts": {
-    "dev": "wxt",
+    "dev": "node scripts/dev.ts",
     "build": "wxt build",
     "zip": "wxt zip",
     "compile": "wxt prepare && tsc --noEmit && pnpm svelte:check",
@@ -28,10 +28,12 @@
     "@types/node": "^24.0.0",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@wxt-dev/module-svelte": "^2.0.5",
+    "chokidar": "^5.0.0",
     "svelte": "^5.57.2",
     "svelte-check": "^4.7.7",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0",
+    "web-ext-run": "^0.2.4",
     "wxt": "^0.21.4"
   }
 }

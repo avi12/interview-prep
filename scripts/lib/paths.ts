@@ -21,3 +21,5 @@ export const PATH_FILE = resolve(CURRICULUM_DIR, "path.json");
 export const TRACKS_FILE = resolve(CURRICULUM_DIR, "tracks.json");
 export const ASSETS_DIR = resolve(ROOT, "assets");
 export const KIT_DIR_NAME = "_kit";
+export const SERVER_DATA_DIR = resolve(ROOT, ".vscode-server");
+export const TOKEN_FILE = resolve(SERVER_DATA_DIR, "connection-token");

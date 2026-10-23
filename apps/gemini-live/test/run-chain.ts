@@ -1,4 +1,6 @@
 import { TUTOR_VIEW_PATH } from "../../../scripts/lib/tutor-view.ts";
+import { debugEndpoint } from "../scripts/cdp.ts";
+import { CHROME_FOR_TESTING_MISSING, chromeExecutable } from "../scripts/chrome-for-testing.ts";
 /*
  * Builds the extension for a throwaway VS Code origin, serves a fake VS Code there, starts
  * Chrome for Testing with that build and a fresh profile, and runs livechain.ts against it.
@@ -8,15 +10,9 @@ import { TUTOR_VIEW_PATH } from "../../../scripts/lib/tutor-view.ts";
  * Only the browser this script started is ever stopped, by its pid.
  */
 import { spawn, spawnSync } from "node:child_process";
-import {
-  existsSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync
-} from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { createServer } from "node:http";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { setTimeout as wait } from "node:timers/promises";
 
@@ -30,32 +26,15 @@ const EXTENSION_DIR = resolve(PACKAGE_DIR, OUT_DIR, "chrome-mv3");
 const WINDOW_SIZE = "2000,1200";
 const BROWSER_READY_TRIES = 100;
 const BROWSER_READY_GAP_MS = 200;
-const PUPPETEER_CHROME_DIR = join(homedir(), ".cache", "puppeteer", "chrome");
-
-function chromeExecutable() {
-  if (process.env.CHROME_FOR_TESTING) {
-    return process.env.CHROME_FOR_TESTING;
-  }
-
-  if (!existsSync(PUPPETEER_CHROME_DIR)) {
-    return null;
-  }
-
-  const builds = readdirSync(PUPPETEER_CHROME_DIR)
-    .map(name => join(PUPPETEER_CHROME_DIR, name, "chrome-win64", "chrome.exe"))
-    .filter(path => existsSync(path))
-    .sort();
-  return builds.at(-1) ?? null;
-}
 
 async function isBrowserUp() {
-  const response = await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/version`).catch(() => null);
+  const response = await fetch(`${debugEndpoint(DEBUG_PORT)}/json/version`).catch(() => null);
   return !!response?.ok;
 }
 
 const chrome = chromeExecutable();
 if (!chrome) {
-  console.log("no Chrome for Testing found: set CHROME_FOR_TESTING to its chrome.exe");
+  console.log(CHROME_FOR_TESTING_MISSING);
   process.exit(2);
 }
 

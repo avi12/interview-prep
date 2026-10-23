@@ -1,3 +1,10 @@
+import {
+  type Cdp,
+  type CdpTarget,
+  connect,
+  debugEndpoint,
+  listTargets
+} from "../scripts/cdp.ts";
 import { buildBrief } from "../src/lib/brief.ts";
 import { Language } from "../src/lib/language.ts";
 import { parseSession } from "../src/lib/session-schema.ts";
@@ -5,7 +12,6 @@ import { oneLine } from "../src/lib/text.ts";
 import { TutorAction, tutorActionSelector } from "../src/lib/tutor-action.ts";
 import { parseVscodeTitle } from "../src/lib/vscode-title.ts";
 import { z } from "../src/lib/zod.ts";
-import { type Cdp, connect } from "./cdp.ts";
 /*
  * Gemini Live, the extension's half, in a real browser with the built extension loaded.
  *
@@ -33,14 +39,14 @@ import { type Cdp, connect } from "./cdp.ts";
 import { readFileSync } from "node:fs";
 import { setTimeout as wait } from "node:timers/promises";
 
-const [, , debugPort, vscodeOrigin] = process.argv;
+const [, , debugPort = "", vscodeOrigin] = process.argv;
 if (!debugPort || !vscodeOrigin) {
   console.log("usage: node test/livechain.ts <debug-port> <fake-vscode-origin>");
   process.exit(2);
 }
 
 const EXTENSION_NAME = "Interview Prep: Gemini Live tutor";
-const BASE = `http://127.0.0.1:${debugPort}`;
+const BASE = debugEndpoint(debugPort);
 const GEMINI = "https://gemini.google.com/";
 const GLIC = `${GEMINI}glic`;
 const VSCODE_URL = `${vscodeOrigin}/?folder=%2Finterview-prep`;
@@ -57,13 +63,6 @@ const LIVE_TIMEOUT_FLAG_COUNT = 4;
 const BRIEF_TIMEOUT_MS = 120_000;
 const BOOT_REPORT_MS = 17_000;
 
-const targetSchema = z.object({
-  id: z.string(),
-  type: z.string(),
-  url: z.string(),
-  webSocketDebuggerUrl: z.string()
-});
-type Target = z.infer<typeof targetSchema>;
 const createdTargetSchema = z.object({ targetId: z.string() });
 const sharedTabSchema = z.object({
   title: z.string(),
@@ -83,15 +82,8 @@ const consoleCallSchema = z.object({
   )
 });
 
-async function targets() {
-  const listed = z.array(z.unknown()).catch([]).parse(await (await fetch(`${BASE}/json/list`)).json());
-  return listed.flatMap(item => {
-    const parsed = targetSchema.safeParse(item);
-    return parsed.success ? [parsed.data] : [];
-  });
-}
 async function targetByUrl(prefix: string) {
-  return (await targets()).find(target => target.url.startsWith(prefix));
+  return (await listTargets(debugPort)).find(target => target.url.startsWith(prefix));
 }
 async function isGeminiOpen() {
   return !!(await targetByUrl(GEMINI));
@@ -179,7 +171,7 @@ browserCdp.on(({ method, params }) => {
 });
 
 // ---- the fake VS Code tab and the popup, each in a window of its own ----
-const blank = (await targets()).find(target => target.type === "page" && target.url === "about:blank");
+const blank = (await listTargets(debugPort)).find(target => target.type === "page" && target.url === "about:blank");
 if (!blank) {
   console.log("no about:blank page target, start the browser as the header describes");
   process.exit(1);
@@ -189,7 +181,7 @@ const vscode = await connect(blank.webSocketDebuggerUrl);
 await vscode.send("Page.enable");
 await vscode.send("Runtime.enable");
 
-async function isOurWorker(target: Target) {
+async function isOurWorker(target: CdpTarget) {
   if (target.type !== "service_worker" || !target.url.startsWith("chrome-extension://")) {
     return false;
   }
@@ -201,7 +193,7 @@ async function isOurWorker(target: Target) {
 }
 
 async function findOurWorker() {
-  for (const target of await targets()) {
+  for (const target of await listTargets(debugPort)) {
     if (await isOurWorker(target)) {
       return target;
     }
@@ -240,7 +232,10 @@ const created = createdTargetSchema.parse(
     newWindow: true
   })
 );
-const popupTarget = await until({ get: async () => (await targets()).find(target => target.id === created.targetId) });
+async function findPopupTarget() {
+  return (await listTargets(debugPort)).find(target => target.id === created.targetId);
+}
+const popupTarget = await until({ get: findPopupTarget });
 if (!popupTarget) {
   console.log("the popup page never opened");
   process.exit(1);
@@ -400,7 +395,7 @@ check({
 
 if (!first) {
   console.log("  popup:", await status());
-  for (const target of await targets()) {
+  for (const target of await listTargets(debugPort)) {
     console.log("  target:", target.type, target.url);
   }
   process.exit(1);
