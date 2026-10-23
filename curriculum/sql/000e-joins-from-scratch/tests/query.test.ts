@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { runSeeded } from "#kit/db.ts";
+import { describe, expect, it } from "vitest";
 
 const SCHEMA = `
 CREATE TABLE departments (id int PRIMARY KEY, name text NOT NULL);
@@ -15,7 +15,13 @@ INSERT INTO departments VALUES (10, 'data'), (20, 'ops'), (30, 'legal');
 INSERT INTO employees VALUES
   (5, 'Ari', 20, 4000), (6, 'Bat', NULL, 3000), (7, 'Cal', 10, 6000), (8, 'Dov', NULL, 2000);`;
 
-const run = (seed: string) => runSeeded({ seed, testUrl: import.meta.url, file: "query.sql" });
+function run(seed: string) {
+  return runSeeded({
+    seed,
+    testUrl: import.meta.url,
+    file: "query.sql"
+  });
+}
 
 describe("every employee with their department", () => {
   it("returns the columns employee, department", async () => {
@@ -26,10 +32,22 @@ describe("every employee with their department", () => {
   it("keeps the employee with no department, with department NULL (LEFT JOIN, not INNER)", async () => {
     const { rows } = await run(COMPANY);
     expect(rows).toEqual([
-      { employee: "Dana", department: "engineering" },
-      { employee: "Omer", department: "sales" },
-      { employee: "Ben", department: null },
-      { employee: "Noa", department: "engineering" }
+      {
+        employee: "Dana",
+        department: "engineering"
+      },
+      {
+        employee: "Omer",
+        department: "sales"
+      },
+      {
+        employee: "Ben",
+        department: null
+      },
+      {
+        employee: "Noa",
+        department: "engineering"
+      }
     ]);
   });
 
@@ -41,10 +59,22 @@ describe("every employee with their department", () => {
   it("works on different data too (no hardcoding)", async () => {
     const { rows } = await run(STARTUP);
     expect(rows).toEqual([
-      { employee: "Ari", department: "ops" },
-      { employee: "Bat", department: null },
-      { employee: "Cal", department: "data" },
-      { employee: "Dov", department: null }
+      {
+        employee: "Ari",
+        department: "ops"
+      },
+      {
+        employee: "Bat",
+        department: null
+      },
+      {
+        employee: "Cal",
+        department: "data"
+      },
+      {
+        employee: "Dov",
+        department: null
+      }
     ]);
   });
 });

@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { runSeeded } from "#kit/db.ts";
+import { describe, expect, it } from "vitest";
 
 const SCHEMA = `CREATE TABLE logins (user_id int NOT NULL, logged_in_at timestamp NOT NULL);`;
 
@@ -20,8 +20,15 @@ INSERT INTO logins VALUES
 const NUMERIC_COLUMNS = ["user_id", "days"];
 const DAY_COLUMNS = ["streak_start", "streak_end"];
 
-const run = (seed: string) =>
-  runSeeded({ seed, testUrl: import.meta.url, file: "islands.sql", numericColumns: NUMERIC_COLUMNS, dayColumns: DAY_COLUMNS });
+function run(seed: string) {
+  return runSeeded({
+    seed,
+    testUrl: import.meta.url,
+    file: "islands.sql",
+    numericColumns: NUMERIC_COLUMNS,
+    dayColumns: DAY_COLUMNS
+  });
+}
 
 describe("login streaks of consecutive days", () => {
   it("returns user_id, streak_start, streak_end, days", async () => {
@@ -32,23 +39,78 @@ describe("login streaks of consecutive days", () => {
   it("splits at gaps, counts days not logins, and crosses a month end", async () => {
     const { rows: streaks } = await run(WEEK_OF_LOGINS);
     expect(streaks).toEqual([
-      { user_id: 1, streak_start: "2025-01-01", streak_end: "2025-01-03", days: 3 },
-      { user_id: 1, streak_start: "2025-01-05", streak_end: "2025-01-06", days: 2 },
-      { user_id: 1, streak_start: "2025-01-09", streak_end: "2025-01-09", days: 1 },
-      { user_id: 2, streak_start: "2025-01-02", streak_end: "2025-01-06", days: 5 },
-      { user_id: 3, streak_start: "2025-01-30", streak_end: "2025-02-02", days: 4 }
+      {
+        user_id: 1,
+        streak_start: "2025-01-01",
+        streak_end: "2025-01-03",
+        days: 3
+      },
+      {
+        user_id: 1,
+        streak_start: "2025-01-05",
+        streak_end: "2025-01-06",
+        days: 2
+      },
+      {
+        user_id: 1,
+        streak_start: "2025-01-09",
+        streak_end: "2025-01-09",
+        days: 1
+      },
+      {
+        user_id: 2,
+        streak_start: "2025-01-02",
+        streak_end: "2025-01-06",
+        days: 5
+      },
+      {
+        user_id: 3,
+        streak_start: "2025-01-30",
+        streak_end: "2025-02-02",
+        days: 4
+      }
     ]);
   });
 
   it("uses calendar days, so logins two minutes apart across midnight are two days (no hardcoding)", async () => {
     const { rows: streaks } = await run(AROUND_MIDNIGHT);
     expect(streaks).toEqual([
-      { user_id: 7, streak_start: "2025-03-01", streak_end: "2025-03-01", days: 1 },
-      { user_id: 8, streak_start: "2025-03-01", streak_end: "2025-03-01", days: 1 },
-      { user_id: 8, streak_start: "2025-03-03", streak_end: "2025-03-03", days: 1 },
-      { user_id: 8, streak_start: "2025-03-05", streak_end: "2025-03-05", days: 1 },
-      { user_id: 9, streak_start: "2025-03-10", streak_end: "2025-03-11", days: 2 },
-      { user_id: 9, streak_start: "2025-03-13", streak_end: "2025-03-15", days: 3 }
+      {
+        user_id: 7,
+        streak_start: "2025-03-01",
+        streak_end: "2025-03-01",
+        days: 1
+      },
+      {
+        user_id: 8,
+        streak_start: "2025-03-01",
+        streak_end: "2025-03-01",
+        days: 1
+      },
+      {
+        user_id: 8,
+        streak_start: "2025-03-03",
+        streak_end: "2025-03-03",
+        days: 1
+      },
+      {
+        user_id: 8,
+        streak_start: "2025-03-05",
+        streak_end: "2025-03-05",
+        days: 1
+      },
+      {
+        user_id: 9,
+        streak_start: "2025-03-10",
+        streak_end: "2025-03-11",
+        days: 2
+      },
+      {
+        user_id: 9,
+        streak_start: "2025-03-13",
+        streak_end: "2025-03-15",
+        days: 3
+      }
     ]);
   });
 });

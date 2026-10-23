@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { runSeeded } from "#kit/db.ts";
+import { describe, expect, it } from "vitest";
 
 const SCHEMA = `CREATE TABLE employees (id int PRIMARY KEY, name text NOT NULL, department text NOT NULL, salary int NOT NULL);`;
 
@@ -13,8 +13,14 @@ INSERT INTO employees VALUES
   (1, 'Ari', 'data', 5000), (2, 'Bat', 'data', 5000), (3, 'Cal', 'data', 3000),
   (4, 'Eli', 'ops', 2000), (5, 'Fay', 'ops', 1000), (6, 'Hal', 'hr', 700);`;
 
-const run = (seed: string) =>
-  runSeeded({ seed, testUrl: import.meta.url, file: "query.sql", numericColumns: ["headcount", "average_salary"] });
+function run(seed: string) {
+  return runSeeded({
+    seed,
+    testUrl: import.meta.url,
+    file: "query.sql",
+    numericColumns: ["headcount", "average_salary"]
+  });
+}
 
 describe("departments with at least two people", () => {
   it("returns the columns department, headcount, average_salary", async () => {
@@ -25,16 +31,32 @@ describe("departments with at least two people", () => {
   it("returns one row per department and drops the department of one", async () => {
     const { rows } = await run(COMPANY);
     expect(rows).toEqual([
-      { department: "engineering", headcount: 3, average_salary: 8000 },
-      { department: "sales", headcount: 2, average_salary: 5500 }
+      {
+        department: "engineering",
+        headcount: 3,
+        average_salary: 8000
+      },
+      {
+        department: "sales",
+        headcount: 2,
+        average_salary: 5500
+      }
     ]);
   });
 
   it("works on different data too (no hardcoding)", async () => {
     const { rows } = await run(STARTUP);
     expect(rows).toEqual([
-      { department: "data", headcount: 3, average_salary: 4333 },
-      { department: "ops", headcount: 2, average_salary: 1500 }
+      {
+        department: "data",
+        headcount: 3,
+        average_salary: 4333
+      },
+      {
+        department: "ops",
+        headcount: 2,
+        average_salary: 1500
+      }
     ]);
   });
 });
