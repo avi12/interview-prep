@@ -17,7 +17,10 @@ const MIN_VALUE = 1;
 const MAX_VALUE = 3999;
 
 export function toRoman(value: number) {
-  if (!Number.isInteger(value) || value < MIN_VALUE || value > MAX_VALUE) throw new RangeError(`value must be a whole number from ${MIN_VALUE} to ${MAX_VALUE}`);
+  if (!Number.isInteger(value) || value < MIN_VALUE || value > MAX_VALUE) {
+    throw new RangeError(`value must be a whole number from ${MIN_VALUE} to ${MAX_VALUE}`);
+  }
+
   let remaining = value;
   let result = "";
   for (const [size, numeral] of NUMERALS) {

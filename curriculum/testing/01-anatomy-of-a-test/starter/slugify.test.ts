@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { slugify } from "./slugify.ts";
+import { describe, expect, it } from "vitest";
 
 describe("slugify", () => {
   it("joins two words with a hyphen", () => {

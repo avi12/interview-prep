@@ -1,5 +1,5 @@
-import { defineMutationCheck } from "#kit/mutation.ts";
 import { SLUGIFY_MUTANTS } from "./fixtures/slugifyMutants.ts";
+import { defineMutationCheck } from "#kit/mutation.ts";
 
 const MIN_TESTS = 6;
 const MIN_TITLE_WORDS = 3;

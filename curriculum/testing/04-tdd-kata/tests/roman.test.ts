@@ -1,24 +1,35 @@
-import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import { describe, expect, it } from "vitest";
 
 type Module = { toRoman: (value: number) => string };
 
-const { toRoman } = await loadImpl<Module>({ testUrl: import.meta.url, file: "roman.ts" });
+const { toRoman } = await loadImpl<Module>({
+  testUrl: import.meta.url,
+  file: "roman.ts"
+});
 
 const MIN_VALUE = 1;
 const MAX_VALUE = 3999;
 const SHAPE = /^(?=.)M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/;
-const VALUES: Record<string, number> = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+const VALUES: Record<string, number> = {
+  I: 1,
+  V: 5,
+  X: 10,
+  L: 50,
+  C: 100,
+  D: 500,
+  M: 1000
+};
 const MAX_REPORTED = 5;
 
-const toNumber = (numeral: string) => {
+function toNumber(numeral: string) {
   let total = 0;
-  for (const [index, letter] of [...numeral].entries()) {
+  for (const [index, letter] of Array.from(numeral).entries()) {
     const next = VALUES[numeral[index + 1]] ?? 0;
     total += VALUES[letter] < next ? -VALUES[letter] : VALUES[letter];
   }
   return total;
-};
+}
 
 describe("stage 1 - repeat the one", () => {
   it.each([
@@ -80,14 +91,22 @@ describe("stage 5 - hundreds and thousands", () => {
 describe("stage 6 - the rule works for every number, not only the examples", () => {
   it("gives a correctly shaped numeral for every number from 1 to 3999", () => {
     const misshapen: number[] = [];
-    for (let value = MIN_VALUE; value <= MAX_VALUE; value++) if (!SHAPE.test(toRoman(value))) misshapen.push(value);
+    for (let value = MIN_VALUE; value <= MAX_VALUE; value++) {
+      if (!SHAPE.test(toRoman(value))) {
+        misshapen.push(value);
+      }
+    }
 
     expect(misshapen.slice(0, MAX_REPORTED)).toEqual([]);
   });
 
   it("reads back as the same number for every number from 1 to 3999", () => {
     const wrong: number[] = [];
-    for (let value = MIN_VALUE; value <= MAX_VALUE; value++) if (toNumber(toRoman(value)) !== value) wrong.push(value);
+    for (let value = MIN_VALUE; value <= MAX_VALUE; value++) {
+      if (toNumber(toRoman(value)) !== value) {
+        wrong.push(value);
+      }
+    }
 
     expect(wrong.slice(0, MAX_REPORTED)).toEqual([]);
   });

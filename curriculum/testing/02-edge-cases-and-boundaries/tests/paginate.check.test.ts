@@ -1,5 +1,5 @@
-import { defineMutationCheck } from "#kit/mutation.ts";
 import { PAGINATE_MUTANTS } from "./fixtures/paginateMutants.ts";
+import { defineMutationCheck } from "#kit/mutation.ts";
 
 const MIN_TESTS = 8;
 const MIN_TITLE_WORDS = 3;

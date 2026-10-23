@@ -1,15 +1,17 @@
 import type { User, UserRepository } from "./registerUser.ts";
 
-const copyOf = (user: User) => ({ ...user });
+function copyOf(user: User) {
+  return { ...user };
+}
 
 export function createInMemoryUserRepository(): UserRepository {
   const usersById = new Map<string, User>();
   return {
-    findByEmail: async email => {
+    async findByEmail(email) {
       const found = [...usersById.values()].find(user => user.email === email);
       return found && copyOf(found);
     },
-    save: async user => {
+    async save(user) {
       usersById.set(user.id, copyOf(user));
     },
     list: async () => [...usersById.values()].map(copyOf)

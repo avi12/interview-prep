@@ -1,3 +1,3 @@
-export function toRoman(value: number) {
+export function toRoman(_value: number) {
   return "";
 }
