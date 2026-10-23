@@ -1,11 +1,12 @@
-import { serverOrigin, tutorViewUrl } from "../../scripts/lib/server.ts";
+import { tutorViewUrl } from "../../scripts/lib/server.ts";
 import { SCRIPTS_ALIAS } from "./aliases.ts";
 import { EXTENSION_KEY } from "./extension-identity.ts";
 import { PROMPT_CLIP_GLOB } from "./src/lib/prompt-clip.ts";
+import { resolveVscodeOrigin } from "./vscode-origin.ts";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { defineConfig } from "wxt";
 
-const vscodeOrigin = process.env.VSCODE_ORIGIN ?? serverOrigin();
+const vscodeOrigin = resolveVscodeOrigin();
 process.env.WXT_VSCODE_ORIGIN = vscodeOrigin;
 process.env.WXT_TUTOR_VIEW_URL = process.env.TUTOR_VIEW_URL ?? tutorViewUrl();
 
