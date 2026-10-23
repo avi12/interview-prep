@@ -1,4 +1,4 @@
-export const sequentialIds = (prefix: string) => {
+export function sequentialIds(prefix: string) {
   let count = 0;
   return () => `${prefix}-${++count}`;
-};
+}

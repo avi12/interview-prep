@@ -1,6 +1,12 @@
-import { readFileSync } from "node:fs";
-import { PGlite } from "@electric-sql/pglite";
 import { implPath } from "./impl.ts";
+import { PGlite } from "@electric-sql/pglite";
+import { readFileSync } from "node:fs";
+import { z } from "zod";
+
+const postgresErrorSchema = z.object({
+  code: z.string().optional(),
+  message: z.string()
+});
 
 export const SqlState = {
   notNull: "23502",
@@ -10,18 +16,40 @@ export const SqlState = {
   check: "23514"
 } as const;
 
-export const openSchemaDb = async ({ testUrl, file }: { testUrl: string; file: string }) => {
+export async function openSchemaDb({ testUrl, file }: {
+  testUrl: string;
+  file: string;
+}) {
   const db = new PGlite();
-  await db.exec(readFileSync(implPath({ testUrl, file }), "utf8"));
+  await db.exec(
+    readFileSync(
+      implPath({
+        testUrl,
+        file
+      }), "utf8"
+    )
+  );
   return db;
-};
+}
 
-export const tryStatement = async ({ db, sql, params = [] }: { db: PGlite; sql: string; params?: unknown[] }) => {
+export async function tryStatement({ db, sql, params = [] }: {
+  db: PGlite;
+  sql: string;
+  params?: unknown[];
+}) {
   try {
     await db.query(sql, params);
-    return { isOk: true, code: null, message: "" };
+    return {
+      isOk: true,
+      code: null,
+      message: ""
+    };
   } catch (error) {
-    const { code, message } = error as { code?: string; message: string };
-    return { isOk: false, code: code ?? null, message };
+    const { code, message } = postgresErrorSchema.parse(error);
+    return {
+      isOk: false,
+      code: code ?? null,
+      message
+    };
   }
-};
+}

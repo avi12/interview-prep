@@ -4,7 +4,14 @@ type NodeCrypto = typeof import("node:crypto");
 
 export type GetRandomBytes = (size: number) => Buffer;
 
-export const withSpiedTimingSafeEqual = (actual: NodeCrypto) => {
+export function withSpiedTimingSafeEqual(actual: NodeCrypto) {
   const timingSafeEqual = vi.fn(actual.timingSafeEqual);
-  return { ...actual, timingSafeEqual, default: { ...actual, timingSafeEqual } };
-};
+  return {
+    ...actual,
+    timingSafeEqual,
+    default: {
+      ...actual,
+      timingSafeEqual
+    }
+  };
+}
