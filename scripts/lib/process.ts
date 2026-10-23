@@ -1,3 +1,4 @@
+import { escapeRegex } from "#scripts/lib/regex.ts";
 import { spawn, spawnSync } from "node:child_process";
 
 const RUN_TIMEOUT_MS = 90_000;
@@ -17,10 +18,6 @@ export function killTree(pid: number | undefined) {
   }
 
   process.kill(-pid, "SIGKILL");
-}
-
-function escapeRegex(text: string) {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 function listPidsMatching(needles: string[]) {
