@@ -3,7 +3,6 @@
   import { type Language, LANGUAGE_LABEL, languageSchema } from "@/lib/language.ts";
   import { isRunning } from "@/lib/live-state.ts";
   import { sessionText, sessionTone } from "@/lib/live-status.ts";
-  import { hasMicKey, MIC_KEY_LABEL, requestMicKey } from "@/lib/mic-key.ts";
   import { parseSession, type Session } from "@/lib/session-schema.ts";
   import { sessionItem } from "@/lib/session.ts";
   import { loadLanguage, saveLanguage } from "@/lib/settings.ts";
@@ -14,14 +13,10 @@
   const IDLE = "idle";
   const READY_TEXT = "Ready when you are";
   const NEEDS_VSCODE_TEXT = `Open VS Code at ${VSCODE_ORIGIN} to begin`;
-  const CONNECT_MIC_KEY_TEXT = `Connect the ${MIC_KEY_LABEL} key`;
-  const MIC_KEY_CONNECTED_TEXT = `${MIC_KEY_LABEL} toggles your mic`;
-  const MIC_KEY_HINT_TEXT = "Pick the ROCCAT keyboard in the list Chrome shows";
   const TAB_EVENTS = [browser.tabs.onCreated, browser.tabs.onRemoved, browser.tabs.onUpdated];
 
   let session = $state<Session | null>(null);
   let isVscodeOpen = $state(false);
-  let isMicKeyConnected = $state(false);
   let language = $state<Language>();
   let note = $state("");
 
@@ -35,7 +30,6 @@
 
     return isVscodeOpen ? READY_TEXT : NEEDS_VSCODE_TEXT;
   });
-  const micKeyText = $derived(isMicKeyConnected ? MIC_KEY_CONNECTED_TEXT : CONNECT_MIC_KEY_TEXT);
 
   async function refreshVscode() {
     isVscodeOpen = !!(await findVscodeTab());
@@ -54,14 +48,6 @@
   async function stop() {
     note = "";
     await extensionMessenger.sendMessage(ExtensionMessage.LIVE_STOP);
-  }
-
-  async function connectMicKey() {
-    isMicKeyConnected = await requestMicKey().catch(() => false);
-
-    if (isMicKeyConnected) {
-      await extensionMessenger.sendMessage(ExtensionMessage.MIC_KEY_GRANTED);
-    }
   }
 
   function chooseLanguage(value: string) {
@@ -84,9 +70,6 @@
     });
     void loadLanguage().then(loaded => {
       language = loaded;
-    });
-    void hasMicKey().then(isConnected => {
-      isMicKeyConnected = isConnected;
     });
     void refreshVscode();
     return () => {
@@ -116,13 +99,6 @@
     </select>
     <small class="sub">Applies to the next session</small>
   </label>
-  <div class="field">
-    <span class="sub">Mic key</span>
-    <button id="mic-key" class="btn" disabled={isMicKeyConnected} onclick={connectMicKey} type="button">{micKeyText}</button>
-    {#if !isMicKeyConnected}
-      <small class="sub">{MIC_KEY_HINT_TEXT}</small>
-    {/if}
-  </div>
   <footer>
     <button id="start" class="btn" data-variant="primary" disabled={!isStartable} onclick={start}>Start session</button>
     {#if session}

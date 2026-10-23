@@ -6,7 +6,6 @@ export const ExtensionMessage = {
   LIVE_START: "liveStart",
   LIVE_STOP: "liveStop",
   MIC_TOGGLE: "micToggle",
-  MIC_KEY_GRANTED: "micKeyGranted",
   GLIC_HELLO: "glicHello",
   GLIC_CAPTURE: "glicCapture",
   GLIC_RETITLE: "glicRetitle",
@@ -37,7 +36,6 @@ interface ExtensionProtocolMap extends GlicCommandMap, GlicReportMap {
   [ExtensionMessage.LIVE_START](): StartResult;
   [ExtensionMessage.LIVE_STOP](): void;
   [ExtensionMessage.MIC_TOGGLE](): void;
-  [ExtensionMessage.MIC_KEY_GRANTED](): void;
   [ExtensionMessage.GLIC_HELLO](): GlicHello;
   [ExtensionMessage.GLIC_CAPTURE](): Frame | null;
   [ExtensionMessage.GLIC_RETITLE](data: Activation): void;
