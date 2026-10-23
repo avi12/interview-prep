@@ -68,27 +68,23 @@
   .ip-tutor-panel {
     --tone: var(--vscode-disabledForeground, #808080);
 
-    position: fixed;
-    bottom: 0;
-    left: 50%;
-    z-index: 2147483000;
+    position: relative;
+    z-index: 1;
     display: flex;
-    gap: 6px;
+    flex: none;
+    gap: 8px;
     align-items: center;
-    max-width: min(480px, 40vw);
-    height: 22px;
-    padding-block: 0;
-    padding-inline: 8px 2px;
-    background: var(--vscode-statusBar-background, canvas);
-    color: var(--vscode-statusBar-foreground, canvastext);
+    max-width: min(520px, 40vw);
+    height: 26px;
+    margin-inline: 8px;
+    color: var(--vscode-titleBar-activeForeground, canvastext);
     font: 12px var(--vscode-font-family, system-ui);
-    translate: -50% 0;
 
     &::before {
       content: "";
       flex: none;
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: var(--tone);
     }
@@ -104,6 +100,13 @@
     &[data-tone="danger"] {
       --tone: var(--vscode-editorError-foreground, #f14c4c);
     }
+
+    &:global(:is(body > *)) {
+      position: fixed;
+      top: 8px;
+      right: 8px;
+      z-index: 2147483000;
+    }
   }
 
   .ip-tutor-status {
@@ -115,16 +118,26 @@
 
   .ip-tutor {
     flex: none;
-    height: 18px;
-    padding: 0 8px;
-    border: 0;
-    background: var(--vscode-statusBarItem-prominentBackground, var(--vscode-button-background, highlight));
-    color: var(--vscode-statusBarItem-prominentForeground, var(--vscode-button-foreground, highlighttext));
-    font: inherit;
+    height: 24px;
+    padding: 0 12px;
+    border: 1px solid var(--vscode-button-border, transparent);
+    border-radius: 2px;
+    background: var(--vscode-button-background, highlight);
+    color: var(--vscode-button-foreground, highlighttext);
+    font: 600 12px var(--vscode-font-family, system-ui);
     cursor: pointer;
 
     &:hover {
-      background: var(--vscode-statusBarItem-prominentHoverBackground, var(--vscode-button-hoverBackground, highlight));
+      background: var(--vscode-button-hoverBackground, highlight);
+    }
+  }
+
+  .ip-tutor-mic {
+    background: var(--vscode-button-secondaryBackground, buttonface);
+    color: var(--vscode-button-secondaryForeground, buttontext);
+
+    &:hover {
+      background: var(--vscode-button-secondaryHoverBackground, buttonface);
     }
   }
 </style>

@@ -5,22 +5,22 @@ import { VSCODE_ORIGIN } from "@/lib/vscode.ts";
 import { defineContentScript } from "#imports";
 import { mount } from "svelte";
 
-const WORKBENCH = ".monaco-workbench";
-const WORKBENCH_WAIT_MS = 10_000;
+const TITLE_BAR_RIGHT = ".titlebar-right";
+const TITLE_BAR_WAIT_MS = 10_000;
 
-function findWorkbench() {
+function waitForElement(selector: string) {
   return new Promise<Element | null>(resolve => {
-    const found = document.querySelector(WORKBENCH);
+    const found = document.querySelector(selector);
     if (found) {
       resolve(found);
       return;
     }
 
     const observer = new MutationObserver(() => {
-      const workbench = document.querySelector(WORKBENCH);
-      if (workbench) {
+      const element = document.querySelector(selector);
+      if (element) {
         observer.disconnect();
-        resolve(workbench);
+        resolve(element);
       }
     });
     observer.observe(document.documentElement, {
@@ -30,7 +30,7 @@ function findWorkbench() {
     setTimeout(() => {
       observer.disconnect();
       resolve(null);
-    }, WORKBENCH_WAIT_MS);
+    }, TITLE_BAR_WAIT_MS);
   });
 }
 
@@ -40,7 +40,10 @@ export default defineContentScript({
   cssInjectionMode: "manifest",
   async main() {
     extensionMessenger.onMessage(ExtensionMessage.VSCODE_FOCUS_RECT, focusRect);
-    const target = await findWorkbench() ?? document.body;
-    mount(TutorChip, { target });
+    const titleBar = await waitForElement(TITLE_BAR_RIGHT);
+    mount(TutorChip, {
+      target: titleBar ?? document.body,
+      anchor: titleBar?.firstChild ?? undefined
+    });
   }
 });
