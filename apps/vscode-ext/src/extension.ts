@@ -29,8 +29,12 @@ function activateIn({ context, root }: {
   context: vscode.ExtensionContext;
   root: string;
 }) {
-  const tree = new LessonTree(root);
   let openLessonId: string | undefined;
+  const tree = new LessonTree({
+    root,
+    currentLessonId: () => openLessonId
+  });
+  const treeView = vscode.window.createTreeView("interviewPrep.lessons", { treeDataProvider: tree });
 
   async function openExercise(id: string) {
     const files = await ensureExerciseFiles({
@@ -161,7 +165,22 @@ function activateIn({ context, root }: {
     await vscode.window.tabGroups.close(tabs.map(({ tab }) => tab));
   }
 
-  async function openLesson(id: string) {
+  async function revealCurrentLesson() {
+    const node = openLessonId ? tree.lessonNode(openLessonId) : undefined;
+    if (!node) {
+      return;
+    }
+
+    await treeView.reveal(node, {
+      select: true,
+      focus: false
+    });
+  }
+
+  async function showLessonWorkspace({ id, isScrolledToTop }: {
+    id: string;
+    isScrolledToTop: boolean;
+  }) {
     const lesson = findLesson({
       root,
       id
@@ -169,11 +188,12 @@ function activateIn({ context, root }: {
     if (!lesson) {
       return showLessonPanel({
         id,
-        isScrolledToTop: true
+        isScrolledToTop
       });
     }
 
     openLessonId = id;
+    tree.refresh();
 
     if (lesson.hasExercise) {
       await openExercise(id);
@@ -182,7 +202,26 @@ function activateIn({ context, root }: {
     await closeOtherLessonTabs(id);
     showLessonPanel({
       id,
+      isScrolledToTop
+    });
+    await revealCurrentLesson();
+  }
+
+  function openLesson(id: string) {
+    return showLessonWorkspace({
+      id,
       isScrolledToTop: true
+    });
+  }
+
+  function goToCurrentLesson() {
+    if (!openLessonId) {
+      return openNextLesson();
+    }
+
+    return showLessonWorkspace({
+      id: openLessonId,
+      isScrolledToTop: false
     });
   }
 
@@ -255,11 +294,12 @@ function activateIn({ context, root }: {
   }
 
   context.subscriptions.push(
-    vscode.window.createTreeView("interviewPrep.lessons", { treeDataProvider: tree }),
+    treeView,
     registerSqlCompletion(sqlTablesOf),
     registerSqlHighlight(sqlTablesOf),
     vscode.commands.registerCommand(Command.openLesson, openLesson),
     vscode.commands.registerCommand(Command.nextLesson, openNextLesson),
+    vscode.commands.registerCommand(Command.goToCurrentLesson, goToCurrentLesson),
     vscode.commands.registerCommand(Command.chooseRole, () => chooseRole(root)),
     vscode.commands.registerCommand(Command.runTests, (uri?: vscode.Uri) => runTests(
       (uri && lessonIdOfFile({

@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 export const Command = {
   openLesson: "interviewPrep.openLesson",
   nextLesson: "interviewPrep.nextLesson",
+  goToCurrentLesson: "interviewPrep.goToCurrentLesson",
   runTests: "interviewPrep.runTests",
   resetExercise: "interviewPrep.resetExercise",
   markDone: "interviewPrep.markDone",
@@ -12,6 +13,8 @@ export const Command = {
   chooseRole: "interviewPrep.chooseRole",
   refresh: "interviewPrep.refresh"
 } as const;
+
+const CURRENT_LESSON_NOTE = "current";
 
 const NodeKind = {
   track: "track",
@@ -46,9 +49,14 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
   readonly onDidChangeTreeData = this.changeEmitter.event;
 
   private readonly root: string;
+  private readonly currentLessonId: () => string | undefined;
 
-  constructor(root: string) {
+  constructor({ root, currentLessonId }: {
+    root: string;
+    currentLessonId: () => string | undefined;
+  }) {
     this.root = root;
+    this.currentLessonId = currentLessonId;
   }
 
   refresh() {
@@ -73,6 +81,26 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
       kind: NodeKind.lesson,
       id
     }));
+  }
+
+  getParent({ kind, id }: Node) {
+    if (kind === NodeKind.track) {
+      return undefined;
+    }
+
+    const track = readCourse(this.root).lessons.find(lesson => lesson.id === id)?.track;
+    return track ? {
+      kind: NodeKind.track,
+      id: track
+    } : undefined;
+  }
+
+  lessonNode(id: string) {
+    const isListed = readCourse(this.root).lessons.some(lesson => lesson.id === id);
+    return isListed ? {
+      kind: NodeKind.lesson,
+      id
+    } : undefined;
   }
 
   getTreeItem({ kind, id }: Node) {
@@ -121,13 +149,21 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
       order,
       progress
     });
-    const item = new vscode.TreeItem(lesson?.title ?? id, vscode.TreeItemCollapsibleState.None);
+    const isCurrent = id === this.currentLessonId();
+    const title = lesson?.title ?? id;
+    const label = isCurrent ? {
+      label: title,
+      highlights: [[0, title.length] satisfies [number, number]]
+    } : title;
+    const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
+    item.id = id;
     item.iconPath = new vscode.ThemeIcon(lessonIcon({
       isDone,
       isNext,
       hasExercise: !!lesson?.hasExercise
     }));
-    item.description = isNext ? "next" : `${lesson?.minutes ?? "?"} min`;
+    const progressNote = isNext ? "next" : `${lesson?.minutes ?? "?"} min`;
+    item.description = isCurrent ? `${CURRENT_LESSON_NOTE} · ${progressNote}` : progressNote;
     item.command = {
       command: Command.openLesson,
       title: "Open lesson",

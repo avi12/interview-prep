@@ -38,6 +38,12 @@
         "icon": "$(arrow-right)"
       },
       {
+        "command": "interviewPrep.goToCurrentLesson",
+        "title": "Go to Current Lesson",
+        "category": "Interview Prep",
+        "icon": "$(target)"
+      },
+      {
         "command": "interviewPrep.runTests",
         "title": "Run My Tests",
         "category": "Interview Prep",
@@ -81,19 +87,24 @@
           "group": "navigation@1"
         },
         {
-          "command": "interviewPrep.askClaude",
+          "command": "interviewPrep.goToCurrentLesson",
           "when": "view == interviewPrep.lessons",
           "group": "navigation@2"
         },
         {
-          "command": "interviewPrep.chooseRole",
+          "command": "interviewPrep.askClaude",
           "when": "view == interviewPrep.lessons",
           "group": "navigation@3"
         },
         {
-          "command": "interviewPrep.refresh",
+          "command": "interviewPrep.chooseRole",
           "when": "view == interviewPrep.lessons",
           "group": "navigation@4"
+        },
+        {
+          "command": "interviewPrep.refresh",
+          "when": "view == interviewPrep.lessons",
+          "group": "navigation@5"
         }
       ],
       "editor/title": [
