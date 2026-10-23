@@ -5,7 +5,7 @@
   "publisher": "avi12",
   "version": "0.1.0",
   "private": true,
-  "license": "GPL-3.0-or-later",
+  "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.90.0"
   },

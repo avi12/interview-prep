@@ -1,0 +1,23 @@
+Interview Prep
+Copyright (c) 2026 Avi (https://avi12.com)
+
+This product includes software and course material developed by
+Avi (https://avi12.com).
+
+Licensed under the Apache License, Version 2.0. Any distribution of this
+software or of a derivative work, including a fork, must keep this NOTICE
+file and carry the attribution above: in the accompanying documentation
+(such as the README), and in any user-facing "about", "credits" or
+third-party-notices display the distribution provides.
+
+------------------------------------------------------------------------------
+Third-party material
+
+vendor/edge-tts-as-extension is a git submodule pointing to a separate
+project by the same author, licensed under the Apache License, Version 2.0,
+with its own NOTICE file.
+
+Recorded narration is synthesized with Microsoft Edge's Read Aloud voices.
+This project is not affiliated with, endorsed by, or sponsored by Microsoft
+or Google. "Microsoft", "Edge", "Google" and "Gemini" are their owners' marks,
+used here only to say what the project works with.

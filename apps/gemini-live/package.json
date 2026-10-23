@@ -4,7 +4,7 @@
   "type": "module",
   "version": "0.1.0",
   "description": "Chrome extension: a Gemini Live voice tutor that watches the learner's VS Code tab",
-  "license": "GPL-3.0-or-later",
+  "license": "Apache-2.0",
   "imports": {
     "#imports": "./.wxt/types/imports-module.d.ts"
   },

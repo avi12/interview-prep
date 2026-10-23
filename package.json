@@ -1,6 +1,7 @@
 {
   "name": "interview-prep",
   "private": true,
+  "license": "Apache-2.0",
   "type": "module",
   "description": "Hands-on interview prep: lessons, exercises and a VS Code in the browser trainer",
   "packageManager": "pnpm@11.13.1",
