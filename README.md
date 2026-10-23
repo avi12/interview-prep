@@ -36,7 +36,6 @@ Every narrated card has a play button. Parts of each diagram light up as the voi
 | `curriculum/AUTHORING.md` | how to write a lesson (enforced by `pnpm verify`) |
 | `work/` | your copies of the exercises (git-ignored) |
 | `.progress/` | what you passed (git-ignored) |
-| `research/` | the job-posting research behind the order |
 | `scripts/` | CLI (`pnpm lesson`), build, narrate, verify, start; `scripts/lib` holds the shared helpers |
 | `apps/vscode-ext/` | the VS Code extension |
 | `apps/gemini-live/` | the Gemini Live bridge |
@@ -57,4 +56,4 @@ pnpm build                 # lessons -> dist/
 - Every exercise ships a failing starter and a passing solution, checked by `pnpm verify`, so a green test means something
 - SQL runs on real Postgres in-process (PGlite), AI exercises use a scripted fake model, so nothing needs a key or a network
 
-Order and priorities come from about 270 job postings (see `research/`): SQL first, then tests and APIs, then your branch. Junior postings ask for less than senior ones on every item, and Israeli junior loops mean a take-home plus two to three technical rounds with easy-to-medium LeetCode.
+The default order puts SQL first, then tests and APIs, then each role's branch. Change it in `curriculum/path.json`.

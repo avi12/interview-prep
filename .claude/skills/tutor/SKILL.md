@@ -39,7 +39,7 @@ Read their file, run the tests, list at most three findings ranked by importance
 
 ## Mock interview mode: "mock <backend|analyst|ai>"
 
-Run a 30 minute loop from `research/` (read `research/07-israel-market.md` and the role's research file for the real format):
+Run a 30 minute loop (read `curriculum/behavioral/01-the-interview-loop/lesson.md` for the real format):
 1. A two-minute intro ("tell me about yourself")
 2. One coding question at the right level (easy to medium), cold: they restate, give examples, state brute force, optimize, code, test, all aloud
 3. One design or case question sized for a junior

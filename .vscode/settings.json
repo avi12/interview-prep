@@ -23,7 +23,6 @@
     "curriculum": true,
     "dist": true,
     "node_modules": true,
-    "research": true,
     "scripts": true,
     ".gitattributes": true,
     ".gitignore": true,
