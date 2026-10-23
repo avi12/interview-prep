@@ -7,3 +7,4 @@ work/**
 .vscode-server/**
 .fallow/**
 apps/vscode-ext/dist/**
+**/*.min.js

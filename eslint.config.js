@@ -273,7 +273,8 @@ export default [
     "work/",
     ".vscode-server/",
     ".fallow/",
-    "apps/vscode-ext/dist/"
+    "apps/vscode-ext/dist/",
+    "**/*.min.js"
   ]),
   {
     files: ["**/*.{ts,js,mjs}"],
