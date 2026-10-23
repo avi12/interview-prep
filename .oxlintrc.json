@@ -157,6 +157,34 @@
           }
         ]
       }
+    },
+    {
+      "files": [
+        "scripts/**",
+        "apps/**",
+        "curriculum/_kit/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "zod",
+                "message": "import z from scripts/lib/zod.ts - it turns off zod's JIT before the first schema is built"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "scripts/lib/zod.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
     }
   ]
 }

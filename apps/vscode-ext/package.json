@@ -148,9 +148,6 @@
     "@vscode/vsce": "^3.6.0",
     "esbuild": "^0.25.0"
   },
-  "dependencies": {
-    "zod": "^4.0.0"
-  },
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": true

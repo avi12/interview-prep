@@ -1,5 +1,6 @@
 import { implPath } from "./impl.ts";
 import { QUERY_RESULT_ENV } from "#scripts/lib/query-result.ts";
+import { z } from "#scripts/lib/zod.ts";
 import { spawn } from "node:child_process";
 import {
   cpSync,
@@ -15,7 +16,6 @@ import { rm } from "node:fs/promises";
 import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
-import { z } from "zod";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const VITEST_ENTRY = resolve(ROOT, "node_modules", "vitest", "vitest.mjs");

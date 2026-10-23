@@ -1,5 +1,5 @@
 import type { progressSchema } from "#scripts/lib/schema.ts";
-import type { z } from "zod";
+import type { z } from "#scripts/lib/zod.ts";
 
 type Progress = z.infer<typeof progressSchema>;
 

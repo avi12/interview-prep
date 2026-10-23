@@ -14,11 +14,11 @@ import {
   Role,
   tracksSchema
 } from "#scripts/lib/schema.ts";
+import { z } from "#scripts/lib/zod.ts";
 import { marked, type Token, type Tokens } from "marked";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
-import { z } from "zod";
 
 const FRONTMATTER_PATTERN = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
 const CARD_HEADING_DEPTH = 2;
