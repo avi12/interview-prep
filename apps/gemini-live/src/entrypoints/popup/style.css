@@ -4,3 +4,18 @@ body {
   width: 340px;
   min-height: 0;
 }
+
+input,
+select {
+  min-height: 36px;
+  padding: 0 var(--s-3);
+  border: 2px solid var(--border);
+  background: var(--surface-2);
+  color: var(--fg);
+  font: var(--t-body-m);
+}
+
+.btn:disabled {
+  opacity: 45%;
+  cursor: not-allowed;
+}

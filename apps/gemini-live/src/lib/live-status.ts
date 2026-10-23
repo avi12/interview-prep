@@ -1,5 +1,4 @@
 import { LiveState, Sight } from "./live-state.ts";
-import { MIC_KEY_LABEL } from "./mic-key.ts";
 import type { Session } from "./session-schema.ts";
 
 export const Tone = {
@@ -40,7 +39,8 @@ const STATE_TONE: Record<LiveState, Tone> = {
 const HIDDEN_TEXT = "Gemini is listening but cannot see VS Code, bring its tab to the front";
 const HIDDEN_LABEL = "Can't see VS Code";
 
-const MUTED_TEXT = `Gemini is watching your VS Code with your mic muted, press ${MIC_KEY_LABEL} to talk`;
+const MUTED_TEXT = "Gemini is watching your VS Code with your mic muted";
+const UNMUTE_TEXT = "unmute to talk";
 const MUTED_LABEL = "Watching";
 
 function isBlind(session: Session) {
@@ -51,7 +51,14 @@ function isMuted(session: Session) {
   return session.state === LiveState.LIVE && !session.isMicOpen;
 }
 
-export function sessionText(session: Session) {
+function unmuteHint(micKeyHint: string) {
+  return micKeyHint ? `press ${micKeyHint} to talk` : UNMUTE_TEXT;
+}
+
+export function sessionText({ session, micKeyHint }: {
+  session: Session;
+  micKeyHint: string;
+}) {
   if (session.state === LiveState.FAILED) {
     return session.detail || STATE_TEXT[LiveState.FAILED];
   }
@@ -61,7 +68,7 @@ export function sessionText(session: Session) {
   }
 
   if (isMuted(session)) {
-    return MUTED_TEXT;
+    return `${MUTED_TEXT}, ${unmuteHint(micKeyHint)}`;
   }
 
   if (session.state === LiveState.LIVE) {

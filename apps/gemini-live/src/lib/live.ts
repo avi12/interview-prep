@@ -396,7 +396,9 @@ export function installLive() {
   extensionMessenger.onMessage(ExtensionMessage.LIVE_START, startSession);
   extensionMessenger.onMessage(ExtensionMessage.LIVE_STOP, stopSession);
   extensionMessenger.onMessage(ExtensionMessage.MIC_TOGGLE, toggleMic);
-  listenToMicKey(() => void toggleMicFromKey());
+  const micKey = listenToMicKey(() => void toggleMicFromKey());
+  extensionMessenger.onMessage(ExtensionMessage.MIC_KEY_TEACH, ({ data }) => micKey.teach(data));
+  extensionMessenger.onMessage(ExtensionMessage.MIC_KEY_CANCEL_TEACH, micKey.cancelTeach);
 
   extensionMessenger.onMessage(ExtensionMessage.GLIC_HELLO, async ({ sender }) => {
     const session = await glicSession(sender.tab);

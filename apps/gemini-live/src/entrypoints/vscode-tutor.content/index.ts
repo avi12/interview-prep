@@ -1,6 +1,7 @@
 import TutorChip from "./TutorChip.svelte";
 import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
 import { focusRect } from "@/lib/focus-rect.ts";
+import { listenToMicCombo } from "@/lib/mic-combo-listener.ts";
 import { VSCODE_ORIGIN } from "@/lib/vscode.ts";
 import { defineContentScript } from "#imports";
 import { mount } from "svelte";
@@ -40,6 +41,7 @@ export default defineContentScript({
   cssInjectionMode: "manifest",
   async main() {
     extensionMessenger.onMessage(ExtensionMessage.VSCODE_FOCUS_RECT, focusRect);
+    listenToMicCombo();
     const titleBar = await waitForElement(TITLE_BAR_RIGHT);
     mount(TutorChip, {
       target: titleBar ?? document.body,

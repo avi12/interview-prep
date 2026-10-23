@@ -2,7 +2,7 @@
   import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
   import { isRunning } from "@/lib/live-state.ts";
   import { sessionLabel, sessionText, sessionTone, Tone } from "@/lib/live-status.ts";
-  import { MIC_KEY_LABEL } from "@/lib/mic-key.ts";
+  import { watchMicKeyHint } from "@/lib/mic-key-hint.ts";
   import { parseSession, type Session } from "@/lib/session-schema.ts";
   import { sessionItem } from "@/lib/session.ts";
   import { onMount } from "svelte";
@@ -12,19 +12,31 @@
   const STOP_TITLE = "Stop the voice tutor";
   const MIC_OPEN_LABEL = "Mic on";
   const MIC_MUTED_LABEL = "Muted";
-  const MIC_OPEN_TITLE = `Gemini hears you. Press ${MIC_KEY_LABEL} or click to mute`;
-  const MIC_MUTED_TITLE = `Gemini can't hear you. Press ${MIC_KEY_LABEL} or click to talk`;
+  const MIC_OPEN_TITLE = "Gemini hears you.";
+  const MIC_MUTED_TITLE = "Gemini can't hear you.";
+  const MUTE_ACTION = "mute";
+  const TALK_ACTION = "talk";
 
   let session = $state<Session | null>(null);
   let failure = $state("");
+  let micKeyHint = $state("");
 
   const isLive = $derived(!!session && isRunning(session.state));
   const tone = $derived(failure ? Tone.DANGER : sessionTone(session));
   const label = $derived(failure || (session ? sessionLabel(session) : ""));
-  const title = $derived(failure || (session ? sessionText(session) : ""));
+  const title = $derived(
+    failure || (session ? sessionText({
+      session,
+      micKeyHint
+    }) : "")
+  );
   const isMicOpen = $derived(!!session?.isMicOpen);
   const micLabel = $derived(isMicOpen ? MIC_OPEN_LABEL : MIC_MUTED_LABEL);
-  const micTitle = $derived(isMicOpen ? MIC_OPEN_TITLE : MIC_MUTED_TITLE);
+  const micTitle = $derived(`${isMicOpen ? MIC_OPEN_TITLE : MIC_MUTED_TITLE} ${pressOrClick(isMicOpen ? MUTE_ACTION : TALK_ACTION)}`);
+
+  function pressOrClick(action: string) {
+    return micKeyHint ? `Press ${micKeyHint} or click to ${action}` : `Click to ${action}`;
+  }
 
   function toggleMic() {
     void extensionMessenger.sendMessage(ExtensionMessage.MIC_TOGGLE).catch(() => {});
@@ -52,7 +64,14 @@
 
   onMount(() => {
     void sessionItem.getValue().then(show);
-    return sessionItem.watch(show);
+    const unwatchSession = sessionItem.watch(show);
+    const unwatchMicKey = watchMicKeyHint(hint => {
+      micKeyHint = hint;
+    });
+    return () => {
+      unwatchSession();
+      unwatchMicKey();
+    };
   });
 </script>
 
@@ -77,7 +96,9 @@
         {/if}
       </svg>
       {micLabel}
-      <kbd>{MIC_KEY_LABEL}</kbd>
+      {#if micKeyHint}
+        <kbd>{micKeyHint}</kbd>
+      {/if}
     </button>
     <button class="ip-tutor ip-tutor-secondary" onclick={toggle} title={STOP_TITLE} type="button">{STOP_LABEL}</button>
   {:else}

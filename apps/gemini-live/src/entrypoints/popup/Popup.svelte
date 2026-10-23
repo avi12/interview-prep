@@ -1,8 +1,10 @@
 <script lang="ts">
+  import MicKey from "./MicKey.svelte";
   import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
   import { type Language, LANGUAGE_LABEL, languageSchema } from "@/lib/language.ts";
   import { isRunning } from "@/lib/live-state.ts";
   import { sessionText, sessionTone } from "@/lib/live-status.ts";
+  import { watchMicKeyHint } from "@/lib/mic-key-hint.ts";
   import { parseSession, type Session } from "@/lib/session-schema.ts";
   import { sessionItem } from "@/lib/session.ts";
   import { loadLanguage, saveLanguage } from "@/lib/settings.ts";
@@ -19,13 +21,17 @@
   let isVscodeOpen = $state(false);
   let language = $state<Language>();
   let note = $state("");
+  let micKeyHint = $state("");
 
   const sessionState = $derived(session?.state ?? IDLE);
   const isSessionRunning = $derived(!!session && isRunning(session.state));
   const isStartable = $derived(isVscodeOpen && !isSessionRunning);
   const status = $derived.by(() => {
     if (session) {
-      return sessionText(session);
+      return sessionText({
+        session,
+        micKeyHint
+      });
     }
 
     return isVscodeOpen ? READY_TEXT : NEEDS_VSCODE_TEXT;
@@ -72,8 +78,12 @@
       language = loaded;
     });
     void refreshVscode();
+    const unwatchMicKey = watchMicKeyHint(hint => {
+      micKeyHint = hint;
+    });
     return () => {
       unwatch();
+      unwatchMicKey();
       for (const event of TAB_EVENTS) {
         event.removeListener(refreshVscode);
       }
@@ -99,6 +109,7 @@
     </select>
     <small class="sub">Applies to the next session</small>
   </label>
+  <MicKey />
   <footer>
     <button id="start" class="btn" data-variant="primary" disabled={!isStartable} onclick={start}>Start session</button>
     {#if session}
@@ -144,15 +155,6 @@
   .field {
     display: grid;
     gap: var(--s-1);
-
-    & select {
-      min-height: 36px;
-      padding: 0 var(--s-3);
-      border: 2px solid var(--border);
-      background: var(--surface-2);
-      color: var(--fg);
-      font: var(--t-body-m);
-    }
   }
 
   footer {
@@ -163,11 +165,6 @@
       flex: 1;
       justify-content: center;
     }
-  }
-
-  .btn:disabled {
-    opacity: 45%;
-    cursor: not-allowed;
   }
 
   .chip {
