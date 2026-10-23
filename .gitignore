@@ -7,4 +7,5 @@ work/
 __pycache__/
 .pytest_cache/
 .fallow/
+.claude/worktrees/
 .svelte-check/

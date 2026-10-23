@@ -273,6 +273,7 @@ export default [
     "work/",
     ".vscode-server/",
     ".fallow/",
+    ".claude/worktrees/",
     "apps/vscode-ext/dist/",
     "curriculum/*",
     "!curriculum/_kit/"

@@ -13,7 +13,8 @@
     "unused-enum-members": "warn"
   },
   "ignorePatterns": [
-    "curriculum/**"
+    "curriculum/**",
+    ".claude/worktrees/**"
   ],
   "ignoreDependencies": [
     "@electric-sql/pglite",
