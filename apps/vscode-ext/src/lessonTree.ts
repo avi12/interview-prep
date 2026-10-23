@@ -9,6 +9,7 @@ export const Command = {
   resetExercise: "interviewPrep.resetExercise",
   markDone: "interviewPrep.markDone",
   askClaude: "interviewPrep.askClaude",
+  chooseRole: "interviewPrep.chooseRole",
   refresh: "interviewPrep.refresh"
 } as const;
 

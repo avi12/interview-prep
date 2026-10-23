@@ -4,6 +4,7 @@ import {
   CURRICULUM_DIR,
   KIT_DIR_NAME,
   PATH_FILE,
+  ROLES_FILE,
   TRACKS_FILE,
   WORK_DIR
 } from "#scripts/lib/paths.ts";
@@ -11,7 +12,7 @@ import {
   lessonMetaSchema,
   type Quiz,
   quizSchema,
-  Role,
+  rolesSchema,
   tracksSchema
 } from "#scripts/lib/schema.ts";
 import { z } from "#scripts/lib/zod.ts";
@@ -35,7 +36,14 @@ export function readStudyOrders(lessons: ReturnType<typeof readLessons>) {
       path: PATH_FILE,
       schema: z.array(z.string())
     }),
-    roles: Object.values(Role)
+    roles: readRoles().map(({ id }) => id)
+  });
+}
+
+export function readRoles() {
+  return readJsonFile({
+    path: ROLES_FILE,
+    schema: rolesSchema
   });
 }
 

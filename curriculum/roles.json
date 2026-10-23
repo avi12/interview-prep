@@ -1,0 +1,14 @@
+[
+  {
+    "id": "backend",
+    "title": "Backend engineer"
+  },
+  {
+    "id": "analyst",
+    "title": "Data analyst"
+  },
+  {
+    "id": "ai",
+    "title": "AI engineer"
+  }
+]

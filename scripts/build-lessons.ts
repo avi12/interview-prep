@@ -1,6 +1,6 @@
 import { writeFileDeep } from "#scripts/lib/files.ts";
 import { LESSONS_DIST_RELATIVE_DIR } from "#scripts/lib/layout.ts";
-import { readLessons, readStudyOrders, readTracks } from "#scripts/lib/lessons.ts";
+import { readLessons, readRoles, readStudyOrders, readTracks } from "#scripts/lib/lessons.ts";
 import { withCachedNarration } from "#scripts/lib/narration-cache.ts";
 import { INDEX_FILE, LESSONS_DIST_DIR, ROOT } from "#scripts/lib/paths.ts";
 import { renderLesson } from "#scripts/lib/render.ts";
@@ -68,6 +68,7 @@ await sqlSchema.close();
 
 const index = {
   tracks: readTracks(),
+  roles: readRoles(),
   orders: readStudyOrders(lessons),
   lessons: lessons.map(lesson => ({
     id: lesson.id,

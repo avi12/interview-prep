@@ -19,6 +19,7 @@ export const LAST_TEST_FILE = resolve(ROOT, LAST_TEST_RELATIVE_PATH);
 export const INDEX_FILE = resolve(ROOT, INDEX_RELATIVE_PATH);
 export const PATH_FILE = resolve(CURRICULUM_DIR, "path.json");
 export const TRACKS_FILE = resolve(CURRICULUM_DIR, "tracks.json");
+export const ROLES_FILE = resolve(CURRICULUM_DIR, "roles.json");
 export const ASSETS_DIR = resolve(ROOT, "assets");
 export const KIT_DIR_NAME = "_kit";
 export const SERVER_DATA_DIR = resolve(ROOT, ".vscode-server");

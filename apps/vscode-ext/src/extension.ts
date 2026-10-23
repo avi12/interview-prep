@@ -1,6 +1,6 @@
 import { watchForChanges } from "@/hotReload.ts";
 import { ensureExerciseFiles, onTestsFinished, runLessonCli, runTestsInTerminal } from "@/lessonCli.ts";
-import { findLesson, findNextLesson, isLessonPassed } from "@/lessonData.ts";
+import { chooseRole, findLesson, findNextLesson, isLessonPassed } from "@/lessonData.ts";
 import { showLesson } from "@/lessonPanel.ts";
 import { Command, LessonTree } from "@/lessonTree.ts";
 import { showQueryResult } from "@/queryResult.ts";
@@ -260,6 +260,7 @@ function activateIn({ context, root }: {
     registerSqlHighlight(sqlTablesOf),
     vscode.commands.registerCommand(Command.openLesson, openLesson),
     vscode.commands.registerCommand(Command.nextLesson, openNextLesson),
+    vscode.commands.registerCommand(Command.chooseRole, () => chooseRole(root)),
     vscode.commands.registerCommand(Command.runTests, (uri?: vscode.Uri) => runTests(
       (uri && lessonIdOfFile({
         root,

@@ -1,5 +1,5 @@
 import { LESSON_TESTS_DIR_NAME } from "#scripts/lib/layout.ts";
-import type { Card, Lesson } from "#scripts/lib/lessons.ts";
+import { type Card, type Lesson, readRoles } from "#scripts/lib/lessons.ts";
 import { EXERCISE_CARD_TITLE } from "#scripts/lib/schema.ts";
 import type { Token } from "marked";
 import { existsSync, readdirSync } from "node:fs";
@@ -86,6 +86,11 @@ export function lessonProblems(lesson: Lesson) {
   const { cards, body, meta } = lesson;
   if (cards.length < MIN_CARDS) {
     problems.push(`needs at least ${MIN_CARDS} cards, has ${cards.length}`);
+  }
+
+  const knownRoles = new Set(readRoles().map(({ id }) => id));
+  for (const role of meta.roles.filter(role => !knownRoles.has(role))) {
+    problems.push(`role "${role}" is not in curriculum/roles.json`);
   }
 
   if (meta.sources.length === 0) {

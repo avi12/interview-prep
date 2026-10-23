@@ -9,6 +9,7 @@ import * as vscode from "vscode";
 
 const EMPTY_INDEX: z.infer<typeof lessonIndexSchema> = {
   tracks: [],
+  roles: [],
   orders: {},
   lessons: []
 };
@@ -29,8 +30,36 @@ function readProgress(root: string) {
   });
 }
 
+const ROLE_SETTING = "role";
+const ALL_ROLES_TITLE = "All roles";
+
+function settings() {
+  return vscode.workspace.getConfiguration("interviewPrep");
+}
+
 function selectedRole() {
-  return vscode.workspace.getConfiguration("interviewPrep").get<string>("role", ALL_ROLES);
+  return settings().get<string>(ROLE_SETTING, ALL_ROLES);
+}
+
+export async function chooseRole(root: string) {
+  const choices = [{
+    id: ALL_ROLES,
+    title: ALL_ROLES_TITLE
+  }, ...readIndex(root).roles];
+  const current = selectedRole();
+  const picked = await vscode.window.showQuickPick(
+    choices.map(({ id, title }) => ({
+      id,
+      label: title,
+      description: id === current ? "current" : undefined
+    })),
+    { placeHolder: "Show the lessons for which role?" }
+  );
+  if (!picked) {
+    return;
+  }
+
+  await settings().update(ROLE_SETTING, picked.id, vscode.ConfigurationTarget.Workspace);
 }
 
 export function readCourse(root: string) {

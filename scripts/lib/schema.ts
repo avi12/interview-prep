@@ -7,11 +7,6 @@ export const Lang = {
   sql: "sql",
   none: "none"
 } as const;
-export const Role = {
-  backend: "backend",
-  analyst: "analyst",
-  ai: "ai"
-} as const;
 
 const MINUTES_MIN = 5;
 const MINUTES_MAX = 60;
@@ -24,7 +19,7 @@ export const lessonMetaSchema = z.object({
   lang: z.enum(Lang),
   minutes: z.number().int().min(MINUTES_MIN).max(MINUTES_MAX),
   level: z.enum(["junior", "mid"]).default("junior"),
-  roles: z.array(z.enum(Role)).min(1),
+  roles: z.array(z.string()).min(1),
   files: z.array(z.string()).default([]),
   timeoutSeconds: z.number().int().min(RUN_SECONDS_MIN).max(RUN_SECONDS_MAX).default(RUN_SECONDS_DEFAULT),
   sources: z.array(z.url()).default([])
@@ -81,8 +76,16 @@ const sqlTableSchema = z.object({
 
 export type SqlTable = z.infer<typeof sqlTableSchema>;
 
+export const rolesSchema = z.array(
+  z.object({
+    id: z.string(),
+    title: z.string()
+  })
+);
+
 export const lessonIndexSchema = z.object({
   tracks: tracksSchema,
+  roles: rolesSchema,
   orders: z.record(z.string(), z.array(z.string())),
   lessons: z.array(
     z.object({
@@ -91,7 +94,7 @@ export const lessonIndexSchema = z.object({
       title: z.string(),
       minutes: z.number(),
       lang: z.enum(Lang),
-      roles: z.array(z.enum(Role)),
+      roles: z.array(z.string()),
       files: z.array(z.string()),
       hasExercise: z.boolean(),
       isNarrated: z.boolean(),
