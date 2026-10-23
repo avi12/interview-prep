@@ -1,19 +1,39 @@
-import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import { describe, expect, it } from "vitest";
 
-type Response = { status: number; headers: Record<string, string>; body?: unknown };
+type Response = {
+  status: number;
+  headers: Record<string, string>;
+  body?: unknown;
+};
 type Module = {
   etagFor: (resource: unknown) => string;
-  conditionalResponse: (input: { resource: unknown; ifNoneMatch?: string; maxAgeSeconds: number }) => Response;
+  conditionalResponse: (input: {
+    resource: unknown;
+    ifNoneMatch?: string;
+    maxAgeSeconds: number;
+  }) => Response;
 };
 
-const { etagFor, conditionalResponse } = await loadImpl<Module>({ testUrl: import.meta.url, file: "conditional.ts" });
+const { etagFor, conditionalResponse } = await loadImpl<Module>({
+  testUrl: import.meta.url,
+  file: "conditional.ts"
+});
 
 const MAX_AGE_SECONDS = 60;
-const profile = { id: 7, name: "Dana", plan: "pro" };
+const profile = {
+  id: 7,
+  name: "Dana",
+  plan: "pro"
+};
 
-const request = (ifNoneMatch?: string, resource: unknown = profile) =>
-  conditionalResponse({ resource, ifNoneMatch, maxAgeSeconds: MAX_AGE_SECONDS });
+function request(ifNoneMatch?: string, resource: unknown = profile) {
+  return conditionalResponse({
+    resource,
+    ifNoneMatch,
+    maxAgeSeconds: MAX_AGE_SECONDS
+  });
+}
 
 describe("etagFor", () => {
   it("is a quoted string, as HTTP requires", () => {
@@ -21,17 +41,43 @@ describe("etagFor", () => {
   });
 
   it("is the same for equal content, even in separate objects", () => {
-    expect(etagFor({ id: 7, name: "Dana", plan: "pro" })).toBe(etagFor(profile));
+    expect(
+      etagFor({
+        id: 7,
+        name: "Dana",
+        plan: "pro"
+      })
+    ).toBe(etagFor(profile));
   });
 
   it("changes when the content changes, even by one character", () => {
-    expect(etagFor({ ...profile, name: "Danb" })).not.toBe(etagFor(profile));
-    expect(etagFor({ ...profile, plan: "free" })).not.toBe(etagFor(profile));
+    expect(
+      etagFor({
+        ...profile,
+        name: "Danb"
+      })
+    ).not.toBe(etagFor(profile));
+    expect(
+      etagFor({
+        ...profile,
+        plan: "free"
+      })
+    ).not.toBe(etagFor(profile));
   });
 
   it("tells apart content that has the same letters in another order", () => {
     expect(etagFor(["ab"])).not.toBe(etagFor(["ba"]));
-    expect(etagFor({ id: 7, name: "Dana" })).not.toBe(etagFor({ id: 7, name: "Dnaa" }));
+    expect(
+      etagFor({
+        id: 7,
+        name: "Dana"
+      })
+    ).not.toBe(
+      etagFor({
+        id: 7,
+        name: "Dnaa"
+      })
+    );
     expect(etagFor({ id: 12 })).not.toBe(etagFor({ id: 21 }));
   });
 
@@ -51,7 +97,10 @@ describe("a request with no If-None-Match", () => {
   });
 
   it("with max age zero asks caches to revalidate every time", () => {
-    const response = conditionalResponse({ resource: profile, maxAgeSeconds: 0 });
+    const response = conditionalResponse({
+      resource: profile,
+      maxAgeSeconds: 0
+    });
     expect(response.headers["cache-control"]).toBe("private, no-cache");
   });
 });
@@ -88,14 +137,17 @@ describe("a request whose If-None-Match matches the current version", () => {
 
 describe("a request whose If-None-Match is out of date", () => {
   it("is a full 200 when the tag is unknown", () => {
-    const response = request('"something-else"');
+    const response = request("\"something-else\"");
     expect(response.status).toBe(200);
     expect(response.body).toEqual(profile);
   });
 
   it("is a full 200 with the new ETag after the resource changed", () => {
     const staleTag = etagFor(profile);
-    const changed = { ...profile, plan: "free" };
+    const changed = {
+      ...profile,
+      plan: "free"
+    };
     const response = request(staleTag, changed);
     expect(response.status).toBe(200);
     expect(response.body).toEqual(changed);
@@ -104,7 +156,7 @@ describe("a request whose If-None-Match is out of date", () => {
   });
 
   it("is a full 200 for a weak tag of some other version", () => {
-    expect(request('W/"something-else"').status).toBe(200);
+    expect(request("W/\"something-else\"").status).toBe(200);
   });
 
   it("is a full 200 for an empty header", () => {

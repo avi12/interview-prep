@@ -12,12 +12,34 @@ export const createUserSchema = z.object({
 
 export type CreateUser = z.infer<typeof createUserSchema>;
 
-const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 export function handleCreateUser(body: unknown) {
-  if (!isPlainObject(body)) return { status: 400, body: { error: "Body must be a JSON object" } };
+  if (!isPlainObject(body)) {
+    return {
+      status: 400,
+      body: {
+        error: "Body must be a JSON object"
+      }
+    };
+  }
+
   const result = createUserSchema.safeParse(body);
-  if (!result.success) return { status: 422, body: { errors: z.flattenError(result.error).fieldErrors } };
-  return { status: 201, body: { user: result.data } };
+  if (!result.success) {
+    return {
+      status: 422,
+      body: {
+        errors: z.flattenError(result.error).fieldErrors
+      }
+    };
+  }
+
+  return {
+    status: 201,
+    body: {
+      user: result.data
+    }
+  };
 }
