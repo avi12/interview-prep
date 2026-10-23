@@ -5,6 +5,7 @@
   import { watchMicKeyHint } from "@/lib/mic-key-hint.ts";
   import { parseSession, type Session } from "@/lib/session-schema.ts";
   import { sessionItem } from "@/lib/session.ts";
+  import { TutorAction } from "@/lib/tutor-action.ts";
   import { onMount } from "svelte";
 
   const START_LABEL = "Start voice tutor";
@@ -47,12 +48,11 @@
     failure = "";
   }
 
-  async function toggle() {
-    if (isLive) {
-      await extensionMessenger.sendMessage(ExtensionMessage.LIVE_STOP);
-      return;
-    }
+  function stop() {
+    void extensionMessenger.sendMessage(ExtensionMessage.LIVE_STOP).catch(() => {});
+  }
 
+  async function start() {
     const result = await extensionMessenger
       .sendMessage(ExtensionMessage.LIVE_START)
       .catch((error: Error) => ({
@@ -100,9 +100,19 @@
         <kbd>{micKeyHint}</kbd>
       {/if}
     </button>
-    <button class="ip-tutor ip-tutor-secondary" onclick={toggle} title={STOP_TITLE} type="button">{STOP_LABEL}</button>
   {:else}
-    <button class="ip-tutor" onclick={toggle} type="button">{START_LABEL}</button>
+    <button class="ip-tutor" data-tutor-action={TutorAction.START} onclick={start} type="button">{START_LABEL}</button>
+  {/if}
+  {#if session}
+    <button
+      class="ip-tutor ip-tutor-secondary"
+      data-tutor-action={TutorAction.STOP}
+      onclick={stop}
+      title={STOP_TITLE}
+      type="button"
+    >
+      {STOP_LABEL}
+    </button>
   {/if}
 </div>
 

@@ -1,8 +1,6 @@
 <script lang="ts">
   import MicKey from "./MicKey.svelte";
-  import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
   import { type Language, LANGUAGE_LABEL, languageSchema } from "@/lib/language.ts";
-  import { isRunning } from "@/lib/live-state.ts";
   import { sessionText, sessionTone } from "@/lib/live-status.ts";
   import { watchMicKeyHint } from "@/lib/mic-key-hint.ts";
   import { parseSession, type Session } from "@/lib/session-schema.ts";
@@ -13,19 +11,16 @@
   import { browser } from "wxt/browser";
 
   const IDLE = "idle";
-  const READY_TEXT = "Ready when you are";
+  const READY_TEXT = "Start the voice tutor from the VS Code title bar";
   const NEEDS_VSCODE_TEXT = `Open VS Code at ${VSCODE_ORIGIN} to begin`;
   const TAB_EVENTS = [browser.tabs.onCreated, browser.tabs.onRemoved, browser.tabs.onUpdated];
 
   let session = $state<Session | null>(null);
   let isVscodeOpen = $state(false);
   let language = $state<Language>();
-  let note = $state("");
   let micKeyHint = $state("");
 
   const sessionState = $derived(session?.state ?? IDLE);
-  const isSessionRunning = $derived(!!session && isRunning(session.state));
-  const isStartable = $derived(isVscodeOpen && !isSessionRunning);
   const status = $derived.by(() => {
     if (session) {
       return sessionText({
@@ -39,21 +34,6 @@
 
   async function refreshVscode() {
     isVscodeOpen = !!(await findVscodeTab());
-  }
-
-  async function start() {
-    const result = await extensionMessenger
-      .sendMessage(ExtensionMessage.LIVE_START)
-      .catch((error: Error) => ({
-        isStarted: false,
-        detail: error.message
-      }));
-    note = result.isStarted ? "" : result.detail;
-  }
-
-  async function stop() {
-    note = "";
-    await extensionMessenger.sendMessage(ExtensionMessage.LIVE_STOP);
   }
 
   function chooseLanguage(value: string) {
@@ -98,7 +78,6 @@
   </header>
   <section class="card">
     <output id="status">{status}</output>
-    <p id="note" class="sub">{note}</p>
   </section>
   <label class="field">
     <span class="sub">Tutor language</span>
@@ -110,12 +89,6 @@
     <small class="sub">Applies to the next session</small>
   </label>
   <MicKey />
-  <footer>
-    <button id="start" class="btn" data-variant="primary" disabled={!isStartable} onclick={start}>Start session</button>
-    {#if session}
-      <button id="stop" class="btn" data-variant="danger" onclick={stop}>Stop session</button>
-    {/if}
-  </footer>
 </main>
 
 <style>
@@ -145,26 +118,11 @@
     & output {
       font: var(--t-body-l);
     }
-
-    & p {
-      min-height: 1.5em;
-      margin: 0;
-    }
   }
 
   .field {
     display: grid;
     gap: var(--s-1);
-  }
-
-  footer {
-    display: flex;
-    gap: var(--s-3);
-
-    & .btn {
-      flex: 1;
-      justify-content: center;
-    }
   }
 
   .chip {

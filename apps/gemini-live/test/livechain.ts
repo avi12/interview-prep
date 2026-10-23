@@ -2,6 +2,7 @@ import { buildBrief } from "../src/lib/brief.ts";
 import { Language } from "../src/lib/language.ts";
 import { parseSession } from "../src/lib/session-schema.ts";
 import { oneLine } from "../src/lib/text.ts";
+import { TutorAction, tutorActionSelector } from "../src/lib/tutor-action.ts";
 import { parseVscodeTitle } from "../src/lib/vscode-title.ts";
 import { z } from "../src/lib/zod.ts";
 import { type Cdp, connect } from "./cdp.ts";
@@ -262,8 +263,8 @@ async function status() {
 async function chip() {
   return String((await popup.evaluate(`document.querySelector('#chip').textContent`)) ?? "");
 }
-async function isStartEnabled() {
-  return !(await popup.evaluate(`document.querySelector('#start').disabled`));
+async function isStartOffered() {
+  return !!(await vscode.evaluate(`!!document.querySelector(${JSON.stringify(tutorActionSelector(TutorAction.START))})`).catch(() => false));
 }
 function statusIncludes(text: string) {
   return until({
@@ -282,11 +283,14 @@ function everStatedIncluding(text: string) {
     timeoutMs: 15_000
   });
 }
+function pressTutorAction(action: TutorAction) {
+  return vscode.evaluate(`document.querySelector(${JSON.stringify(tutorActionSelector(action))}).click()`);
+}
 function pressStart() {
-  return popup.evaluate(`document.querySelector('#start').click()`);
+  return pressTutorAction(TutorAction.START);
 }
 function pressStop() {
-  return popup.evaluate(`document.querySelector('#stop').click()`);
+  return pressTutorAction(TutorAction.STOP);
 }
 async function storedSession() {
   return parseSession(await popup.evaluate(`chrome.storage.local.get('session').then(row => row.session ?? null)`));
@@ -365,19 +369,19 @@ function hasNewPicture({ cdp, since }: {
 
 await until({ get: async () => (await status()) !== "" });
 check({
-  name: "popup: no VS Code tab, so start is disabled",
-  ok: !(await isStartEnabled()),
+  name: "popup: no VS Code tab, so it says to open VS Code",
+  ok: (await status()).includes("Open VS Code"),
   detail: await status()
 });
 check({
-  name: "popup: and it says to open VS Code",
-  ok: (await status()).includes("Open VS Code")
+  name: "popup: has no start button of its own",
+  ok: !(await popup.evaluate(`!!document.querySelector("button#start")`))
 });
 await vscode.send("Page.navigate", { url: VSCODE_URL });
 check({
-  name: "popup: a VS Code tab appears, start enables by itself",
+  name: "a VS Code tab appears: its title bar offers to start the tutor",
   ok: !!(await until({
-    get: isStartEnabled,
+    get: isStartOffered,
     timeoutMs: 15_000
   })),
   detail: await status()
@@ -395,7 +399,7 @@ check({
 });
 
 if (!first) {
-  console.log("  popup:", await status(), "|", await popup.evaluate(`document.querySelector('#note').textContent`));
+  console.log("  popup:", await status());
   for (const target of await targets()) {
     console.log("  target:", target.type, target.url);
   }
@@ -668,9 +672,9 @@ check({
   ok: !!(await isSessionCleared(5000))
 });
 check({
-  name: "popup: back to a start button",
+  name: "the title bar is back to a start button",
   ok: !!(await until({
-    get: isStartEnabled,
+    get: isStartOffered,
     timeoutMs: 5000
   }))
 });
@@ -710,9 +714,9 @@ check({
   ok: !!(await isSessionCleared(10_000))
 });
 check({
-  name: "popup: back to a start button",
+  name: "the title bar is back to a start button",
   ok: !!(await until({
-    get: isStartEnabled,
+    get: isStartOffered,
     timeoutMs: 5000
   }))
 });
@@ -728,7 +732,7 @@ check({
 });
 check({
   name: "...the session is marked failed, and start is offered again",
-  ok: (await chip()) === "failed" && (await isStartEnabled())
+  ok: (await chip()) === "failed" && (await isStartOffered())
 });
 await wait(BOOT_REPORT_MS);
 check({
