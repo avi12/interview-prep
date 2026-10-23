@@ -1,21 +1,15 @@
 import { writeFileDeep } from "#scripts/lib/files.ts";
-import { ROOT } from "#scripts/lib/paths.ts";
+import { ROOT, SERVER_DATA_DIR, TOKEN_FILE } from "#scripts/lib/paths.ts";
 import { killMatching, killTree } from "#scripts/lib/process.ts";
-import { SERVER_DEFAULT_PORT, SERVER_HOST } from "#scripts/lib/server.ts";
+import { SERVER_DEFAULT_PORT, SERVER_HOST, serverOrigin } from "#scripts/lib/server.ts";
+import { readToken, trainerUrl } from "#scripts/lib/trainer-url.ts";
 import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import {
-  existsSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  symlinkSync
-} from "node:fs";
+import { readdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { resolve } from "node:path";
 
 const PORT = Number(process.env.PORT ?? SERVER_DEFAULT_PORT);
 const HOST = SERVER_HOST;
-const SERVER_DATA_DIR = resolve(ROOT, ".vscode-server");
 const EXTENSION_DIR = resolve(ROOT, "apps", "vscode-ext");
 const VSIX_PATH = resolve(EXTENSION_DIR, "interview-prep.vsix");
 const READY_MARKER = "Web UI available";
@@ -29,14 +23,9 @@ const SERVER_ONLY_SETTINGS = {
   "update.showReleaseNotes": false
 };
 const SERVER_PROCESS_NEEDLES = ["--server-data-dir", SERVER_DATA_DIR];
-const TOKEN_FILE = resolve(SERVER_DATA_DIR, "connection-token");
 const isOpeningBrowser = !process.argv.includes("--no-open");
 const isDev = process.argv.includes("--dev");
 const EXTENSION_FOLDER_PATTERN = /^avi12\.interview-prep-/;
-
-function toUrlPath(path: string) {
-  return `/${path.replaceAll("\\", "/")}`;
-}
 
 function runStep({ label, command, args, cwd = ROOT }: {
   label: string;
@@ -112,8 +101,9 @@ if (isDev) {
 }
 
 function readOrCreateToken() {
-  if (existsSync(TOKEN_FILE)) {
-    return readFileSync(TOKEN_FILE, "utf8").trim();
+  const existing = readToken();
+  if (existing) {
+    return existing;
   }
 
   const created = randomBytes(16).toString("hex");
@@ -125,7 +115,10 @@ function readOrCreateToken() {
 }
 
 const token = readOrCreateToken();
-const url = `http://${HOST}:${PORT}/?tkn=${token}&folder=${encodeURIComponent(toUrlPath(ROOT))}`;
+const url = trainerUrl({
+  origin: serverOrigin(PORT),
+  token
+});
 
 const staleCount = killMatching(SERVER_PROCESS_NEEDLES);
 if (staleCount > 0) {
