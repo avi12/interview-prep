@@ -1,13 +1,16 @@
+import { NO_RESULT_TABLE_FLAG } from "#scripts/lib/layout.ts";
 import { findLesson, readLessons, readStudyOrders, readTracks } from "#scripts/lib/lessons.ts";
 import { DONE_COMMAND } from "#scripts/lib/panel.ts";
 import { ALL_ROLES } from "#scripts/lib/path.ts";
 import { readProgress, recordAttempt, recordLastTest } from "#scripts/lib/progress.ts";
+import { formatQueryResult } from "#scripts/lib/query-result.ts";
 import { ensureWorkCopy, prepareSolutionDir, resetWorkCopy, runQuiet } from "#scripts/lib/run.ts";
 import { isPassed, nextUnpassedId } from "#scripts/lib/study.ts";
 import { resolve } from "node:path";
 
 const [command, idArgument, ...flags] = process.argv.slice(2);
 const isSolutionRequested = flags.includes("--solution");
+const isResultTableShown = !flags.includes(NO_RESULT_TABLE_FLAG);
 
 function listLessons() {
   const progress = readProgress();
@@ -50,11 +53,14 @@ async function testLesson(id: string) {
 
   ensureWorkCopy(lesson);
   const implDir = isSolutionRequested ? prepareSolutionDir(lesson) : lesson.workDir;
-  const { isPass, output } = await runQuiet({
+  const { isPass, output, queryResults } = await runQuiet({
     lesson,
     implDir
   });
   console.log(output);
+  for (const result of isResultTableShown ? queryResults : []) {
+    console.log(formatQueryResult(result));
+  }
 
   if (!isSolutionRequested) {
     recordAttempt({

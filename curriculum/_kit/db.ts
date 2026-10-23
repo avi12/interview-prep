@@ -1,10 +1,49 @@
 import { implPath } from "./impl.ts";
 import { PGlite } from "@electric-sql/pglite";
-import { readFileSync } from "node:fs";
+import { QUERY_RESULT_ENV } from "#scripts/lib/query-result.ts";
+import { appendFileSync, readFileSync } from "node:fs";
 
 type Row = Record<string, unknown>;
 
 const DAY_LENGTH = 10;
+const MIDNIGHT_SUFFIX = / 00:00:00$/;
+const ISO_ZONE_SUFFIX = /(\.000)?Z$/;
+
+function cellText(value: unknown) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString().replace("T", " ").replace(ISO_ZONE_SUFFIX, "").replace(MIDNIGHT_SUFFIX, "");
+  }
+
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+
+  return String(value);
+}
+
+function recordQueryResult({ file, columns, rows }: {
+  file: string;
+  columns: string[];
+  rows: Row[];
+}) {
+  const path = process.env[QUERY_RESULT_ENV];
+  if (!path) {
+    return;
+  }
+
+  const cells = rows.map(row => columns.map(column => cellText(row[column])));
+  appendFileSync(
+    path, `${JSON.stringify({
+      file,
+      columns,
+      rows: cells
+    })}\n`
+  );
+}
 
 export async function openDb(seedSql: string) {
   const db = new PGlite();
@@ -35,9 +74,15 @@ export async function runQueryFile({ db, testUrl, file }: {
       file
     })
   );
+  const columns = fields.map(field => field.name);
+  recordQueryResult({
+    file,
+    columns,
+    rows
+  });
   return {
     rows,
-    columns: fields.map(field => field.name)
+    columns
   };
 }
 

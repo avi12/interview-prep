@@ -1,4 +1,5 @@
 import { implPath } from "./impl.ts";
+import { QUERY_RESULT_ENV } from "#scripts/lib/query-result.ts";
 import { spawn } from "node:child_process";
 import {
   cpSync,
@@ -91,7 +92,7 @@ export function applyMutant({ source, mutant }: {
 }
 
 function cleanEnvironment() {
-  const kept = Object.entries(process.env).filter(([key]) => !key.startsWith("VITEST") && key !== "IMPL_DIR" && key !== "FORCE_COLOR");
+  const kept = Object.entries(process.env).filter(([key]) => !key.startsWith("VITEST") && key !== "IMPL_DIR" && key !== QUERY_RESULT_ENV && key !== "FORCE_COLOR");
   return {
     ...Object.fromEntries(kept),
     NO_COLOR: "1"

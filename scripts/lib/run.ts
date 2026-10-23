@@ -2,6 +2,7 @@ import { LESSON_TESTS_DIR_NAME } from "#scripts/lib/layout.ts";
 import type { Lesson } from "#scripts/lib/lessons.ts";
 import { CURRICULUM_DIR, DIST_DIR, KIT_DIR_NAME, ROOT } from "#scripts/lib/paths.ts";
 import { runWithTimeout } from "#scripts/lib/process.ts";
+import { clearQueryResults, QUERY_RESULT_ENV, queryResultFileOf, readQueryResults } from "#scripts/lib/query-result.ts";
 import { Lang } from "#scripts/lib/schema.ts";
 import { cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
@@ -54,10 +55,14 @@ function commandFor(lesson: Lesson) {
   };
 }
 
-function envFor(implDir: string) {
+function envFor({ implDir, queryResultFile }: {
+  implDir: string;
+  queryResultFile: string;
+}) {
   return {
     ...process.env,
     IMPL_DIR: implDir,
+    [QUERY_RESULT_ENV]: queryResultFile,
     PYTHONPATH: resolve(CURRICULUM_DIR, KIT_DIR_NAME),
     PYTHONDONTWRITEBYTECODE: "1"
   };
@@ -76,16 +81,25 @@ export async function runQuiet({ lesson, implDir }: {
   implDir: string;
 }) {
   const { command, args } = commandFor(lesson);
+  const queryResultFile = queryResultFileOf({
+    root: ROOT,
+    lessonId: lesson.id
+  });
+  clearQueryResults(queryResultFile);
   const { status, output, isTimedOut } = await runWithTimeout({
     command,
     args,
     cwd: ROOT,
-    env: envFor(implDir),
+    env: envFor({
+      implDir,
+      queryResultFile
+    }),
     timeoutMs: timeoutMsOf(lesson)
   });
   return {
     isPass: status === 0 && !isTimedOut,
     isTimedOut,
-    output: isTimedOut ? `${timeoutMessage(lesson)}\n${output.slice(-500)}` : output
+    output: isTimedOut ? `${timeoutMessage(lesson)}\n${output.slice(-500)}` : output,
+    queryResults: readQueryResults(queryResultFile)
   };
 }

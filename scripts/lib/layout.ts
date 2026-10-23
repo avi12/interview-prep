@@ -7,3 +7,5 @@ export const INDEX_RELATIVE_PATH = `${DIST_DIR_NAME}/index.json`;
 export const LESSON_CLI_RELATIVE_PATH = "scripts/lesson.ts";
 export const LESSON_ID_SEGMENTS = 2;
 export const LESSON_TESTS_DIR_NAME = "tests";
+export const QUERY_RESULTS_RELATIVE_DIR = `${DIST_DIR_NAME}/query-results`;
+export const NO_RESULT_TABLE_FLAG = "--no-table";
