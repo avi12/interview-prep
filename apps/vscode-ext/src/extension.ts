@@ -133,6 +133,34 @@ function activateIn({ context, root }: {
     });
   }
 
+  function otherLessonTabs(id: string) {
+    return vscode.window.tabGroups.all
+      .flatMap(group => group.tabs)
+      .flatMap(tab => {
+        if (!(tab.input instanceof vscode.TabInputText)) {
+          return [];
+        }
+
+        const tabLessonId = lessonIdOfFile({
+          root,
+          file: tab.input.uri.fsPath
+        });
+        return tabLessonId !== undefined && tabLessonId !== id ? [{
+          tab,
+          uri: tab.input.uri.toString()
+        }] : [];
+      });
+  }
+
+  async function closeOtherLessonTabs(id: string) {
+    const tabs = otherLessonTabs(id);
+    const uris = new Set(tabs.map(({ uri }) => uri));
+    const dirtyDocuments = vscode.workspace.textDocuments
+      .filter(document => document.isDirty && uris.has(document.uri.toString()));
+    await Promise.all(dirtyDocuments.map(document => document.save()));
+    await vscode.window.tabGroups.close(tabs.map(({ tab }) => tab));
+  }
+
   async function openLesson(id: string) {
     const lesson = findLesson({
       root,
@@ -151,6 +179,7 @@ function activateIn({ context, root }: {
       await openExercise(id);
     }
 
+    await closeOtherLessonTabs(id);
     showLessonPanel({
       id,
       isScrolledToTop: true
