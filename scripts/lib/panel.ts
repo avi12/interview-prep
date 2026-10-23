@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export const PanelAction = {
   runTests: "runTests",
   openExercise: "openExercise",
@@ -6,23 +8,22 @@ export const PanelAction = {
   viewing: "viewing"
 } as const;
 
-export type PanelActionName = (typeof PanelAction)[keyof typeof PanelAction];
+const PANEL_COMMANDS = [
+  PanelAction.runTests,
+  PanelAction.openExercise,
+  PanelAction.resetExercise,
+  PanelAction.markDone
+] as const;
 
-type NoPayload = Record<never, never>;
+export const panelMessageSchema = z.union([
+  z.object({ action: z.enum(PANEL_COMMANDS) }),
+  z.object({
+    action: z.literal(PanelAction.viewing),
+    section: z.string()
+  })
+]);
 
-export interface PanelMessageMap {
-  [PanelAction.runTests]: NoPayload;
-  [PanelAction.openExercise]: NoPayload;
-  [PanelAction.resetExercise]: NoPayload;
-  [PanelAction.markDone]: NoPayload;
-  [PanelAction.viewing]: { section: string };
-}
-
-export type PanelMessage = {
-  [Action in PanelActionName]: { action: Action } & PanelMessageMap[Action];
-}[PanelActionName];
-
-export type PanelCommand = Exclude<PanelActionName, typeof PanelAction.viewing>;
+export type PanelCommand = (typeof PANEL_COMMANDS)[number];
 
 export const SCROLL_TO_TOP_SCRIPT = `addEventListener("load", () => setTimeout(() => scrollTo(0, 0)));`;
 

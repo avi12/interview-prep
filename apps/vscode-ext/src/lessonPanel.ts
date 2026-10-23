@@ -2,7 +2,7 @@ import type { LessonEntry } from "@/lessonData.ts";
 import {
   PanelAction,
   type PanelCommand,
-  type PanelMessage,
+  panelMessageSchema,
   SCROLL_TO_TOP_SCRIPT,
   VIEWING_SCRIPT
 } from "@scripts/lib/panel.ts";
@@ -68,7 +68,13 @@ export function showLesson({
   panel.webview.html = html;
   panel.reveal(viewColumn, true);
   messageSubscription?.dispose();
-  messageSubscription = panel.webview.onDidReceiveMessage((message: PanelMessage) => {
+  messageSubscription = panel.webview.onDidReceiveMessage((raw: unknown) => {
+    const parsed = panelMessageSchema.safeParse(raw);
+    if (!parsed.success) {
+      return;
+    }
+
+    const message = parsed.data;
     if (message.action !== PanelAction.viewing) {
       return onAction(message.action);
     }
