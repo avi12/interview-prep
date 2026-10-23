@@ -61,7 +61,7 @@
       }
     },
     {
-      "files": ["./test/**/*.ts", "./aliases.ts", "**/*.config.ts", "**/*.config.js", "**/*.config.mjs"],
+      "files": ["./test/**/*.ts", "./scripts/**/*.ts", "./aliases.ts", "./extension-identity.ts", "**/*.config.ts", "**/*.config.js", "**/*.config.mjs"],
       "env": {
         "node": true
       },

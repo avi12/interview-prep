@@ -259,7 +259,7 @@ const browserGlobals = {
 // Node globals belong only to tooling that actually runs under Node (the chain test driver
 // and config files). Browser/extension and Vite source must not see `process` - oxlint
 // enforces this via the matching env override.
-const nodeToolingFiles = ["test/**/*.ts", "aliases.ts", "**/*.config.ts", "**/*.config.js", "**/*.config.mjs"];
+const nodeToolingFiles = ["test/**/*.ts", "scripts/**/*.ts", "aliases.ts", "extension-identity.ts", "**/*.config.ts", "**/*.config.js", "**/*.config.mjs"];
 
 export default [
   ...svelteEslint.configs["flat/recommended"],

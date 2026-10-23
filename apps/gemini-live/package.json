@@ -18,7 +18,8 @@
     "test:chain": "node test/run-chain.ts",
     "lint": "oxlint --type-aware --fix -c .oxlintrc.fix.json && eslint --fix && oxlint --type-aware",
     "stylelint": "stylelint . --fix",
-    "svelte:check": "svelte-check --tsconfig ./tsconfig.json --tsgo"
+    "svelte:check": "svelte-check --tsconfig ./tsconfig.json --tsgo",
+    "mic-key:install": "node scripts/install-mic-key-host.ts"
   },
   "dependencies": {
     "@webext-core/messaging": "^4.0.0",
@@ -29,7 +30,6 @@
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tsconfig/svelte": "^5.0.8",
     "@types/node": "^24.0.0",
-    "@types/w3c-web-hid": "^1.0.7",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@wxt-dev/module-svelte": "^2.0.5",
     "eslint": "^10.13.0",

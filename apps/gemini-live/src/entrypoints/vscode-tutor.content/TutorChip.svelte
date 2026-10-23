@@ -2,13 +2,7 @@
   import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
   import { isRunning } from "@/lib/live-state.ts";
   import { sessionLabel, sessionText, sessionTone, Tone } from "@/lib/live-status.ts";
-  import {
-    hasMicKey,
-    MIC_KEY_LABEL,
-    openMicKeys,
-    requestMicKey,
-    watchMicKeys
-  } from "@/lib/mic-key.ts";
+  import { MIC_KEY_LABEL } from "@/lib/mic-key.ts";
   import { parseSession, type Session } from "@/lib/session-schema.ts";
   import { sessionItem } from "@/lib/session.ts";
   import { onMount } from "svelte";
@@ -18,12 +12,9 @@
   const MUTE_LABEL = "Mute";
   const TALK_LABEL = "Talk";
   const MIC_TITLE = `Mute or unmute your mic (${MIC_KEY_LABEL})`;
-  const CONNECT_MIC_KEY_LABEL = `Connect ${MIC_KEY_LABEL}`;
-  const CONNECT_MIC_KEY_TITLE = `Let the ${MIC_KEY_LABEL} key mute and unmute your mic: pick the ROCCAT keyboard in the list Chrome shows`;
 
   let session = $state<Session | null>(null);
   let failure = $state("");
-  let isMicKeyConnected = $state(true);
 
   const isLive = $derived(!!session && isRunning(session.state));
   const tone = $derived(failure ? Tone.DANGER : sessionTone(session));
@@ -34,11 +25,6 @@
 
   function toggleMic() {
     void extensionMessenger.sendMessage(ExtensionMessage.MIC_TOGGLE).catch(() => {});
-  }
-
-  async function connectMicKey() {
-    isMicKeyConnected = await requestMicKey().catch(() => false);
-    await openMicKeys(toggleMic);
   }
 
   function show(raw: unknown) {
@@ -63,10 +49,6 @@
 
   onMount(() => {
     void sessionItem.getValue().then(show);
-    void hasMicKey().then(isConnected => {
-      isMicKeyConnected = isConnected;
-    });
-    watchMicKeys(toggleMic);
     return sessionItem.watch(show);
   });
 </script>
@@ -82,14 +64,6 @@
       title={MIC_TITLE}
       type="button"
     >{micLabel}</button>
-  {/if}
-  {#if !isMicKeyConnected}
-    <button
-      class="ip-tutor ip-tutor-secondary"
-      onclick={connectMicKey}
-      title={CONNECT_MIC_KEY_TITLE}
-      type="button"
-    >{CONNECT_MIC_KEY_LABEL}</button>
   {/if}
   <button class="ip-tutor" onclick={toggle} type="button">{toggleLabel}</button>
 </div>

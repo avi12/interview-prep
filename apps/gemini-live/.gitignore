@@ -2,3 +2,4 @@ node_modules/
 .wxt/
 .output/
 .output-test/
+native/bin/

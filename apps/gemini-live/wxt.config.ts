@@ -1,5 +1,6 @@
 import { serverOrigin, tutorViewUrl } from "../../scripts/lib/server.ts";
 import { SCRIPTS_ALIAS } from "./aliases.ts";
+import { EXTENSION_KEY } from "./extension-identity.ts";
 import { PROMPT_CLIP_GLOB } from "./src/lib/prompt-clip.ts";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { defineConfig } from "wxt";
@@ -23,7 +24,8 @@ export default defineConfig({
   manifest: {
     name: "Interview Prep: Gemini Live tutor",
     description: "A voice tutor from Gemini Live that sees your VS Code tab and coaches you through the lesson",
-    permissions: ["storage", "debugger"],
+    key: EXTENSION_KEY,
+    permissions: ["storage", "debugger", "nativeMessaging"],
     host_permissions: [`${vscodeOrigin}/*`, "https://gemini.google.com/*", HOST_PERMISSION_CAPTURE_VISIBLE_TAB_REQUIRES],
     web_accessible_resources: [{
       resources: [PROMPT_CLIP_GLOB],
