@@ -94,10 +94,14 @@ Progressive nudge. The first is gentle, the last nearly gives it away.
 
 Derived from the project's CLAUDE.md. In short: early returns and minimal nesting, small pure functions, descriptive full-word names and zero comments, `for...of` instead of `.forEach`/`.reduce`, 2+ params as one destructured object (except a given interview signature), no magic numbers (named `SCREAMING_SNAKE_CASE` constants), `is`-prefixed positive booleans, inferred return types in TypeScript. Python: PEP 8, type hints optional, same early-return and naming habits.
 
+TypeScript in a lesson follows the repo's shared lint rules (oxlint + ESLint, the same as the rest of the repo): `function` declarations instead of arrow functions assigned to a `const`, braces on every `if`/`for` body, names of three letters or more (a few like `i`, `n`, `x` are allowed), no `as` casts (use a typed variable, a type guard or zod), no unhandled promises, no nested ternaries.
+
 ## Verify before you finish
 
 ```
 pnpm verify <track>          # structure + solution passes + starter fails
+pnpm exec oxlint --type-aware --ignore-path .oxlintignore curriculum/<track>
+pnpm exec eslint curriculum/<track>
 ```
 
 Everything must be green. Do not run git; the maintainer commits. Do not edit files outside your own track folders.
