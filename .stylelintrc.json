@@ -13,7 +13,8 @@
     ".vscode-server/**",
     "apps/vscode-ext/dist/**",
     "curriculum/**",
-    "**/*.svg"
+    "**/*.svg",
+    "assets/skin.css"
   ],
   "rules": {
     "plugin/stylelint-no-indistinguishable-colors": null,

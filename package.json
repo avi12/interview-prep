@@ -23,7 +23,7 @@
     "dev:lint": "pnpm fallow && pnpm lint",
     "prepare": "simple-git-hooks",
     "lint": "oxlint --type-aware --fix -c .oxlintrc.fix.json && eslint --fix && oxlint --type-aware",
-    "stylelint": "stylelint . --fix"
+    "stylelint": "stylelint \"**/*.{css,html,svelte}\" --fix"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.10",

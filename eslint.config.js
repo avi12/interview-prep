@@ -274,9 +274,8 @@ export default [
     ".vscode-server/",
     ".fallow/",
     "apps/vscode-ext/dist/",
-    "curriculum/**",
-    "!curriculum/_kit/",
-    "!curriculum/_kit/**"
+    "curriculum/*",
+    "!curriculum/_kit/"
   ]),
   {
     files: ["**/*.{ts,js,mjs}"],
