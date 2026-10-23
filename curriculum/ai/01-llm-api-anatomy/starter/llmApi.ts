@@ -1,4 +1,10 @@
-import type { Message, MessageRequest, MessageResponse, MessagesClient, Usage } from "#kit/fakeModel.ts";
+import type {
+  Message,
+  MessageRequest,
+  MessageResponse,
+  MessagesClient,
+  Usage
+} from "#kit/fakeModel.ts";
 
 export type Prices = {
   inputPerMillion: number;
@@ -16,20 +22,39 @@ export type RequestInput = {
   stopSequences?: string[];
 };
 
-const TOKENS_PER_MILLION = 1_000_000;
+export const TOKENS_PER_MILLION = 1_000_000;
 
-export function buildRequest({ model, system, history = [], userText, maxTokens, stopSequences = [] }: RequestInput): MessageRequest {
-  return { model, max_tokens: maxTokens, messages: [] };
+export function buildRequest({ model, maxTokens }: RequestInput): MessageRequest {
+  return {
+    model,
+    max_tokens: maxTokens,
+    messages: []
+  };
 }
 
 export function readResponse(response: MessageResponse) {
-  return { text: "", stopReason: response.stop_reason, isTruncated: false };
+  return {
+    text: "",
+    stopReason: response.stop_reason,
+    isTruncated: false
+  };
 }
 
-export function costOf({ usage, prices }: { usage: Usage; prices: Prices }) {
+export function costOf(_options: {
+  usage: Usage;
+  prices: Prices;
+}) {
   return 0;
 }
 
-export async function ask({ client, prices, ...requestInput }: RequestInput & { client: MessagesClient; prices: Prices }) {
-  return { text: "", stopReason: "", isTruncated: false, costUsd: 0 };
+export async function ask(_options: RequestInput & {
+  client: MessagesClient;
+  prices: Prices;
+}) {
+  return {
+    text: "",
+    stopReason: "",
+    isTruncated: false,
+    costUsd: 0
+  };
 }
