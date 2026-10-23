@@ -7,6 +7,7 @@ import { findLesson, findNextLesson } from "@/lessonData.ts";
 import { ensureExerciseFiles, onTestsFinished, runLessonCli, runTestsInTerminal } from "@/lessonCli.ts";
 import { showLesson } from "@/lessonPanel.ts";
 import { Command, LessonTree } from "@/lessonTree.ts";
+import { registerSqlCompletion } from "@/sqlCompletion.ts";
 import { serveTutorView } from "@/tutorView.ts";
 
 const CLAUDE_TERMINAL_NAME = "Claude tutor";
@@ -108,8 +109,14 @@ export function activate(context: vscode.ExtensionContext) {
     terminal.sendText(`claude "/tutor${lessonHint}"`);
   };
 
+  const sqlTablesOf = (document: vscode.TextDocument) => {
+    const id = lessonIdOfFile({ root, file: document.uri.fsPath });
+    return (id && findLesson({ root, id })?.sqlTables) ?? [];
+  };
+
   context.subscriptions.push(
     vscode.window.createTreeView("interviewPrep.lessons", { treeDataProvider: tree }),
+    registerSqlCompletion(sqlTablesOf),
     vscode.commands.registerCommand(Command.openLesson, openLesson),
     vscode.commands.registerCommand(Command.nextLesson, openNextLesson),
     vscode.commands.registerCommand(Command.runTests, (uri?: vscode.Uri) => runTests((uri && lessonIdOfFile({ root, file: uri.fsPath })) ?? activeLessonId())),
