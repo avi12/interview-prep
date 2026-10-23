@@ -158,18 +158,5 @@
         ]
       }
     }
-  ],
-  "ignorePatterns": [
-    "**/node_modules/**",
-    "**/.output/**",
-    "**/.output-test/**",
-    "**/.wxt/**",
-    "dist/**",
-    "work/**",
-    ".vscode-server/**",
-    ".fallow/**",
-    "apps/vscode-ext/dist/**",
-    "curriculum/**",
-    "!curriculum/_kit/**"
   ]
 }

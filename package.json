@@ -22,7 +22,7 @@
     "fallow": "fallow audit --base HEAD",
     "dev:lint": "pnpm fallow && pnpm lint",
     "prepare": "simple-git-hooks",
-    "lint": "oxlint --type-aware --fix -c .oxlintrc.fix.json && eslint --fix && oxlint --type-aware",
+    "lint": "oxlint --type-aware --ignore-path .oxlintignore --fix -c .oxlintrc.fix.json && eslint --fix && oxlint --type-aware --ignore-path .oxlintignore",
     "stylelint": "stylelint \"**/*.{css,html,svelte}\" --fix"
   },
   "dependencies": {
@@ -61,9 +61,9 @@
   },
   "lint-staged": {
     "*.{ts,js,mjs,svelte}": [
-      "oxlint --fix -c .oxlintrc.fix.json",
+      "oxlint --ignore-path .oxlintignore --fix -c .oxlintrc.fix.json",
       "eslint --fix --no-warn-ignored",
-      "oxlint"
+      "oxlint --ignore-path .oxlintignore"
     ],
     "*.{css,svelte}": [
       "stylelint --fix --allow-empty-input"
