@@ -29,7 +29,10 @@ export class Notifier {
   #channel: Channel;
   #formatter: Formatter;
 
-  constructor({ channel, formatter }: { channel: Channel; formatter: Formatter }) {
+  constructor({ channel, formatter }: {
+    channel: Channel;
+    formatter: Formatter;
+  }) {
     this.#channel = channel;
     this.#formatter = formatter;
   }
@@ -43,7 +46,10 @@ export class Notifier {
   }
 
   notify(notices: readonly Notice[]) {
-    if (notices.length === 0) return;
+    if (notices.length === 0) {
+      return;
+    }
+
     this.#channel.send(this.#formatter.format(notices));
   }
 }

@@ -1,23 +1,37 @@
-import { describe, expect, it } from "vitest";
-import { loadImpl } from "#kit/impl.ts";
+import type * as BusModule from "../starter/eventBus.ts";
+import type * as EventsModule from "../starter/events.ts";
+import type * as FakesModule from "../starter/fakes.ts";
+import type * as ListenersModule from "../starter/listeners.ts";
+import type * as PlaceOrderModule from "../starter/placeOrder.ts";
 import { nextTick } from "#kit/async.ts";
-import { sequentialIds } from "#kit/ids.ts";
 import { DomainError } from "#kit/bookstore/domainError.ts";
 import { Money } from "#kit/bookstore/money.ts";
-import type * as EventsModule from "../starter/events.ts";
-import type * as BusModule from "../starter/eventBus.ts";
-import type * as PlaceOrderModule from "../starter/placeOrder.ts";
-import type * as ListenersModule from "../starter/listeners.ts";
-import type * as FakesModule from "../starter/fakes.ts";
+import { sequentialIds } from "#kit/ids.ts";
+import { loadImpl } from "#kit/impl.ts";
+import { describe, expect, it } from "vitest";
 
-const { EventType } = await loadImpl<typeof EventsModule>({ testUrl: import.meta.url, file: "events.ts" });
-const { EventBus } = await loadImpl<typeof BusModule>({ testUrl: import.meta.url, file: "eventBus.ts" });
-const { createPlaceOrder } = await loadImpl<typeof PlaceOrderModule>({ testUrl: import.meta.url, file: "placeOrder.ts" });
+const { EventType } = await loadImpl<typeof EventsModule>({
+  testUrl: import.meta.url,
+  file: "events.ts"
+});
+const { EventBus } = await loadImpl<typeof BusModule>({
+  testUrl: import.meta.url,
+  file: "eventBus.ts"
+});
+const { createPlaceOrder } = await loadImpl<typeof PlaceOrderModule>({
+  testUrl: import.meta.url,
+  file: "placeOrder.ts"
+});
 const { ConfirmationEmailListener, StockListener, LoyaltyListener } = await loadImpl<typeof ListenersModule>({
   testUrl: import.meta.url,
   file: "listeners.ts"
 });
-const { InMemoryOrderRepository, RecordingMailer, RecordingInventory, RecordingLedger } = await loadImpl<typeof FakesModule>({
+const {
+  InMemoryOrderRepository,
+  RecordingMailer,
+  RecordingInventory,
+  RecordingLedger
+} = await loadImpl<typeof FakesModule>({
   testUrl: import.meta.url,
   file: "fakes.ts"
 });
@@ -29,32 +43,56 @@ type ListenerFailure = BusModule.ListenerFailure;
 
 const CUSTOMER = "ana@example.com";
 const BOOKS = [
-  { isbn: "isbn-1", title: "Clean Code", unitPrice: Money.usd(1999), quantity: 3 },
-  { isbn: "isbn-2", title: "The Pragmatic Programmer", unitPrice: Money.usd(500), quantity: 1 }
+  {
+    isbn: "isbn-1",
+    title: "Clean Code",
+    unitPrice: Money.usd(1999),
+    quantity: 3
+  },
+  {
+    isbn: "isbn-2",
+    title: "The Pragmatic Programmer",
+    unitPrice: Money.usd(500),
+    quantity: 1
+  }
 ];
 
-const setupBus = () => {
+function setupBus() {
   const failures: ListenerFailure[] = [];
   const bus = new EventBus({ onListenerError: failure => failures.push(failure) });
-  return { bus, failures };
-};
+  return {
+    bus,
+    failures
+  };
+}
 
-const eventNamed = (type: string): DomainEvent => ({ type });
+function messageOf(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
 
-const orderPlacedEvent = (overrides: Partial<OrderPlaced> = {}): OrderPlaced => ({
-  type: EventType.orderPlaced,
-  orderId: "order-1",
-  customerEmail: CUSTOMER,
-  lines: BOOKS,
-  total: Money.usd(6497),
-  ...overrides
-});
+function eventNamed(type: string): DomainEvent {
+  return { type };
+}
+
+function orderPlacedEvent(overrides: Partial<OrderPlaced> = {}): OrderPlaced {
+  return {
+    type: EventType.orderPlaced,
+    orderId: "order-1",
+    customerEmail: CUSTOMER,
+    lines: BOOKS,
+    total: Money.usd(6497),
+    ...overrides
+  };
+}
 
 class LogListener implements Listener {
   readonly #name: string;
   readonly #log: string[];
 
-  constructor({ name, log }: { name: string; log: string[] }) {
+  constructor({ name, log }: {
+    name: string;
+    log: string[];
+  }) {
     this.#name = name;
     this.#log = log;
   }
@@ -68,9 +106,24 @@ describe("EventBus", () => {
   it("calls every listener of the event type, in the order they subscribed", async () => {
     const { bus } = setupBus();
     const log: string[] = [];
-    bus.subscribe("Ping", new LogListener({ name: "first", log }));
-    bus.subscribe("Ping", new LogListener({ name: "second", log }));
-    bus.subscribe("Ping", new LogListener({ name: "third", log }));
+    bus.subscribe(
+      "Ping", new LogListener({
+        name: "first",
+        log
+      })
+    );
+    bus.subscribe(
+      "Ping", new LogListener({
+        name: "second",
+        log
+      })
+    );
+    bus.subscribe(
+      "Ping", new LogListener({
+        name: "third",
+        log
+      })
+    );
 
     await bus.publish(eventNamed("Ping"));
 
@@ -80,8 +133,18 @@ describe("EventBus", () => {
   it("does not call listeners of other event types", async () => {
     const { bus } = setupBus();
     const log: string[] = [];
-    bus.subscribe("Ping", new LogListener({ name: "ping", log }));
-    bus.subscribe("Pong", new LogListener({ name: "pong", log }));
+    bus.subscribe(
+      "Ping", new LogListener({
+        name: "ping",
+        log
+      })
+    );
+    bus.subscribe(
+      "Pong", new LogListener({
+        name: "pong",
+        log
+      })
+    );
 
     await bus.publish(eventNamed("Pong"));
 
@@ -110,7 +173,7 @@ describe("EventBus", () => {
     const { bus } = setupBus();
     const log: string[] = [];
     bus.subscribe("Ping", {
-      handle: async () => {
+      async handle() {
         log.push("slow starts");
         await nextTick();
         log.push("slow ends");
@@ -127,7 +190,7 @@ describe("EventBus", () => {
     const { bus } = setupBus();
     let isFinished = false;
     bus.subscribe("Ping", {
-      handle: async () => {
+      async handle() {
         await nextTick();
         isFinished = true;
       }
@@ -142,12 +205,17 @@ describe("EventBus", () => {
     const { bus, failures } = setupBus();
     const log: string[] = [];
     const broken: Listener = {
-      handle: () => {
+      handle() {
         throw new Error("mail server down");
       }
     };
     bus.subscribe("Ping", broken);
-    bus.subscribe("Ping", new LogListener({ name: "after", log }));
+    bus.subscribe(
+      "Ping", new LogListener({
+        name: "after",
+        log
+      })
+    );
     const event = eventNamed("Ping");
 
     await bus.publish(event);
@@ -156,7 +224,7 @@ describe("EventBus", () => {
     expect(failures).toHaveLength(1);
     expect(failures[0].event).toBe(event);
     expect(failures[0].listener).toBe(broken);
-    expect((failures[0].error as Error).message).toBe("mail server down");
+    expect(messageOf(failures[0].error)).toBe("mail server down");
   });
 
   it("a listener that rejects is reported too", async () => {
@@ -165,14 +233,24 @@ describe("EventBus", () => {
 
     await bus.publish(eventNamed("Ping"));
 
-    expect(failures.map(failure => (failure.error as Error).message)).toEqual(["async failure"]);
+    expect(failures.map(failure => messageOf(failure.error))).toEqual(["async failure"]);
   });
 
   it("stops calling a listener after it unsubscribes", async () => {
     const { bus } = setupBus();
     const log: string[] = [];
-    const unsubscribe = bus.subscribe("Ping", new LogListener({ name: "gone", log }));
-    bus.subscribe("Ping", new LogListener({ name: "stays", log }));
+    const unsubscribe = bus.subscribe(
+      "Ping", new LogListener({
+        name: "gone",
+        log
+      })
+    );
+    bus.subscribe(
+      "Ping", new LogListener({
+        name: "stays",
+        log
+      })
+    );
 
     unsubscribe();
     await bus.publish(eventNamed("Ping"));
@@ -184,8 +262,13 @@ describe("EventBus", () => {
     const { bus } = setupBus();
     const log: string[] = [];
     bus.subscribe("Ping", {
-      handle: () => {
-        bus.subscribe("Ping", new LogListener({ name: "late", log }));
+      handle() {
+        bus.subscribe(
+          "Ping", new LogListener({
+            name: "late",
+            log
+          })
+        );
       }
     });
 
@@ -200,7 +283,12 @@ describe("EventBus", () => {
     const first = setupBus().bus;
     const second = setupBus().bus;
     const log: string[] = [];
-    first.subscribe("Ping", new LogListener({ name: "first only", log }));
+    first.subscribe(
+      "Ping", new LogListener({
+        name: "first only",
+        log
+      })
+    );
 
     await second.publish(eventNamed("Ping"));
 
@@ -225,8 +313,14 @@ describe("the three listeners", () => {
     await new StockListener({ inventory }).handle(orderPlacedEvent());
 
     expect(inventory.sales).toEqual([
-      { isbn: "isbn-1", quantity: 3 },
-      { isbn: "isbn-2", quantity: 1 }
+      {
+        isbn: "isbn-1",
+        quantity: 3
+      },
+      {
+        isbn: "isbn-2",
+        quantity: 1
+      }
     ]);
   });
 
@@ -235,7 +329,10 @@ describe("the three listeners", () => {
 
     await new LoyaltyListener({ ledger }).handle(orderPlacedEvent());
 
-    expect(ledger.awards).toEqual([{ email: CUSTOMER, points: 64 }]);
+    expect(ledger.awards).toEqual([{
+      email: CUSTOMER,
+      points: 64
+    }]);
   });
 
   it("LoyaltyListener records nothing for an order under one dollar", async () => {
@@ -248,17 +345,29 @@ describe("the three listeners", () => {
 });
 
 describe("placeOrder announces a fact and knows nothing about who listens", () => {
-  const setupPlaceOrder = () => {
+  function setupPlaceOrder() {
     const { bus, failures } = setupBus();
     const orders = new InMemoryOrderRepository();
-    const placeOrder = createPlaceOrder({ orders, bus, newId: sequentialIds("order") });
-    return { bus, failures, orders, placeOrder };
-  };
+    const placeOrder = createPlaceOrder({
+      orders,
+      bus,
+      newId: sequentialIds("order")
+    });
+    return {
+      bus,
+      failures,
+      orders,
+      placeOrder
+    };
+  }
 
   it("saves the order and returns its id", async () => {
     const { placeOrder, orders } = setupPlaceOrder();
 
-    const result = await placeOrder({ customerEmail: CUSTOMER, lines: BOOKS });
+    const result = await placeOrder({
+      customerEmail: CUSTOMER,
+      lines: BOOKS
+    });
 
     expect(result).toEqual({ orderId: "order-1" });
     expect((await orders.findById("order-1"))?.total.toString()).toBe("64.97 USD");
@@ -267,7 +376,12 @@ describe("placeOrder announces a fact and knows nothing about who listens", () =
   it("works with nobody listening", async () => {
     const { placeOrder } = setupPlaceOrder();
 
-    await expect(placeOrder({ customerEmail: CUSTOMER, lines: BOOKS })).resolves.toEqual({ orderId: "order-1" });
+    await expect(
+      placeOrder({
+        customerEmail: CUSTOMER,
+        lines: BOOKS
+      })
+    ).resolves.toEqual({ orderId: "order-1" });
   });
 
   it("publishes one OrderPlaced event with the order details", async () => {
@@ -275,7 +389,10 @@ describe("placeOrder announces a fact and knows nothing about who listens", () =
     const received: OrderPlaced[] = [];
     bus.subscribe<OrderPlaced>(EventType.orderPlaced, { handle: event => void received.push(event) });
 
-    await placeOrder({ customerEmail: CUSTOMER, lines: BOOKS });
+    await placeOrder({
+      customerEmail: CUSTOMER,
+      lines: BOOKS
+    });
 
     expect(received).toHaveLength(1);
     expect(received[0].type).toBe("OrderPlaced");
@@ -289,12 +406,15 @@ describe("placeOrder announces a fact and knows nothing about who listens", () =
     const { bus, placeOrder, orders } = setupPlaceOrder();
     const foundWhileListening: boolean[] = [];
     bus.subscribe<OrderPlaced>(EventType.orderPlaced, {
-      handle: async event => {
+      async handle(event) {
         foundWhileListening.push((await orders.findById(event.orderId)) !== undefined);
       }
     });
 
-    await placeOrder({ customerEmail: CUSTOMER, lines: BOOKS });
+    await placeOrder({
+      customerEmail: CUSTOMER,
+      lines: BOOKS
+    });
 
     expect(foundWhileListening).toEqual([true]);
   });
@@ -302,9 +422,19 @@ describe("placeOrder announces a fact and knows nothing about who listens", () =
   it("an order with no lines is a domain error, with no event and nothing saved", async () => {
     const { bus, placeOrder, orders } = setupPlaceOrder();
     const log: string[] = [];
-    bus.subscribe(EventType.orderPlaced, new LogListener({ name: "heard", log }));
+    bus.subscribe(
+      EventType.orderPlaced, new LogListener({
+        name: "heard",
+        log
+      })
+    );
 
-    await expect(placeOrder({ customerEmail: CUSTOMER, lines: [] })).rejects.toThrow(DomainError);
+    await expect(
+      placeOrder({
+        customerEmail: CUSTOMER,
+        lines: []
+      })
+    ).rejects.toThrow(DomainError);
     expect(log).toEqual([]);
     expect(await orders.list()).toEqual([]);
   });
@@ -312,12 +442,15 @@ describe("placeOrder announces a fact and knows nothing about who listens", () =
   it("a failing listener does not undo or fail the order", async () => {
     const { bus, failures, placeOrder, orders } = setupPlaceOrder();
     bus.subscribe(EventType.orderPlaced, {
-      handle: () => {
+      handle() {
         throw new Error("mail server down");
       }
     });
 
-    const result = await placeOrder({ customerEmail: CUSTOMER, lines: BOOKS });
+    const result = await placeOrder({
+      customerEmail: CUSTOMER,
+      lines: BOOKS
+    });
 
     expect(result).toEqual({ orderId: "order-1" });
     expect(await orders.list()).toHaveLength(1);
@@ -342,7 +475,7 @@ describe("wired together, and a new listener plugs in without changing placeOrde
     }
   }
 
-  const wire = () => {
+  function wire() {
     const { bus, failures } = setupBus();
     const orders = new InMemoryOrderRepository();
     const mailer = new RecordingMailer();
@@ -351,34 +484,60 @@ describe("wired together, and a new listener plugs in without changing placeOrde
     bus.subscribe(EventType.orderPlaced, new ConfirmationEmailListener({ mailer }));
     bus.subscribe(EventType.orderPlaced, new StockListener({ inventory }));
     bus.subscribe(EventType.orderPlaced, new LoyaltyListener({ ledger }));
-    const placeOrder = createPlaceOrder({ orders, bus, newId: sequentialIds("order") });
-    return { bus, failures, mailer, inventory, ledger, placeOrder };
-  };
+    const placeOrder = createPlaceOrder({
+      orders,
+      bus,
+      newId: sequentialIds("order")
+    });
+    return {
+      bus,
+      failures,
+      mailer,
+      inventory,
+      ledger,
+      placeOrder
+    };
+  }
 
-  const wireWithBrokenFirstListener = () => {
+  function wireWithBrokenFirstListener() {
     const { bus, failures } = setupBus();
     const orders = new InMemoryOrderRepository();
     const inventory = new RecordingInventory();
     const ledger = new RecordingLedger();
     bus.subscribe(EventType.orderPlaced, {
-      handle: () => {
+      handle() {
         throw new Error("mail server down");
       }
     });
     bus.subscribe(EventType.orderPlaced, new StockListener({ inventory }));
     bus.subscribe(EventType.orderPlaced, new LoyaltyListener({ ledger }));
-    const placeOrder = createPlaceOrder({ orders, bus, newId: sequentialIds("order") });
-    return { failures, inventory, ledger, placeOrder };
-  };
+    const placeOrder = createPlaceOrder({
+      orders,
+      bus,
+      newId: sequentialIds("order")
+    });
+    return {
+      failures,
+      inventory,
+      ledger,
+      placeOrder
+    };
+  }
 
   it("placing one order emails, updates stock and awards points", async () => {
     const { placeOrder, mailer, inventory, ledger } = wire();
 
-    await placeOrder({ customerEmail: CUSTOMER, lines: BOOKS });
+    await placeOrder({
+      customerEmail: CUSTOMER,
+      lines: BOOKS
+    });
 
     expect(mailer.sent).toHaveLength(1);
     expect(inventory.sales).toHaveLength(2);
-    expect(ledger.awards).toEqual([{ email: CUSTOMER, points: 64 }]);
+    expect(ledger.awards).toEqual([{
+      email: CUSTOMER,
+      points: 64
+    }]);
   });
 
   it("an analytics listener written later receives the event and the others still run", async () => {
@@ -386,7 +545,10 @@ describe("wired together, and a new listener plugs in without changing placeOrde
     const analytics = new AnalyticsListener();
     bus.subscribe(EventType.orderPlaced, analytics);
 
-    await placeOrder({ customerEmail: CUSTOMER, lines: BOOKS });
+    await placeOrder({
+      customerEmail: CUSTOMER,
+      lines: BOOKS
+    });
 
     expect(analytics.tracked).toEqual(["order-1:64.97 USD"]);
     expect(mailer.sent).toHaveLength(1);
@@ -396,7 +558,10 @@ describe("wired together, and a new listener plugs in without changing placeOrde
   it("one failing listener does not stop the stock and points listeners that come after it", async () => {
     const { failures, placeOrder, inventory, ledger } = wireWithBrokenFirstListener();
 
-    await placeOrder({ customerEmail: CUSTOMER, lines: BOOKS });
+    await placeOrder({
+      customerEmail: CUSTOMER,
+      lines: BOOKS
+    });
 
     expect(failures).toHaveLength(1);
     expect(inventory.sales).toHaveLength(2);

@@ -1,6 +1,10 @@
 import type { DomainEvent, Listener } from "./events.ts";
 
-export type ListenerFailure = { event: DomainEvent; listener: Listener; error: unknown };
+export type ListenerFailure = {
+  event: DomainEvent;
+  listener: Listener;
+  error: unknown;
+};
 
 type Subscription = { listener: Listener };
 
@@ -27,7 +31,11 @@ export class EventBus {
       try {
         await listener.handle(event);
       } catch (error) {
-        this.#onListenerError({ event, listener, error });
+        this.#onListenerError({
+          event,
+          listener,
+          error
+        });
       }
     }
   }

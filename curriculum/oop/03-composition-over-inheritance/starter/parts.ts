@@ -1,4 +1,7 @@
-export type Notice = { orderId: string; text: string };
+export type Notice = {
+  orderId: string;
+  text: string;
+};
 
 export interface Channel {
   send(text: string): void;

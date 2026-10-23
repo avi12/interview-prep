@@ -4,11 +4,17 @@ export function createOrderValidator(): OrderValidator {
   throw new Error("not implemented");
 }
 
-export function createBulkDiscountRule(_input: { minimumQuantity: number; percent: number }): PricingRule {
+export function createBulkDiscountRule(_input: {
+  minimumQuantity: number;
+  percent: number;
+}): PricingRule {
   throw new Error("not implemented");
 }
 
-export function createCouponRule(_input: { code: string; amountCents: number }): PricingRule {
+export function createCouponRule(_input: {
+  code: string;
+  amountCents: number;
+}): PricingRule {
   throw new Error("not implemented");
 }
 
@@ -18,7 +24,7 @@ export function createPriceCalculator(_input: { rules: PricingRule[] }): PriceCa
 
 export function createNoReceiptSender(): ReceiptSender {
   return {
-    send: async () => {
+    async send() {
       throw new Error("not supported");
     }
   };

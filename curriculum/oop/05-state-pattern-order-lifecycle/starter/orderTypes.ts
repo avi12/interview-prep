@@ -20,7 +20,10 @@ export class IllegalTransitionError extends DomainError {
   readonly from: string;
   readonly action: string;
 
-  constructor({ from, action }: { from: string; action: string }) {
+  constructor({ from, action }: {
+    from: string;
+    action: string;
+  }) {
     super(`cannot ${action} an order that is ${from}`);
     this.from = from;
     this.action = action;
@@ -41,6 +44,12 @@ export interface OrderState {
   cancel(order: OrderContext): void;
 }
 
-export const refuse = ({ from, action }: { from: string; action: string }): never => {
-  throw new IllegalTransitionError({ from, action });
-};
+export function refuse({ from, action }: {
+  from: string;
+  action: string;
+}): never {
+  throw new IllegalTransitionError({
+    from,
+    action
+  });
+}

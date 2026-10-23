@@ -1,6 +1,3 @@
-import { describe, expect, it } from "vitest";
-import { loadImpl } from "#kit/impl.ts";
-import { createGate, nextTick } from "#kit/async.ts";
 import type { CheckoutError as CheckoutErrorClass } from "../starter/errors.ts";
 import type { Money as MoneyClass } from "../starter/money.ts";
 import type {
@@ -11,40 +8,90 @@ import type {
   OrderLine,
   PaymentGateway
 } from "../starter/types.ts";
+import { createGate, nextTick } from "#kit/async.ts";
+import { loadImpl } from "#kit/impl.ts";
+import { describe, expect, it } from "vitest";
 
 type PublicApi = {
   createCheckout: (options: CheckoutOptions) => Checkout;
   percentOff: (input: { percent: number }) => DiscountRule;
-  bulkDiscount: (input: { minimumQuantity: number; percent: number }) => DiscountRule;
+  bulkDiscount: (input: {
+    minimumQuantity: number;
+    percent: number;
+  }) => DiscountRule;
   Money: typeof MoneyClass;
   CheckoutError: typeof CheckoutErrorClass;
 };
 
-const api = await loadImpl<PublicApi>({ testUrl: import.meta.url, file: "index.ts" });
+const api = await loadImpl<PublicApi>({
+  testUrl: import.meta.url,
+  file: "index.ts"
+});
 const { createCheckout, percentOff, bulkDiscount, Money, CheckoutError } = api;
 
 const PUBLIC_NAMES = ["CheckoutError", "Money", "bulkDiscount", "createCheckout", "percentOff"];
 const BOOK_CENTS = 1000;
 
-const bookLines = (quantity = 1): OrderLine[] => [{ title: "Clean Code", unitPrice: Money.usd(BOOK_CENTS), quantity }];
+function bookLines(quantity = 1): OrderLine[] {
+  return [{
+    title: "Clean Code",
+    unitPrice: Money.usd(BOOK_CENTS),
+    quantity
+  }];
+}
 
-const setup = (overrides: Partial<CheckoutOptions> = {}) => {
-  const charges: { orderId: string; cents: number }[] = [];
-  const refunds: { orderId: string; receiptId: string; cents: number }[] = [];
+function setup(overrides: Partial<CheckoutOptions> = {}) {
+  const charges: {
+    orderId: string;
+    cents: number;
+  }[] = [];
+  const refunds: {
+    orderId: string;
+    receiptId: string;
+    cents: number;
+  }[] = [];
   const reported: unknown[] = [];
-  const behavior = { declineReason: undefined as string | undefined, chargeGate: undefined as Promise<void> | undefined, failRefund: false };
+  const behavior: {
+    declineReason: string | undefined;
+    chargeGate: Promise<void> | undefined;
+    failRefund: boolean;
+  } = {
+    declineReason: undefined,
+    chargeGate: undefined,
+    failRefund: false
+  };
   let receiptCount = 0;
   let orderCount = 0;
   const gateway: PaymentGateway = {
-    charge: async ({ orderId, amount }) => {
-      charges.push({ orderId, cents: amount.cents });
+    async charge({ orderId, amount }) {
+      charges.push({
+        orderId,
+        cents: amount.cents
+      });
       await behavior.chargeGate;
-      if (behavior.declineReason) return { ok: false, reason: behavior.declineReason };
-      return { ok: true, receiptId: `receipt-${++receiptCount}` };
+
+      if (behavior.declineReason) {
+        return {
+          ok: false,
+          reason: behavior.declineReason
+        };
+      }
+
+      return {
+        ok: true,
+        receiptId: `receipt-${++receiptCount}`
+      };
     },
-    refund: async ({ orderId, receiptId, amount }) => {
-      if (behavior.failRefund) throw new Error("refund service down");
-      refunds.push({ orderId, receiptId, cents: amount.cents });
+    async refund({ orderId, receiptId, amount }) {
+      if (behavior.failRefund) {
+        throw new Error("refund service down");
+      }
+
+      refunds.push({
+        orderId,
+        receiptId,
+        cents: amount.cents
+      });
     }
   };
   const checkout = createCheckout({
@@ -55,23 +102,30 @@ const setup = (overrides: Partial<CheckoutOptions> = {}) => {
   });
   const events: CheckoutEvent[] = [];
   checkout.on(event => void events.push(event));
-  return { checkout, charges, refunds, reported, events, behavior };
-};
+  return {
+    checkout,
+    charges,
+    refunds,
+    reported,
+    events,
+    behavior
+  };
+}
 
-const placeAndPay = async (context: ReturnType<typeof setup>, quantity = 1) => {
+async function placeAndPay(context: ReturnType<typeof setup>, quantity = 1) {
   const order = context.checkout.placeOrder({ lines: bookLines(quantity) });
   await context.checkout.pay(order.id);
   return order.id;
-};
+}
 
-const thrownBy = (action: () => unknown) => {
+function thrownBy(action: () => unknown) {
   try {
     action();
   } catch (error) {
     return error;
   }
   throw new Error("expected the call to throw");
-};
+}
 
 describe("the public API", () => {
   it("exports exactly the documented names and nothing internal", () => {
@@ -91,14 +145,22 @@ describe("placing an order", () => {
 
     const order = checkout.placeOrder({ lines: bookLines(2) });
 
-    expect(order).toMatchObject({ id: "order-1", status: "placed" });
+    expect(order).toMatchObject({
+      id: "order-1",
+      status: "placed"
+    });
     expect(order.subtotal.cents).toBe(2000);
     expect(order.discount.cents).toBe(0);
     expect(order.total.cents).toBe(2000);
   });
 
   it("applies the discount rules it was given", () => {
-    const { checkout } = setup({ rules: [bulkDiscount({ minimumQuantity: 3, percent: 10 }), percentOff({ percent: 5 })] });
+    const { checkout } = setup({
+      rules: [bulkDiscount({
+        minimumQuantity: 3,
+        percent: 10
+      }), percentOff({ percent: 5 })]
+    });
 
     const small = checkout.placeOrder({ lines: bookLines(2) });
     const big = checkout.placeOrder({ lines: bookLines(3) });
@@ -109,7 +171,10 @@ describe("placing an order", () => {
   });
 
   it("never lets the discount push the total below zero", () => {
-    const hugeRule: DiscountRule = { name: "huge", discountFor: () => Money.usd(999_999) };
+    const hugeRule: DiscountRule = {
+      name: "huge",
+      discountFor: () => Money.usd(999_999)
+    };
     const { checkout } = setup({ rules: [hugeRule] });
 
     const order = checkout.placeOrder({ lines: bookLines() });
@@ -159,7 +224,10 @@ describe("paying", () => {
 
     expect(result.outcome).toBe("paid");
     expect(result.order.status).toBe("paid");
-    expect(charges).toEqual([{ orderId: order.id, cents: 2000 }]);
+    expect(charges).toEqual([{
+      orderId: order.id,
+      cents: 2000
+    }]);
     expect(checkout.getOrder(order.id).status).toBe("paid");
   });
 
@@ -170,7 +238,10 @@ describe("paying", () => {
 
     const declined = await checkout.pay(order.id);
 
-    expect(declined).toMatchObject({ outcome: "declined", reason: "card declined" });
+    expect(declined).toMatchObject({
+      outcome: "declined",
+      reason: "card declined"
+    });
     expect(checkout.getOrder(order.id).status).toBe("placed");
     expect(events.map(event => event.type)).toEqual(["OrderPlaced", "PaymentDeclined"]);
 
@@ -245,7 +316,11 @@ describe("shipping and cancelling", () => {
 
     expect(cancelled.status).toBe("cancelled");
     expect(refunds).toEqual([]);
-    expect(events.at(-1)).toEqual({ type: "OrderCancelled", orderId: order.id, wasRefunded: false });
+    expect(events.at(-1)).toEqual({
+      type: "OrderCancelled",
+      orderId: order.id,
+      wasRefunded: false
+    });
   });
 
   it("cancelling a paid order refunds the receipt and the total", async () => {
@@ -254,8 +329,16 @@ describe("shipping and cancelling", () => {
 
     await context.checkout.cancel(orderId);
 
-    expect(context.refunds).toEqual([{ orderId, receiptId: "receipt-1", cents: 3000 }]);
-    expect(context.events.at(-1)).toEqual({ type: "OrderCancelled", orderId, wasRefunded: true });
+    expect(context.refunds).toEqual([{
+      orderId,
+      receiptId: "receipt-1",
+      cents: 3000
+    }]);
+    expect(context.events.at(-1)).toEqual({
+      type: "OrderCancelled",
+      orderId,
+      wasRefunded: true
+    });
   });
 
   it("a shipped order cannot be cancelled and nothing is refunded", async () => {
@@ -311,9 +394,20 @@ describe("domain events", () => {
     await context.checkout.ship(order.id);
 
     expect(context.events).toEqual([
-      { type: "OrderPlaced", orderId: order.id, total: Money.usd(2000) },
-      { type: "OrderPaid", orderId: order.id, receiptId: "receipt-1" },
-      { type: "OrderShipped", orderId: order.id }
+      {
+        type: "OrderPlaced",
+        orderId: order.id,
+        total: Money.usd(2000)
+      },
+      {
+        type: "OrderPaid",
+        orderId: order.id,
+        receiptId: "receipt-1"
+      },
+      {
+        type: "OrderShipped",
+        orderId: order.id
+      }
     ]);
   });
 
@@ -370,7 +464,13 @@ describe("domain events", () => {
 
   it("works without a reportError option", () => {
     const checkout = createCheckout({
-      gateway: { charge: async () => ({ ok: true, receiptId: "r" }), refund: async () => {} },
+      gateway: {
+        charge: async () => ({
+          ok: true,
+          receiptId: "r"
+        }),
+        async refund() {}
+      },
       newId: () => "order-1"
     });
     checkout.on(() => {
@@ -382,7 +482,10 @@ describe("domain events", () => {
 });
 
 describe("extension: new variants plug in without editing your code", () => {
-  const bookClubRule: DiscountRule = { name: "book club", discountFor: () => Money.usd(250) };
+  const bookClubRule: DiscountRule = {
+    name: "book club",
+    discountFor: () => Money.usd(250)
+  };
 
   it("a discount rule written in the test is applied next to the built-in ones", () => {
     const { checkout } = setup({ rules: [percentOff({ percent: 10 }), bookClubRule] });
@@ -396,9 +499,12 @@ describe("extension: new variants plug in without editing your code", () => {
   it("a different payment gateway can be injected", async () => {
     const calls: string[] = [];
     const bankTransferGateway: PaymentGateway = {
-      charge: async ({ orderId }) => {
+      async charge({ orderId }) {
         calls.push(`transfer for ${orderId}`);
-        return { ok: true, receiptId: `BT-${orderId}` };
+        return {
+          ok: true,
+          receiptId: `BT-${orderId}`
+        };
       },
       refund: async ({ receiptId }) => void calls.push(`return ${receiptId}`)
     };
@@ -415,7 +521,9 @@ describe("extension: new variants plug in without editing your code", () => {
     const { checkout } = setup();
     const emails: string[] = [];
     checkout.on(event => {
-      if (event.type === "OrderPaid") emails.push(`receipt ${event.receiptId} for ${event.orderId}`);
+      if (event.type === "OrderPaid") {
+        emails.push(`receipt ${event.receiptId} for ${event.orderId}`);
+      }
     });
     const order = checkout.placeOrder({ lines: bookLines() });
 
@@ -427,10 +535,16 @@ describe("extension: new variants plug in without editing your code", () => {
   it("rule, gateway and listener together run a whole order from placed to shipped", async () => {
     const audit: string[] = [];
     const gateway: PaymentGateway = {
-      charge: async ({ amount }) => ({ ok: true, receiptId: `paid-${amount.cents}` }),
-      refund: async () => {}
+      charge: async ({ amount }) => ({
+        ok: true,
+        receiptId: `paid-${amount.cents}`
+      }),
+      async refund() {}
     };
-    const { checkout } = setup({ gateway, rules: [bookClubRule] });
+    const { checkout } = setup({
+      gateway,
+      rules: [bookClubRule]
+    });
     checkout.on(event => void audit.push(event.type));
     const order = checkout.placeOrder({ lines: bookLines(2) });
 

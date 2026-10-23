@@ -1,13 +1,22 @@
-import { describe, expect, it } from "vitest";
-import { loadImpl } from "#kit/impl.ts";
-import { Money } from "#kit/bookstore/money.ts";
+import type * as OrderModule from "../starter/order.ts";
 import type * as TypesModule from "../starter/orderTypes.ts";
 import type * as StatesModule from "../starter/states.ts";
-import type * as OrderModule from "../starter/order.ts";
+import { Money } from "#kit/bookstore/money.ts";
+import { loadImpl } from "#kit/impl.ts";
+import { describe, expect, it } from "vitest";
 
-const { IllegalTransitionError, OrderAction, refuse } = await loadImpl<typeof TypesModule>({ testUrl: import.meta.url, file: "orderTypes.ts" });
-const { ShippedState, CancelledState } = await loadImpl<typeof StatesModule>({ testUrl: import.meta.url, file: "states.ts" });
-const { Order } = await loadImpl<typeof OrderModule>({ testUrl: import.meta.url, file: "order.ts" });
+const { IllegalTransitionError, OrderAction, refuse } = await loadImpl<typeof TypesModule>({
+  testUrl: import.meta.url,
+  file: "orderTypes.ts"
+});
+const { ShippedState, CancelledState } = await loadImpl<typeof StatesModule>({
+  testUrl: import.meta.url,
+  file: "states.ts"
+});
+const { Order } = await loadImpl<typeof OrderModule>({
+  testUrl: import.meta.url,
+  file: "order.ts"
+});
 
 type OrderContext = TypesModule.OrderContext;
 type OrderState = TypesModule.OrderState;
@@ -25,36 +34,58 @@ const PATH_TO = {
 } as const satisfies Record<string, readonly Action[]>;
 
 const LEGAL_MOVES: Record<keyof typeof PATH_TO, Partial<Record<Action, string>>> = {
-  pending: { pay: "paid", cancel: "cancelled" },
-  paid: { ship: "shipped", cancel: "cancelled" },
-  shipped: { deliver: "delivered" },
+  pending: {
+    pay: "paid",
+    cancel: "cancelled"
+  },
+  paid: {
+    ship: "shipped",
+    cancel: "cancelled"
+  },
+  shipped: {
+    deliver: "delivered"
+  },
   delivered: {},
   cancelled: {}
 };
 
-const newOrder = () => new Order({ id: "order-1", total: TOTAL });
+function newOrder() {
+  return new Order({
+    id: "order-1",
+    total: TOTAL
+  });
+}
 
-const orderIn = (status: keyof typeof PATH_TO) => {
+function orderIn(status: keyof typeof PATH_TO) {
   const order = newOrder();
-  for (const action of PATH_TO[status]) order[action]();
+  for (const action of PATH_TO[status]) {
+    order[action]();
+  }
   return order;
-};
+}
 
-const errorThrownBy = (action: () => void) => {
+function errorThrownBy(action: () => void) {
   try {
     action();
   } catch (error) {
-    return error as InstanceType<typeof IllegalTransitionError>;
+    if (error instanceof IllegalTransitionError) {
+      return error;
+    }
+
+    throw error;
   }
   return undefined;
-};
+}
 
-const combinations = (Object.keys(PATH_TO) as (keyof typeof PATH_TO)[]).flatMap(status =>
+function isStatus(key: string): key is keyof typeof PATH_TO {
+  return key in PATH_TO;
+}
+
+const combinations = Object.keys(PATH_TO).filter(isStatus).flatMap(status =>
   ACTIONS.map(action => {
     const expected = LEGAL_MOVES[status][action];
     return [status, action, expected ?? "a refusal", expected] as const;
-  })
-);
+  }));
 
 describe("the order lifecycle", () => {
   it("starts out pending, with nothing refunded", () => {
@@ -77,12 +108,12 @@ describe("the order lifecycle", () => {
 
   it.each(combinations)("from %s, %s leads to %s", (status, action, _label, expected) => {
     const order = orderIn(status);
-
     if (expected) {
       order[action]();
       expect(order.status).toBe(expected);
       return;
     }
+
     const error = errorThrownBy(() => order[action]());
 
     expect(error).toBeInstanceOf(IllegalTransitionError);
@@ -145,7 +176,10 @@ describe("a state the author never saw plugs in without changing any of your cod
     readonly name = "packing";
 
     pay() {
-      refuse({ from: this.name, action: OrderAction.pay });
+      refuse({
+        from: this.name,
+        action: OrderAction.pay
+      });
     }
 
     ship(order: OrderContext) {
@@ -153,7 +187,10 @@ describe("a state the author never saw plugs in without changing any of your cod
     }
 
     deliver() {
-      refuse({ from: this.name, action: OrderAction.deliver });
+      refuse({
+        from: this.name,
+        action: OrderAction.deliver
+      });
     }
 
     cancel(order: OrderContext) {
@@ -168,28 +205,49 @@ describe("a state the author never saw plugs in without changing any of your cod
     readonly totals: string[] = [];
 
     pay(order: OrderContext) {
-      this.#record({ action: "pay", order });
+      this.#record({
+        action: "pay",
+        order
+      });
     }
 
     ship(order: OrderContext) {
-      this.#record({ action: "ship", order });
+      this.#record({
+        action: "ship",
+        order
+      });
     }
 
     deliver(order: OrderContext) {
-      this.#record({ action: "deliver", order });
+      this.#record({
+        action: "deliver",
+        order
+      });
     }
 
     cancel(order: OrderContext) {
-      this.#record({ action: "cancel", order });
+      this.#record({
+        action: "cancel",
+        order
+      });
     }
 
-    #record({ action, order }: { action: string; order: OrderContext }) {
+    #record({ action, order }: {
+      action: string;
+      order: OrderContext;
+    }) {
       this.calls.push(action);
       this.totals.push(order.total.toString());
     }
   }
 
-  const packingOrder = () => new Order({ id: "order-9", total: TOTAL, state: new PackingState() });
+  function packingOrder() {
+    return new Order({
+      id: "order-9",
+      total: TOTAL,
+      state: new PackingState()
+    });
+  }
 
   it("an order can start in a state written later", () => {
     expect(packingOrder().status).toBe("packing");
@@ -222,7 +280,11 @@ describe("a state the author never saw plugs in without changing any of your cod
 
   it("the order only forwards each call to its current state and decides nothing itself", () => {
     const spy = new StateSpy();
-    const order = new Order({ id: "order-9", total: TOTAL, state: spy });
+    const order = new Order({
+      id: "order-9",
+      total: TOTAL,
+      state: spy
+    });
 
     order.pay();
     order.deliver();

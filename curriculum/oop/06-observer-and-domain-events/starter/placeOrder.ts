@@ -7,8 +7,11 @@ export type PlaceOrderDependencies = {
   newId: () => string;
 };
 
-export const createPlaceOrder =
-  (_dependencies: PlaceOrderDependencies) =>
-  async (_input: { customerEmail: string; lines: readonly OrderLine[] }): Promise<{ orderId: string }> => {
+export function createPlaceOrder(_dependencies: PlaceOrderDependencies) {
+  return async (_input: {
+    customerEmail: string;
+    lines: readonly OrderLine[];
+  }): Promise<{ orderId: string }> => {
     throw new Error("not implemented");
   };
+}

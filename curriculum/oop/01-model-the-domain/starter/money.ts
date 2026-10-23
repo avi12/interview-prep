@@ -4,17 +4,26 @@ export class Money {
   cents: number;
   currency: string;
 
-  constructor({ cents, currency }: { cents: number; currency: string }) {
+  constructor({ cents, currency }: {
+    cents: number;
+    currency: string;
+  }) {
     this.cents = cents;
     this.currency = currency;
   }
 
   static usd(cents: number) {
-    return new Money({ cents, currency: "USD" });
+    return new Money({
+      cents,
+      currency: "USD"
+    });
   }
 
   static zero(currency: string) {
-    return new Money({ cents: 0, currency });
+    return new Money({
+      cents: 0,
+      currency
+    });
   }
 
   add(other: Money) {
