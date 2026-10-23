@@ -1,6 +1,6 @@
 # Authoring a lesson
 
-The learner is a career changer preparing for junior interviews. They struggle to concentrate on long text, learn best from pictures and doing, and want to know **why this way and not another way**. Every lesson serves that.
+Every lesson serves the learner described in `LEARNER.md`. Read it first.
 
 Read the three exemplars before writing anything. They define the format:
 
@@ -22,7 +22,7 @@ Reading-only lessons use `lang: none` and need no starter, solution or tests.
 
 ## lesson.md
 
-Frontmatter: `title`, `lang` (`ts` | `py` | `sql` | `none`), `minutes` (5-60, honest), `level` (`junior` | `mid`), `roles` (any of `backend`, `analyst`, `ai`), `files` (the files the learner edits, first one opens), `sources` (real URLs you read, official docs first).
+Frontmatter: `title`, `lang` (`ts` | `py` | `sql` | `none`), `minutes` (5-60, honest), `level` (`junior` | `mid`), `roles` (ids from `roles.json`), `files` (the files the learner edits, first one opens), `sources` (real URLs you read, official docs first).
 
 Body is a list of **cards**. A card starts at `## Title`. Rules enforced by `pnpm verify`:
 
@@ -92,7 +92,7 @@ Progressive nudge. The first is gentle, the last nearly gives it away.
 
 ## Code style (starter and solution show the habits we want)
 
-Derived from the project's CLAUDE.md. In short: early returns and minimal nesting, small pure functions, descriptive full-word names and zero comments, `for...of` instead of `.forEach`/`.reduce`, 2+ params as one destructured object (except a given interview signature), no magic numbers (named `SCREAMING_SNAKE_CASE` constants), `is`-prefixed positive booleans, inferred return types in TypeScript. Python: PEP 8, type hints optional, same early-return and naming habits.
+Derived from the project's `AGENTS.md`. In short: early returns and minimal nesting, small pure functions, descriptive full-word names and zero comments, `for...of` instead of `.forEach`/`.reduce`, 2+ params as one destructured object (except a given interview signature), no magic numbers (named `SCREAMING_SNAKE_CASE` constants), `is`-prefixed positive booleans, inferred return types in TypeScript. Python: PEP 8, type hints optional, same early-return and naming habits.
 
 ## Verify before you finish
 
