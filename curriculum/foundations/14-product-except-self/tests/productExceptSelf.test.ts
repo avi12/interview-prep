@@ -1,8 +1,8 @@
-import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
 import { implPath, loadImpl } from "#kit/impl.ts";
 import { createSeededPicker } from "#kit/random.ts";
 import { measureMs } from "#kit/timing.ts";
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
 
 type Module = { productExceptSelf: (numbers: number[]) => number[] };
 
@@ -12,26 +12,44 @@ const TIME_LIMIT_MS = 1000;
 const COMMENTS_AND_TEXT = /\/\/.*|\/\*[\s\S]*?\*\/|"[^"\n]*"|'[^'\n]*'|`[^`]*`/g;
 const DIVISION_SIGN = "/";
 const RANDOM_ROUNDS = 300;
-const RANDOM_LENGTHS = { min: 2, max: 9 };
+const RANDOM_LENGTHS = {
+  min: 2,
+  max: 9
+};
 const RANDOM_VALUES = [-3, -2, -1, 0, 0, 1, 2, 3];
 const SEED = 238;
 
-const { productExceptSelf } = await loadImpl<Module>({ testUrl: import.meta.url, file: IMPL_FILE });
+const { productExceptSelf } = await loadImpl<Module>({
+  testUrl: import.meta.url,
+  file: IMPL_FILE
+});
 
-const slowProductsExceptSelf = (numbers: number[]) =>
-  numbers.map((_, index) => {
+function slowProductsExceptSelf(numbers: number[]) {
+  return numbers.map((_, index) => {
     let product = 1;
-    for (const [otherIndex, value] of numbers.entries()) if (otherIndex !== index) product *= value;
+    for (const [otherIndex, value] of numbers.entries()) {
+      if (otherIndex !== index) {
+        product *= value;
+      }
+    }
     return product;
   });
+}
 
-const withoutNegativeZero = (values: number[]) => values.map(value => value + 0);
+function withoutNegativeZero(values: number[]) {
+  return values.map(value => value + 0);
+}
 
-const onesWith = ({ size, specials }: { size: number; specials: Record<number, number> }) => {
+function onesWith({ size, specials }: {
+  size: number;
+  specials: Record<number, number>;
+}) {
   const numbers = Array.from({ length: size }, () => 1);
-  for (const [index, value] of Object.entries(specials)) numbers[Number(index)] = value;
+  for (const [index, value] of Object.entries(specials)) {
+    numbers[Number(index)] = value;
+  }
   return numbers;
-};
+}
 
 describe("productExceptSelf", () => {
   it("multiplies all the other numbers", () => {
@@ -70,7 +88,12 @@ describe("productExceptSelf", () => {
   });
 
   it("does not use division (the rule of this exercise)", () => {
-    const source = readFileSync(implPath({ testUrl: import.meta.url, file: IMPL_FILE }), "utf8");
+    const source = readFileSync(
+      implPath({
+        testUrl: import.meta.url,
+        file: IMPL_FILE
+      }), "utf8"
+    );
     const code = source.replace(COMMENTS_AND_TEXT, "");
     expect(code.includes(DIVISION_SIGN), "found a / in your code: build the answer from left and right products").toBe(false);
   });
@@ -82,7 +105,13 @@ describe("productExceptSelf", () => {
   });
 
   it("stays fast on 100,000 numbers (O(n), not O(n squared))", () => {
-    const numbers = onesWith({ size: LARGE_SIZE, specials: { 100: 3, 80_000: -5 } });
+    const numbers = onesWith({
+      size: LARGE_SIZE,
+      specials: {
+        100: 3,
+        80_000: -5
+      }
+    });
     const { result: products, elapsedMs } = measureMs(() => productExceptSelf(numbers));
     expect(elapsedMs).toBeLessThan(TIME_LIMIT_MS);
     expect(products[0]).toBe(-15);
@@ -92,7 +121,13 @@ describe("productExceptSelf", () => {
   });
 
   it("stays fast and correct with a zero in the middle of 100,000 numbers", () => {
-    const numbers = onesWith({ size: LARGE_SIZE, specials: { 50_000: 0, 60_000: 7 } });
+    const numbers = onesWith({
+      size: LARGE_SIZE,
+      specials: {
+        50_000: 0,
+        60_000: 7
+      }
+    });
     const { result: rawProducts, elapsedMs } = measureMs(() => productExceptSelf(numbers));
     const products = withoutNegativeZero(rawProducts);
     expect(elapsedMs).toBeLessThan(TIME_LIMIT_MS);

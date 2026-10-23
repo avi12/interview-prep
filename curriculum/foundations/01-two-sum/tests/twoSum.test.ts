@@ -1,13 +1,18 @@
-import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
 import { createSeededPicker } from "#kit/random.ts";
 import { measureMs } from "#kit/timing.ts";
+import { describe, expect, it } from "vitest";
 
 type Module = { twoSum: (numbers: number[], target: number) => number[] };
 
-const { twoSum } = await loadImpl<Module>({ testUrl: import.meta.url, file: "twoSum.ts" });
+const { twoSum } = await loadImpl<Module>({
+  testUrl: import.meta.url,
+  file: "twoSum.ts"
+});
 
-const sortedPair = (pair: number[]) => [...pair].sort((a, b) => a - b);
+function sortedPair(pair: number[]) {
+  return [...pair].sort((first, second) => first - second);
+}
 const LARGE_SIZE = 200_000;
 const TIME_LIMIT_MS = 1000;
 const RANDOM_SEED = 20_240_601;
@@ -18,8 +23,14 @@ const RANDOM_VALUE_FLOOR = -10;
 const RANDOM_TARGET_SPAN = 41;
 const RANDOM_TARGET_FLOOR = -20;
 
-const hasPairWithSum = ({ numbers, target }: { numbers: number[]; target: number }) =>
-  numbers.some((first, i) => numbers.some((second, j) => i < j && first + second === target));
+function hasPairWithSum({ numbers, target }: {
+  numbers: number[];
+  target: number;
+}) {
+  return numbers.some((first, firstIndex) => numbers.some(
+    (second, secondIndex) => firstIndex < secondIndex && first + second === target
+  ));
+}
 
 describe("twoSum", () => {
   it("finds the pair in the simplest case", () => {
@@ -44,7 +55,8 @@ describe("twoSum", () => {
   });
 
   it("does not change the numbers it was given", () => {
-    const numbers = Object.freeze([11, 7, 2, 15]) as number[];
+    const numbers = [11, 7, 2, 15];
+    Object.freeze(numbers);
     expect(sortedPair(twoSum(numbers, 9))).toEqual([1, 2]);
     expect(numbers).toEqual([11, 7, 2, 15]);
   });
@@ -56,10 +68,14 @@ describe("twoSum", () => {
       const numbers = Array.from({ length }, () => random(RANDOM_VALUE_SPAN) + RANDOM_VALUE_FLOOR);
       const target = random(RANDOM_TARGET_SPAN) + RANDOM_TARGET_FLOOR;
       const pair = twoSum([...numbers], target);
-      if (!hasPairWithSum({ numbers, target })) {
+      if (!hasPairWithSum({
+        numbers,
+        target
+      })) {
         expect(pair, `numbers ${JSON.stringify(numbers)} target ${target}`).toEqual([]);
         continue;
       }
+
       const [first, second] = pair;
       expect(pair, `numbers ${JSON.stringify(numbers)} target ${target}`).toHaveLength(2);
       expect(first).not.toBe(second);
@@ -68,7 +84,7 @@ describe("twoSum", () => {
   });
 
   it("stays fast on 200,000 numbers (O(n), not O(n squared))", () => {
-    const numbers = Array.from({ length: LARGE_SIZE }, (_, i) => i);
+    const numbers = Array.from({ length: LARGE_SIZE }, (_, index) => index);
     const target = numbers[LARGE_SIZE - 1] + numbers[LARGE_SIZE - 2];
     const { result: pair, elapsedMs } = measureMs(() => twoSum(numbers, target));
     expect(elapsedMs).toBeLessThan(TIME_LIMIT_MS);

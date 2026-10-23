@@ -1,3 +1,3 @@
-export function twoSum(numbers: number[], target: number) {
+export function twoSum(_numbers: number[], _target: number) {
   return [];
 }

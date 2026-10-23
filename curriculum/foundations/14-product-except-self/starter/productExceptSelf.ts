@@ -1,3 +1,3 @@
-export function productExceptSelf(numbers: number[]) {
+export function productExceptSelf(_numbers: number[]) {
   return [];
 }

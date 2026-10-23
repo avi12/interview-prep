@@ -7,6 +7,7 @@ export function mergeIntervals(intervals: number[][]) {
       merged.push([start, end]);
       continue;
     }
+
     last[1] = Math.max(last[1], end);
   }
   return merged;

@@ -1,3 +1,3 @@
-export function lengthOfLongestSubstring(text: string) {
+export function lengthOfLongestSubstring(_text: string) {
   return 0;
 }
