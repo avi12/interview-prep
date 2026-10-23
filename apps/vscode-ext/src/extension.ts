@@ -4,6 +4,7 @@ import { findLesson, findNextLesson } from "@/lessonData.ts";
 import { showLesson } from "@/lessonPanel.ts";
 import { Command, LessonTree } from "@/lessonTree.ts";
 import { registerSqlCompletion } from "@/sqlCompletion.ts";
+import { registerSqlHighlight } from "@/sqlHighlight.ts";
 import { serveTutorView } from "@/tutorView.ts";
 import { LESSON_ID_SEGMENTS, WORK_DIR_NAME } from "@scripts/lib/layout.ts";
 import { DONE_COMMAND, PanelAction } from "@scripts/lib/panel.ts";
@@ -208,6 +209,7 @@ function activateIn({ context, root }: {
   context.subscriptions.push(
     vscode.window.createTreeView("interviewPrep.lessons", { treeDataProvider: tree }),
     registerSqlCompletion(sqlTablesOf),
+    registerSqlHighlight(sqlTablesOf),
     vscode.commands.registerCommand(Command.openLesson, openLesson),
     vscode.commands.registerCommand(Command.nextLesson, openNextLesson),
     vscode.commands.registerCommand(Command.runTests, (uri?: vscode.Uri) => runTests(

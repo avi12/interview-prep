@@ -1,7 +1,7 @@
 import type { SqlTable } from "@scripts/lib/schema.ts";
 import * as vscode from "vscode";
 
-const SQL_SELECTOR: vscode.DocumentSelector = {
+export const SQL_SELECTOR: vscode.DocumentSelector = {
   language: "sql",
   scheme: "file"
 };
@@ -81,7 +81,9 @@ function keywordItems() {
   });
 }
 
-export function registerSqlCompletion(tablesOfDocument: (document: vscode.TextDocument) => SqlTable[]) {
+export type SqlTablesOfDocument = (document: vscode.TextDocument) => SqlTable[];
+
+export function registerSqlCompletion(tablesOfDocument: SqlTablesOfDocument) {
   return vscode.languages.registerCompletionItemProvider(
     SQL_SELECTOR,
     {
