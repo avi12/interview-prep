@@ -2,6 +2,16 @@
 
 Hands-on practice for junior interviews: backend, data analyst and AI engineer on one shared core, plus object-oriented design in practice and a reverse engineering sprinkle. Short narrated lessons, exercises with real tests, and a tutor that reads your code.
 
+Created by [Avi](https://avi12.com).
+
+![The trainer: lessons by track on the left, the exercise file in the middle, the lesson on the right](docs/screenshots/trainer.png)
+
+## Requirements
+
+- Node 24 or newer, and pnpm
+- Python 3.13 with `pip install -r requirements.txt` (for the Python lessons)
+- VS Code with its `code` command on your PATH (the trainer runs `code serve-web`)
+
 ## Run it
 
 ```sh
@@ -16,11 +26,15 @@ Press **Run my tests** in the lesson, or `pnpm lesson test <track>/<lesson>`. Pa
 ## Voice
 
 ```sh
-pnpm narrate          # synthesizes the spoken script of every lesson (Edge Read Aloud voices, cached)
+pnpm narrate          # records the spoken script of every lesson with Edge Read Aloud voices, cached
 pnpm build            # rebuilds pages with the audio
 ```
 
 Every narrated card has a play button. Parts of each diagram light up as the voice reaches them.
+
+![A card being narrated: the diagram's parts light up in the order the voice names them, with live subtitles](docs/screenshots/narration.png)
+
+The voices come from [edge-tts-as-extension](https://github.com/avi12/edge-tts-as-extension), a git submodule in `vendor/`. The first `pnpm narrate` checks it out and installs it, with no other setup.
 
 ## Tutors
 
@@ -33,12 +47,15 @@ Every narrated card has a play button. Parts of each diagram light up as the voi
 | --- | --- |
 | `curriculum/<track>/<NN-slug>/` | `lesson.md`, `starter/`, `solution/`, `tests/` |
 | `curriculum/_kit/` | helpers lessons share: implementation loading, Postgres (PGlite), fake LLM, mutation checks, seeded random, timing, bookstore Money |
+| `curriculum/LEARNER.md` | who the course is written for |
 | `curriculum/AUTHORING.md` | how to write a lesson (enforced by `pnpm verify`) |
+| `curriculum/tracks.json`, `roles.json`, `path.json` | tracks, target roles and the study order |
 | `work/` | your copies of the exercises (git-ignored) |
 | `.progress/` | what you passed (git-ignored) |
 | `scripts/` | CLI (`pnpm lesson`), build, narrate, verify, start; `scripts/lib` holds the shared helpers |
 | `apps/vscode-ext/` | the VS Code extension |
 | `apps/gemini-live/` | the Gemini Live bridge |
+| `vendor/edge-tts-as-extension/` | the voice tool (git submodule) |
 
 ## Commands
 
@@ -57,3 +74,16 @@ pnpm build                 # lessons -> dist/
 - SQL runs on real Postgres in-process (PGlite), AI exercises use a scripted fake model, so nothing needs a key or a network
 
 The default order puts SQL first, then tests and APIs, then each role's branch. Change it in `curriculum/path.json`.
+
+## Make it yours
+
+The course is data in `curriculum/`, so you can add lessons, tracks and roles, or retarget it to another job or subject, without touching the tooling.
+
+- **With a coding agent:** ask it to extend the curriculum. Claude Code has the `/extend-curriculum` skill, and other agents read `AGENTS.md`, which points to the same steps
+- **By hand:** follow `.claude/skills/extend-curriculum/SKILL.md`, then `curriculum/AUTHORING.md`. `pnpm verify` tells you when a lesson is right
+
+## License
+
+[Apache License 2.0](LICENSE). Copyright 2026 [Avi](https://avi12.com).
+
+You may use, change and share this project, including commercially. If you fork it or redistribute it, keep the [`NOTICE`](NOTICE) file and its credit to the original author, as section 4(d) of the license requires, and mark the files you changed.
