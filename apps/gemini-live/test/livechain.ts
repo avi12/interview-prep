@@ -30,6 +30,7 @@ import { type Cdp, connect } from "./cdp.ts";
  * src/entrypoints/glic.content.ts.
  */
 import { readFileSync } from "node:fs";
+import { setTimeout as wait } from "node:timers/promises";
 
 const [, , debugPort, vscodeOrigin] = process.argv;
 if (!debugPort || !vscodeOrigin) {
@@ -81,9 +82,6 @@ const consoleCallSchema = z.object({
   )
 });
 
-function wait(delayMs: number) {
-  return new Promise(resolve => setTimeout(resolve, delayMs));
-}
 async function targets() {
   const listed = z.array(z.unknown()).catch([]).parse(await (await fetch(`${BASE}/json/list`)).json());
   return listed.flatMap(item => {

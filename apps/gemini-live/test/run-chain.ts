@@ -18,6 +18,7 @@ import {
 import { createServer } from "node:http";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { setTimeout as wait } from "node:timers/promises";
 
 const PACKAGE_DIR = resolve(import.meta.dirname, "..");
 const VSCODE_PORT = Number(process.env.CHAIN_VSCODE_PORT ?? 18765);
@@ -45,10 +46,6 @@ function chromeExecutable() {
     .filter(path => existsSync(path))
     .sort();
   return builds.at(-1) ?? null;
-}
-
-function wait(delayMs: number) {
-  return new Promise(resolveWait => setTimeout(resolveWait, delayMs));
 }
 
 async function isBrowserUp() {

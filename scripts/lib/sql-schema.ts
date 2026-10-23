@@ -1,11 +1,8 @@
 import type { Lesson } from "./lessons.ts";
-import type { sqlTableSchema } from "./schema.ts";
+import type { SqlTable } from "./schema.ts";
 import { PGlite } from "@electric-sql/pglite";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { z } from "zod";
-
-type SqlTable = z.infer<typeof sqlTableSchema>;
 
 const CREATE_TABLE = /CREATE TABLE[\s\S]*?\);/gi;
 const TESTS_DIR = "tests";

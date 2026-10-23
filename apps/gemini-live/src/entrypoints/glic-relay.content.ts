@@ -3,6 +3,7 @@ import { type Activation, GLIC_URL, GlicCommand, GlicReport } from "@/lib/bridge
 import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
 import { promptClipPath } from "@/lib/prompt-clip.ts";
 import { loadLanguage } from "@/lib/settings.ts";
+import { sleep } from "@/lib/sleep.ts";
 import { defineContentScript } from "#imports";
 import { browser } from "wxt/browser";
 
@@ -14,10 +15,6 @@ import { browser } from "wxt/browser";
 
 const HELLO_TRIES = 5;
 const HELLO_GAP_MS = 400;
-
-function sleep(delayMs: number) {
-  return new Promise(resolve => setTimeout(resolve, delayMs));
-}
 
 async function askWorkerWhoOwnsTab() {
   for (let attempt = 0; attempt < HELLO_TRIES; attempt++) {

@@ -12,6 +12,7 @@ import {
 import { type MicMixer, mixMicrophone } from "@/lib/mic-mixer.ts";
 import { annotatedPageContent, byteStream } from "@/lib/page-content.ts";
 import { PromptEvent } from "@/lib/prompt-clip.ts";
+import { sleep } from "@/lib/sleep.ts";
 import { within } from "@/lib/within.ts";
 import { z } from "@/lib/zod.ts";
 import type { TutorTestRun, TutorView } from "@scripts/lib/tutor-view.ts";
@@ -218,10 +219,6 @@ function setState(state: GlicState) {
 
   bridge.lastState = state;
   report(bridgeMessenger.sendMessage(GlicReport.STATE, state));
-}
-
-function sleep(delayMs: number) {
-  return new Promise(resolve => setTimeout(resolve, delayMs));
 }
 
 function pageText() {

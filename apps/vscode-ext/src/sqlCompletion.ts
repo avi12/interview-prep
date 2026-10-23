@@ -1,7 +1,5 @@
-import type { LessonEntry } from "@/lessonData.ts";
+import type { SqlTable } from "@scripts/lib/schema.ts";
 import * as vscode from "vscode";
-
-type SqlTable = LessonEntry["sqlTables"][number];
 
 const SQL_SELECTOR: vscode.DocumentSelector = {
   language: "sql",
