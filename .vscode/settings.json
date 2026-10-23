@@ -35,7 +35,12 @@
     "tsconfig.json": true,
     "tsconfig.solutions.json": true,
     "vitest.config.ts": true,
-    "continue-*.md": true
+    "AGENTS.md": true,
+    "LICENSE": true,
+    "NOTICE": true,
+    "docs": true,
+    "vendor": true,
+    ".gitmodules": true
   },
   "search.exclude": {
     "**/solution": true,
