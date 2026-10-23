@@ -3,6 +3,7 @@ import { ensureExerciseFiles, onTestsFinished, runLessonCli, runTestsInTerminal 
 import { findLesson, findNextLesson } from "@/lessonData.ts";
 import { showLesson } from "@/lessonPanel.ts";
 import { Command, LessonTree } from "@/lessonTree.ts";
+import { showQueryResult } from "@/queryResult.ts";
 import { registerSqlCompletion } from "@/sqlCompletion.ts";
 import { registerSqlHighlight } from "@/sqlHighlight.ts";
 import { serveTutorView } from "@/tutorView.ts";
@@ -241,6 +242,10 @@ function activateIn({ context, root }: {
     vscode.workspace.onDidChangeConfiguration(e => e.affectsConfiguration("interviewPrep.role") && tree.refresh()),
     onTestsFinished(({ id, isPass }) => {
       tree.refresh();
+      void showQueryResult({
+        root,
+        id
+      });
 
       if (!isPass) {
         return;

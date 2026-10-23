@@ -123,6 +123,10 @@
       {
         "type": "interviewPrep",
         "properties": {}
+      },
+      {
+        "type": "interviewPrepResult",
+        "properties": {}
       }
     ],
     "viewsContainers": {

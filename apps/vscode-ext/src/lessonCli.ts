@@ -1,9 +1,10 @@
-import { LESSON_CLI_RELATIVE_PATH } from "@scripts/lib/layout.ts";
+import { LESSON_CLI_RELATIVE_PATH, NO_RESULT_TABLE_FLAG } from "@scripts/lib/layout.ts";
 import { spawn } from "node:child_process";
 import * as vscode from "vscode";
 
 const TASK_TYPE = "interviewPrep";
-const TASK_SOURCE = "interview-prep";
+export const TASK_SOURCE = "interview-prep";
+const TEST_TERMINAL_GROUP = "interviewPrepTests";
 const OPEN_OUTPUT_FILE_PATTERN = /^ {2}(.+)$/gm;
 
 export function runLessonCli({ root, args }: {
@@ -34,21 +35,26 @@ export async function ensureExerciseFiles({ root, id }: {
   return [...output.matchAll(OPEN_OUTPUT_FILE_PATTERN)].map(match => match[1].trim());
 }
 
+export function besideTestsPresentation() {
+  return {
+    reveal: vscode.TaskRevealKind.Always,
+    clear: true,
+    focus: false,
+    panel: vscode.TaskPanelKind.Dedicated,
+    group: TEST_TERMINAL_GROUP
+  };
+}
+
 export async function runTestsInTerminal({ root, id }: {
   root: string;
   id: string;
 }) {
-  const execution = new vscode.ShellExecution("node", [LESSON_CLI_RELATIVE_PATH, "test", id], { cwd: root });
+  const execution = new vscode.ShellExecution("node", [LESSON_CLI_RELATIVE_PATH, "test", id, NO_RESULT_TABLE_FLAG], { cwd: root });
   const task = new vscode.Task({
     type: TASK_TYPE,
     lesson: id
   }, vscode.TaskScope.Workspace, `Tests: ${id}`, TASK_SOURCE, execution);
-  task.presentationOptions = {
-    reveal: vscode.TaskRevealKind.Always,
-    clear: true,
-    focus: false,
-    panel: vscode.TaskPanelKind.Dedicated
-  };
+  task.presentationOptions = besideTestsPresentation();
   await vscode.tasks.executeTask(task);
 }
 
