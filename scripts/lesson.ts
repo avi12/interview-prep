@@ -5,7 +5,7 @@ import { ALL_ROLES } from "#scripts/lib/path.ts";
 import { readProgress, recordAttempt, recordLastTest } from "#scripts/lib/progress.ts";
 import { formatQueryResult } from "#scripts/lib/query-result.ts";
 import { ensureWorkCopy, prepareSolutionDir, resetWorkCopy, runQuiet } from "#scripts/lib/run.ts";
-import { isPassed, nextUnpassedId } from "#scripts/lib/study.ts";
+import { groupByTrack, isPassed, nextUnpassedId } from "#scripts/lib/study.ts";
 import { resolve } from "node:path";
 
 const [command, idArgument, ...flags] = process.argv.slice(2);
@@ -14,15 +14,13 @@ const isResultTableShown = !flags.includes(NO_RESULT_TABLE_FLAG);
 
 function listLessons() {
   const progress = readProgress();
-  const lessons = readLessons({ isStrict: false });
-  for (const track of readTracks()) {
-    const inTrack = lessons.filter(lesson => lesson.track === track.id);
-    if (inTrack.length === 0) {
-      continue;
-    }
-
+  const groups = groupByTrack({
+    tracks: readTracks(),
+    lessons: readLessons({ isStrict: false })
+  });
+  for (const { track, lessons } of groups) {
     console.log(`\n${track.title}`);
-    for (const lesson of inTrack) {
+    for (const lesson of lessons) {
       const mark = isPassed({
         id: lesson.id,
         progress

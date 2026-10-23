@@ -1,4 +1,4 @@
-import type { progressSchema } from "#scripts/lib/schema.ts";
+import type { progressSchema, tracksSchema } from "#scripts/lib/schema.ts";
 import type { z } from "zod";
 
 type Progress = z.infer<typeof progressSchema>;
@@ -18,4 +18,16 @@ export function nextUnpassedId({ order, progress }: {
     id,
     progress
   }));
+}
+
+export function groupByTrack<Lesson extends { track: string }>({ tracks, lessons }: {
+  tracks: z.infer<typeof tracksSchema>;
+  lessons: readonly Lesson[];
+}) {
+  return tracks
+    .map(track => ({
+      track,
+      lessons: lessons.filter(lesson => lesson.track === track.id)
+    }))
+    .filter(group => group.lessons.length > 0);
 }
