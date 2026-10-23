@@ -8,10 +8,12 @@
   import { onMount } from "svelte";
 
   const START_LABEL = "Start voice tutor";
-  const STOP_LABEL = "Stop voice tutor";
-  const MUTE_LABEL = "Mute";
-  const TALK_LABEL = "Talk";
-  const MIC_TITLE = `Mute or unmute your mic (${MIC_KEY_LABEL})`;
+  const STOP_LABEL = "Stop";
+  const STOP_TITLE = "Stop the voice tutor";
+  const MIC_OPEN_LABEL = "Mic on";
+  const MIC_MUTED_LABEL = "Muted";
+  const MIC_OPEN_TITLE = `Gemini hears you. Press ${MIC_KEY_LABEL} or click to mute`;
+  const MIC_MUTED_TITLE = `Gemini can't hear you. Press ${MIC_KEY_LABEL} or click to talk`;
 
   let session = $state<Session | null>(null);
   let failure = $state("");
@@ -20,8 +22,9 @@
   const tone = $derived(failure ? Tone.DANGER : sessionTone(session));
   const label = $derived(failure || (session ? sessionLabel(session) : ""));
   const title = $derived(failure || (session ? sessionText(session) : ""));
-  const toggleLabel = $derived(isLive ? STOP_LABEL : START_LABEL);
-  const micLabel = $derived(session?.isMicOpen ? MUTE_LABEL : TALK_LABEL);
+  const isMicOpen = $derived(!!session?.isMicOpen);
+  const micLabel = $derived(isMicOpen ? MIC_OPEN_LABEL : MIC_MUTED_LABEL);
+  const micTitle = $derived(isMicOpen ? MIC_OPEN_TITLE : MIC_MUTED_TITLE);
 
   function toggleMic() {
     void extensionMessenger.sendMessage(ExtensionMessage.MIC_TOGGLE).catch(() => {});
@@ -59,13 +62,27 @@
   {/if}
   {#if isLive}
     <button
-      class="ip-tutor ip-tutor-mic ip-tutor-secondary"
+      class="ip-tutor ip-tutor-mic"
+      aria-pressed={isMicOpen}
+      data-open={isMicOpen}
       onclick={toggleMic}
-      title={MIC_TITLE}
+      title={micTitle}
       type="button"
-    >{micLabel}</button>
+    >
+      <svg aria-hidden="true" viewBox="0 0 16 16">
+        <rect height="8" rx="2" width="5" x="5.5" y="1.5" />
+        <path d="M3 7.5a5 5 0 0 0 10 0M8 12.5v2" />
+        {#if !isMicOpen}
+          <path d="M2 2l12 12" />
+        {/if}
+      </svg>
+      {micLabel}
+      <kbd>{MIC_KEY_LABEL}</kbd>
+    </button>
+    <button class="ip-tutor ip-tutor-secondary" onclick={toggle} title={STOP_TITLE} type="button">{STOP_LABEL}</button>
+  {:else}
+    <button class="ip-tutor" onclick={toggle} type="button">{START_LABEL}</button>
   {/if}
-  <button class="ip-tutor" onclick={toggle} type="button">{toggleLabel}</button>
 </div>
 
 <style>
@@ -142,6 +159,57 @@
 
     &:hover {
       background: var(--vscode-button-secondaryHoverBackground, buttonface);
+    }
+  }
+
+  .ip-tutor-mic {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    background: var(--vscode-button-secondaryBackground, buttonface);
+    color: var(--vscode-button-secondaryForeground, buttontext);
+
+    &:hover {
+      background: var(--vscode-button-secondaryHoverBackground, buttonface);
+    }
+
+    &[data-open="true"] {
+      background: var(--vscode-statusBarItem-errorBackground, #c72e0f);
+      color: var(--vscode-statusBarItem-errorForeground, #ffffff);
+      animation: ip-tutor-on-air 1600ms ease-out infinite;
+    }
+
+    & svg {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-width: 1.5;
+    }
+
+    & kbd {
+      padding-inline: 4px;
+      border: 1px solid currentColor;
+      border-radius: 3px;
+      font: 10px var(--vscode-editor-font-family, monospace);
+      opacity: 75%;
+    }
+  }
+
+  @keyframes ip-tutor-on-air {
+    from {
+      box-shadow: 0 0 0 0 var(--vscode-statusBarItem-errorBackground, #c72e0f);
+    }
+
+    to {
+      box-shadow: 0 0 0 6px transparent;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ip-tutor-mic[data-open="true"] {
+      animation: none;
     }
   }
 </style>

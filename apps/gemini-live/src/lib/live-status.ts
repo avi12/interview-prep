@@ -20,12 +20,12 @@ const STATE_TEXT: Record<LiveState, string> = {
 };
 
 const STATE_LABEL: Record<LiveState, string> = {
-  [LiveState.OPENING]: "Tutor opening",
-  [LiveState.BRIEFING]: "Tutor getting ready",
-  [LiveState.LIVE]: "Tutor listening",
-  [LiveState.PAUSED]: "Tutor paused",
-  [LiveState.RECONNECTING]: "Tutor reconnecting",
-  [LiveState.FAILED]: "Tutor stopped"
+  [LiveState.OPENING]: "Opening",
+  [LiveState.BRIEFING]: "Getting ready",
+  [LiveState.LIVE]: "Listening",
+  [LiveState.PAUSED]: "Paused",
+  [LiveState.RECONNECTING]: "Reconnecting",
+  [LiveState.FAILED]: "Stopped"
 };
 
 const STATE_TONE: Record<LiveState, Tone> = {
@@ -38,10 +38,10 @@ const STATE_TONE: Record<LiveState, Tone> = {
 };
 
 const HIDDEN_TEXT = "Gemini is listening but cannot see VS Code, bring its tab to the front";
-const HIDDEN_LABEL = "Tutor can't see VS Code";
+const HIDDEN_LABEL = "Can't see VS Code";
 
 const MUTED_TEXT = `Gemini is watching your VS Code with your mic muted, press ${MIC_KEY_LABEL} to talk`;
-const MUTED_LABEL = `Tutor muted, ${MIC_KEY_LABEL} to talk`;
+const MUTED_LABEL = "Watching";
 
 function isBlind(session: Session) {
   return session.state === LiveState.LIVE && session.sight === Sight.HIDDEN;
