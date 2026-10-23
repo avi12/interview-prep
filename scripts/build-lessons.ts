@@ -6,6 +6,7 @@ import { INDEX_FILE, LESSONS_DIST_DIR, ROOT } from "#scripts/lib/paths.ts";
 import { readLessons, readStudyOrders, readTracks } from "#scripts/lib/lessons.ts";
 import { withCachedNarration } from "#scripts/lib/narration-cache.ts";
 import { renderLesson } from "#scripts/lib/render.ts";
+import { createSqlSchemaReader } from "#scripts/lib/sql-schema.ts";
 import { tutorNotes } from "#scripts/lib/tutor-notes.ts";
 
 const RM_MAX_RETRIES = 5;
@@ -26,6 +27,11 @@ for (const lesson of lessons) {
   writeFileDeep({ path: resolve(ROOT, distPath({ id: lesson.id, extension: TUTOR_EXTENSION })), content: JSON.stringify(tutorNotes(lesson), null, 2) });
 }
 
+const sqlSchema = await createSqlSchemaReader();
+const sqlTablesById = new Map<string, Awaited<ReturnType<typeof sqlSchema.tablesOf>>>();
+for (const lesson of lessons) sqlTablesById.set(lesson.id, await sqlSchema.tablesOf(lesson));
+await sqlSchema.close();
+
 const index = {
   tracks: readTracks(),
   orders: readStudyOrders(lessons),
@@ -40,7 +46,8 @@ const index = {
     hasExercise: lesson.hasExercise,
     isNarrated: narratedIds.has(lesson.id),
     html: distPath({ id: lesson.id, extension: HTML_EXTENSION }),
-    tutor: distPath({ id: lesson.id, extension: TUTOR_EXTENSION })
+    tutor: distPath({ id: lesson.id, extension: TUTOR_EXTENSION }),
+    sqlTables: sqlTablesById.get(lesson.id) ?? []
   }))
 };
 

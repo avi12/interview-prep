@@ -55,6 +55,11 @@ export const progressSchema = z.record(
   })
 );
 
+export const sqlTableSchema = z.object({
+  name: z.string(),
+  columns: z.array(z.object({ name: z.string(), type: z.string() }))
+});
+
 export const lessonIndexSchema = z.object({
   tracks: tracksSchema,
   orders: z.record(z.string(), z.array(z.string())),
@@ -70,7 +75,8 @@ export const lessonIndexSchema = z.object({
       hasExercise: z.boolean(),
       isNarrated: z.boolean(),
       html: z.string(),
-      tutor: z.string()
+      tutor: z.string(),
+      sqlTables: z.array(sqlTableSchema).default([])
     })
   )
 });
