@@ -1,23 +1,19 @@
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import type { GetRandomBytes } from "#kit/nodeCrypto.ts";
-import { randomBytes } from "node:crypto";
 
-export const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
-export const TOKEN_BYTES = 32;
-export const TOKEN_ENCODING = "base64url";
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+const TOKEN_BYTES = 32;
+const TOKEN_ENCODING = "base64url";
 
-export function escapeHtml(text: string) {
-  return text;
-}
+export const escapeHtml = (text: string) => text;
 
-export function createCsrfToken({
-  getRandomBytes: _getRandomBytes = randomBytes
+export const createCsrfToken = ({ getRandomBytes = randomBytes }: { getRandomBytes?: GetRandomBytes } = {}) => "";
+
+export function isCsrfRequestAllowed({
+  method,
+  sessionToken,
+  submittedToken
 }: {
-  getRandomBytes?: GetRandomBytes;
-} = {}) {
-  return "";
-}
-
-export function isCsrfRequestAllowed(_input: {
   method: string;
   sessionToken: string;
   submittedToken: string | undefined;

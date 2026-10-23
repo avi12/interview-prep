@@ -1,45 +1,31 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi
-} from "vitest";
 
 type Module = typeof import("../starter/timing.ts");
 
-const { retry, isExpired } = await loadImpl<Module>({
-  testUrl: import.meta.url,
-  file: "timing.ts"
-});
+const { retry, isExpired } = await loadImpl<Module>({ testUrl: import.meta.url, file: "timing.ts" });
 
 const DELAY_MS = 1000;
 const ONE_MILLISECOND = 1;
 const TTL_MS = 500;
 const ISSUED_AT = 1000;
 
-function failingThenSucceeding(failures: number) {
+const failingThenSucceeding = (failures: number) => {
   let calls = 0;
   return vi.fn(async () => {
     calls++;
-
-    if (calls <= failures) {
-      throw new Error(`failure ${calls}`);
-    }
-
+    if (calls <= failures) throw new Error(`failure ${calls}`);
     return "ok";
   });
-}
+};
 
-function alwaysFailing() {
+const alwaysFailing = () => {
   let calls = 0;
   return vi.fn(async (): Promise<string> => {
     calls++;
     throw new Error(`failure ${calls}`);
   });
-}
+};
 
 describe("retry with fake timers", () => {
   beforeEach(() => {
@@ -53,11 +39,7 @@ describe("retry with fake timers", () => {
   it("returns the result at once when the first attempt succeeds", async () => {
     const task = failingThenSucceeding(0);
 
-    const result = await retry({
-      task,
-      attempts: 3,
-      delayMs: DELAY_MS
-    });
+    const result = await retry({ task, attempts: 3, delayMs: DELAY_MS });
 
     expect(result).toBe("ok");
     expect(task).toHaveBeenCalledTimes(1);
@@ -66,11 +48,7 @@ describe("retry with fake timers", () => {
 
   it("waits the whole delay before the second attempt", async () => {
     const task = failingThenSucceeding(1);
-    const outcome = retry({
-      task,
-      attempts: 3,
-      delayMs: DELAY_MS
-    });
+    const outcome = retry({ task, attempts: 3, delayMs: DELAY_MS });
 
     await vi.advanceTimersByTimeAsync(0);
     expect(task).toHaveBeenCalledTimes(1);
@@ -85,11 +63,7 @@ describe("retry with fake timers", () => {
 
   it("waits the same delay before every further attempt", async () => {
     const task = failingThenSucceeding(2);
-    const outcome = retry({
-      task,
-      attempts: 3,
-      delayMs: DELAY_MS
-    });
+    const outcome = retry({ task, attempts: 3, delayMs: DELAY_MS });
 
     await vi.advanceTimersByTimeAsync(DELAY_MS);
     expect(task).toHaveBeenCalledTimes(2);
@@ -104,11 +78,7 @@ describe("retry with fake timers", () => {
 
   it("keeps the result of the attempt that finally succeeds", async () => {
     const task = failingThenSucceeding(2);
-    const outcome = retry({
-      task,
-      attempts: 5,
-      delayMs: DELAY_MS
-    });
+    const outcome = retry({ task, attempts: 5, delayMs: DELAY_MS });
 
     await vi.runAllTimersAsync();
 
@@ -118,13 +88,7 @@ describe("retry with fake timers", () => {
 
   it("gives up after the last attempt and throws the last error", async () => {
     const task = alwaysFailing();
-    const outcome = expect(
-      retry({
-        task,
-        attempts: 3,
-        delayMs: DELAY_MS
-      })
-    ).rejects.toThrow("failure 3");
+    const outcome = expect(retry({ task, attempts: 3, delayMs: DELAY_MS })).rejects.toThrow("failure 3");
 
     await vi.runAllTimersAsync();
 
@@ -134,13 +98,7 @@ describe("retry with fake timers", () => {
 
   it("does not wait after the final failed attempt", async () => {
     const task = alwaysFailing();
-    const outcome = expect(
-      retry({
-        task,
-        attempts: 2,
-        delayMs: DELAY_MS
-      })
-    ).rejects.toThrow("failure 2");
+    const outcome = expect(retry({ task, attempts: 2, delayMs: DELAY_MS })).rejects.toThrow("failure 2");
 
     await vi.advanceTimersByTimeAsync(DELAY_MS);
 
@@ -150,13 +108,7 @@ describe("retry with fake timers", () => {
 
   it("tries only once and never waits when attempts is 1", async () => {
     const task = alwaysFailing();
-    const outcome = expect(
-      retry({
-        task,
-        attempts: 1,
-        delayMs: DELAY_MS
-      })
-    ).rejects.toThrow("failure 1");
+    const outcome = expect(retry({ task, attempts: 1, delayMs: DELAY_MS })).rejects.toThrow("failure 1");
 
     await vi.advanceTimersByTimeAsync(0);
 
@@ -168,11 +120,7 @@ describe("retry with fake timers", () => {
   it.each([0, -1])("rejects with a RangeError when attempts is %i, below 1", async attempts => {
     const task = failingThenSucceeding(0);
 
-    const outcome = retry({
-      task,
-      attempts,
-      delayMs: DELAY_MS
-    });
+    const outcome = retry({ task, attempts, delayMs: DELAY_MS });
 
     await expect(outcome).rejects.toThrow(RangeError);
     expect(task).not.toHaveBeenCalled();
@@ -181,45 +129,21 @@ describe("retry with fake timers", () => {
 
 describe("isExpired with an injected clock", () => {
   it("is not expired one millisecond before the time to live is up", () => {
-    function now() {
-      return ISSUED_AT + TTL_MS - ONE_MILLISECOND;
-    }
+    const now = () => ISSUED_AT + TTL_MS - ONE_MILLISECOND;
 
-    expect(
-      isExpired({
-        issuedAt: ISSUED_AT,
-        ttlMs: TTL_MS,
-        now
-      })
-    ).toBe(false);
+    expect(isExpired({ issuedAt: ISSUED_AT, ttlMs: TTL_MS, now })).toBe(false);
   });
 
   it("is expired exactly when the time to live is up", () => {
-    function now() {
-      return ISSUED_AT + TTL_MS;
-    }
+    const now = () => ISSUED_AT + TTL_MS;
 
-    expect(
-      isExpired({
-        issuedAt: ISSUED_AT,
-        ttlMs: TTL_MS,
-        now
-      })
-    ).toBe(true);
+    expect(isExpired({ issuedAt: ISSUED_AT, ttlMs: TTL_MS, now })).toBe(true);
   });
 
   it("is expired long after the time to live is up", () => {
-    function now() {
-      return ISSUED_AT + TTL_MS * 10;
-    }
+    const now = () => ISSUED_AT + TTL_MS * 10;
 
-    expect(
-      isExpired({
-        issuedAt: ISSUED_AT,
-        ttlMs: TTL_MS,
-        now
-      })
-    ).toBe(true);
+    expect(isExpired({ issuedAt: ISSUED_AT, ttlMs: TTL_MS, now })).toBe(true);
   });
 });
 
@@ -236,27 +160,12 @@ describe("isExpired with the real clock, faked", () => {
   it("uses Date.now when no clock is given", () => {
     const issuedAt = Date.now();
 
-    expect(
-      isExpired({
-        issuedAt,
-        ttlMs: TTL_MS
-      })
-    ).toBe(false);
+    expect(isExpired({ issuedAt, ttlMs: TTL_MS })).toBe(false);
 
     vi.advanceTimersByTime(TTL_MS - ONE_MILLISECOND);
-    expect(
-      isExpired({
-        issuedAt,
-        ttlMs: TTL_MS
-      })
-    ).toBe(false);
+    expect(isExpired({ issuedAt, ttlMs: TTL_MS })).toBe(false);
 
     vi.advanceTimersByTime(ONE_MILLISECOND);
-    expect(
-      isExpired({
-        issuedAt,
-        ttlMs: TTL_MS
-      })
-    ).toBe(true);
+    expect(isExpired({ issuedAt, ttlMs: TTL_MS })).toBe(true);
   });
 });

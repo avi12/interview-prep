@@ -1,5 +1,5 @@
-import { runSeeded } from "#kit/db.ts";
 import { describe, expect, it } from "vitest";
+import { runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `CREATE TABLE employees (id int PRIMARY KEY, name text NOT NULL, department text NOT NULL, salary int NOT NULL);`;
 
@@ -13,13 +13,7 @@ INSERT INTO employees VALUES
   (1, 'Yon', 'data', 5000), (2, 'Hal', 'hr', 700), (3, 'Cal', 'data', 5000),
   (4, 'Eli', 'ops', 2000), (5, 'Bat', 'data', 5000), (6, 'Ari', 'ops', 5000);`;
 
-function run(seed: string) {
-  return runSeeded({
-    seed,
-    testUrl: import.meta.url,
-    file: "query.sql"
-  });
-}
+const run = (seed: string) => runSeeded({ seed, testUrl: import.meta.url, file: "query.sql" });
 
 describe("three highest-paid people", () => {
   it("returns the columns name, salary", async () => {
@@ -30,36 +24,18 @@ describe("three highest-paid people", () => {
   it("puts the highest salary first and breaks the tie at the cut by name", async () => {
     const { rows } = await run(COMPANY);
     expect(rows).toEqual([
-      {
-        name: "Dana",
-        salary: 9000
-      },
-      {
-        name: "Lior",
-        salary: 8000
-      },
-      {
-        name: "Omer",
-        salary: 8000
-      }
+      { name: "Dana", salary: 9000 },
+      { name: "Lior", salary: 8000 },
+      { name: "Omer", salary: 8000 }
     ]);
   });
 
   it("works on different data too, where four people tie at the top (no hardcoding)", async () => {
     const { rows } = await run(STARTUP);
     expect(rows).toEqual([
-      {
-        name: "Ari",
-        salary: 5000
-      },
-      {
-        name: "Bat",
-        salary: 5000
-      },
-      {
-        name: "Cal",
-        salary: 5000
-      }
+      { name: "Ari", salary: 5000 },
+      { name: "Bat", salary: 5000 },
+      { name: "Cal", salary: 5000 }
     ]);
   });
 });

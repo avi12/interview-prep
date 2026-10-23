@@ -1,5 +1,5 @@
-import type { OrderLine } from "./ports.ts";
 import type { Money } from "#kit/bookstore/money.ts";
+import type { OrderLine } from "./ports.ts";
 
 export const EventType = {
   orderPlaced: "OrderPlaced"

@@ -1,22 +1,15 @@
+import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
 import { measureMs } from "#kit/timing.ts";
-import { describe, expect, it } from "vitest";
 
-type Node = {
-  val: number;
-  left: Node | null;
-  right: Node | null;
-};
+type Node = { val: number; left: Node | null; right: Node | null };
 type Module = {
   TreeNode: new (val?: number, left?: Node | null, right?: Node | null) => Node;
   maxDepth: (root: Node | null) => number;
   levelOrder: (root: Node | null) => number[][];
 };
 
-const { TreeNode, maxDepth, levelOrder } = await loadImpl<Module>({
-  testUrl: import.meta.url,
-  file: "treeTraversal.ts"
-});
+const { TreeNode, maxDepth, levelOrder } = await loadImpl<Module>({ testUrl: import.meta.url, file: "treeTraversal.ts" });
 
 const CHAIN_LENGTH = 3000;
 const COMPLETE_TREE_LEVELS = 16;
@@ -24,72 +17,46 @@ const TIME_LIMIT_MS = 2000;
 const GUARDED_CHAIN_LENGTH = 25;
 const READS_PER_NODE_LIMIT = 10;
 
-function nodeOrNull(value: number | null | undefined) {
-  return value === null || value === undefined ? null : new TreeNode(value);
-}
+const nodeOrNull = (value: number | null | undefined) => (value === null || value === undefined ? null : new TreeNode(value));
 
-function treeFromLevels(values: (number | null)[]) {
+const treeFromLevels = (values: (number | null)[]) => {
   const root = nodeOrNull(values[0]);
-  if (root === null) {
-    return null;
-  }
-
+  if (root === null) return null;
   const parents = [root];
   let cursor = 1;
   for (const parent of parents) {
     parent.left = nodeOrNull(values[cursor]);
     parent.right = nodeOrNull(values[cursor + 1]);
     cursor += 2;
-
-    if (parent.left) {
-      parents.push(parent.left);
-    }
-
-    if (parent.right) {
-      parents.push(parent.right);
-    }
+    if (parent.left) parents.push(parent.left);
+    if (parent.right) parents.push(parent.right);
   }
   return root;
-}
+};
 
-function guardedChain({ length, side }: {
-  length: number;
-  side: "left" | "right";
-}) {
-  const budget = {
-    reads: 0,
-    limit: length * READS_PER_NODE_LIMIT
-  };
-  function read(child: Node | null) {
+const guardedChain = ({ length, side }: { length: number; side: "left" | "right" }) => {
+  const budget = { reads: 0, limit: length * READS_PER_NODE_LIMIT };
+  const read = (child: Node | null) => {
     budget.reads++;
-
     if (budget.reads > budget.limit) {
       throw new Error(`The ${side} children of a ${length} node chain were read ${budget.reads} times. Ask each child once and reuse the answer, do not call maxDepth twice for the same child`);
     }
-
     return child;
-  }
+  };
   let root: Node | null = null;
   for (let value = length; value >= 1; value--) {
     const child = root;
-    const node: Node = {
-      val: value,
-      left: null,
-      right: null
-    };
+    const node: Node = { val: value, left: null, right: null };
     Object.defineProperty(node, side, { get: () => read(child) });
     root = node;
   }
   return root;
-}
+};
 
-function completeTreeValues(levels: number) {
-  return Array.from({ length: 2 ** levels - 1 }, (_, i) => i + 1);
-}
+const completeTreeValues = (levels: number) => Array.from({ length: 2 ** levels - 1 }, (_, i) => i + 1);
 
-function completeTreeLevelOrder(levels: number) {
-  return Array.from({ length: levels }, (_, depth) => Array.from({ length: 2 ** depth }, (_, i) => 2 ** depth + i));
-}
+const completeTreeLevelOrder = (levels: number) =>
+  Array.from({ length: levels }, (_, depth) => Array.from({ length: 2 ** depth }, (_, i) => 2 ** depth + i));
 
 describe("maxDepth", () => {
   it("is 0 for an empty tree", () => {
@@ -113,33 +80,12 @@ describe("maxDepth", () => {
   });
 
   it("works on a chain of 3,000 nodes", () => {
-    expect(
-      maxDepth(
-        guardedChain({
-          length: CHAIN_LENGTH,
-          side: "left"
-        })
-      )
-    ).toBe(CHAIN_LENGTH);
+    expect(maxDepth(guardedChain({ length: CHAIN_LENGTH, side: "left" }))).toBe(CHAIN_LENGTH);
   });
 
   it("asks each child once, so a long chain does not double the work at every node", () => {
-    expect(
-      maxDepth(
-        guardedChain({
-          length: GUARDED_CHAIN_LENGTH,
-          side: "left"
-        })
-      )
-    ).toBe(GUARDED_CHAIN_LENGTH);
-    expect(
-      maxDepth(
-        guardedChain({
-          length: GUARDED_CHAIN_LENGTH,
-          side: "right"
-        })
-      )
-    ).toBe(GUARDED_CHAIN_LENGTH);
+    expect(maxDepth(guardedChain({ length: GUARDED_CHAIN_LENGTH, side: "left" }))).toBe(GUARDED_CHAIN_LENGTH);
+    expect(maxDepth(guardedChain({ length: GUARDED_CHAIN_LENGTH, side: "right" }))).toBe(GUARDED_CHAIN_LENGTH);
   });
 
   it("works when the values are zero or negative", () => {

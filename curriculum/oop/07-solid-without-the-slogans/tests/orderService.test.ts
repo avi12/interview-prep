@@ -1,3 +1,6 @@
+import { describe, expect, it } from "vitest";
+import { loadImpl } from "#kit/impl.ts";
+import { sequentialIds } from "#kit/ids.ts";
 import type {
   Order,
   OrderRequest,
@@ -9,38 +12,21 @@ import type {
   PricingRule,
   ReceiptSender
 } from "../starter/contracts.ts";
-import { sequentialIds } from "#kit/ids.ts";
-import { loadImpl } from "#kit/impl.ts";
-import { describe, expect, it } from "vitest";
 
 type CollaboratorsModule = {
   createOrderValidator: () => OrderValidator;
-  createBulkDiscountRule: (input: {
-    minimumQuantity: number;
-    percent: number;
-  }) => PricingRule;
-  createCouponRule: (input: {
-    code: string;
-    amountCents: number;
-  }) => PricingRule;
+  createBulkDiscountRule: (input: { minimumQuantity: number; percent: number }) => PricingRule;
+  createCouponRule: (input: { code: string; amountCents: number }) => PricingRule;
   createPriceCalculator: (input: { rules: PricingRule[] }) => PriceCalculator;
   createNoReceiptSender: () => ReceiptSender;
 };
 
 type ServiceModule = {
-  createOrderService: (dependencies: OrderServiceDependencies) => {
-    placeOrder: (request: OrderRequest) => Promise<PlaceOrderResult>;
-  };
+  createOrderService: (dependencies: OrderServiceDependencies) => { placeOrder: (request: OrderRequest) => Promise<PlaceOrderResult> };
 };
 
-const collaborators = await loadImpl<CollaboratorsModule>({
-  testUrl: import.meta.url,
-  file: "collaborators.ts"
-});
-const { createOrderService } = await loadImpl<ServiceModule>({
-  testUrl: import.meta.url,
-  file: "orderService.ts"
-});
+const collaborators = await loadImpl<CollaboratorsModule>({ testUrl: import.meta.url, file: "collaborators.ts" });
+const { createOrderService } = await loadImpl<ServiceModule>({ testUrl: import.meta.url, file: "orderService.ts" });
 
 const EMAIL = "ana@example.com";
 const BOOK_PRICE_CENTS = 1500;
@@ -49,58 +35,37 @@ const BULK_PERCENT = 10;
 const COUPON_CODE = "WELCOME5";
 const COUPON_CENTS = 500;
 
-function requestOf({ quantity = 1, couponCode, customerEmail = EMAIL }: {
-  quantity?: number;
-  couponCode?: string;
-  customerEmail?: string;
-} = {}): OrderRequest {
-  return {
-    customerEmail,
-    lines: [{
-      sku: "book-1",
-      unitPriceCents: BOOK_PRICE_CENTS,
-      quantity
-    }],
-    couponCode
-  };
-}
+const requestOf = ({ quantity = 1, couponCode, customerEmail = EMAIL }: { quantity?: number; couponCode?: string; customerEmail?: string } = {}): OrderRequest => ({
+  customerEmail,
+  lines: [{ sku: "book-1", unitPriceCents: BOOK_PRICE_CENTS, quantity }],
+  couponCode
+});
 
-function shopRules() {
-  return [
-    collaborators.createBulkDiscountRule({
-      minimumQuantity: BULK_MINIMUM_QUANTITY,
-      percent: BULK_PERCENT
-    }),
-    collaborators.createCouponRule({
-      code: COUPON_CODE,
-      amountCents: COUPON_CENTS
-    })
-  ];
-}
+const shopRules = () => [
+  collaborators.createBulkDiscountRule({ minimumQuantity: BULK_MINIMUM_QUANTITY, percent: BULK_PERCENT }),
+  collaborators.createCouponRule({ code: COUPON_CODE, amountCents: COUPON_CENTS })
+];
 
-function setup(overrides: Partial<OrderServiceDependencies> = {}) {
+const setup = (overrides: Partial<OrderServiceDependencies> = {}) => {
   const calls: string[] = [];
   const saved: Order[] = [];
   const sent: Order[] = [];
-  const charged: {
-    email: string;
-    amountCents: number;
-  }[] = [];
+  const charged: { email: string; amountCents: number }[] = [];
   const gateway: PaymentGateway = {
-    async charge(input) {
+    charge: async input => {
       calls.push("charge");
       charged.push(input);
       return { ok: true };
     }
   };
   const orders = {
-    async save(order: Order) {
+    save: async (order: Order) => {
       calls.push("save");
       saved.push(order);
     }
   };
   const receipts = {
-    async send(order: Order) {
+    send: async (order: Order) => {
       calls.push("send");
       sent.push(order);
     }
@@ -114,14 +79,8 @@ function setup(overrides: Partial<OrderServiceDependencies> = {}) {
     newId: sequentialIds("order"),
     ...overrides
   };
-  return {
-    service: createOrderService(dependencies),
-    calls,
-    saved,
-    sent,
-    charged
-  };
-}
+  return { service: createOrderService(dependencies), calls, saved, sent, charged };
+};
 
 describe("one reason to change: each collaborator does one job", () => {
   it("validator accepts a good request", () => {
@@ -135,10 +94,7 @@ describe("one reason to change: each collaborator does one job", () => {
   });
 
   it("validator names an order with no lines", () => {
-    const problems = collaborators.createOrderValidator().validate({
-      customerEmail: EMAIL,
-      lines: []
-    });
+    const problems = collaborators.createOrderValidator().validate({ customerEmail: EMAIL, lines: [] });
 
     expect(problems).toEqual(["order has no lines"]);
   });
@@ -151,42 +107,26 @@ describe("one reason to change: each collaborator does one job", () => {
   });
 
   it("validator rejects a negative price", () => {
-    const request: OrderRequest = {
-      customerEmail: EMAIL,
-      lines: [{
-        sku: "book-1",
-        unitPriceCents: -1,
-        quantity: 1
-      }]
-    };
+    const request: OrderRequest = { customerEmail: EMAIL, lines: [{ sku: "book-1", unitPriceCents: -1, quantity: 1 }] };
 
     expect(collaborators.createOrderValidator().validate(request)).toEqual(["price must be a whole number of cents, zero or more"]);
   });
 
   it("validator reports every problem at once, not just the first", () => {
-    const problems = collaborators.createOrderValidator().validate({
-      customerEmail: "nope",
-      lines: []
-    });
+    const problems = collaborators.createOrderValidator().validate({ customerEmail: "nope", lines: [] });
 
     expect(problems).toEqual(["email is invalid", "order has no lines"]);
   });
 
   it("bulk rule discounts only from the configured quantity, using the configured percent", () => {
-    const rule = collaborators.createBulkDiscountRule({
-      minimumQuantity: 3,
-      percent: 20
-    });
+    const rule = collaborators.createBulkDiscountRule({ minimumQuantity: 3, percent: 20 });
 
     expect(rule.discountCents(requestOf({ quantity: 2 }))).toBe(0);
     expect(rule.discountCents(requestOf({ quantity: 3 }))).toBe(900);
   });
 
   it("coupon rule discounts only for its own code", () => {
-    const rule = collaborators.createCouponRule({
-      code: "SAVE7",
-      amountCents: 700
-    });
+    const rule = collaborators.createCouponRule({ code: "SAVE7", amountCents: 700 });
 
     expect(rule.discountCents(requestOf({ couponCode: "SAVE7" }))).toBe(700);
     expect(rule.discountCents(requestOf({ couponCode: "OTHER" }))).toBe(0);
@@ -196,40 +136,20 @@ describe("one reason to change: each collaborator does one job", () => {
   it("calculator without rules charges the full subtotal", () => {
     const calculator = collaborators.createPriceCalculator({ rules: [] });
 
-    expect(calculator.priceOf(requestOf({ quantity: 2 }))).toEqual({
-      subtotalCents: 3000,
-      discountCents: 0,
-      totalCents: 3000
-    });
+    expect(calculator.priceOf(requestOf({ quantity: 2 }))).toEqual({ subtotalCents: 3000, discountCents: 0, totalCents: 3000 });
   });
 
   it("calculator adds up every rule", () => {
     const calculator = collaborators.createPriceCalculator({ rules: shopRules() });
-    const request = requestOf({
-      quantity: BULK_MINIMUM_QUANTITY,
-      couponCode: COUPON_CODE
-    });
+    const request = requestOf({ quantity: BULK_MINIMUM_QUANTITY, couponCode: COUPON_CODE });
 
-    expect(calculator.priceOf(request)).toEqual({
-      subtotalCents: 15000,
-      discountCents: 2000,
-      totalCents: 13000
-    });
+    expect(calculator.priceOf(request)).toEqual({ subtotalCents: 15000, discountCents: 2000, totalCents: 13000 });
   });
 
   it("calculator never lets the total drop below zero", () => {
-    const calculator = collaborators.createPriceCalculator({
-      rules: [{
-        name: "huge",
-        discountCents: () => 999_999
-      }]
-    });
+    const calculator = collaborators.createPriceCalculator({ rules: [{ name: "huge", discountCents: () => 999_999 }] });
 
-    expect(calculator.priceOf(requestOf())).toEqual({
-      subtotalCents: 1500,
-      discountCents: 1500,
-      totalCents: 0
-    });
+    expect(calculator.priceOf(requestOf())).toEqual({ subtotalCents: 1500, discountCents: 1500, totalCents: 0 });
   });
 });
 
@@ -239,19 +159,9 @@ describe("the service only conducts: validate, price, charge, save, send", () =>
 
     const result = await service.placeOrder(requestOf({ quantity: 2 }));
 
-    expect(result).toEqual({
-      status: "paid",
-      order: saved[0]
-    });
-    expect(saved[0]).toMatchObject({
-      id: "order-1",
-      customerEmail: EMAIL,
-      totalCents: 3000
-    });
-    expect(charged).toEqual([{
-      email: EMAIL,
-      amountCents: 3000
-    }]);
+    expect(result).toEqual({ status: "paid", order: saved[0] });
+    expect(saved[0]).toMatchObject({ id: "order-1", customerEmail: EMAIL, totalCents: 3000 });
+    expect(charged).toEqual([{ email: EMAIL, amountCents: 3000 }]);
     expect(sent).toEqual(saved);
   });
 
@@ -266,17 +176,9 @@ describe("the service only conducts: validate, price, charge, save, send", () =>
   it("the customer is charged the discounted total", async () => {
     const { service, charged } = setup();
 
-    await service.placeOrder(
-      requestOf({
-        quantity: BULK_MINIMUM_QUANTITY,
-        couponCode: COUPON_CODE
-      })
-    );
+    await service.placeOrder(requestOf({ quantity: BULK_MINIMUM_QUANTITY, couponCode: COUPON_CODE }));
 
-    expect(charged).toEqual([{
-      email: EMAIL,
-      amountCents: 13000
-    }]);
+    expect(charged).toEqual([{ email: EMAIL, amountCents: 13000 }]);
   });
 
   it("an invalid request is rejected with the validator's problems and nothing else happens", async () => {
@@ -284,28 +186,17 @@ describe("the service only conducts: validate, price, charge, save, send", () =>
 
     const result = await service.placeOrder(requestOf({ customerEmail: "nope" }));
 
-    expect(result).toEqual({
-      status: "rejected",
-      problems: ["email is invalid"]
-    });
+    expect(result).toEqual({ status: "rejected", problems: ["email is invalid"] });
     expect(calls).toEqual([]);
   });
 
   it("a declined card returns the reason and neither saves nor sends a receipt", async () => {
-    const gateway: PaymentGateway = {
-      charge: async () => ({
-        ok: false,
-        reason: "card declined"
-      })
-    };
+    const gateway: PaymentGateway = { charge: async () => ({ ok: false, reason: "card declined" }) };
     const { service, saved, sent } = setup({ gateway });
 
     const result = await service.placeOrder(requestOf());
 
-    expect(result).toEqual({
-      status: "declined",
-      reason: "card declined"
-    });
+    expect(result).toEqual({ status: "declined", reason: "card declined" });
     expect(saved).toEqual([]);
     expect(sent).toEqual([]);
   });
@@ -325,29 +216,17 @@ describe("the service only conducts: validate, price, charge, save, send", () =>
 
     const result = await service.placeOrder(requestOf());
 
-    expect(result).toEqual({
-      status: "rejected",
-      problems: ["shop is closed"]
-    });
+    expect(result).toEqual({ status: "rejected", problems: ["shop is closed"] });
     expect(calls).toEqual([]);
   });
 
   it("asks the injected calculator, not a built-in price", async () => {
-    const calculator: PriceCalculator = {
-      priceOf: () => ({
-        subtotalCents: 1,
-        discountCents: 0,
-        totalCents: 4321
-      })
-    };
+    const calculator: PriceCalculator = { priceOf: () => ({ subtotalCents: 1, discountCents: 0, totalCents: 4321 }) };
     const { service, charged } = setup({ calculator });
 
     await service.placeOrder(requestOf());
 
-    expect(charged).toEqual([{
-      email: EMAIL,
-      amountCents: 4321
-    }]);
+    expect(charged).toEqual([{ email: EMAIL, amountCents: 4321 }]);
   });
 });
 
@@ -364,39 +243,22 @@ describe("a substitute keeps the promise of the type it replaces", () => {
   it("the no-receipt sender can be called on its own without throwing", async () => {
     const sender = collaborators.createNoReceiptSender();
 
-    await expect(
-      sender.send({
-        id: "order-1",
-        customerEmail: EMAIL,
-        lines: [],
-        totalCents: 0
-      })
-    ).resolves.toBeUndefined();
+    await expect(sender.send({ id: "order-1", customerEmail: EMAIL, lines: [], totalCents: 0 })).resolves.toBeUndefined();
   });
 });
 
 describe("extension: new variants plug in without editing your code", () => {
-  const fridayRule: PricingRule = {
-    name: "friday",
-    discountCents: () => 250
-  };
+  const fridayRule: PricingRule = { name: "friday", discountCents: () => 250 };
 
   it("a pricing rule written in the test lowers the price", () => {
     const calculator = collaborators.createPriceCalculator({ rules: [fridayRule] });
 
-    expect(calculator.priceOf(requestOf())).toEqual({
-      subtotalCents: 1500,
-      discountCents: 250,
-      totalCents: 1250
-    });
+    expect(calculator.priceOf(requestOf())).toEqual({ subtotalCents: 1500, discountCents: 250, totalCents: 1250 });
   });
 
   it("a new rule combines with the shop's existing rules", () => {
     const calculator = collaborators.createPriceCalculator({ rules: [...shopRules(), fridayRule] });
-    const request = requestOf({
-      quantity: BULK_MINIMUM_QUANTITY,
-      couponCode: COUPON_CODE
-    });
+    const request = requestOf({ quantity: BULK_MINIMUM_QUANTITY, couponCode: COUPON_CODE });
 
     expect(calculator.priceOf(request).discountCents).toBe(2250);
   });
@@ -407,10 +269,7 @@ describe("extension: new variants plug in without editing your code", () => {
 
     await service.placeOrder(requestOf());
 
-    expect(charged).toEqual([{
-      email: EMAIL,
-      amountCents: 1250
-    }]);
+    expect(charged).toEqual([{ email: EMAIL, amountCents: 1250 }]);
   });
 
   it("a new receipt channel receives the saved order", async () => {
@@ -425,17 +284,11 @@ describe("extension: new variants plug in without editing your code", () => {
 
   it("a new payment gateway with its own decline rule is honored", async () => {
     const strictGateway: PaymentGateway = {
-      charge: async ({ amountCents }) => (amountCents > 2000 ? {
-        ok: false,
-        reason: "over limit"
-      } : { ok: true })
+      charge: async ({ amountCents }) => (amountCents > 2000 ? { ok: false, reason: "over limit" } : { ok: true })
     };
     const { service } = setup({ gateway: strictGateway });
 
     expect((await service.placeOrder(requestOf({ quantity: 1 }))).status).toBe("paid");
-    expect(await service.placeOrder(requestOf({ quantity: 2 }))).toEqual({
-      status: "declined",
-      reason: "over limit"
-    });
+    expect(await service.placeOrder(requestOf({ quantity: 2 }))).toEqual({ status: "declined", reason: "over limit" });
   });
 });

@@ -1,26 +1,21 @@
+import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
 import { measureMs } from "#kit/timing.ts";
-import { describe, expect, it } from "vitest";
 
 type Module = { climbStairs: (n: number) => number };
 
-const { climbStairs } = await loadImpl<Module>({
-  testUrl: import.meta.url,
-  file: "climbStairs.ts"
-});
+const { climbStairs } = await loadImpl<Module>({ testUrl: import.meta.url, file: "climbStairs.ts" });
 
 const LARGEST_STAIRCASE = 45;
 const WAYS_FOR_LARGEST_STAIRCASE = 1_836_311_903;
 const TIME_LIMIT_MS = 1000;
 const SEQUENCE_CHECK_LIMIT = 35;
 
-function waysUpTo(steps: number) {
+const waysUpTo = (steps: number) => {
   const ways = [1, 1];
-  for (let step = 2; step <= steps; step++) {
-    ways.push(ways[step - 1] + ways[step - 2]);
-  }
+  for (let step = 2; step <= steps; step++) ways.push(ways[step - 1] + ways[step - 2]);
   return ways;
-}
+};
 
 describe("climbStairs", () => {
   it("has one way to climb one step", () => {

@@ -12,13 +12,9 @@ export type Manifest = {
   host_permissions?: string[];
   content_scripts?: { matches?: string[] }[];
   content_security_policy?: string | { extension_pages?: string };
-  web_accessible_resources?: (string | {
-    resources?: string[];
-    matches?: string[];
-  })[];
+  web_accessible_resources?: (string | { resources?: string[]; matches?: string[] })[];
 };
 
-export function auditManifest(_manifest: Manifest) {
-  const findings: Finding[] = [];
-  return findings;
+export function auditManifest(manifest: Manifest) {
+  return [] as Finding[];
 }

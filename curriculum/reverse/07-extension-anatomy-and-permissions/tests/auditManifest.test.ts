@@ -1,45 +1,21 @@
-import type { Finding } from "../starter/auditManifest.ts";
-import { loadImpl } from "#kit/impl.ts";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { loadImpl } from "#kit/impl.ts";
+import type { Finding } from "../starter/auditManifest.ts";
 
 type Manifest = Record<string, unknown>;
 type Module = { auditManifest: (manifest: Manifest) => Finding[] };
 
-const { auditManifest } = await loadImpl<Module>({
-  testUrl: import.meta.url,
-  file: "auditManifest.ts"
-});
+const { auditManifest } = await loadImpl<Module>({ testUrl: import.meta.url, file: "auditManifest.ts" });
 
-function readFixture(name: string): Manifest {
-  return JSON.parse(readFileSync(new URL(`../starter/${name}`, import.meta.url), "utf8"));
-}
+const readFixture = (name: string): Manifest => JSON.parse(readFileSync(new URL(`../starter/${name}`, import.meta.url), "utf8"));
 
-const BASE: Manifest = {
-  manifest_version: 3,
-  name: "Test",
-  version: "1"
-};
+const BASE: Manifest = { manifest_version: 3, name: "Test", version: "1" };
 const BROAD_PATTERNS = ["<all_urls>", "*://*/*", "http://*/*", "https://*/*"];
 
-function finding(rule: string, severity: Finding["severity"], subject: string): Finding {
-  return {
-    rule,
-    severity,
-    subject
-  };
-}
-function ordered(findings: Finding[]) {
-  return [...findings].sort((first, second) => `${first.rule}|${first.subject}`.localeCompare(`${second.rule}|${second.subject}`));
-}
-function audit(changes: Manifest) {
-  return ordered(
-    auditManifest({
-      ...BASE,
-      ...changes
-    })
-  );
-}
+const finding = (rule: string, severity: Finding["severity"], subject: string): Finding => ({ rule, severity, subject });
+const ordered = (findings: Finding[]) => [...findings].sort((a, b) => `${a.rule}|${a.subject}`.localeCompare(`${b.rule}|${b.subject}`));
+const audit = (changes: Manifest) => ordered(auditManifest({ ...BASE, ...changes }));
 
 describe("auditManifest on whole manifests", () => {
   it("finds nothing in a narrow, single-purpose extension", () => {
@@ -88,27 +64,15 @@ describe("auditManifest rules", () => {
   });
 
   it.each(BROAD_PATTERNS)("flags %s as a broad content script", pattern => {
-    expect(
-      audit({
-        content_scripts: [{
-          matches: [pattern],
-          js: ["a.js"]
-        }]
-      })
-    ).toEqual([finding("broad-content-script", "high", pattern)]);
+    expect(audit({ content_scripts: [{ matches: [pattern], js: ["a.js"] }] })).toEqual([finding("broad-content-script", "high", pattern)]);
   });
 
   it("does not flag specific hosts, even with a subdomain wildcard", () => {
     const narrow = ["https://api.shop.test/*", "https://*.shop.test/*", "*://mail.shop.test/*"];
-    expect(
-      audit({
-        host_permissions: narrow,
-        content_scripts: [{ matches: narrow }]
-      })
-    ).toEqual([]);
+    expect(audit({ host_permissions: narrow, content_scripts: [{ matches: narrow }] })).toEqual([]);
   });
 
-  it.each<[string, Finding["severity"]]>([
+  it.each([
     ["debugger", "high"],
     ["proxy", "high"],
     ["cookies", "high"],
@@ -121,7 +85,7 @@ describe("auditManifest rules", () => {
     ["declarativeNetRequest", "medium"],
     ["downloads", "low"]
   ])("ranks the %s permission as %s", (permission, severity) => {
-    expect(audit({ permissions: [permission] })).toEqual([finding("risky-permission", severity, permission)]);
+    expect(audit({ permissions: [permission] })).toEqual([finding("risky-permission", severity as Finding["severity"], permission)]);
   });
 
   it("leaves harmless permissions alone", () => {
@@ -144,30 +108,16 @@ describe("auditManifest rules", () => {
   });
 
   it("flags a web accessible resource that every site can load", () => {
-    const resources = [{
-      resources: ["a.png"],
-      matches: ["https://*/*"]
-    }];
+    const resources = [{ resources: ["a.png"], matches: ["https://*/*"] }];
     expect(audit({ web_accessible_resources: resources })).toEqual([finding("open-web-accessible-resources", "medium", "https://*/*")]);
   });
 
   it("flags a manifest that is not version 3", () => {
-    expect(
-      ordered(
-        auditManifest({
-          name: "x",
-          version: "1",
-          manifest_version: 2
-        })
-      )
-    ).toEqual([finding("old-manifest-version", "medium", "2")]);
+    expect(ordered(auditManifest({ name: "x", version: "1", manifest_version: 2 }))).toEqual([finding("old-manifest-version", "medium", "2")]);
   });
 
   it("reports the same pattern once", () => {
-    const result = audit({
-      host_permissions: ["<all_urls>"],
-      permissions: ["<all_urls>"]
-    });
+    const result = audit({ host_permissions: ["<all_urls>"], permissions: ["<all_urls>"] });
     expect(result).toEqual([finding("broad-host-access", "high", "<all_urls>")]);
   });
 

@@ -52,10 +52,7 @@ export class FreeShippingFrom implements DiscountRule {
   }
 
   discountFor({ subtotal, shippingFee }: PricingContext) {
-    if (subtotal.isAtLeast(this.#threshold)) {
-      return shippingFee;
-    }
-
+    if (subtotal.isAtLeast(this.#threshold)) return shippingFee;
     return Money.zero(shippingFee.currency);
   }
 }

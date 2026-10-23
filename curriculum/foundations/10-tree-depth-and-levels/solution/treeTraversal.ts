@@ -11,18 +11,12 @@ export class TreeNode {
 }
 
 export function maxDepth(root: TreeNode | null): number {
-  if (root === null) {
-    return 0;
-  }
-
+  if (root === null) return 0;
   return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
 }
 
 export function levelOrder(root: TreeNode | null) {
-  if (root === null) {
-    return [];
-  }
-
+  if (root === null) return [];
   const levels: number[][] = [];
   const queue = [root];
   let head = 0;
@@ -33,14 +27,8 @@ export function levelOrder(root: TreeNode | null) {
       const node = queue[head];
       head++;
       level.push(node.val);
-
-      if (node.left !== null) {
-        queue.push(node.left);
-      }
-
-      if (node.right !== null) {
-        queue.push(node.right);
-      }
+      if (node.left !== null) queue.push(node.left);
+      if (node.right !== null) queue.push(node.right);
     }
     levels.push(level);
   }

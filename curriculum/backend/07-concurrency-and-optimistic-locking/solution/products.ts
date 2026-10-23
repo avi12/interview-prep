@@ -1,39 +1,18 @@
 import type { PGlite } from "@electric-sql/pglite";
 
-export type Product = {
-  id: number;
-  name: string;
-  stock: number;
-  version: number;
-};
-export type Changes = {
-  name: string;
-  stock: number;
-};
+export type Product = { id: number; name: string; stock: number; version: number };
+export type Changes = { name: string; stock: number };
 export type UpdateResult =
-  | {
-    outcome: "updated";
-    product: Product;
-  }
-  | {
-    outcome: "conflict";
-    current: Product;
-  }
+  | { outcome: "updated"; product: Product }
+  | { outcome: "conflict"; current: Product }
   | { outcome: "not_found" };
 
-const STATUS = {
-  ok: 200,
-  notFound: 404,
-  conflict: 409
-} as const;
+const STATUS = { ok: 200, notFound: 404, conflict: 409 } as const;
 
-export async function findProduct({ db, id }: {
-  db: PGlite;
-  id: number;
-}) {
+export const findProduct = async ({ db, id }: { db: PGlite; id: number }) => {
   const { rows } = await db.query<Product>(`SELECT id, name, stock, version FROM products WHERE id = $1`, [id]);
   return rows[0] ?? null;
-}
+};
 
 export async function updateWithVersion({
   db,
@@ -52,25 +31,10 @@ export async function updateWithVersion({
      RETURNING id, name, stock, version`,
     [id, expectedVersion, changes.name, changes.stock]
   );
-  if (rows[0]) {
-    return {
-      outcome: "updated",
-      product: rows[0]
-    };
-  }
-
-  const current = await findProduct({
-    db,
-    id
-  });
-  if (!current) {
-    return { outcome: "not_found" };
-  }
-
-  return {
-    outcome: "conflict",
-    current
-  };
+  if (rows[0]) return { outcome: "updated", product: rows[0] };
+  const current = await findProduct({ db, id });
+  if (!current) return { outcome: "not_found" };
+  return { outcome: "conflict", current };
 }
 
 export async function updateWithRetry({
@@ -84,54 +48,17 @@ export async function updateWithRetry({
   change: (current: Product) => Changes | Promise<Changes>;
   maxAttempts: number;
 }): Promise<UpdateResult> {
-  const current = await findProduct({
-    db,
-    id
-  });
-  if (!current) {
-    return { outcome: "not_found" };
-  }
-
-  const result = await updateWithVersion({
-    db,
-    id,
-    expectedVersion: current.version,
-    changes: await change(current)
-  });
-  if (result.outcome !== "conflict" || maxAttempts <= 1) {
-    return result;
-  }
-
-  return updateWithRetry({
-    db,
-    id,
-    change,
-    maxAttempts: maxAttempts - 1
-  });
+  const current = await findProduct({ db, id });
+  if (!current) return { outcome: "not_found" };
+  const result = await updateWithVersion({ db, id, expectedVersion: current.version, changes: await change(current) });
+  if (result.outcome !== "conflict" || maxAttempts <= 1) return result;
+  return updateWithRetry({ db, id, change, maxAttempts: maxAttempts - 1 });
 }
 
-export function toResponse(result: UpdateResult) {
-  if (result.outcome === "updated") {
-    return {
-      status: STATUS.ok,
-      body: result.product
-    };
-  }
-
+export const toResponse = (result: UpdateResult) => {
+  if (result.outcome === "updated") return { status: STATUS.ok, body: result.product };
   if (result.outcome === "conflict") {
-    return {
-      status: STATUS.conflict,
-      body: {
-        error: "The product changed since you read it",
-        current: result.current
-      }
-    };
+    return { status: STATUS.conflict, body: { error: "The product changed since you read it", current: result.current } };
   }
-
-  return {
-    status: STATUS.notFound,
-    body: {
-      error: "Product not found"
-    }
-  };
-}
+  return { status: STATUS.notFound, body: { error: "Product not found" } };
+};

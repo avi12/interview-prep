@@ -10,10 +10,10 @@ export class TreeNode {
   }
 }
 
-export function maxDepth(_root: TreeNode | null): number {
+export function maxDepth(root: TreeNode | null): number {
   return 0;
 }
 
-export function levelOrder(_root: TreeNode | null): number[][] {
+export function levelOrder(root: TreeNode | null): number[][] {
   return [];
 }

@@ -2,13 +2,13 @@ import type { UserRepository } from "./registerUser.ts";
 
 export function createInMemoryUserRepository(): UserRepository {
   return {
-    async findByEmail() {
+    findByEmail: async () => {
       throw new Error("not implemented");
     },
-    async save() {
+    save: async () => {
       throw new Error("not implemented");
     },
-    async list() {
+    list: async () => {
       throw new Error("not implemented");
     }
   };

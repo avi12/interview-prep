@@ -1,11 +1,6 @@
 import { Money } from "./money.ts";
 
-export type CartLine = {
-  isbn: string;
-  title: string;
-  unitPrice: Money;
-  quantity: number;
-};
+export type CartLine = { isbn: string; title: string; unitPrice: Money; quantity: number };
 
 export class Cart {
   lines: CartLine[] = [];
@@ -19,14 +14,9 @@ export class Cart {
     this.lines.push(line);
   }
 
-  changeQuantity({ isbn, quantity }: {
-    isbn: string;
-    quantity: number;
-  }) {
+  changeQuantity({ isbn, quantity }: { isbn: string; quantity: number }) {
     const line = this.lines.find(candidate => candidate.isbn === isbn);
-    if (line) {
-      line.quantity = quantity;
-    }
+    if (line) line.quantity = quantity;
   }
 
   remove(isbn: string) {
@@ -35,9 +25,7 @@ export class Cart {
 
   total() {
     let total = Money.zero(this.currency);
-    for (const line of this.lines) {
-      total = total.add(line.unitPrice.multiply(line.quantity));
-    }
+    for (const line of this.lines) total = total.add(line.unitPrice.multiply(line.quantity));
     return total;
   }
 }

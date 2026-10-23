@@ -1,34 +1,15 @@
+import { beforeEach, describe, expect, it } from "vitest";
 import type { PGlite } from "@electric-sql/pglite";
 import { openDb } from "#kit/db.ts";
 import { loadImpl } from "#kit/impl.ts";
-import {
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi
-} from "vitest";
 
-type User = {
-  id: number;
-  username: string;
-  role: string;
-};
+type User = { id: number; username: string; role: string };
 type Module = {
-  findUser: (input: {
-    db: PGlite;
-    username: string;
-  }) => Promise<User | null>;
-  listUsers: (input: {
-    db: PGlite;
-    sortBy: string;
-  }) => Promise<User[]>;
+  findUser: (input: { db: PGlite; username: string }) => Promise<User | null>;
+  listUsers: (input: { db: PGlite; sortBy: string }) => Promise<User[]>;
 };
 
-const { findUser, listUsers } = await loadImpl<Module>({
-  testUrl: import.meta.url,
-  file: "users.ts"
-});
+const { findUser, listUsers } = await loadImpl<Module>({ testUrl: import.meta.url, file: "users.ts" });
 
 const SEED = `
 CREATE TABLE users (id int PRIMARY KEY, username text NOT NULL UNIQUE, role text NOT NULL, password_hash text NOT NULL);
@@ -56,108 +37,72 @@ beforeEach(async () => {
   db = await openDb(SEED);
 });
 
-function withQueryLog(target: PGlite) {
-  const querySpy = vi.spyOn(target, "query");
-  return {
-    watchedDb: target,
-    sentTexts: () => querySpy.mock.calls.map(([text]) => text)
-  };
-}
+const withQueryLog = (target: PGlite) => {
+  const sentTexts: string[] = [];
+  const proxy = new Proxy(target, {
+    get(source, property) {
+      const value = Reflect.get(source, property);
+      if (typeof value !== "function") return value;
+      if (property !== "query") return value.bind(source);
+      return (text: string, params?: unknown[]) => {
+        sentTexts.push(text);
+        return source.query(text, params);
+      };
+    }
+  });
+  return { watchedDb: proxy, sentTexts };
+};
 
-async function userCount() {
+const userCount = async () => {
   const { rows } = await db.query<{ total: number }>("SELECT COUNT(*)::int AS total FROM users");
   return rows[0].total;
-}
+};
 
-async function idsSortedBy(column: string) {
+const idsSortedBy = async (column: string) => {
   const { rows } = await db.query<{ id: number }>(`SELECT id FROM users ORDER BY ${column}, id`);
   return rows.map(row => row.id);
-}
+};
 
 describe("findUser", () => {
   it("finds a user by exact username", async () => {
-    expect(
-      await findUser({
-        db,
-        username: "dana"
-      })
-    ).toEqual({
-      id: 2,
-      username: "dana",
-      role: "member"
-    });
+    expect(await findUser({ db, username: "dana" })).toEqual({ id: 2, username: "dana", role: "member" });
   });
 
   it("returns null when nobody has that name", async () => {
-    expect(
-      await findUser({
-        db,
-        username: "nobody"
-      })
-    ).toBeNull();
+    expect(await findUser({ db, username: "nobody" })).toBeNull();
   });
 
   it("finds a real name that contains a quote (O'Brien)", async () => {
-    expect(
-      await findUser({
-        db,
-        username: "O'Brien"
-      })
-    ).toEqual({
-      id: 4,
-      username: "O'Brien",
-      role: "member"
-    });
+    expect(await findUser({ db, username: "O'Brien" })).toEqual({ id: 4, username: "O'Brien", role: "member" });
   });
 
   it("sends the name as a parameter, never pasted or hand-escaped inside the query text", async () => {
     const { watchedDb, sentTexts } = withQueryLog(db);
-    expect(
-      await findUser({
-        db: watchedDb,
-        username: "dana"
-      })
-    ).not.toBeNull();
-    expect(sentTexts().filter(text => text.includes("dana"))).toEqual([]);
+    expect(await findUser({ db: watchedDb, username: "dana" })).not.toBeNull();
+    expect(sentTexts.filter(text => text.includes("dana"))).toEqual([]);
   });
 
   it.each(LOGIN_PAYLOADS)("treats the payload %s as a plain name and finds nobody", async payload => {
-    expect(
-      await findUser({
-        db,
-        username: payload
-      })
-    ).toBeNull();
+    expect(await findUser({ db, username: payload })).toBeNull();
     expect(await userCount()).toBe(USER_COUNT);
   });
 });
 
 describe("listUsers", () => {
   it.each(["id", "username"])("sorts by %s", async column => {
-    const users = await listUsers({
-      db,
-      sortBy: column
-    });
+    const users = await listUsers({ db, sortBy: column });
     expect(users.map(user => user.id)).toEqual(await idsSortedBy(column));
   });
 
   it("returns only id, username and role (never the password hash)", async () => {
-    const [first] = await listUsers({
-      db,
-      sortBy: "id"
-    });
+    const [first] = await listUsers({ db, sortBy: "id" });
     expect(Object.keys(first).sort()).toEqual(["id", "role", "username"]);
   });
 
   it.each(SORT_PAYLOADS)("refuses to sort by %s before any SQL is sent", async payload => {
     const { watchedDb, sentTexts } = withQueryLog(db);
-    await expect(
-      listUsers({
-        db: watchedDb,
-        sortBy: payload
-      })
-    ).rejects.toThrow();
-    expect(sentTexts()).toEqual([]);
+    await expect(listUsers({ db: watchedDb, sortBy: payload })).rejects.toThrow();
+    expect(sentTexts).toEqual([]);
     expect(await userCount()).toBe(USER_COUNT);
   });
 });

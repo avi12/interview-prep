@@ -1,16 +1,15 @@
-export const MS_PER_SECOND = 1000;
+const MS_PER_SECOND = 1000;
 
-export function createTokenBucketLimiter(_input: {
+export function createTokenBucketLimiter({
+  capacity,
+  refillPerSecond,
+  now
+}: {
   capacity: number;
   refillPerSecond: number;
   now: () => number;
 }) {
-  function tryConsume(_key: string) {
-    return {
-      isAllowed: true,
-      retryAfterSeconds: 0
-    };
-  }
+  const tryConsume = (key: string) => ({ isAllowed: true, retryAfterSeconds: 0 });
 
   return { tryConsume };
 }

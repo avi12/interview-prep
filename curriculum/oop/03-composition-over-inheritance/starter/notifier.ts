@@ -21,10 +21,7 @@ export class DigestFormatter implements Formatter {
 }
 
 export class Notifier {
-  constructor(_options: {
-    channel: Channel;
-    formatter: Formatter;
-  }) {}
+  constructor(_options: { channel: Channel; formatter: Formatter }) {}
 
   useChannel(_channel: Channel) {
     throw new Error("not implemented");

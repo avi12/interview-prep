@@ -1,10 +1,6 @@
 import type { DomainEvent, Listener } from "./events.ts";
 
-export type ListenerFailure = {
-  event: DomainEvent;
-  listener: Listener;
-  error: unknown;
-};
+export type ListenerFailure = { event: DomainEvent; listener: Listener; error: unknown };
 
 export class EventBus {
   constructor(_options: { onListenerError: (failure: ListenerFailure) => void }) {}

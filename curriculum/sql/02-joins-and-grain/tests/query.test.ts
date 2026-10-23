@@ -1,5 +1,5 @@
-import { runSeeded } from "#kit/db.ts";
 import { describe, expect, it } from "vitest";
+import { runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `
 CREATE TABLE customers (id int PRIMARY KEY, name text NOT NULL);
@@ -24,21 +24,9 @@ INSERT INTO order_items VALUES
 
 const NUMERIC_COLUMNS = ["revenue", "units"];
 
-function run(seed: string) {
-  return runSeeded({
-    seed,
-    testUrl: import.meta.url,
-    file: "query.sql",
-    numericColumns: NUMERIC_COLUMNS
-  });
-}
+const run = (seed: string) => runSeeded({ seed, testUrl: import.meta.url, file: "query.sql", numericColumns: NUMERIC_COLUMNS });
 
-function rowFor({ rows, name }: {
-  rows: Record<string, unknown>[];
-  name: string;
-}) {
-  return rows.find(row => row.name === name);
-}
+const rowFor = ({ rows, name }: { rows: Record<string, unknown>[]; name: string }) => rows.find(row => row.name === name);
 
 describe("revenue and units per customer", () => {
   it("returns the columns name, revenue, units", async () => {
@@ -48,109 +36,41 @@ describe("revenue and units per customer", () => {
 
   it("does not multiply an order total by its number of items (fan-out)", async () => {
     const { rows } = await run(SHOP);
-    expect(
-      rowFor({
-        rows,
-        name: "Ava"
-      })
-    ).toEqual({
-      name: "Ava",
-      revenue: 65,
-      units: 10
-    });
+    expect(rowFor({ rows, name: "Ava" })).toEqual({ name: "Ava", revenue: 65, units: 10 });
   });
 
   it("keeps an order that has no items, with 0 units", async () => {
     const { rows } = await run(SHOP);
-    expect(
-      rowFor({
-        rows,
-        name: "Cleo"
-      })
-    ).toEqual({
-      name: "Cleo",
-      revenue: 30,
-      units: 0
-    });
+    expect(rowFor({ rows, name: "Cleo" })).toEqual({ name: "Cleo", revenue: 30, units: 0 });
   });
 
   it("keeps customers with no orders, with 0 revenue and 0 units (LEFT JOIN)", async () => {
     const { rows } = await run(SHOP);
-    expect(
-      rowFor({
-        rows,
-        name: "Dan"
-      })
-    ).toEqual({
-      name: "Dan",
-      revenue: 0,
-      units: 0
-    });
+    expect(rowFor({ rows, name: "Dan" })).toEqual({ name: "Dan", revenue: 0, units: 0 });
   });
 
   it("counts two different orders that happen to have the same total twice", async () => {
     const { rows } = await run(CAFE);
-    expect(
-      rowFor({
-        rows,
-        name: "Eli"
-      })
-    ).toEqual({
-      name: "Eli",
-      revenue: 24,
-      units: 6
-    });
+    expect(rowFor({ rows, name: "Eli" })).toEqual({ name: "Eli", revenue: 24, units: 6 });
   });
 
   it("returns the full report sorted by revenue, then name", async () => {
     const { rows } = await run(SHOP);
     expect(rows).toEqual([
-      {
-        name: "Ava",
-        revenue: 65,
-        units: 10
-      },
-      {
-        name: "Ben",
-        revenue: 60,
-        units: 2
-      },
-      {
-        name: "Cleo",
-        revenue: 30,
-        units: 0
-      },
-      {
-        name: "Dan",
-        revenue: 0,
-        units: 0
-      }
+      { name: "Ava", revenue: 65, units: 10 },
+      { name: "Ben", revenue: 60, units: 2 },
+      { name: "Cleo", revenue: 30, units: 0 },
+      { name: "Dan", revenue: 0, units: 0 }
     ]);
   });
 
   it("works on different data too (no hardcoding)", async () => {
     const { rows } = await run(CAFE);
     expect(rows).toEqual([
-      {
-        name: "Fay",
-        revenue: 55,
-        units: 5
-      },
-      {
-        name: "Eli",
-        revenue: 24,
-        units: 6
-      },
-      {
-        name: "Gus",
-        revenue: 0,
-        units: 0
-      },
-      {
-        name: "Hana",
-        revenue: 0,
-        units: 0
-      }
+      { name: "Fay", revenue: 55, units: 5 },
+      { name: "Eli", revenue: 24, units: 6 },
+      { name: "Gus", revenue: 0, units: 0 },
+      { name: "Hana", revenue: 0, units: 0 }
     ]);
   });
 });

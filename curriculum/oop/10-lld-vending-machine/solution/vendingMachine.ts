@@ -1,12 +1,5 @@
 import { Reason, StateName } from "./contracts.ts";
-import type {
-  CancelResult,
-  InsertResult,
-  MachineOptions,
-  Product,
-  SelectResult,
-  VendingMachine
-} from "./contracts.ts";
+import type { CancelResult, InsertResult, MachineOptions, Product, SelectResult, VendingMachine } from "./contracts.ts";
 
 type MachineState = {
   name: StateName;
@@ -15,28 +8,16 @@ type MachineState = {
   cancel: () => CancelResult;
 };
 
-function reject(reason: Reason) {
-  return {
-    ok: false as const,
-    reason
-  };
-}
+const reject = (reason: Reason) => ({ ok: false as const, reason });
 
-export function createVendingMachine({
-  products,
-  acceptedCoins,
-  dispenser,
-  rules = []
-}: MachineOptions): VendingMachine {
+export const createVendingMachine = ({ products, acceptedCoins, dispenser, rules = [] }: MachineOptions): VendingMachine => {
   const stock = new Map(products.map(product => [product.code, { ...product }]));
-  const coinsLargestFirst = acceptedCoins.filter(coin => coin > 0).sort((first, second) => second - first);
+  const coinsLargestFirst = acceptedCoins.filter(coin => coin > 0).sort((a, b) => b - a);
   let balanceCents = 0;
 
-  function hasAnyStock() {
-    return [...stock.values()].some(product => product.stock > 0);
-  }
+  const hasAnyStock = () => [...stock.values()].some(product => product.stock > 0);
 
-  function coinsFor(amountCents: number) {
+  const coinsFor = (amountCents: number) => {
     const coins: number[] = [];
     let remainingCents = amountCents;
     for (const coin of coinsLargestFirst) {
@@ -45,100 +26,61 @@ export function createVendingMachine({
       remainingCents -= count * coin;
     }
     return coins;
-  }
+  };
 
-  function takeBalanceAsCoins() {
+  const takeBalanceAsCoins = () => {
     const coins = coinsFor(balanceCents);
     balanceCents = 0;
     return coins;
-  }
+  };
 
-  function addCoin(coinCents: number): InsertResult {
-    if (!acceptedCoins.includes(coinCents)) {
-      return reject(Reason.invalidCoin);
-    }
-
+  const addCoin = (coinCents: number): InsertResult => {
+    if (!acceptedCoins.includes(coinCents)) return reject(Reason.invalidCoin);
     balanceCents += coinCents;
     state = hasMoney;
-    return {
-      ok: true,
-      balanceCents
-    };
-  }
+    return { ok: true, balanceCents };
+  };
 
-  async function dispense(product: Product): Promise<SelectResult> {
+  const dispense = async (product: Product): Promise<SelectResult> => {
     state = dispensing;
     try {
       await dispenser.dispense(product.code);
     } catch {
       state = idle;
-      return {
-        ...reject(Reason.jammed),
-        refundCoins: takeBalanceAsCoins()
-      };
+      return { ...reject(Reason.jammed), refundCoins: takeBalanceAsCoins() };
     }
     product.stock -= 1;
     const changeCoins = coinsFor(balanceCents - product.priceCents);
     balanceCents = 0;
     state = hasAnyStock() ? idle : outOfStock;
-    return {
-      ok: true,
-      code: product.code,
-      changeCoins
-    };
-  }
+    return { ok: true, code: product.code, changeCoins };
+  };
 
   const idle: MachineState = {
     name: StateName.idle,
     insertCoin: addCoin,
     select: async () => reject(Reason.noMoney),
-    cancel: () => ({
-      ok: true,
-      refundCoins: []
-    })
+    cancel: () => ({ ok: true, refundCoins: [] })
   };
 
   const hasMoney: MachineState = {
     name: StateName.hasMoney,
     insertCoin: addCoin,
-    async select(code) {
+    select: async code => {
       const product = stock.get(code);
-      if (!product) {
-        return reject(Reason.unknownProduct);
-      }
-
-      if (product.stock === 0) {
-        return reject(Reason.productSoldOut);
-      }
-
+      if (!product) return reject(Reason.unknownProduct);
+      if (product.stock === 0) return reject(Reason.productSoldOut);
       for (const rule of rules) {
-        const detail = rule({
-          product: {
-            ...product
-          },
-          balanceCents
-        });
-        if (detail) {
-          return {
-            ...reject(Reason.ruleRejected),
-            detail
-          };
-        }
+        const detail = rule({ product: { ...product }, balanceCents });
+        if (detail) return { ...reject(Reason.ruleRejected), detail };
       }
-
-      if (balanceCents < product.priceCents) {
-        return reject(Reason.insufficientFunds);
-      }
-
+      if (balanceCents < product.priceCents) return reject(Reason.insufficientFunds);
       return dispense(product);
     },
-    cancel() {
+    cancel: () => {
       const refundCoins = takeBalanceAsCoins();
       state = idle;
-      return {
-        ok: true,
-        refundCoins
-      };
+      return { ok: true, refundCoins };
     }
   };
 
@@ -153,10 +95,7 @@ export function createVendingMachine({
     name: StateName.outOfStock,
     insertCoin: () => reject(Reason.soldOut),
     select: async () => reject(Reason.soldOut),
-    cancel: () => ({
-      ok: true,
-      refundCoins: []
-    })
+    cancel: () => ({ ok: true, refundCoins: [] })
   };
 
   let state: MachineState = hasAnyStock() ? idle : outOfStock;
@@ -165,20 +104,14 @@ export function createVendingMachine({
     insertCoin: coinCents => state.insertCoin(coinCents),
     select: code => state.select(code),
     cancel: () => state.cancel(),
-    restock({ code, quantity }) {
+    restock: ({ code, quantity }) => {
       const product = stock.get(code);
-      if (!product) {
-        throw new Error(`unknown product ${code}`);
-      }
-
+      if (!product) throw new Error(`unknown product ${code}`);
       product.stock += quantity;
-
-      if (state === outOfStock && hasAnyStock()) {
-        state = idle;
-      }
+      if (state === outOfStock && hasAnyStock()) state = idle;
     },
     stateName: () => state.name,
     balanceCents: () => balanceCents,
     stockOf: code => stock.get(code)?.stock ?? 0
   };
-}
+};

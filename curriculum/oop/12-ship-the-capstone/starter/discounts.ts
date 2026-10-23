@@ -9,16 +9,10 @@ export function percentOff(_input: { percent: number }): DiscountRule {
   throw new Error("not implemented");
 }
 
-export function bulkDiscount(_input: {
-  minimumQuantity: number;
-  percent: number;
-}): DiscountRule {
+export function bulkDiscount(_input: { minimumQuantity: number; percent: number }): DiscountRule {
   throw new Error("not implemented");
 }
 
-export function totalDiscount(_input: {
-  rules: readonly DiscountRule[];
-  lines: readonly OrderLine[];
-}): Money {
+export function totalDiscount(_input: { rules: readonly DiscountRule[]; lines: readonly OrderLine[] }): Money {
   throw new Error("not implemented");
 }

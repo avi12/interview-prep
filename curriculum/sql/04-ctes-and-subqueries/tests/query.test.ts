@@ -1,5 +1,5 @@
-import { readQueryFile, runSeeded } from "#kit/db.ts";
 import { describe, expect, it } from "vitest";
+import { readQueryFile, runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `CREATE TABLE payments (id int PRIMARY KEY, customer text NOT NULL, amount int NOT NULL);`;
 
@@ -22,20 +22,11 @@ INSERT INTO payments VALUES
 const MIN_CTE_COUNT = 2;
 const CTE_DEFINITION = /\b\w+\s+AS\s*\(/gi;
 
-function run(seed: string) {
-  return runSeeded({
-    seed,
-    testUrl: import.meta.url,
-    file: "query.sql"
-  });
-}
+const run = (seed: string) => runSeeded({ seed, testUrl: import.meta.url, file: "query.sql" });
 
 describe("customers above the average customer total", () => {
   it("is written as two chained CTEs: WITH first AS (...), second AS (...)", () => {
-    const query = readQueryFile({
-      testUrl: import.meta.url,
-      file: "query.sql"
-    });
+    const query = readQueryFile({ testUrl: import.meta.url, file: "query.sql" });
     const definitions = query.match(CTE_DEFINITION) ?? [];
     expect(query).toMatch(/^\s*WITH\b/i);
     expect(definitions.length).toBeGreaterThanOrEqual(MIN_CTE_COUNT);
@@ -54,28 +45,16 @@ describe("customers above the average customer total", () => {
   it("uses a strict comparison: a customer exactly at the average is left out", async () => {
     const { rows } = await run(SHOP);
     expect(rows).toEqual([
-      {
-        customer: "Ada",
-        total: 120
-      },
-      {
-        customer: "Bo",
-        total: 80
-      }
+      { customer: "Ada", total: 120 },
+      { customer: "Bo", total: 80 }
     ]);
   });
 
   it("works on different data too (no hardcoding)", async () => {
     const { rows } = await run(CAFE);
     expect(rows).toEqual([
-      {
-        customer: "Fox",
-        total: 200
-      },
-      {
-        customer: "Gil",
-        total: 90
-      }
+      { customer: "Fox", total: 200 },
+      { customer: "Gil", total: 90 }
     ]);
   });
 });

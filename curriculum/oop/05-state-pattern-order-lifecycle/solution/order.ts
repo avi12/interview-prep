@@ -1,6 +1,6 @@
+import { Money } from "#kit/bookstore/money.ts";
 import type { OrderContext, OrderState } from "./orderTypes.ts";
 import { PendingState } from "./states.ts";
-import { Money } from "#kit/bookstore/money.ts";
 
 export class Order {
   readonly id: string;
@@ -9,11 +9,7 @@ export class Order {
   #refunded: Money;
   readonly #context: OrderContext;
 
-  constructor({ id, total, state = new PendingState() }: {
-    id: string;
-    total: Money;
-    state?: OrderState;
-  }) {
+  constructor({ id, total, state = new PendingState() }: { id: string; total: Money; state?: OrderState }) {
     this.id = id;
     this.total = total;
     this.#state = state;

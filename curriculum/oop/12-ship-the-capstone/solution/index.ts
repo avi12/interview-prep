@@ -12,6 +12,6 @@ export type {
   OrderLine,
   OrderStatus,
   OrderView,
-  PaymentGateway,
-  PayResult
+  PayResult,
+  PaymentGateway
 } from "./types.ts";

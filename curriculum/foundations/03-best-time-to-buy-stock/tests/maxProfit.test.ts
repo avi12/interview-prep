@@ -1,18 +1,16 @@
+import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
 import { createSeededPicker } from "#kit/random.ts";
 import { measureMs } from "#kit/timing.ts";
-import { describe, expect, it } from "vitest";
 
 type Module = { maxProfit: (prices: number[]) => number };
 
-const { maxProfit } = await loadImpl<Module>({
-  testUrl: import.meta.url,
-  file: "maxProfit.ts"
-});
+const { maxProfit } = await loadImpl<Module>({ testUrl: import.meta.url, file: "maxProfit.ts" });
 
 const LARGE_SIZE = 20_000;
 const HALF_SIZE = LARGE_SIZE / 2;
 const READS_PER_PRICE_LIMIT = 10;
+const INDEX_KEY_PATTERN = /^\d+$/;
 const COPY_PROOF_SIZE = 30_000;
 const COPY_PROOF_LIMIT_MS = 100;
 const RANDOM_SEED = 20_240_602;
@@ -20,36 +18,27 @@ const RANDOM_CASE_COUNT = 300;
 const RANDOM_MAX_LENGTH = 10;
 const RANDOM_PRICE_SPAN = 20;
 
-function bestProfitOfEveryPair(prices: number[]) {
+const bestProfitOfEveryPair = (prices: number[]) => {
   let best = 0;
   for (const [buyDay, buyPrice] of prices.entries()) {
-    for (const sellPrice of prices.slice(buyDay + 1)) {
-      best = Math.max(best, sellPrice - buyPrice);
-    }
+    for (const sellPrice of prices.slice(buyDay + 1)) best = Math.max(best, sellPrice - buyPrice);
   }
   return best;
-}
+};
 
-function withReadLimit(prices: number[]) {
+const withReadLimit = (prices: number[]) => {
   const readLimit = prices.length * READS_PER_PRICE_LIMIT;
   let readCount = 0;
-  const countedPrices: number[] = [];
-  for (const [day, price] of prices.entries()) {
-    Object.defineProperty(countedPrices, day, {
-      enumerable: true,
-      get() {
-        readCount++;
-
-        if (readCount > readLimit) {
-          throw new Error(`Read prices ${readCount} times for ${prices.length} prices. One pass reads each price a few times, not once per pair of days.`);
-        }
-
-        return price;
+  return new Proxy(prices, {
+    get(target, key, receiver) {
+      if (typeof key === "string" && INDEX_KEY_PATTERN.test(key)) readCount++;
+      if (readCount > readLimit) {
+        throw new Error(`Read prices ${readCount} times for ${prices.length} prices. One pass reads each price a few times, not once per pair of days.`);
       }
-    });
-  }
-  return countedPrices;
-}
+      return Reflect.get(target, key, receiver);
+    }
+  });
+};
 
 describe("maxProfit", () => {
   it("buys low and sells high later", () => {
@@ -84,8 +73,7 @@ describe("maxProfit", () => {
   });
 
   it("does not change the prices it was given", () => {
-    const prices = [7, 1, 5, 3, 6, 4];
-    Object.freeze(prices);
+    const prices = Object.freeze([7, 1, 5, 3, 6, 4]) as number[];
     expect(maxProfit(prices)).toBe(5);
     expect(prices).toEqual([7, 1, 5, 3, 6, 4]);
   });

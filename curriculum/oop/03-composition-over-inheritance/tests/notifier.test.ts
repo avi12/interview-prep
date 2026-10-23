@@ -1,18 +1,12 @@
+import { describe, expect, it } from "vitest";
+import { loadImpl } from "#kit/impl.ts";
+import { Money } from "#kit/bookstore/money.ts";
+import type * as PartsModule from "../starter/parts.ts";
 import type * as NoticesModule from "../starter/notices.ts";
 import type * as NotifierModule from "../starter/notifier.ts";
-import type * as PartsModule from "../starter/parts.ts";
-import { Money } from "#kit/bookstore/money.ts";
-import { loadImpl } from "#kit/impl.ts";
-import { describe, expect, it } from "vitest";
 
-const { EmailChannel, SmsChannel } = await loadImpl<typeof PartsModule>({
-  testUrl: import.meta.url,
-  file: "parts.ts"
-});
-const { orderPlacedNotice, orderShippedNotice } = await loadImpl<typeof NoticesModule>({
-  testUrl: import.meta.url,
-  file: "notices.ts"
-});
+const { EmailChannel, SmsChannel } = await loadImpl<typeof PartsModule>({ testUrl: import.meta.url, file: "parts.ts" });
+const { orderPlacedNotice, orderShippedNotice } = await loadImpl<typeof NoticesModule>({ testUrl: import.meta.url, file: "notices.ts" });
 const { Notifier, SlackChannel, UrgentFormatter, DigestFormatter } = await loadImpl<typeof NotifierModule>({
   testUrl: import.meta.url,
   file: "notifier.ts"
@@ -25,10 +19,7 @@ type Notice = PartsModule.Notice;
 const SMS_LIMIT = 160;
 const SMS_BODY_LENGTH = 157;
 
-const placed = orderPlacedNotice({
-  orderId: "1042",
-  total: Money.usd(5997)
-});
+const placed = orderPlacedNotice({ orderId: "1042", total: Money.usd(5997) });
 const shipped = orderShippedNotice({ orderId: "1042" });
 
 describe("SlackChannel", () => {
@@ -79,20 +70,13 @@ describe("Notifier connects one channel to one formatter", () => {
     ["digest", () => new DigestFormatter()]
   ] as const;
   const combinations = channelFactories.flatMap(([channelName, makeChannel]) =>
-    formatterFactories.map(([formatterName, makeFormatter]) => [
-      channelName,
-      formatterName,
-      makeChannel,
-      makeFormatter
-    ] as const));
+    formatterFactories.map(([formatterName, makeFormatter]) => [channelName, formatterName, makeChannel, makeFormatter] as const)
+  );
 
   it.each(combinations)("%s channel with %s formatter delivers the formatted text once", (_channelName, _formatterName, makeChannel, makeFormatter) => {
     const channel = makeChannel();
     const formatter = makeFormatter();
-    new Notifier({
-      channel,
-      formatter
-    }).notify([shipped]);
+    new Notifier({ channel, formatter }).notify([shipped]);
 
     expect(channel.sent).toHaveLength(1);
     expect(channel.sent[0]).toContain(formatter.format([shipped]));
@@ -101,10 +85,7 @@ describe("Notifier connects one channel to one formatter", () => {
   it("sends one message per call, not one per notice", () => {
     const channel = new EmailChannel();
 
-    new Notifier({
-      channel,
-      formatter: new DigestFormatter()
-    }).notify([placed, shipped]);
+    new Notifier({ channel, formatter: new DigestFormatter() }).notify([placed, shipped]);
 
     expect(channel.sent).toHaveLength(1);
   });
@@ -112,10 +93,7 @@ describe("Notifier connects one channel to one formatter", () => {
   it("sends nothing when there are no notices", () => {
     const channel = new EmailChannel();
 
-    new Notifier({
-      channel,
-      formatter: new DigestFormatter()
-    }).notify([]);
+    new Notifier({ channel, formatter: new DigestFormatter() }).notify([]);
 
     expect(channel.sent).toEqual([]);
   });
@@ -123,10 +101,7 @@ describe("Notifier connects one channel to one formatter", () => {
   it("the SMS length limit applies to every formatter, with no class per combination", () => {
     const manyNotices = Array.from({ length: 12 }, (_, index) => orderShippedNotice({ orderId: `order-${index}` }));
     const sms = new SmsChannel();
-    const notifier = new Notifier({
-      channel: sms,
-      formatter: new DigestFormatter()
-    });
+    const notifier = new Notifier({ channel: sms, formatter: new DigestFormatter() });
     notifier.notify(manyNotices);
     notifier.useFormatter(new UrgentFormatter());
     notifier.notify(manyNotices);
@@ -143,10 +118,7 @@ describe("Notifier connects one channel to one formatter", () => {
   it("switches channel at runtime: later messages go to the new one", () => {
     const email = new EmailChannel();
     const sms = new SmsChannel();
-    const notifier = new Notifier({
-      channel: email,
-      formatter: new DigestFormatter()
-    });
+    const notifier = new Notifier({ channel: email, formatter: new DigestFormatter() });
 
     notifier.notify([placed]);
     notifier.useChannel(sms);
@@ -158,10 +130,7 @@ describe("Notifier connects one channel to one formatter", () => {
 
   it("switches formatter at runtime: later messages look different", () => {
     const email = new EmailChannel();
-    const notifier = new Notifier({
-      channel: email,
-      formatter: new DigestFormatter()
-    });
+    const notifier = new Notifier({ channel: email, formatter: new DigestFormatter() });
 
     notifier.notify([shipped]);
     notifier.useFormatter(new UrgentFormatter());
@@ -173,14 +142,8 @@ describe("Notifier connects one channel to one formatter", () => {
   it("two notifiers do not share their parts", () => {
     const first = new EmailChannel();
     const second = new EmailChannel();
-    const notifierOne = new Notifier({
-      channel: first,
-      formatter: new DigestFormatter()
-    });
-    const notifierTwo = new Notifier({
-      channel: second,
-      formatter: new DigestFormatter()
-    });
+    const notifierOne = new Notifier({ channel: first, formatter: new DigestFormatter() });
+    const notifierTwo = new Notifier({ channel: second, formatter: new DigestFormatter() });
 
     notifierOne.useChannel(new SmsChannel());
     notifierTwo.notify([shipped]);
@@ -225,10 +188,7 @@ describe("new parts plug in without changing any of your code", () => {
   it("a channel written later works with the existing formatters", () => {
     const pigeon = new PigeonChannel();
 
-    new Notifier({
-      channel: pigeon,
-      formatter: new UrgentFormatter()
-    }).notify([shipped]);
+    new Notifier({ channel: pigeon, formatter: new UrgentFormatter() }).notify([shipped]);
 
     expect(pigeon.sent).toEqual(["a pigeon carries: URGENT: ORDER 1042 SHIPPED"]);
   });
@@ -236,10 +196,7 @@ describe("new parts plug in without changing any of your code", () => {
   it("a formatter written later works with the existing channels", () => {
     const email = new EmailChannel();
 
-    new Notifier({
-      channel: email,
-      formatter: new CsvFormatter()
-    }).notify([placed, shipped]);
+    new Notifier({ channel: email, formatter: new CsvFormatter() }).notify([placed, shipped]);
 
     expect(email.sent).toEqual(["[email] 1042,Order 1042 placed, total 59.97 USD;1042,Order 1042 shipped"]);
   });
@@ -247,10 +204,7 @@ describe("new parts plug in without changing any of your code", () => {
   it("both new parts together", () => {
     const pigeon = new PigeonChannel();
 
-    new Notifier({
-      channel: pigeon,
-      formatter: new CsvFormatter()
-    }).notify([shipped]);
+    new Notifier({ channel: pigeon, formatter: new CsvFormatter() }).notify([shipped]);
 
     expect(pigeon.sent).toEqual(["a pigeon carries: 1042,Order 1042 shipped"]);
   });
@@ -258,10 +212,7 @@ describe("new parts plug in without changing any of your code", () => {
   it("swaps from a built-in part to a new one at runtime", () => {
     const sms = new SmsChannel();
     const pigeon = new PigeonChannel();
-    const notifier = new Notifier({
-      channel: sms,
-      formatter: new DigestFormatter()
-    });
+    const notifier = new Notifier({ channel: sms, formatter: new DigestFormatter() });
 
     notifier.notify([shipped]);
     notifier.useChannel(pigeon);
@@ -276,10 +227,7 @@ describe("new parts plug in without changing any of your code", () => {
     const formatter = new FormatterSpy();
     const channel = new ChannelSpy();
 
-    new Notifier({
-      channel,
-      formatter
-    }).notify([placed, shipped]);
+    new Notifier({ channel, formatter }).notify([placed, shipped]);
 
     expect(formatter.received).toHaveLength(1);
     expect([...formatter.received[0]]).toEqual([placed, shipped]);

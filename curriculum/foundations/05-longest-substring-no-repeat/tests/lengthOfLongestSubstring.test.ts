@@ -1,16 +1,11 @@
+import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
 import { createSeededPicker } from "#kit/random.ts";
 import { measureMs } from "#kit/timing.ts";
-import { describe, expect, it } from "vitest";
 
-type Module = {
-  lengthOfLongestSubstring: (text: string) => number;
-};
+type Module = { lengthOfLongestSubstring: (text: string) => number };
 
-const { lengthOfLongestSubstring } = await loadImpl<Module>({
-  testUrl: import.meta.url,
-  file: "lengthOfLongestSubstring.ts"
-});
+const { lengthOfLongestSubstring } = await loadImpl<Module>({ testUrl: import.meta.url, file: "lengthOfLongestSubstring.ts" });
 
 const FIRST_CJK_CODE = 0x4e00;
 const DISTINCT_CHAR_COUNT = 4_000;
@@ -21,17 +16,15 @@ const RANDOM_CASE_COUNT = 400;
 const RANDOM_MAX_LENGTH = 16;
 const RANDOM_ALPHABETS = ["ab", "abcd", "abcdefgh", "aAbB1! "];
 
-function longestWithoutRepeatByRescanning(text: string) {
+const longestWithoutRepeatByRescanning = (text: string) => {
   let longest = 0;
   for (let start = 0; start < text.length; start++) {
     let end = start;
-    while (end < text.length && !text.slice(start, end).includes(text[end])) {
-      end++;
-    }
+    while (end < text.length && !text.slice(start, end).includes(text[end])) end++;
     longest = Math.max(longest, end - start);
   }
   return longest;
-}
+};
 
 describe("lengthOfLongestSubstring", () => {
   it("finds a window at the start", () => {

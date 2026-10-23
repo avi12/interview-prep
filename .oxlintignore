@@ -7,4 +7,4 @@ work/**
 .vscode-server/**
 .fallow/**
 apps/vscode-ext/dist/**
-**/*.min.js
+curriculum/*/[0-9]*/**

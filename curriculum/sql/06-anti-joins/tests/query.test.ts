@@ -1,5 +1,5 @@
-import { runSeeded } from "#kit/db.ts";
 import { describe, expect, it } from "vitest";
+import { runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `
 CREATE TABLE customers (id int PRIMARY KEY, name text NOT NULL);
@@ -24,13 +24,7 @@ INSERT INTO orders VALUES
   (5, NULL, 'cancelled'),
   (6, 12, 'cancelled');`;
 
-function run(seed: string) {
-  return runSeeded({
-    seed,
-    testUrl: import.meta.url,
-    file: "query.sql"
-  });
-}
+const run = (seed: string) => runSeeded({ seed, testUrl: import.meta.url, file: "query.sql" });
 
 describe("customers with no paid order", () => {
   it("returns the columns id, name", async () => {
@@ -56,36 +50,18 @@ describe("customers with no paid order", () => {
   it("returns each customer once, sorted by id", async () => {
     const { rows } = await run(SHOP);
     expect(rows).toEqual([
-      {
-        id: 2,
-        name: "Ben"
-      },
-      {
-        id: 4,
-        name: "Dan"
-      },
-      {
-        id: 5,
-        name: "Eve"
-      }
+      { id: 2, name: "Ben" },
+      { id: 4, name: "Dan" },
+      { id: 5, name: "Eve" }
     ]);
   });
 
   it("works on different data too (no hardcoding)", async () => {
     const { rows } = await run(CAFE);
     expect(rows).toEqual([
-      {
-        id: 11,
-        name: "Gil"
-      },
-      {
-        id: 12,
-        name: "Hana"
-      },
-      {
-        id: 13,
-        name: "Ivo"
-      }
+      { id: 11, name: "Gil" },
+      { id: 12, name: "Hana" },
+      { id: 13, name: "Ivo" }
     ]);
   });
 });

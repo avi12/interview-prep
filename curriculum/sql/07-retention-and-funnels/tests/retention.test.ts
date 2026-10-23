@@ -1,5 +1,5 @@
-import { runSeeded } from "#kit/db.ts";
 import { describe, expect, it } from "vitest";
+import { runSeeded } from "#kit/db.ts";
 
 const SCHEMA = `
 CREATE TABLE users (id int PRIMARY KEY, signed_up_at date NOT NULL);
@@ -37,15 +37,8 @@ INSERT INTO events VALUES
 const NUMERIC_COLUMNS = ["users", "retained_week_1", "retention_pct"];
 const DAY_COLUMNS = ["cohort_week"];
 
-function run(seed: string) {
-  return runSeeded({
-    seed,
-    testUrl: import.meta.url,
-    file: "retention.sql",
-    numericColumns: NUMERIC_COLUMNS,
-    dayColumns: DAY_COLUMNS
-  });
-}
+const run = (seed: string) =>
+  runSeeded({ seed, testUrl: import.meta.url, file: "retention.sql", numericColumns: NUMERIC_COLUMNS, dayColumns: DAY_COLUMNS });
 
 describe("week 1 retention by signup week", () => {
   it("returns cohort_week, users, retained_week_1, retention_pct", async () => {
@@ -56,48 +49,18 @@ describe("week 1 retention by signup week", () => {
   it("counts people once and keeps a cohort nobody came back to", async () => {
     const { rows: cohorts } = await run(JANUARY_SIGNUPS);
     expect(cohorts).toEqual([
-      {
-        cohort_week: "2025-01-06",
-        users: 4,
-        retained_week_1: 2,
-        retention_pct: 50
-      },
-      {
-        cohort_week: "2025-01-13",
-        users: 3,
-        retained_week_1: 2,
-        retention_pct: 66.7
-      },
-      {
-        cohort_week: "2025-01-20",
-        users: 2,
-        retained_week_1: 0,
-        retention_pct: 0
-      }
+      { cohort_week: "2025-01-06", users: 4, retained_week_1: 2, retention_pct: 50 },
+      { cohort_week: "2025-01-13", users: 3, retained_week_1: 2, retention_pct: 66.7 },
+      { cohort_week: "2025-01-20", users: 2, retained_week_1: 0, retention_pct: 0 }
     ]);
   });
 
   it("works across a year boundary and ignores week 2 activity (no hardcoding)", async () => {
     const { rows: cohorts } = await run(YEAR_BOUNDARY);
     expect(cohorts).toEqual([
-      {
-        cohort_week: "2024-12-30",
-        users: 3,
-        retained_week_1: 2,
-        retention_pct: 66.7
-      },
-      {
-        cohort_week: "2025-01-06",
-        users: 4,
-        retained_week_1: 4,
-        retention_pct: 100
-      },
-      {
-        cohort_week: "2025-01-13",
-        users: 3,
-        retained_week_1: 1,
-        retention_pct: 33.3
-      }
+      { cohort_week: "2024-12-30", users: 3, retained_week_1: 2, retention_pct: 66.7 },
+      { cohort_week: "2025-01-06", users: 4, retained_week_1: 4, retention_pct: 100 },
+      { cohort_week: "2025-01-13", users: 3, retained_week_1: 1, retention_pct: 33.3 }
     ]);
   });
 });

@@ -1,11 +1,7 @@
-export function computeAccept(_key: string) {
+export function computeAccept(key: string) {
   return "";
 }
 
-export function unmaskFrame(_frame: Uint8Array) {
-  return {
-    isFinal: false,
-    opcode: 0,
-    payload: new Uint8Array()
-  };
+export function unmaskFrame(frame: Uint8Array) {
+  return { isFinal: false, opcode: 0, payload: new Uint8Array() };
 }

@@ -13,23 +13,18 @@ export type SourceMap = {
   mappings: string;
 };
 
-type OriginalPosition = {
-  source: string;
-  line: number;
-  column: number;
-  name: string | null;
-};
-
-export function decodeMappings(_mappings: string) {
-  const lines: Segment[][] = [];
-  return lines;
+export function decodeMappings(mappings: string) {
+  return [] as Segment[][];
 }
 
-export function originalPositionFor(_options: {
+export function originalPositionFor({
+  sourceMap,
+  generatedLine,
+  generatedColumn
+}: {
   sourceMap: SourceMap;
   generatedLine: number;
   generatedColumn: number;
 }) {
-  const position: OriginalPosition | null = null;
-  return position;
+  return null as { source: string; line: number; column: number; name: string | null } | null;
 }

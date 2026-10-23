@@ -11,20 +11,11 @@ export type PlacedOrder = {
   transactionId: string;
 };
 
-export type ChargeRequest = {
-  amount: Money;
-  paymentToken: string;
-};
+export type ChargeRequest = { amount: Money; paymentToken: string };
 
 export type ChargeResult =
-  | {
-    status: "approved";
-    transactionId: string;
-  }
-  | {
-    status: "declined";
-    reason: string;
-  };
+  | { status: "approved"; transactionId: string }
+  | { status: "declined"; reason: string };
 
 export interface PaymentGateway {
   charge(request: ChargeRequest): Promise<ChargeResult>;

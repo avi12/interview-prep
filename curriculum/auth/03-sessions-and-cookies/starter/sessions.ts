@@ -1,60 +1,35 @@
-export type Session = {
-  id: string;
-  userId: string | null;
-  expiresAt: number;
-};
+import { randomBytes } from "node:crypto";
 
-export const SESSION_ID_BYTES = 32;
-export const ID_ENCODING = "base64url";
-export const COOKIE_NAME = "__Host-sid";
+export type Session = { id: string; userId: string | null; expiresAt: number };
 
-export function generateSessionId() {
+const SESSION_ID_BYTES = 32;
+const ID_ENCODING = "base64url";
+const COOKIE_NAME = "__Host-sid";
+
+export const generateSessionId = () => "";
+
+export function sessionCookie({ sessionId, maxAgeSeconds }: { sessionId: string; maxAgeSeconds: number }) {
   return "";
 }
 
-export function sessionCookie(_input: {
-  sessionId: string;
-  maxAgeSeconds: number;
-}) {
-  return "";
-}
-
-export function createSessionManager(_input: {
+export function createSessionManager({
+  now,
+  generateId,
+  ttlMs
+}: {
   now: () => number;
   generateId: () => string;
   ttlMs: number;
 }) {
-  const _sessions = new Map<string, Session>();
+  const sessions = new Map<string, Session>();
 
-  function start(): Session {
-    return {
-      id: "",
-      userId: null,
-      expiresAt: 0
-    };
-  }
+  const start = (): Session => ({ id: "", userId: null, expiresAt: 0 });
 
-  function get(_sessionId: string): Session | undefined {
-    return undefined;
-  }
+  const get = (sessionId: string): Session | undefined => undefined;
 
-  function login({ sessionId: _sessionId, userId }: {
-    sessionId: string;
-    userId: string;
-  }): Session {
-    return {
-      id: "",
-      userId,
-      expiresAt: 0
-    };
-  }
+  const login = ({ sessionId, userId }: { sessionId: string; userId: string }): Session => ({ id: "", userId, expiresAt: 0 });
 
-  function destroy(_sessionId: string) {}
+  const destroy = (sessionId: string) => {};
 
-  return {
-    start,
-    get,
-    login,
-    destroy
-  };
+  return { start, get, login, destroy };
 }

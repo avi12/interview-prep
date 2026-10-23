@@ -15,62 +15,23 @@ export const OrderAction = {
 } as const;
 export type OrderAction = (typeof OrderAction)[keyof typeof OrderAction];
 
-export type OrderLine = {
-  title: string;
-  unitPrice: Money;
-  quantity: number;
-};
+export type OrderLine = { title: string; unitPrice: Money; quantity: number };
 
-export type DiscountRule = {
-  name: string;
-  discountFor: (lines: readonly OrderLine[]) => Money;
-};
+export type DiscountRule = { name: string; discountFor: (lines: readonly OrderLine[]) => Money };
 
-export type ChargeResult = {
-  ok: true;
-  receiptId: string;
-} | {
-  ok: false;
-  reason: string;
-};
+export type ChargeResult = { ok: true; receiptId: string } | { ok: false; reason: string };
 
 export type PaymentGateway = {
-  charge: (input: {
-    orderId: string;
-    amount: Money;
-  }) => Promise<ChargeResult>;
-  refund: (input: {
-    orderId: string;
-    receiptId: string;
-    amount: Money;
-  }) => Promise<void>;
+  charge: (input: { orderId: string; amount: Money }) => Promise<ChargeResult>;
+  refund: (input: { orderId: string; receiptId: string; amount: Money }) => Promise<void>;
 };
 
 export type CheckoutEvent =
-  | {
-    type: "OrderPlaced";
-    orderId: string;
-    total: Money;
-  }
-  | {
-    type: "OrderPaid";
-    orderId: string;
-    receiptId: string;
-  }
-  | {
-    type: "PaymentDeclined";
-    orderId: string;
-    reason: string;
-  }
-  | {
-    type: "OrderShipped";
-    orderId: string;
-  }
-  | {
-    type: "OrderCancelled";
-    orderId: string;
-    wasRefunded: boolean;
-  };
+  | { type: "OrderPlaced"; orderId: string; total: Money }
+  | { type: "OrderPaid"; orderId: string; receiptId: string }
+  | { type: "PaymentDeclined"; orderId: string; reason: string }
+  | { type: "OrderShipped"; orderId: string }
+  | { type: "OrderCancelled"; orderId: string; wasRefunded: boolean };
 
 export type CheckoutListener = (event: CheckoutEvent) => void | Promise<void>;
 
@@ -79,10 +40,7 @@ export type EventBus = {
   publish: (event: CheckoutEvent) => void;
 };
 
-export type Transition = {
-  to: OrderStatus;
-  refunds: boolean;
-};
+export type Transition = { to: OrderStatus; refunds: boolean };
 
 export type CheckoutOptions = {
   gateway: PaymentGateway;
@@ -101,15 +59,8 @@ export type OrderView = {
 };
 
 export type PayResult =
-  | {
-    outcome: "paid";
-    order: OrderView;
-  }
-  | {
-    outcome: "declined";
-    reason: string;
-    order: OrderView;
-  };
+  | { outcome: "paid"; order: OrderView }
+  | { outcome: "declined"; reason: string; order: OrderView };
 
 export type Checkout = {
   placeOrder: (input: { lines: OrderLine[] }) => OrderView;

@@ -1,15 +1,11 @@
-import type { OrderState } from "./orderTypes.ts";
 import type { Money } from "#kit/bookstore/money.ts";
+import type { OrderState } from "./orderTypes.ts";
 
 export class Order {
   readonly id: string;
   readonly total: Money;
 
-  constructor({ id, total }: {
-    id: string;
-    total: Money;
-    state?: OrderState;
-  }) {
+  constructor({ id, total }: { id: string; total: Money; state?: OrderState }) {
     this.id = id;
     this.total = total;
   }

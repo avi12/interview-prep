@@ -15,19 +15,13 @@ export interface OrderRepository {
   findById(id: string): Promise<PlacedOrder | undefined>;
 }
 
-export type StockSale = {
-  isbn: string;
-  quantity: number;
-};
+export type StockSale = { isbn: string; quantity: number };
 
 export interface Inventory {
   recordSale(sale: StockSale): Promise<void>;
 }
 
-export type PointsAward = {
-  email: string;
-  points: number;
-};
+export type PointsAward = { email: string; points: number };
 
 export interface LoyaltyLedger {
   award(award: PointsAward): Promise<void>;

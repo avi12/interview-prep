@@ -12,36 +12,27 @@ export class MaxIterationsError extends Error {
   }
 }
 
-export const MODEL = "claude-sonnet-5-5";
-export const MAX_TOKENS = 1024;
+const MODEL = "claude-sonnet-5-5";
+const MAX_TOKENS = 1024;
 
-export function toResultText(value: unknown) {
-  return typeof value === "string" ? value : JSON.stringify(value);
+export const toResultText = (value: unknown) => (typeof value === "string" ? value : JSON.stringify(value));
+
+export async function runTool({ tools, block }: { tools: AgentTool[]; block: ToolUseBlock }): Promise<ToolResultBlock> {
+  return { type: "tool_result", tool_use_id: block.id, content: "" };
 }
 
-export async function runTool({ block }: {
-  tools: AgentTool[];
-  block: ToolUseBlock;
-}): Promise<ToolResultBlock> {
-  return {
-    type: "tool_result",
-    tool_use_id: block.id,
-    content: ""
-  };
-}
-
-export async function runAgent(_options: {
+export async function runAgent({
+  client,
+  system,
+  task,
+  tools,
+  maxIterations
+}: {
   client: MessagesClient;
   system?: string;
   task: string;
   tools: AgentTool[];
   maxIterations: number;
-}): Promise<{
-  answer: string;
-  iterations: number;
-}> {
-  return {
-    answer: "",
-    iterations: 0
-  };
+}): Promise<{ answer: string; iterations: number }> {
+  return { answer: "", iterations: 0 };
 }

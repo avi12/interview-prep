@@ -5,34 +5,34 @@ export type UrlStore = {
   setIfAbsent: (code: string, longUrl: string) => boolean;
 };
 
-export type HashInput = {
-  longUrl: string;
-  attempt: number;
-};
+export type HashInput = { longUrl: string; attempt: number };
 
 const ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const BASE = ALPHABET.length;
 const CODE_LENGTH = 7;
-export const CODE_SPACE = BASE ** CODE_LENGTH;
-export const MAX_ATTEMPTS = 5;
+const CODE_SPACE = BASE ** CODE_LENGTH;
+const MAX_ATTEMPTS = 5;
 const HASH_BYTES = 6;
 
-export function sha256Hash({ longUrl, attempt }: HashInput) {
-  return createHash("sha256").update(`${longUrl}#${attempt}`).digest().readUIntBE(0, HASH_BYTES);
-}
+export const sha256Hash = ({ longUrl, attempt }: HashInput) =>
+  createHash("sha256").update(`${longUrl}#${attempt}`).digest().readUIntBE(0, HASH_BYTES);
 
-export function encodeBase62(_id: number) {
+export const encodeBase62 = (id: number) => {
   return "";
-}
+};
 
-export function decodeBase62(_code: string) {
+export const decodeBase62 = (code: string) => {
   return 0;
-}
+};
 
-export function shorten(_options: {
+export const shorten = ({
+  longUrl,
+  store,
+  hash = sha256Hash
+}: {
   longUrl: string;
   store: UrlStore;
   hash?: (input: HashInput) => number;
-}) {
+}) => {
   return "";
-}
+};

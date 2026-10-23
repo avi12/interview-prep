@@ -1,3 +1,3 @@
-export function climbStairs(_steps: number) {
+export function climbStairs(n: number) {
   return 0;
 }

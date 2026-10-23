@@ -60,12 +60,17 @@
     "pre-commit": "pnpm lint-staged"
   },
   "lint-staged": {
-    "*.{ts,js,mjs,svelte}": [
+    "{scripts,apps,eslint-rules,curriculum/_kit}/**/*.{ts,js,mjs,svelte}": [
       "oxlint --ignore-path .oxlintignore --fix -c .oxlintrc.fix.json",
       "eslint --fix --no-warn-ignored",
       "oxlint --ignore-path .oxlintignore"
     ],
-    "*.{css,svelte}": [
+    "eslint.config.js": [
+      "oxlint --ignore-path .oxlintignore --fix -c .oxlintrc.fix.json",
+      "eslint --fix --no-warn-ignored",
+      "oxlint --ignore-path .oxlintignore"
+    ],
+    "{assets,apps}/**/*.{css,svelte}": [
       "stylelint --fix --allow-empty-input"
     ]
   }

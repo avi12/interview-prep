@@ -1,35 +1,23 @@
 import type { PGlite } from "@electric-sql/pglite";
 
-export type Product = {
-  id: number;
-  name: string;
-  stock: number;
-  version: number;
-};
-export type Changes = {
-  name: string;
-  stock: number;
-};
+export type Product = { id: number; name: string; stock: number; version: number };
+export type Changes = { name: string; stock: number };
 export type UpdateResult =
-  | {
-    outcome: "updated";
-    product: Product;
-  }
-  | {
-    outcome: "conflict";
-    current: Product;
-  }
+  | { outcome: "updated"; product: Product }
+  | { outcome: "conflict"; current: Product }
   | { outcome: "not_found" };
 
-export async function findProduct({ db, id }: {
-  db: PGlite;
-  id: number;
-}) {
+export const findProduct = async ({ db, id }: { db: PGlite; id: number }) => {
   const { rows } = await db.query<Product>(`SELECT id, name, stock, version FROM products WHERE id = $1`, [id]);
   return rows[0] ?? null;
-}
+};
 
-export async function updateWithVersion(_options: {
+export async function updateWithVersion({
+  db,
+  id,
+  expectedVersion,
+  changes
+}: {
   db: PGlite;
   id: number;
   expectedVersion: number;
@@ -38,7 +26,12 @@ export async function updateWithVersion(_options: {
   return { outcome: "not_found" };
 }
 
-export async function updateWithRetry(_options: {
+export async function updateWithRetry({
+  db,
+  id,
+  change,
+  maxAttempts
+}: {
   db: PGlite;
   id: number;
   change: (current: Product) => Changes | Promise<Changes>;
@@ -47,9 +40,4 @@ export async function updateWithRetry(_options: {
   return { outcome: "not_found" };
 }
 
-export function toResponse(_result: UpdateResult) {
-  return {
-    status: 501,
-    body: {}
-  };
-}
+export const toResponse = (result: UpdateResult) => ({ status: 501, body: {} });

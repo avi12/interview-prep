@@ -1,26 +1,21 @@
-import { loadImpl } from "#kit/impl.ts";
 import { describe, expect, it } from "vitest";
+import { loadImpl } from "#kit/impl.ts";
 
 type Module = { mergeIntervals: (intervals: number[][]) => number[][] };
 
-const { mergeIntervals } = await loadImpl<Module>({
-  testUrl: import.meta.url,
-  file: "mergeIntervals.ts"
-});
+const { mergeIntervals } = await loadImpl<Module>({ testUrl: import.meta.url, file: "mergeIntervals.ts" });
 
 const LARGE_SIZE = 60_000;
 const SHUFFLE_STRIDE = 7_919;
 const CPU_TIME_LIMIT_MS = 400;
 const MICROSECONDS_PER_MILLISECOND = 1_000;
 
-function cpuMilliseconds() {
+const cpuMilliseconds = () => {
   const { user, system } = process.cpuUsage();
   return (user + system) / MICROSECONDS_PER_MILLISECOND;
-}
+};
 
-function shuffledIndexes() {
-  return Array.from({ length: LARGE_SIZE }, (_, i) => (i * SHUFFLE_STRIDE) % LARGE_SIZE);
-}
+const shuffledIndexes = () => Array.from({ length: LARGE_SIZE }, (_, i) => (i * SHUFFLE_STRIDE) % LARGE_SIZE);
 
 describe("mergeIntervals", () => {
   it("merges overlapping intervals and keeps the separate ones", () => {

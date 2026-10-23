@@ -1,3 +1,3 @@
-export function maxProfit(_prices: number[]) {
+export function maxProfit(prices: number[]) {
   return 0;
 }

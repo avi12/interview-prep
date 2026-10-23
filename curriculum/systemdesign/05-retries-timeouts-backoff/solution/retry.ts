@@ -4,7 +4,7 @@ export type RetryOptions<T> = {
   maxAttempts: number;
   baseDelayMs: number;
   maxDelayMs: number;
-  sleep: (delayMs: number) => Promise<void>;
+  sleep: (ms: number) => Promise<void>;
   random: () => number;
 };
 
@@ -17,11 +17,10 @@ export type BackoffInput = {
 
 const BACKOFF_FACTOR = 2;
 
-export function backoffDelayMs({ retryIndex, baseDelayMs, maxDelayMs, random }: BackoffInput) {
-  return random() * Math.min(maxDelayMs, baseDelayMs * BACKOFF_FACTOR ** retryIndex);
-}
+export const backoffDelayMs = ({ retryIndex, baseDelayMs, maxDelayMs, random }: BackoffInput) =>
+  random() * Math.min(maxDelayMs, baseDelayMs * BACKOFF_FACTOR ** retryIndex);
 
-export async function retry<T>({
+export const retry = async <T>({
   operation,
   isRetryable,
   maxAttempts,
@@ -29,24 +28,14 @@ export async function retry<T>({
   maxDelayMs,
   sleep,
   random
-}: RetryOptions<T>) {
+}: RetryOptions<T>) => {
   for (let attempt = 0; ; attempt++) {
     try {
       return await operation(attempt);
     } catch (error) {
       const isLastAttempt = attempt + 1 >= maxAttempts;
-      if (isLastAttempt || !isRetryable(error)) {
-        throw error;
-      }
-
-      await sleep(
-        backoffDelayMs({
-          retryIndex: attempt,
-          baseDelayMs,
-          maxDelayMs,
-          random
-        })
-      );
+      if (isLastAttempt || !isRetryable(error)) throw error;
+      await sleep(backoffDelayMs({ retryIndex: attempt, baseDelayMs, maxDelayMs, random }));
     }
   }
-}
+};

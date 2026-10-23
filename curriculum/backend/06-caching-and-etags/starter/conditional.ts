@@ -1,21 +1,15 @@
-export type ConditionalResponse = {
-  status: number;
-  headers: Record<string, string>;
-  body?: unknown;
-};
+export type ConditionalResponse = { status: number; headers: Record<string, string>; body?: unknown };
 
-export function etagFor(_resource: unknown) {
-  return "\"\"";
-}
+export const etagFor = (resource: unknown) => '""';
 
-export function conditionalResponse({ resource }: {
+export function conditionalResponse({
+  resource,
+  ifNoneMatch,
+  maxAgeSeconds
+}: {
   resource: unknown;
   ifNoneMatch?: string;
   maxAgeSeconds: number;
 }): ConditionalResponse {
-  return {
-    status: 200,
-    headers: {},
-    body: resource
-  };
+  return { status: 200, headers: {}, body: resource };
 }

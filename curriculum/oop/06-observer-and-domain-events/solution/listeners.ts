@@ -27,12 +27,7 @@ export class StockListener implements Listener<OrderPlaced> {
   }
 
   async handle({ lines }: OrderPlaced) {
-    for (const { isbn, quantity } of lines) {
-      await this.#inventory.recordSale({
-        isbn,
-        quantity
-      });
-    }
+    for (const { isbn, quantity } of lines) await this.#inventory.recordSale({ isbn, quantity });
   }
 }
 
@@ -45,13 +40,7 @@ export class LoyaltyListener implements Listener<OrderPlaced> {
 
   async handle({ customerEmail, total }: OrderPlaced) {
     const points = Math.floor(total.cents / CENTS_PER_POINT);
-    if (points === 0) {
-      return;
-    }
-
-    await this.#ledger.award({
-      email: customerEmail,
-      points
-    });
+    if (points === 0) return;
+    await this.#ledger.award({ email: customerEmail, points });
   }
 }
