@@ -1,13 +1,13 @@
 import { ensureParentDir, writeFileDeep } from "#scripts/lib/files.ts";
 import { readLessons } from "#scripts/lib/lessons.ts";
 import { narratedInputPath, narratedPath, removeStaleNarrations } from "#scripts/lib/narration-cache.ts";
+import { NARRATE_TOOL_DIR, ROOT } from "#scripts/lib/paths.ts";
 import { renderLesson } from "#scripts/lib/render.ts";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 
-const NARRATE_REPO = "C:/repositories/avi/reverse-engineer-edge-tts";
 const PARALLEL_JOBS = 1;
 const MAX_ATTEMPTS = 4;
 const RETRY_DELAY_MS = 4000;
@@ -22,7 +22,7 @@ function narrate({ input, output }: {
   output: string;
 }) {
   return new Promise<boolean>(done => {
-    const child = spawn("pnpm", ["--dir", NARRATE_REPO, "narrate", toNativePath(input), "--out", toNativePath(output)], {
+    const child = spawn("pnpm", ["--dir", toNativePath(NARRATE_TOOL_DIR), "narrate", toNativePath(input), "--out", toNativePath(output)], {
       shell: true,
       stdio: ["ignore", "ignore", "inherit"]
     });
@@ -47,6 +47,36 @@ async function narrateWithRetry({ input, output }: {
   return false;
 }
 
+function runVisibly({ command, args, cwd }: {
+  command: string;
+  args: string[];
+  cwd: string;
+}) {
+  return spawnSync(command, args, {
+    cwd,
+    shell: true,
+    stdio: "inherit"
+  }).status === 0;
+}
+
+function ensureNarrateTool() {
+  const isCheckedOut = existsSync(resolve(NARRATE_TOOL_DIR, "package.json"));
+  if (!isCheckedOut && !runVisibly({
+    command: "git",
+    args: ["submodule", "update", "--init", "--", toNativePath(NARRATE_TOOL_DIR)],
+    cwd: ROOT
+  })) {
+    return false;
+  }
+
+  const isInstalled = existsSync(resolve(NARRATE_TOOL_DIR, "node_modules"));
+  return isInstalled || runVisibly({
+    command: "pnpm",
+    args: ["install"],
+    cwd: NARRATE_TOOL_DIR
+  });
+}
+
 const pending = readLessons({ isStrict: false })
   .filter(lesson => filters.length === 0 || filters.some(filter => lesson.id.startsWith(filter)))
   .map(lesson => {
@@ -63,6 +93,11 @@ const pending = readLessons({ isStrict: false })
   .filter(({ output }) => !existsSync(output));
 
 console.log(`${pending.length} lessons need narration`);
+
+if (pending.length > 0 && !ensureNarrateTool()) {
+  console.error(`Could not set up the narration tool in ${NARRATE_TOOL_DIR}`);
+  process.exit(1);
+}
 
 const queue = [...pending];
 let failureCount = 0;

@@ -14,7 +14,8 @@
   },
   "ignorePatterns": [
     "curriculum/**",
-    ".claude/worktrees/**"
+    ".claude/worktrees/**",
+    "vendor/**"
   ],
   "ignoreDependencies": [
     "@electric-sql/pglite",

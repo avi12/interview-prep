@@ -19,6 +19,7 @@ export const LAST_TEST_FILE = resolve(ROOT, LAST_TEST_RELATIVE_PATH);
 export const INDEX_FILE = resolve(ROOT, INDEX_RELATIVE_PATH);
 export const PATH_FILE = resolve(CURRICULUM_DIR, "path.json");
 export const TRACKS_FILE = resolve(CURRICULUM_DIR, "tracks.json");
+export const NARRATE_TOOL_DIR = resolve(ROOT, "vendor", "edge-tts-as-extension");
 export const ROLES_FILE = resolve(CURRICULUM_DIR, "roles.json");
 export const ASSETS_DIR = resolve(ROOT, "assets");
 export const KIT_DIR_NAME = "_kit";

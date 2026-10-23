@@ -11,6 +11,7 @@
     "dist/**",
     "work/**",
     ".vscode-server/**",
+    "vendor/**",
     "apps/vscode-ext/dist/**",
     "curriculum/**",
     "**/*.svg",

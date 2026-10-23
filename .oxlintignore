@@ -7,5 +7,6 @@ work/**
 .vscode-server/**
 .fallow/**
 .claude/worktrees/**
+vendor/**
 apps/vscode-ext/dist/**
 curriculum/*/[0-9]*/**

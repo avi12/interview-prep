@@ -274,6 +274,7 @@ export default [
     ".vscode-server/",
     ".fallow/",
     ".claude/worktrees/",
+    "vendor/",
     "apps/vscode-ext/dist/",
     "curriculum/*",
     "!curriculum/_kit/"

@@ -1,0 +1,3 @@
+[submodule "vendor/edge-tts-as-extension"]
+	path = vendor/edge-tts-as-extension
+	url = https://github.com/avi12/edge-tts-as-extension
