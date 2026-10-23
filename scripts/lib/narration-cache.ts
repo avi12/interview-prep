@@ -6,14 +6,16 @@ import { resolve } from "node:path";
 const NARRATED_DIR = resolve(DIST_DIR, "narrated");
 const NARRATION_INPUT_DIR = resolve(DIST_DIR, "narration-input");
 
-const STYLE_BLOCK_PATTERN = /<style>[\s\S]*?<\/style>/;
+const SPOKEN_ATTRIBUTE_PATTERN = /\s(?:data-narrate|data-narrate-voice|lang)="[^"]*"/g;
+const NARRATION_BLOCK_PATTERN = /<!-- narration:start -->[\s\S]*?<!-- narration:end -->/;
 
 function fileSafe(id: string) {
   return id.replaceAll("/", "__");
 }
 
 function narrationKey(html: string) {
-  return createHash("sha1").update(html.replace(STYLE_BLOCK_PATTERN, "")).digest("hex").slice(0, 12);
+  const spoken = html.match(SPOKEN_ATTRIBUTE_PATTERN)?.join("\n") ?? "";
+  return createHash("sha1").update(spoken).digest("hex").slice(0, 12);
 }
 
 export function narratedPath({ id, html }: {
@@ -42,10 +44,16 @@ export function withCachedNarration({ id, html }: {
     };
   }
 
-  const freshStyle = STYLE_BLOCK_PATTERN.exec(html)?.[0] ?? "";
-  const narrated = readFileSync(path, "utf8").replace(STYLE_BLOCK_PATTERN, () => freshStyle);
+  const block = NARRATION_BLOCK_PATTERN.exec(readFileSync(path, "utf8"))?.[0];
+  if (!block) {
+    return {
+      html,
+      isNarrated: false
+    };
+  }
+
   return {
-    html: narrated,
+    html: `${html.trimEnd()}\n${block}\n`,
     isNarrated: true
   };
 }
