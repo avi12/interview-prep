@@ -12,7 +12,7 @@ const EXECUTABLE = join(BIN_DIR, "mic-key-host.exe");
 const MANIFEST = join(BIN_DIR, `${MIC_KEY_HOST}.json`);
 const BROWSER_KEYS = ["Google\\Chrome", "Google\\Chrome for Testing"];
 if (process.platform !== "win32") {
-  console.log("The M1 key host reads a Windows HID device; nothing to install on this platform");
+  console.log("The mic key helper reads Windows HID devices; nothing to install on this platform");
   process.exit(0);
 }
 
@@ -23,7 +23,7 @@ writeFileSync(
   JSON.stringify(
     {
       name: MIC_KEY_HOST,
-      description: "Tells the Gemini Live tutor when the ROCCAT M1 key is pressed",
+      description: "Tells the Gemini Live tutor when a key it was taught is pressed or released",
       path: EXECUTABLE,
       type: "stdio",
       allowed_origins: [`chrome-extension://${extensionId()}/`]
@@ -37,4 +37,4 @@ for (const browserKey of BROWSER_KEYS) {
   execFileSync("reg", ["add", registryKey, "/ve", "/t", "REG_SZ", "/d", MANIFEST, "/f"], { stdio: "ignore" });
 }
 
-console.log(`M1 key host installed for ${BROWSER_KEYS.join(" and ")} (extension ${extensionId()})`);
+console.log(`Mic key helper installed for ${BROWSER_KEYS.join(" and ")} (extension ${extensionId()})`);
