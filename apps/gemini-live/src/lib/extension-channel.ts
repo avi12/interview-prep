@@ -1,6 +1,7 @@
 import type { Activation, Frame, GlicCommandMap, GlicReportMap } from "./bridge-vocab.ts";
 import type { TeachResult } from "./mic-key.ts";
 import type { TeachRole } from "./taught-key.ts";
+import type { VoiceHello, VoiceReport } from "./voice-channel.ts";
 import type { TutorView } from "@scripts/lib/tutor-view.ts";
 import { defineExtensionMessaging } from "@webext-core/messaging";
 
@@ -14,7 +15,12 @@ export const ExtensionMessage = {
   GLIC_CAPTURE: "glicCapture",
   GLIC_RETITLE: "glicRetitle",
   GLIC_TUTOR_VIEW: "glicTutorView",
-  VSCODE_FOCUS_RECT: "vscodeFocusRect"
+  VSCODE_FOCUS_RECT: "vscodeFocusRect",
+  VOICE_HELLO: "voicePageHello",
+  VOICE_CAPTURE: "voicePageCapture",
+  VOICE_REPORT: "voicePageReport",
+  VOICE_STOP: "voicePageStop",
+  VOICE_MIC_TOGGLE: "voicePageMicToggle"
 } as const;
 
 interface GlicHello {
@@ -47,6 +53,11 @@ interface ExtensionProtocolMap extends GlicCommandMap, GlicReportMap {
   [ExtensionMessage.GLIC_RETITLE](data: Activation): void;
   [ExtensionMessage.GLIC_TUTOR_VIEW](): TutorView | null;
   [ExtensionMessage.VSCODE_FOCUS_RECT](): FocusRect | null;
+  [ExtensionMessage.VOICE_HELLO](): VoiceHello;
+  [ExtensionMessage.VOICE_CAPTURE](): Frame | null;
+  [ExtensionMessage.VOICE_REPORT](report: VoiceReport): void;
+  [ExtensionMessage.VOICE_STOP](): void;
+  [ExtensionMessage.VOICE_MIC_TOGGLE](): void;
 }
 
 export const extensionMessenger = defineExtensionMessaging<ExtensionProtocolMap>();
