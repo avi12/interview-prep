@@ -3,6 +3,7 @@ import { ROOT, SERVER_DATA_DIR, TOKEN_FILE } from "#scripts/lib/paths.ts";
 import { killMatching, killTree } from "#scripts/lib/process.ts";
 import { SERVER_DEFAULT_PORT, SERVER_HOST, serverOrigin } from "#scripts/lib/server.ts";
 import { readToken, trainerUrl } from "#scripts/lib/trainer-url.ts";
+import { VOICE_BUILD_COMMAND } from "#scripts/lib/voice.ts";
 import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { readdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
@@ -77,6 +78,15 @@ const isBuilt =
   });
 if (!isBuilt) {
   process.exit(1);
+}
+
+const isVoicePageBuilt = runStep({
+  label: "build voice tutor page",
+  command: VOICE_BUILD_COMMAND,
+  args: []
+});
+if (!isVoicePageBuilt) {
+  console.warn(`The voice tutor page did not build, so its link shows a "run the build" note. Retry with: ${VOICE_BUILD_COMMAND}`);
 }
 
 installExtension(`"${VSIX_PATH}"`);

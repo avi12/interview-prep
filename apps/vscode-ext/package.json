@@ -77,6 +77,23 @@
         "title": "Refresh Lessons",
         "category": "Interview Prep",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "interviewPrep.openVoiceTutor",
+        "title": "Open Voice Tutor",
+        "category": "Interview Prep",
+        "icon": "$(mic)"
+      },
+      {
+        "command": "interviewPrep.setGeminiApiKey",
+        "title": "Set Gemini API Key",
+        "category": "Interview Prep",
+        "icon": "$(key)"
+      },
+      {
+        "command": "interviewPrep.clearGeminiApiKey",
+        "title": "Clear Gemini API Key",
+        "category": "Interview Prep"
       }
     ],
     "menus": {
@@ -157,6 +174,7 @@
   },
   "scripts": {
     "build": "node esbuild.mjs",
+    "test": "vitest run",
     "package": "pnpm build && vsce package --no-dependencies --allow-missing-repository --skip-license -o interview-prep.vsix"
   },
   "devDependencies": {

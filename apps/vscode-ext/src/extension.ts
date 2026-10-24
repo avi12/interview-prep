@@ -1,12 +1,18 @@
+import { createApiKeyStore } from "@/apiKey.ts";
 import { watchForChanges } from "@/hotReload.ts";
 import { ensureExerciseFiles, onTestsFinished, runLessonCli, runTestsInTerminal } from "@/lessonCli.ts";
 import { chooseRole, findLesson, findNextLesson, isLessonPassed } from "@/lessonData.ts";
 import { showLesson } from "@/lessonPanel.ts";
 import { Command, LessonTree } from "@/lessonTree.ts";
 import { showQueryResult } from "@/queryResult.ts";
+import { apiKeyRoute } from "@/server/apiKeyRoute.ts";
+import { serveRoutes } from "@/server/router.ts";
+import { voiceFilesRoute } from "@/server/voiceFiles.ts";
+import { voiceSetupRoute } from "@/server/voiceSetupRoute.ts";
 import { registerSqlCompletion } from "@/sqlCompletion.ts";
 import { registerSqlHighlight } from "@/sqlHighlight.ts";
-import { serveTutorView } from "@/tutorView.ts";
+import { tutorViewRoute } from "@/tutorView.ts";
+import { registerVoiceTutor } from "@/voiceTutor.ts";
 import { LESSON_ID_SEGMENTS, WORK_DIR_NAME } from "@scripts/lib/layout.ts";
 import { DONE_COMMAND, PanelAction } from "@scripts/lib/panel.ts";
 import { relative, resolve, sep } from "node:path";
@@ -35,6 +41,7 @@ function activateIn({ context, root }: {
     currentLessonId: () => openLessonId
   });
   const treeView = vscode.window.createTreeView("interviewPrep.lessons", { treeDataProvider: tree });
+  const apiKeyStore = createApiKeyStore(context.secrets);
 
   async function openExercise(id: string) {
     const files = await ensureExerciseFiles({
@@ -311,11 +318,17 @@ function activateIn({ context, root }: {
     vscode.commands.registerCommand(Command.markDone, () => markDone(activeLessonId())),
     vscode.commands.registerCommand(Command.askClaude, askClaude),
     vscode.commands.registerCommand(Command.refresh, () => tree.refresh()),
-    serveTutorView({
-      root,
-      lesson: activeLesson,
-      editor: lessonEditor
-    }),
+    serveRoutes([
+      tutorViewRoute({
+        root,
+        lesson: activeLesson,
+        editor: lessonEditor
+      }),
+      apiKeyRoute(apiKeyStore),
+      voiceSetupRoute(root),
+      voiceFilesRoute(root)
+    ]),
+    ...registerVoiceTutor(apiKeyStore),
     ...watchForChanges({
       root,
       extensionPath: context.extensionPath,

@@ -1,9 +1,10 @@
 import type { LessonEntry } from "@/lessonData.ts";
 import { lessonPanelState } from "@/lessonPanel.ts";
+import { HttpStatus, sendJson, sendStatus } from "@/server/respond.ts";
+import type { Route } from "@/server/router.ts";
 import { readJsonFile } from "@scripts/lib/files.ts";
 import { LAST_TEST_RELATIVE_PATH } from "@scripts/lib/layout.ts";
 import { lastTestSchema, tutorNotesSchema } from "@scripts/lib/schema.ts";
-import { SERVER_HOST, TUTOR_VIEW_PORT } from "@scripts/lib/server.ts";
 import {
   TUTOR_VIEW_PATH,
   type TutorBlock,
@@ -13,20 +14,12 @@ import {
   type TutorView
 } from "@scripts/lib/tutor-view.ts";
 import { createHash } from "node:crypto";
-import { createServer } from "node:http";
 import { relative, resolve } from "node:path";
 import * as vscode from "vscode";
 
 const MAX_CODE_LINES = 400;
 const MAX_SELECTION_CHARS = 200;
 const MS_PER_MINUTE = 60_000;
-const HTTP_OK = 200;
-const HTTP_NOT_FOUND = 404;
-const HTTP_SERVER_ERROR = 500;
-const JSON_HEADERS = {
-  "content-type": "application/json; charset=utf-8",
-  "cache-control": "no-store"
-};
 const NO_LESSON_TITLE = "VS Code";
 const VERSION_HASH = "sha1";
 
@@ -186,22 +179,23 @@ function viewBody(sources: ViewSources) {
   }
 }
 
-export function serveTutorView(sources: ViewSources) {
-  const server = createServer((request, response) => {
-    if (request.url !== TUTOR_VIEW_PATH) {
-      response.writeHead(HTTP_NOT_FOUND).end();
-      return;
-    }
+export function tutorViewRoute(sources: ViewSources): Route {
+  return {
+    isMatch: pathname => pathname === TUTOR_VIEW_PATH,
+    isGuarded: false,
+    handle({ response }) {
+      const body = viewBody(sources);
+      if (!body) {
+        return sendStatus({
+          response,
+          status: HttpStatus.SERVER_ERROR
+        });
+      }
 
-    const body = viewBody(sources);
-    if (!body) {
-      response.writeHead(HTTP_SERVER_ERROR).end();
-      return;
+      sendJson({
+        response,
+        body
+      });
     }
-
-    response.writeHead(HTTP_OK, JSON_HEADERS).end(body);
-  });
-  server.on("error", () => server.close());
-  server.listen(TUTOR_VIEW_PORT, SERVER_HOST);
-  return new vscode.Disposable(() => server.close());
+  };
 }
