@@ -1,6 +1,6 @@
 <script lang="ts">
   import CopyLine from "./CopyLine.svelte";
-  import { Engine, ENGINE_LABEL } from "@/lib/engine.ts";
+  import { Engine, ENGINE_LABEL, SUBSCRIPTION_CONSEQUENCE, SUBSCRIPTION_RISK } from "@/lib/engine.ts";
   import { EXTENSION_BUILD_COMMAND, EXTENSION_BUILD_RELATIVE_DIR, type VoiceSetup } from "@scripts/lib/voice.ts";
 
   const EXTENSIONS_PAGE = "chrome://extensions";
@@ -11,8 +11,7 @@
 <section class="card without-extension" aria-labelledby="subscription-title">
   <h2 id="subscription-title" class="card-head">Use your Gemini subscription instead</h2>
   <p class="callout" data-kind="warn">
-    The Chrome extension rides your Gemini subscription through Google's own web client,
-    which Google doesn't offer for this use. <strong>Google may suspend or ban an account that uses it.</strong>
+    {SUBSCRIPTION_RISK} <strong>{SUBSCRIPTION_CONSEQUENCE}</strong>
     Your API key above is the official, public Live API.
   </p>
   <ol class="steps">

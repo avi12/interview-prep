@@ -192,21 +192,4 @@
       color: var(--warn);
     }
   }
-
-  .chip {
-    &[data-tone="ok"] {
-      border-color: var(--ok);
-      color: var(--ok);
-    }
-
-    &[data-tone="warn"] {
-      border-color: var(--warn);
-      color: var(--warn);
-    }
-
-    &[data-tone="danger"] {
-      border-color: var(--danger);
-      color: var(--danger);
-    }
-  }
 </style>
