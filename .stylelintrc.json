@@ -6,6 +6,7 @@
   "ignoreFiles": [
     "**/node_modules/**",
     "**/.output/**",
+    "**/.output-voice/**",
     "**/.output-test/**",
     "**/.wxt/**",
     "dist/**",

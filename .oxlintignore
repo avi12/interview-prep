@@ -1,6 +1,8 @@
 **/node_modules/**
 **/.output/**
+**/.output-voice/**
 **/.output-test/**
+**/.output-voice/**
 **/.wxt/**
 dist/**
 work/**
