@@ -51,9 +51,15 @@ function contextLine(context: VscodeContext) {
   return `The learner has the page "${name}" open in VS Code, most likely the lesson.`;
 }
 
-export function buildBrief({ context, language }: {
+interface BriefOptions {
   context: VscodeContext;
   language: Language;
-}) {
-  return [ROLE, contextLine(context), SEEING, COACHING_RULES, LANGUAGE_RULE[language], ACKNOWLEDGE].join("\n");
+}
+
+export function buildInstructions({ context, language }: BriefOptions) {
+  return [ROLE, contextLine(context), SEEING, COACHING_RULES, LANGUAGE_RULE[language]].join("\n");
+}
+
+export function buildBrief(options: BriefOptions) {
+  return [buildInstructions(options), ACKNOWLEDGE].join("\n");
 }

@@ -15,9 +15,13 @@ const APP_SEGMENT = /^(Visual Studio Code|VS Code|Insiders|code-server)$/i;
 const FILE_NAME = /^\S+\.[A-Za-z0-9]{1,8}$/;
 const MIN_SEGMENTS_WITH_EDITOR = 2;
 
+export function isAppName(segment: string) {
+  return APP_SEGMENT.test(segment.trim());
+}
+
 export function parseVscodeTitle(title: string): VscodeContext {
   const segments = title.split(TITLE_SEPARATOR).map(segment => segment.trim());
-  while (segments.length > 0 && APP_SEGMENT.test(segments.at(-1) ?? "")) {
+  while (segments.length > 0 && isAppName(segments.at(-1) ?? "")) {
     segments.pop();
   }
 

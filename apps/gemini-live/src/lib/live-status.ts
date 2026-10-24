@@ -43,6 +43,14 @@ const MUTED_TEXT = "Gemini is watching your VS Code with your mic muted";
 const UNMUTE_TEXT = "unmute to talk";
 const MUTED_LABEL = "Watching";
 
+export function liveStateLabel(state: LiveState) {
+  return STATE_LABEL[state];
+}
+
+export function liveStateTone(state: LiveState) {
+  return STATE_TONE[state];
+}
+
 function isBlind(session: Session) {
   return session.state === LiveState.LIVE && session.sight === Sight.HIDDEN;
 }
@@ -87,7 +95,7 @@ export function sessionLabel(session: Session) {
     return MUTED_LABEL;
   }
 
-  return STATE_LABEL[session.state];
+  return liveStateLabel(session.state);
 }
 
 export function sessionTone(session: Session | null) {
@@ -103,5 +111,5 @@ export function sessionTone(session: Session | null) {
     return Tone.IDLE;
   }
 
-  return STATE_TONE[session.state];
+  return liveStateTone(session.state);
 }

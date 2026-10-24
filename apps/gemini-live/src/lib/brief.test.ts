@@ -1,4 +1,4 @@
-import { buildBrief } from "./brief.ts";
+import { buildBrief, buildInstructions } from "./brief.ts";
 import { Language } from "./language.ts";
 import { oneLine } from "./text.ts";
 import { EditorKind } from "./vscode-title.ts";
@@ -131,5 +131,27 @@ describe("buildBrief", () => {
         })
       )
     ).not.toContain("\n");
+  });
+});
+
+describe("buildInstructions", () => {
+  const options = {
+    context: lesson,
+    language: Language.ENGLISH
+  };
+
+  it("is the brief without the one-word acknowledgement", () => {
+    expect(buildInstructions(options)).not.toContain("only the word Ready");
+    expect(buildBrief(options).startsWith(buildInstructions(options))).toBe(true);
+  });
+
+  it("keeps the teacher role, the context and the language", () => {
+    const instructions = buildInstructions({
+      context: lesson,
+      language: Language.HEBREW
+    });
+    expect(instructions).toContain("patient teacher");
+    expect(instructions).toContain("the page \"Two Sum\" open in VS Code");
+    expect(instructions).toContain("natural spoken Hebrew");
   });
 });

@@ -1,5 +1,6 @@
 import type { Frame } from "./bridge-vocab.ts";
 import { ExtensionMessage, extensionMessenger, type FocusRect } from "./extension-channel.ts";
+import { bytesToBase64 } from "./live-api/base64.ts";
 import { Sight } from "./live-state.ts";
 import { isVscodeUrl } from "./vscode.ts";
 import { browser } from "wxt/browser";
@@ -9,7 +10,6 @@ const CAPTURE_JPEG_QUALITY = 85;
 const RESIZE_JPEG_QUALITY = 0.85;
 const MAX_FRAME_WIDTH = 2200;
 const MIN_CAPTURE_GAP_MS = 600;
-const BASE64_CHUNK_BYTES = 0x8000;
 const MINIMIZED = "minimized";
 
 interface Capture {
@@ -21,14 +21,6 @@ const HIDDEN: Capture = {
   sight: Sight.HIDDEN,
   frame: null
 };
-
-function bytesToBase64(bytes: Uint8Array) {
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += BASE64_CHUNK_BYTES) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + BASE64_CHUNK_BYTES));
-  }
-  return btoa(binary);
-}
 
 function cropOf({ bitmap, rect }: {
   bitmap: ImageBitmap;
