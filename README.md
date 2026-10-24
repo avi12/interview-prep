@@ -4,7 +4,7 @@ Hands-on practice for junior interviews: backend, data analyst and AI engineer o
 
 Created by [Avi](https://avi12.com).
 
-![The trainer: lessons by track on the left, the exercise file in the middle, the lesson on the right](docs/screenshots/trainer.png)
+![The trainer: lessons by track on the left, the exercise file in the middle, the lesson on the right](https://github.com/user-attachments/assets/b81aafcc-1670-4b79-aa65-70321c254e56)
 
 ## Requirements
 
@@ -32,7 +32,7 @@ pnpm build            # rebuilds pages with the audio
 
 Every narrated card has a play button. Parts of each diagram light up as the voice reaches them.
 
-![A card being narrated: the diagram's parts light up in the order the voice names them, with live subtitles](docs/screenshots/narration.png)
+![A card being narrated: the diagram's parts light up in the order the voice names them, with live subtitles](https://github.com/user-attachments/assets/0c1d2aee-c568-4f8d-a663-03d507ca85aa)
 
 The voices come from [edge-tts-as-extension](https://github.com/avi12/edge-tts-as-extension), a git submodule in `vendor/`. The first `pnpm narrate` checks it out and installs it, with no other setup.
 
