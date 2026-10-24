@@ -5,7 +5,7 @@
   import { loadApiKey, loadVoiceSetup } from "./server-api.ts";
   import SessionCard from "./SessionCard.svelte";
   import SubscriptionCard from "./SubscriptionCard.svelte";
-  import type { VoiceHello } from "@/lib/voice-channel.ts";
+  import type { VoiceHello } from "@/lib/voice-protocol.ts";
   import type { ApiKeyResponse, VoiceSetup } from "@scripts/lib/voice.ts";
   import { onMount } from "svelte";
 

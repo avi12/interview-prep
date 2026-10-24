@@ -1,4 +1,4 @@
-import { TutorBlockKind } from "./tutor-view.ts";
+import { tutorBlockSchema } from "./tutor-view.ts";
 import { z } from "#scripts/lib/zod.ts";
 
 export const Lang = {
@@ -49,12 +49,7 @@ export const lastTestSchema = z.object({
   output: z.string()
 });
 
-export const tutorNotesSchema = z.array(
-  z.object({
-    kind: z.enum(TutorBlockKind),
-    text: z.string()
-  })
-);
+export const tutorNotesSchema = z.array(tutorBlockSchema);
 
 export const progressSchema = z.record(
   z.string(),

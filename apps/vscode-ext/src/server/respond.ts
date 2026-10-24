@@ -1,3 +1,4 @@
+import type { z } from "@scripts/lib/zod.ts";
 import type { ServerResponse } from "node:http";
 
 export const HttpStatus = {
@@ -22,15 +23,23 @@ export function sendStatus({ response, status }: {
   response.writeHead(status, { "cache-control": NO_STORE }).end();
 }
 
-export function sendJson({ response, body, status = HttpStatus.OK }: {
+export function sendJson<T>({ response, schema, value }: {
   response: ServerResponse;
-  body: string;
-  status?: HttpStatus;
+  schema: z.ZodType<T>;
+  value: T;
 }) {
-  response.writeHead(status, {
+  const parsed = schema.safeParse(value);
+  if (!parsed.success) {
+    return sendStatus({
+      response,
+      status: HttpStatus.SERVER_ERROR
+    });
+  }
+
+  response.writeHead(HttpStatus.OK, {
     "content-type": JSON_CONTENT_TYPE,
     "cache-control": NO_STORE
-  }).end(body);
+  }).end(JSON.stringify(parsed.data));
 }
 
 export function sendData({ response, body, contentType, status = HttpStatus.OK }: {

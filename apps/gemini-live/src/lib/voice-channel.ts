@@ -1,6 +1,5 @@
-import type { Frame } from "./bridge-vocab.ts";
-import type { Language } from "./language.ts";
-import type { LiveState } from "./live-state.ts";
+import type { Frame } from "./frame.ts";
+import type { VoiceHello, VoiceReport } from "./voice-protocol.ts";
 import { defineCustomEventMessaging } from "@webext-core/messaging/page";
 
 const VOICE_CHANNEL_NAMESPACE = "interview-prep-voice";
@@ -13,17 +12,6 @@ export const VoiceMessage = {
   STOP: "voiceStop",
   MIC_TOGGLE: "voiceMicToggle"
 } as const;
-
-export interface VoiceHello {
-  language: Language;
-  isAutostart: boolean;
-}
-
-export interface VoiceReport {
-  state: LiveState;
-  detail: string;
-  isMicOpen: boolean;
-}
 
 interface VoiceProtocolMap {
   [VoiceMessage.HELLO](): VoiceHello;

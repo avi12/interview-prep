@@ -2,7 +2,7 @@ import type { ApiKeyStore } from "@/apiKey.ts";
 import { readJsonBody } from "@/server/body.ts";
 import { HttpStatus, sendJson, sendMethodNotAllowed, sendStatus } from "@/server/respond.ts";
 import type { Exchange, Route } from "@/server/router.ts";
-import { API_KEY_PATH, apiKeyUpdateSchema } from "@scripts/lib/voice.ts";
+import { API_KEY_PATH, apiKeyResponseSchema, apiKeyUpdateSchema } from "@scripts/lib/voice.ts";
 
 const HttpMethod = {
   GET: "GET",
@@ -68,7 +68,8 @@ export function apiKeyRoute(store: ApiKeyStore): Route {
 
       sendJson({
         response,
-        body: JSON.stringify(result)
+        schema: apiKeyResponseSchema,
+        value: result
       });
     }
   };

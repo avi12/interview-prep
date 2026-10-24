@@ -1,11 +1,12 @@
-import { bytesToBase64 } from "./base64.ts";
 import {
   audioMessage,
   buildSetupMessage,
   contextMessage,
   parseServerMessage,
+  serializeClientMessage,
   ServerEventKind
 } from "./messages.ts";
+import { bytesToBase64 } from "@/lib/base64.ts";
 import { describe, expect, it } from "vitest";
 
 const setupOptions = {
@@ -152,5 +153,23 @@ describe("parseServerMessage", () => {
         })
       )
     ).toEqual([]);
+  });
+});
+
+describe("serializeClientMessage", () => {
+  it("sends a message that matches the Live API schema", () => {
+    const text = serializeClientMessage(contextMessage("The learner opened a lesson."));
+    expect(JSON.parse(text ?? "null")).toEqual(contextMessage("The learner opened a lesson."));
+  });
+
+  it("refuses a setup message with no voice", () => {
+    expect(
+      serializeClientMessage(
+        buildSetupMessage({
+          ...setupOptions,
+          voice: ""
+        })
+      )
+    ).toBeNull();
   });
 });

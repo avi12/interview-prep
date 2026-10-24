@@ -1,14 +1,15 @@
+import { base64ToBytes } from "@/lib/base64.ts";
 import { installBidi } from "@/lib/bidi.ts";
 import { BridgeMessage, bridgeMessenger } from "@/lib/bridge-channel.ts";
 import {
   type Activation,
   BridgeFailure,
-  type Frame,
   GLIC_URL,
   GlicCommand,
   GlicReport,
   GlicState
 } from "@/lib/bridge-vocab.ts";
+import { frameSchema } from "@/lib/frame.ts";
 import { type MicMixer, mixMicrophone } from "@/lib/mic-mixer.ts";
 import { annotatedPageContent, byteStream } from "@/lib/page-content.ts";
 import { PromptEvent } from "@/lib/prompt-clip.ts";
@@ -261,14 +262,15 @@ function reportStartFailure(fallback: BridgeFailure) {
   return reportFailure(isSignedOut() ? BridgeFailure.SIGNED_OUT : fallback);
 }
 
-function decodeFrame(frame: Frame | null) {
-  if (!frame?.base64) {
+function decodeFrame(raw: unknown) {
+  const parsed = frameSchema.safeParse(raw);
+  if (!parsed.success || !parsed.data.base64) {
     return null;
   }
 
-  const bytes = Uint8Array.from(atob(frame.base64), char => char.charCodeAt(0));
+  const frame = parsed.data;
   return {
-    data: bytes.buffer,
+    data: base64ToBytes(frame.base64).buffer,
     mimeType: frame.mimeType,
     widthPixels: frame.width,
     heightPixels: frame.height

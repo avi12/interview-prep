@@ -7,7 +7,7 @@ import type { Session } from "./session-schema.ts";
 import { loadEngineSession, updateSession } from "./session.ts";
 import { loadLanguage } from "./settings.ts";
 import { VOICE_URL } from "./voice-page.ts";
-import { voiceReportSchema } from "./voice-report.ts";
+import { voiceReportSchema } from "./voice-protocol.ts";
 import { within } from "./within.ts";
 
 const CALL_TIMEOUT_MS = 5000;

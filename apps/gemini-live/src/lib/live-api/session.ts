@@ -1,17 +1,19 @@
-import { bytesToBase64 } from "./base64.ts";
 import { LIVE_ENDPOINT, LIVE_MODEL, LIVE_VOICE } from "./defaults.ts";
 import {
   audioEndMessage,
   audioMessage,
   buildSetupMessage,
+  type ClientMessage,
   contextMessage,
   parseServerMessage,
+  serializeClientMessage,
   type ServerEvent,
   ServerEventKind,
   videoMessage
 } from "./messages.ts";
 import { pcm16Bytes } from "./pcm.ts";
-import type { Frame } from "@/lib/bridge-vocab.ts";
+import { bytesToBase64 } from "@/lib/base64.ts";
+import type { Frame } from "@/lib/frame.ts";
 
 const SESSION_ENDED = "The session ended";
 const RECONNECT_FAILED = "Reconnect failed";
@@ -56,6 +58,16 @@ function messageText(data: unknown) {
   }
 
   return data instanceof ArrayBuffer ? textDecoder.decode(data) : "";
+}
+
+function sendOn({ socket, message }: {
+  socket: WebSocket;
+  message: ClientMessage;
+}) {
+  const text = serializeClientMessage(message);
+  if (text) {
+    socket.send(text);
+  }
 }
 
 function socketUrl(apiKey: string) {
@@ -168,16 +180,15 @@ export function openLiveSession(options: LiveSessionOptions) {
     socket.binaryType = "arraybuffer";
     let wasSetUp = false;
     socket.addEventListener("open", () => {
-      socket.send(
-        JSON.stringify(
-          buildSetupMessage({
-            model,
-            voice,
-            systemInstruction,
-            resumeHandle
-          })
-        )
-      );
+      sendOn({
+        socket,
+        message: buildSetupMessage({
+          model,
+          voice,
+          systemInstruction,
+          resumeHandle
+        })
+      });
     });
     socket.addEventListener("message", e => {
       for (const event of parseServerMessage(messageText(e.data))) {
@@ -198,12 +209,15 @@ export function openLiveSession(options: LiveSessionOptions) {
     return socket;
   }
 
-  function send(message: object) {
+  function send(message: ClientMessage) {
     if (!isReady || active?.readyState !== WebSocket.OPEN) {
       return;
     }
 
-    active.send(JSON.stringify(message));
+    sendOn({
+      socket: active,
+      message
+    });
   }
 
   events.onConnection(LiveConnection.CONNECTING);

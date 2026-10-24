@@ -1,4 +1,5 @@
-import type { Activation, Frame, GlicCommandMap, GlicReportMap } from "./bridge-vocab.ts";
+import type { Activation, GlicCommandMap, GlicReportMap } from "./bridge-vocab.ts";
+import type { Frame } from "./frame.ts";
 import type { PromptEvent } from "./prompt-clip.ts";
 import type { TutorView } from "@scripts/lib/tutor-view.ts";
 import { defineCustomEventMessaging } from "@webext-core/messaging/page";

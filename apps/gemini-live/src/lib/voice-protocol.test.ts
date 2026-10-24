@@ -1,5 +1,5 @@
 import { LiveState } from "./live-state.ts";
-import { voiceReportSchema } from "./voice-report.ts";
+import { voiceReportSchema } from "./voice-protocol.ts";
 import { describe, expect, it } from "vitest";
 
 describe("voiceReportSchema", () => {

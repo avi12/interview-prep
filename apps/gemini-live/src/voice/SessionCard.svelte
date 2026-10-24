@@ -15,7 +15,8 @@
   import { type ScreenShare, startScreenShare } from "@/lib/live-api/screen-share.ts";
   import { isRunning, LiveState } from "@/lib/live-state.ts";
   import { liveStateLabel, liveStateTone, Tone } from "@/lib/live-status.ts";
-  import { type VoiceHello, VoiceMessage, voiceMessenger } from "@/lib/voice-channel.ts";
+  import { VoiceMessage, voiceMessenger } from "@/lib/voice-channel.ts";
+  import type { VoiceHello } from "@/lib/voice-protocol.ts";
   import { onMount } from "svelte";
 
   const IDLE_LABEL = "Idle";

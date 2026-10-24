@@ -11,7 +11,8 @@ import {
   tutorHeading,
   tutorParagraph,
   type TutorTestRun,
-  type TutorView
+  type TutorView,
+  tutorViewSchema
 } from "@scripts/lib/tutor-view.ts";
 import { createHash } from "node:crypto";
 import { relative, resolve } from "node:path";
@@ -171,9 +172,9 @@ function buildTutorView({ root, lesson, editor }: ViewSources): TutorView {
   };
 }
 
-function viewBody(sources: ViewSources) {
+function safeTutorView(sources: ViewSources) {
   try {
-    return JSON.stringify(buildTutorView(sources));
+    return buildTutorView(sources);
   } catch {
     return null;
   }
@@ -184,8 +185,8 @@ export function tutorViewRoute(sources: ViewSources): Route {
     isMatch: pathname => pathname === TUTOR_VIEW_PATH,
     isGuarded: false,
     handle({ response }) {
-      const body = viewBody(sources);
-      if (!body) {
+      const view = safeTutorView(sources);
+      if (!view) {
         return sendStatus({
           response,
           status: HttpStatus.SERVER_ERROR
@@ -194,7 +195,8 @@ export function tutorViewRoute(sources: ViewSources): Route {
 
       sendJson({
         response,
-        body
+        schema: tutorViewSchema,
+        value: view
       });
     }
   };

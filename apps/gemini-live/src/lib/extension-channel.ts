@@ -1,7 +1,8 @@
-import type { Activation, Frame, GlicCommandMap, GlicReportMap } from "./bridge-vocab.ts";
+import type { Activation, GlicCommandMap, GlicReportMap } from "./bridge-vocab.ts";
+import type { Frame } from "./frame.ts";
 import type { TeachResult } from "./mic-key.ts";
 import type { TeachRole } from "./taught-key.ts";
-import type { VoiceHello, VoiceReport } from "./voice-channel.ts";
+import type { VoiceHello, VoiceReport } from "./voice-protocol.ts";
 import type { TutorView } from "@scripts/lib/tutor-view.ts";
 import { defineExtensionMessaging } from "@webext-core/messaging";
 

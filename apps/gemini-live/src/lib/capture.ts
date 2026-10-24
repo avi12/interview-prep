@@ -1,6 +1,6 @@
-import type { Frame } from "./bridge-vocab.ts";
+import { bytesToBase64 } from "./base64.ts";
 import { ExtensionMessage, extensionMessenger, type FocusRect } from "./extension-channel.ts";
-import { bytesToBase64 } from "./live-api/base64.ts";
+import type { Frame } from "./frame.ts";
 import { Sight } from "./live-state.ts";
 import { isVscodeUrl } from "./vscode.ts";
 import { browser } from "wxt/browser";

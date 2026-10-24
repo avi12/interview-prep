@@ -1,6 +1,6 @@
 import { Speaker } from "./captions.ts";
-import type { Frame } from "@/lib/bridge-vocab.ts";
 import { buildInstructions } from "@/lib/brief.ts";
+import type { Frame } from "@/lib/frame.ts";
 import type { Language } from "@/lib/language.ts";
 import { openMic } from "@/lib/live-api/mic.ts";
 import { createPlayback } from "@/lib/live-api/playback.ts";

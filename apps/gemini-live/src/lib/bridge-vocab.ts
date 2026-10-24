@@ -52,10 +52,3 @@ export interface Activation {
   title: string;
   url: string;
 }
-
-export interface Frame {
-  base64: string;
-  mimeType: string;
-  width: number;
-  height: number;
-}

@@ -1,6 +1,6 @@
-import { bytesToBase64 } from "./base64.ts";
 import { FRAME_MIME_TYPE } from "./defaults.ts";
-import type { Frame } from "@/lib/bridge-vocab.ts";
+import { bytesToBase64 } from "@/lib/base64.ts";
+import type { Frame } from "@/lib/frame.ts";
 
 const MAX_FRAME_WIDTH = 1600;
 const JPEG_QUALITY = 0.8;

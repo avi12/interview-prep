@@ -1,10 +1,70 @@
-import { base64ToBytes } from "./base64.ts";
 import { MIC_MIME_TYPE } from "./defaults.ts";
+import { base64ToBytes } from "@/lib/base64.ts";
 import { z } from "@/lib/zod.ts";
 
 const RESPONSE_MODALITY_AUDIO = "AUDIO";
 const MEDIA_RESOLUTION = "MEDIA_RESOLUTION_MEDIUM";
 const USER_ROLE = "user";
+const MODEL_PREFIX = "models/";
+
+const textPartSchema = z.object({ text: z.string() });
+const blobSchema = z.object({
+  mimeType: z.string(),
+  data: z.string()
+});
+const emptySchema = z.object({});
+
+const setupMessageSchema = z.object({
+  setup: z.object({
+    model: z.string().startsWith(MODEL_PREFIX),
+    generationConfig: z.object({
+      responseModalities: z.array(z.literal(RESPONSE_MODALITY_AUDIO)),
+      mediaResolution: z.literal(MEDIA_RESOLUTION),
+      speechConfig: z.object({
+        voiceConfig: z.object({
+          prebuiltVoiceConfig: z.object({ voiceName: z.string().min(1) })
+        })
+      })
+    }),
+    systemInstruction: z.object({ parts: z.array(textPartSchema) }),
+    inputAudioTranscription: emptySchema,
+    outputAudioTranscription: emptySchema,
+    contextWindowCompression: z.object({ slidingWindow: emptySchema }),
+    sessionResumption: z.object({ handle: z.string().optional() })
+  })
+});
+type SetupMessage = z.infer<typeof setupMessageSchema>;
+
+const audioMessageSchema = z.object({ realtimeInput: z.object({ audio: blobSchema }) });
+const videoMessageSchema = z.object({ realtimeInput: z.object({ video: blobSchema }) });
+const audioEndMessageSchema = z.object({ realtimeInput: z.object({ audioStreamEnd: z.literal(true) }) });
+
+const clientContentMessageSchema = z.object({
+  clientContent: z.object({
+    turns: z.array(
+      z.object({
+        role: z.literal(USER_ROLE),
+        parts: z.array(textPartSchema)
+      })
+    ),
+    turnComplete: z.boolean()
+  })
+});
+type ClientContentMessage = z.infer<typeof clientContentMessageSchema>;
+
+const clientMessageSchema = z.union([
+  setupMessageSchema,
+  audioMessageSchema,
+  videoMessageSchema,
+  audioEndMessageSchema,
+  clientContentMessageSchema
+]);
+export type ClientMessage = z.infer<typeof clientMessageSchema>;
+
+export function serializeClientMessage(message: ClientMessage) {
+  const parsed = clientMessageSchema.safeParse(message);
+  return parsed.success ? JSON.stringify(parsed.data) : null;
+}
 
 export interface SetupOptions {
   model: string;
@@ -13,10 +73,10 @@ export interface SetupOptions {
   resumeHandle: string | null;
 }
 
-export function buildSetupMessage({ model, voice, systemInstruction, resumeHandle }: SetupOptions) {
+export function buildSetupMessage({ model, voice, systemInstruction, resumeHandle }: SetupOptions): SetupMessage {
   return {
     setup: {
-      model: `models/${model}`,
+      model: `${MODEL_PREFIX}${model}`,
       generationConfig: {
         responseModalities: [RESPONSE_MODALITY_AUDIO],
         mediaResolution: MEDIA_RESOLUTION,
@@ -41,7 +101,7 @@ export function buildSetupMessage({ model, voice, systemInstruction, resumeHandl
   };
 }
 
-export function audioMessage(base64: string) {
+export function audioMessage(base64: string): z.infer<typeof audioMessageSchema> {
   return {
     realtimeInput: {
       audio: {
@@ -52,7 +112,7 @@ export function audioMessage(base64: string) {
   };
 }
 
-export function audioEndMessage() {
+export function audioEndMessage(): z.infer<typeof audioEndMessageSchema> {
   return {
     realtimeInput: {
       audioStreamEnd: true
@@ -63,7 +123,7 @@ export function audioEndMessage() {
 export function videoMessage({ base64, mimeType }: {
   base64: string;
   mimeType: string;
-}) {
+}): z.infer<typeof videoMessageSchema> {
   return {
     realtimeInput: {
       video: {
@@ -74,7 +134,7 @@ export function videoMessage({ base64, mimeType }: {
   };
 }
 
-export function contextMessage(text: string) {
+export function contextMessage(text: string): ClientContentMessage {
   return {
     clientContent: {
       turns: [{
