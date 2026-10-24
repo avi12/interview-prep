@@ -1,6 +1,7 @@
 node_modules/
 .wxt/
 .output/
+.output-voice/
 .output-test/
 .dev-profile/
 native/bin/

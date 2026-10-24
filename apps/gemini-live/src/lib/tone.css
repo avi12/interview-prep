@@ -1,0 +1,16 @@
+.chip[data-tone] {
+  border-color: var(--tone-color, var(--border));
+  color: var(--tone-color, var(--fg-muted));
+
+  &[data-tone="ok"] {
+    --tone-color: var(--ok);
+  }
+
+  &[data-tone="warn"] {
+    --tone-color: var(--warn);
+  }
+
+  &[data-tone="danger"] {
+    --tone-color: var(--danger);
+  }
+}

@@ -1,0 +1,31 @@
+@import url("../../../../assets/skin.css");
+@import url("../lib/tone.css");
+
+input,
+select {
+  min-height: 36px;
+  padding: 0 var(--s-3);
+  border: 2px solid var(--border);
+  background: var(--surface-2);
+  color: var(--fg);
+  font: var(--t-body-m);
+}
+
+a {
+  color: var(--secondary);
+}
+
+.btn:disabled {
+  opacity: 45%;
+  cursor: not-allowed;
+}
+
+.card p {
+  margin: 0;
+  margin-top: var(--s-3);
+}
+
+:root:not([data-tutor-extension]) .with-extension,
+:root[data-tutor-extension] .without-extension {
+  display: none;
+}
