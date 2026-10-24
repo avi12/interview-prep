@@ -4,6 +4,9 @@ A Chrome extension that gives the trainer a voice tutor which sees your VS Code.
 
 The design is ported from `learn-math-5-units/apps/extension` (the same author's code). There the tutor looked at a pad drawn by the page; here it looks at a screenshot of the VS Code tab.
 
+> [!WARNING]
+> By default, the extension rides your Gemini subscription through Google's own web client, which Google doesn't offer for this use. **Google may suspend or ban an account that uses it.** If you'd rather not risk your account, switch to [your own Gemini API key](#use-your-own-api-key) - the official, public Live API.
+
 ## Install
 
 ```
@@ -14,6 +17,16 @@ pnpm --filter @interview-prep/gemini-live build
 Then in Chrome: `chrome://extensions`, turn on Developer mode, Load unpacked, pick `apps/gemini-live/.output/chrome-mv3`.
 
 You also need to be signed in to Google in that Chrome, so the Gemini window can start Live.
+
+## Use your own API key
+
+The API key engine needs no extension. Click **Voice tutor** in the VS Code status bar: it opens the voice page at `http://127.0.0.1:8766/voice/`, served by the trainer's VS Code extension. Paste your key there once and press Start. The page offers to sideload this extension when you want the subscription engine instead.
+
+With the extension installed, its popup picks what Gemini runs on: **Your Gemini subscription** or **Your API key**. On the API key, Start opens the same voice page in a small window, and the extension hands it the cropped picture of your VS Code tab and mirrors its state into the chip. **Set or change API key** in the popup opens the page's key form.
+
+The key is kept in VS Code's secret storage and served only to that page, on this machine. A `GEMINI_API_KEY` environment variable, if set, takes precedence. The VS Code commands **Interview Prep: Set Gemini API Key** and **Clear Gemini API Key** do the same as the page.
+
+Usage is billed to the key's Google Cloud project under the [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing); the free tier works, with lower rate limits. The quickest way to get a key is [Google AI Studio › API keys](https://aistudio.google.com/apikey) › **Create API key**. The Gemini API rejects unrestricted keys, and new keys must be bound to a service account ([details](https://ai.google.dev/gemini-api/docs/api-key)); AI Studio sets that up for you.
 
 ## Develop
 

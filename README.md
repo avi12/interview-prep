@@ -39,7 +39,15 @@ The voices come from [edge-tts-as-extension](https://github.com/avi12/edge-tts-a
 ## Tutors
 
 - **Claude Code**: the **Ask Claude** button (or `claude` then `/tutor`) opens a Socratic coach that reads your lesson, your code and your progress. It gives hints in steps, reviews against the project style, and runs mock interviews
-- **Gemini Live**: `apps/gemini-live` is a Chrome extension that lets Gemini watch your VS Code tab and talk you through it. See its README
+- **Gemini Live**: a voice tutor that watches your VS Code and talks you through it. Click **Voice tutor** in the VS Code status bar. It runs either on your own Gemini API key (no extension needed) or on your Gemini subscription through the `apps/gemini-live` Chrome extension. See [Gemini Live](#gemini-live)
+
+## Gemini Live
+
+> [!WARNING]
+> The subscription engine rides your Gemini subscription through Google's own web client, which Google doesn't offer for this use. **Google may suspend or ban an account that uses it.** If you'd rather not risk your account, use [your own Gemini API key](apps/gemini-live/README.md#use-your-own-api-key) - the official, public Live API.
+
+- **Your API key** (no extension): click **Voice tutor** in the status bar. The page that opens asks for a key once ([create a free one in Google AI Studio](https://aistudio.google.com/apikey)) and keeps it in VS Code's secret storage. A `GEMINI_API_KEY` environment variable, if set, takes precedence
+- **Your Gemini subscription**: sideload the extension (the same page walks you through it, or see [its README](apps/gemini-live/README.md#install)). Once it is installed, its popup switches between the subscription and your API key
 
 ## Layout
 
