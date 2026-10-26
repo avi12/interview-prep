@@ -34,7 +34,7 @@ Every narrated card has a play button. Parts of each diagram light up as the voi
 
 ![A card being narrated: the diagram's parts light up in the order the voice names them, with live subtitles](https://github.com/user-attachments/assets/0c1d2aee-c568-4f8d-a663-03d507ca85aa)
 
-The voices come from [edge-tts-as-extension](https://github.com/avi12/edge-tts-as-extension), a git submodule in `vendor/`. The first `pnpm narrate` checks it out and installs it, with no other setup.
+The voices come from [edge-tts-as-extension](https://github.com/avi12/edge-tts-as-extension), a git submodule in `vendor/`. The first `pnpm start` or `pnpm narrate` checks it out and installs it, with no other setup. `pnpm start` also builds its recorder, so the voice in a lesson's narration panel can be switched to any Edge voice.
 
 ## Tutors
 
