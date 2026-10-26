@@ -169,40 +169,38 @@
   }
 
   .ip-tutor {
+    --button-background: var(--vscode-button-background, transparent);
+    --button-hover-background: var(--vscode-button-hoverBackground, var(--button-background));
+    --button-foreground: var(--vscode-button-foreground, var(--vscode-foreground, canvastext));
+
     flex: none;
     height: 24px;
     padding: 0 12px;
     border: 1px solid var(--vscode-button-border, transparent);
     border-radius: 2px;
-    background: var(--vscode-button-background, highlight);
-    color: var(--vscode-button-foreground, highlighttext);
+    background: var(--button-background);
+    color: var(--button-foreground);
     font: 600 12px var(--vscode-font-family, system-ui);
     cursor: pointer;
 
     &:hover {
-      background: var(--vscode-button-hoverBackground, highlight);
+      background: var(--button-hover-background);
+      outline: 1px dashed var(--vscode-contrastActiveBorder, transparent);
+      outline-offset: -1px;
     }
   }
 
-  .ip-tutor-secondary {
-    background: var(--vscode-button-secondaryBackground, buttonface);
-    color: var(--vscode-button-secondaryForeground, buttontext);
-
-    &:hover {
-      background: var(--vscode-button-secondaryHoverBackground, buttonface);
-    }
+  .ip-tutor-secondary,
+  .ip-tutor-mic {
+    --button-background: var(--vscode-button-secondaryBackground, transparent);
+    --button-hover-background: var(--vscode-button-secondaryHoverBackground, var(--button-background));
+    --button-foreground: var(--vscode-button-secondaryForeground, var(--vscode-foreground, canvastext));
   }
 
   .ip-tutor-mic {
     display: inline-flex;
     gap: 6px;
     align-items: center;
-    background: var(--vscode-button-secondaryBackground, buttonface);
-    color: var(--vscode-button-secondaryForeground, buttontext);
-
-    &:hover {
-      background: var(--vscode-button-secondaryHoverBackground, buttonface);
-    }
 
     &[data-open="true"] {
       background: var(--vscode-statusBarItem-errorBackground, #c72e0f);
