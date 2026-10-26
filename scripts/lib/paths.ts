@@ -3,6 +3,8 @@ import {
   INDEX_RELATIVE_PATH,
   LAST_TEST_RELATIVE_PATH,
   LESSONS_DIST_RELATIVE_DIR,
+  NARRATION_HOST_RELATIVE_DIR,
+  NARRATION_RUNTIME_FILE_NAME,
   PROGRESS_RELATIVE_PATH,
   WORK_DIR_NAME
 } from "#scripts/lib/layout.ts";
@@ -20,6 +22,8 @@ export const INDEX_FILE = resolve(ROOT, INDEX_RELATIVE_PATH);
 export const PATH_FILE = resolve(CURRICULUM_DIR, "path.json");
 export const TRACKS_FILE = resolve(CURRICULUM_DIR, "tracks.json");
 export const NARRATE_TOOL_DIR = resolve(ROOT, "vendor", "edge-tts-as-extension");
+export const NARRATION_HOST_DIR = resolve(ROOT, NARRATION_HOST_RELATIVE_DIR);
+export const NARRATION_RUNTIME_FILE = resolve(NARRATION_HOST_DIR, NARRATION_RUNTIME_FILE_NAME);
 export const ROLES_FILE = resolve(CURRICULUM_DIR, "roles.json");
 export const ASSETS_DIR = resolve(ROOT, "assets");
 export const KIT_DIR_NAME = "_kit";

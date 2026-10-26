@@ -1,9 +1,10 @@
 import { ensureParentDir, writeFileDeep } from "#scripts/lib/files.ts";
 import { readLessons } from "#scripts/lib/lessons.ts";
+import { ensureNarrateTool, toNativePath } from "#scripts/lib/narrate-tool.ts";
 import { narratedInputPath, narratedPath, removeStaleNarrations } from "#scripts/lib/narration-cache.ts";
-import { NARRATE_TOOL_DIR, ROOT } from "#scripts/lib/paths.ts";
+import { NARRATE_TOOL_DIR } from "#scripts/lib/paths.ts";
 import { renderLesson } from "#scripts/lib/render.ts";
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -12,10 +13,6 @@ const PARALLEL_JOBS = 1;
 const MAX_ATTEMPTS = 4;
 const RETRY_DELAY_MS = 4000;
 const [, , ...filters] = process.argv;
-
-function toNativePath(path: string) {
-  return path.replaceAll("\\", "/");
-}
 
 function narrate({ input, output }: {
   input: string;
@@ -45,36 +42,6 @@ async function narrateWithRetry({ input, output }: {
     await sleep(RETRY_DELAY_MS * attempt);
   }
   return false;
-}
-
-function runVisibly({ command, args, cwd }: {
-  command: string;
-  args: string[];
-  cwd: string;
-}) {
-  return spawnSync(command, args, {
-    cwd,
-    shell: true,
-    stdio: "inherit"
-  }).status === 0;
-}
-
-function ensureNarrateTool() {
-  const isCheckedOut = existsSync(resolve(NARRATE_TOOL_DIR, "package.json"));
-  if (!isCheckedOut && !runVisibly({
-    command: "git",
-    args: ["submodule", "update", "--init", "--", toNativePath(NARRATE_TOOL_DIR)],
-    cwd: ROOT
-  })) {
-    return false;
-  }
-
-  const isInstalled = existsSync(resolve(NARRATE_TOOL_DIR, "node_modules"));
-  return isInstalled || runVisibly({
-    command: "pnpm",
-    args: ["install"],
-    cwd: NARRATE_TOOL_DIR
-  });
 }
 
 const pending = readLessons({ isStrict: false })

@@ -1,4 +1,4 @@
-import { DIST_DIR } from "#scripts/lib/paths.ts";
+import { DIST_DIR, NARRATION_RUNTIME_FILE } from "#scripts/lib/paths.ts";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
@@ -8,6 +8,18 @@ const NARRATION_INPUT_DIR = resolve(DIST_DIR, "narration-input");
 
 const SPOKEN_ATTRIBUTE_PATTERN = /\s(?:data-narrate|data-narrate-voice|lang)="[^"]*"/g;
 const NARRATION_BLOCK_PATTERN = /<!-- narration:start -->[\s\S]*?<!-- narration:end -->/;
+const RUNTIME_SCRIPT_PATTERN = /<script>[\s\S]*<\/script>(?=\n<!-- narration:end -->)/;
+const SCRIPT_CLOSE = "</script";
+const ESCAPED_SCRIPT_CLOSE = "<\\/script";
+
+function withCurrentRuntime(block: string) {
+  if (!existsSync(NARRATION_RUNTIME_FILE)) {
+    return block;
+  }
+
+  const runtime = readFileSync(NARRATION_RUNTIME_FILE, "utf8").replaceAll(SCRIPT_CLOSE, ESCAPED_SCRIPT_CLOSE);
+  return block.replace(RUNTIME_SCRIPT_PATTERN, () => `<script>${runtime}</script>`);
+}
 
 function fileSafe(id: string) {
   return id.replaceAll("/", "__");
@@ -53,7 +65,7 @@ export function withCachedNarration({ id, html }: {
   }
 
   return {
-    html: `${html.trimEnd()}\n${block}\n`,
+    html: `${html.trimEnd()}\n${withCurrentRuntime(block)}\n`,
     isNarrated: true
   };
 }

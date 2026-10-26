@@ -9,3 +9,7 @@ export const LESSON_ID_SEGMENTS = 2;
 export const LESSON_TESTS_DIR_NAME = "tests";
 export const QUERY_RESULTS_RELATIVE_DIR = `${DIST_DIR_NAME}/query-results`;
 export const NO_RESULT_TABLE_FLAG = "--no-table";
+export const NARRATION_HOST_RELATIVE_DIR = `${DIST_DIR_NAME}/narration-host`;
+export const NARRATION_RUNTIME_FILE_NAME = "narration-runtime.js";
+export const NARRATION_SERVICE_FILE_NAME = "narration-service.mjs";
+export const VOICE_RECORDINGS_RELATIVE_DIR = `${DIST_DIR_NAME}/voice-recordings`;

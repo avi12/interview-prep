@@ -1,4 +1,5 @@
 import { writeFileDeep } from "#scripts/lib/files.ts";
+import { buildNarrationHost } from "#scripts/lib/narrate-tool.ts";
 import { ROOT, SERVER_DATA_DIR, TOKEN_FILE } from "#scripts/lib/paths.ts";
 import { killMatching, killTree } from "#scripts/lib/process.ts";
 import { SERVER_DEFAULT_PORT, SERVER_HOST, serverOrigin } from "#scripts/lib/server.ts";
@@ -63,6 +64,12 @@ function writeMachineSettings() {
 }
 
 writeMachineSettings();
+
+console.log("> build narration voices");
+
+if (!buildNarrationHost()) {
+  console.warn("The narration tool did not build, so lessons play only their recorded voice");
+}
 
 const isBuilt =
   runStep({
