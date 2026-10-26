@@ -43,7 +43,7 @@ describe("parseSession", () => {
 });
 
 describe("freshSession", () => {
-  it("starts opening, muted and blind, with the brief kept for reloads", () => {
+  it("starts opening with the mic open and blind, with the brief kept for reloads", () => {
     const session = freshSession({
       engine: Engine.SUBSCRIPTION,
       vscodeTab: VSCODE_TAB,
@@ -55,7 +55,7 @@ describe("freshSession", () => {
     expect(session).toMatchObject({
       state: LiveState.OPENING,
       sight: Sight.UNKNOWN,
-      isMicOpen: false,
+      isMicOpen: true,
       frames: 0,
       brief: "be kind",
       briefing: "be kind"

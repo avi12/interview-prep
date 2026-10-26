@@ -61,7 +61,7 @@ export function freshSession({ engine, vscodeTab, title, liveTab, liveWindow, br
     briefing: brief,
     restarts: [],
     isBooted: false,
-    isMicOpen: false,
+    isMicOpen: true,
     state: LiveState.OPENING,
     detail: "",
     sight: Sight.UNKNOWN,
