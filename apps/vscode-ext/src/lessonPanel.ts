@@ -1,5 +1,11 @@
 import type { LessonEntry } from "@/lessonData.ts";
 import {
+  NARRATION_HOST_SCRIPT,
+  type NarrationReply,
+  type NarrationRequest,
+  narrationRequestSchema
+} from "@scripts/lib/narration-host.ts";
+import {
   PanelAction,
   type PanelCommand,
   panelMessageSchema,
@@ -20,7 +26,7 @@ function panelHtml({ root, lesson, isPassed, isScrolledToTop }: {
   isPassed: boolean;
   isScrolledToTop: boolean;
 }) {
-  const scripts = [VIEWING_SCRIPT, isPassed ? PASSED_SCRIPT : "", isScrolledToTop ? SCROLL_TO_TOP_SCRIPT : ""].join("\n");
+  const scripts = [VIEWING_SCRIPT, NARRATION_HOST_SCRIPT, isPassed ? PASSED_SCRIPT : "", isScrolledToTop ? SCROLL_TO_TOP_SCRIPT : ""].join("\n");
   const openedAt = isScrolledToTop ? `<!-- opened ${Date.now()} -->` : "";
   return readFileSync(resolve(root, lesson.html), "utf8").replace(BODY_END, `<script>${scripts}</script>${openedAt}${BODY_END}`);
 }
@@ -42,7 +48,8 @@ export function showLesson({
   viewColumn,
   isPassed,
   isScrolledToTop,
-  onAction
+  onAction,
+  onNarration
 }: {
   root: string;
   lesson: LessonEntry;
@@ -50,6 +57,7 @@ export function showLesson({
   isPassed: boolean;
   isScrolledToTop: boolean;
   onAction: (action: PanelCommand) => void;
+  onNarration: (request: NarrationRequest) => Promise<NarrationReply>;
 }) {
   const html = panelHtml({
     root,
@@ -74,6 +82,12 @@ export function showLesson({
   panel.reveal(viewColumn, true);
   messageSubscription?.dispose();
   messageSubscription = panel.webview.onDidReceiveMessage((raw: unknown) => {
+    const narration = narrationRequestSchema.safeParse(raw);
+    if (narration.success) {
+      void onNarration(narration.data).then(reply => panel?.webview.postMessage(reply));
+      return;
+    }
+
     const parsed = panelMessageSchema.safeParse(raw);
     if (!parsed.success) {
       return;

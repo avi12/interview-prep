@@ -4,6 +4,7 @@ import { ensureExerciseFiles, onTestsFinished, runLessonCli, runTestsInTerminal 
 import { chooseRole, findLesson, findNextLesson, isLessonPassed } from "@/lessonData.ts";
 import { showLesson } from "@/lessonPanel.ts";
 import { Command, LessonTree } from "@/lessonTree.ts";
+import { createNarrationVoices } from "@/narrationVoices.ts";
 import { showQueryResult } from "@/queryResult.ts";
 import { apiKeyRoute } from "@/server/apiKeyRoute.ts";
 import { serveRoutes } from "@/server/router.ts";
@@ -42,6 +43,10 @@ function activateIn({ context, root }: {
   });
   const treeView = vscode.window.createTreeView("interviewPrep.lessons", { treeDataProvider: tree });
   const apiKeyStore = createApiKeyStore(context.secrets);
+  const answerNarration = createNarrationVoices({
+    root,
+    state: context.globalState
+  });
 
   async function openExercise(id: string) {
     const files = await ensureExerciseFiles({
@@ -120,6 +125,7 @@ function activateIn({ context, root }: {
         id
       }),
       isScrolledToTop,
+      onNarration: answerNarration,
       onAction(action) {
         if (action === PanelAction.runTests) {
           void runTests(id);
