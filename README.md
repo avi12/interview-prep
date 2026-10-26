@@ -43,6 +43,10 @@ The voices come from [edge-tts-as-extension](https://github.com/avi12/edge-tts-a
 
 ## Gemini Live
 
+The voice tutor talking through a lesson in real time:
+
+https://github.com/user-attachments/assets/5054318b-fd63-47ef-8363-2ae6b4b1abcf
+
 > [!WARNING]
 > The subscription engine rides your Gemini subscription through Google's own web client, which Google doesn't offer for this use. **Google may suspend or ban an account that uses it.** If you'd rather not risk your account, use [your own Gemini API key](apps/gemini-live/README.md#use-your-own-api-key) - the official, public Live API.
 
