@@ -1,11 +1,14 @@
 <script lang="ts">
+  import { Engine, ENGINE_LABEL, engineSchema } from "@/lib/engine.ts";
   import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
   import { isRunning } from "@/lib/live-state.ts";
   import { sessionLabel, sessionText, sessionTone, Tone } from "@/lib/live-status.ts";
   import { watchMicKeyHint } from "@/lib/mic-key-hint.ts";
   import { parseSession, type Session } from "@/lib/session-schema.ts";
   import { sessionItem } from "@/lib/session.ts";
+  import { loadEngine, saveEngine } from "@/lib/settings.ts";
   import { TutorAction } from "@/lib/tutor-action.ts";
+  import { VOICE_URL } from "@/lib/voice-page.ts";
   import { onMount } from "svelte";
 
   const START_LABEL = "Start voice tutor";
@@ -26,6 +29,18 @@
   let session = $state<Session | null>(null);
   let failure = $state("");
   let micKeyHint = $state("");
+  let engine = $state<Engine>(Engine.SUBSCRIPTION);
+  const ENGINE_TITLE = "Which Gemini Live engine the voice tutor uses";
+  const API_KEY_LABEL = "API key";
+  const API_KEY_TITLE = "Set or change your Gemini API key";
+
+  function chooseEngine(e: Event & { currentTarget: HTMLSelectElement }) {
+    const parsed = engineSchema.safeParse(e.currentTarget.value);
+    if (parsed.success) {
+      engine = parsed.data;
+      void saveEngine(parsed.data);
+    }
+  }
 
   const isLive = $derived(!!session && isRunning(session.state));
   const tone = $derived(failure ? Tone.DANGER : sessionTone(session));
@@ -69,6 +84,9 @@
 
   onMount(() => {
     void sessionItem.getValue().then(show);
+    void loadEngine().then(loaded => {
+      engine = loaded;
+    });
     const unwatchSession = sessionItem.watch(show);
     const unwatchMicKey = watchMicKeyHint(hint => {
       micKeyHint = hint;
@@ -110,6 +128,29 @@
     </button>
     <span id={micTipId} class="ip-tutor-tip ip-tutor-mic-tip" role="tooltip">{micTitle}</span>
   {:else}
+    <select
+      class="ip-tutor ip-tutor-secondary ip-tutor-engine"
+      aria-label={ENGINE_TITLE}
+      disabled={!!session}
+      onchange={chooseEngine}
+      title={ENGINE_TITLE}
+      value={engine}
+    >
+      {#each Object.values(Engine) as option (option)}
+        <option value={option}>{ENGINE_LABEL[option]}</option>
+      {/each}
+    </select>
+    {#if engine === Engine.API_KEY}
+      <a
+        class="ip-tutor ip-tutor-secondary ip-tutor-link"
+        href={VOICE_URL}
+        rel="noreferrer"
+        target="_blank"
+        title={API_KEY_TITLE}
+      >
+        {API_KEY_LABEL}
+      </a>
+    {/if}
     <button class="ip-tutor" data-tutor-action={TutorAction.START} onclick={start} type="button">{START_LABEL}</button>
   {/if}
   {#if session}
@@ -206,6 +247,17 @@
     --button-background: var(--vscode-button-secondaryBackground, transparent);
     --button-hover-background: var(--vscode-button-secondaryHoverBackground, var(--button-background));
     --button-foreground: var(--vscode-button-secondaryForeground, var(--vscode-foreground, canvastext));
+  }
+
+  .ip-tutor-link {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .ip-tutor-engine {
+    max-width: 160px;
+    padding-inline: 6px;
   }
 
   .ip-tutor-mic {
