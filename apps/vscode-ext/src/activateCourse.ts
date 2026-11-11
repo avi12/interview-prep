@@ -303,7 +303,7 @@ export async function activateCourse({ context, host, isHotSwap }: {
   async function openNextLesson() {
     const next = course.findNextLesson();
     if (!next) {
-      return vscode.window.showInformationMessage("Every lesson is passed. Nice.");
+      return vscode.window.showInformationMessage("That was the last lesson in your topics, and every one is passed. Nice. Add more topics from the status bar to keep going");
     }
 
     await openLesson(next.id);
