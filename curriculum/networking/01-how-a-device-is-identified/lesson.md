@@ -70,8 +70,39 @@ A **static** IP is typed in by hand (Settings, Network and internet, IP assignme
 
 > **Not this:** static IPs on every laptop. Two people type the same address, both lose the network, and nobody knows which one is wrong.
 
+```svg Four messages, two directions: the device asks twice and the server answers twice
+<svg viewBox="0 0 560 230" role="img" aria-label="DHCP discover, offer, request, acknowledge between a device and a server">
+  <g font-family="var(--font-mono)" font-size="12">
+    <rect x="20" y="20" width="110" height="190" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
+    <text x="75" y="42" text-anchor="middle" fill="var(--fg)">device</text>
+    <rect x="430" y="20" width="110" height="190" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
+    <text x="485" y="42" text-anchor="middle" fill="var(--fg)">DHCP server</text>
+  </g>
+  <g data-cue="discover" font-family="var(--font-mono)" font-size="12">
+    <path d="M130 66 L430 66" stroke="var(--accent-2)" stroke-width="2" stroke-dasharray="6 4"/>
+    <text x="150" y="58" fill="var(--fg)">1 Discover: any server?</text>
+    <circle class="pkt" cx="130" cy="66" r="6" fill="var(--accent-2)" style="--dx: 300px; --delay: 0ms"/>
+  </g>
+  <g data-cue="offer" font-family="var(--font-mono)" font-size="12">
+    <path d="M430 106 L130 106" stroke="var(--primary)" stroke-width="2"/>
+    <text x="150" y="98" fill="var(--fg)">2 Offer: 10.13.2.17 is free</text>
+    <circle class="pkt" cx="430" cy="106" r="6" fill="var(--primary)" style="--dx: -300px; --delay: 1000ms"/>
+  </g>
+  <g data-cue="request" font-family="var(--font-mono)" font-size="12">
+    <path d="M130 146 L430 146" stroke="var(--accent-2)" stroke-width="2"/>
+    <text x="150" y="138" fill="var(--fg)">3 Request: I will take it</text>
+    <circle class="pkt" cx="130" cy="146" r="6" fill="var(--accent-2)" style="--dx: 300px; --delay: 2000ms"/>
+  </g>
+  <g data-cue="ack" font-family="var(--font-mono)" font-size="12">
+    <path d="M430 186 L130 186" stroke="var(--ok)" stroke-width="3"/>
+    <text x="150" y="178" fill="var(--fg)">4 Acknowledge: yours for the lease</text>
+    <circle class="pkt" cx="430" cy="186" r="6" fill="var(--ok)" style="--dx: -300px; --delay: 3000ms"/>
+  </g>
+</svg>
+```
+
 ```narrate
-Most devices get their address automatically from a dynamic host configuration protocol server. The device shouts a discover message, a server offers a free address, the device requests it, and the server acknowledges and lends it for a while. A static address is typed in by hand, which suits printers and servers. Doing it on every laptop invites two machines with the same address.
+Most devices get their address automatically from a dynamic host configuration protocol server. [[discover]] The device shouts a discover message. [[offer]] A server offers a free address. [[request]] The device requests it. [[ack]] And the server acknowledges and lends it for a while. A static address is typed in by hand, which suits printers and servers. Doing it on every laptop invites two machines with the same address.
 ```
 
 ## No DHCP server? 169.254

@@ -315,9 +315,42 @@ body {
   }
 }
 
+.pkt {
+  animation: pkt-travel 4000ms var(--ease-emph) infinite;
+  animation-delay: var(--delay, 0ms);
+}
+
+@keyframes pkt-travel {
+  0% {
+    opacity: 0%;
+    translate: 0 0;
+  }
+
+  3% {
+    opacity: 100%;
+  }
+
+  22% {
+    opacity: 100%;
+    translate: var(--dx, 0) var(--dy, 0);
+  }
+
+  25%,
+  100% {
+    opacity: 0%;
+    translate: var(--dx, 0) var(--dy, 0);
+  }
+}
+
 [data-narrating] .pkt {
   visibility: hidden;
   animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pkt {
+    animation: none;
+  }
 }
 
 .hljs-keyword,

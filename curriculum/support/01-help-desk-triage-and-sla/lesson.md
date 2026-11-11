@@ -69,8 +69,49 @@ These targets are an example. Every organization writes its own.
 
 > **Why:** the priority is about the **business**, not about who shouts loudest. A calm email about a stopped payroll server beats an angry call about a desktop wallpaper.
 
+```svg Urgency across, impact down: the bottom right corner, both high, is the first ticket to work
+<svg viewBox="0 0 560 250" role="img" aria-label="Priority grid of urgency and impact">
+  <g font-family="var(--font-mono)" font-size="12" fill="var(--fg-muted)">
+    <text x="300" y="20" text-anchor="middle">urgency</text>
+    <text x="40" y="44">impact</text>
+    <text x="150" y="44">low</text>
+    <text x="270" y="44">medium</text>
+    <text x="410" y="44">high</text>
+    <text x="100" y="82" text-anchor="end">one user</text>
+    <text x="100" y="142" text-anchor="end">a team</text>
+    <text x="100" y="202" text-anchor="end">everyone</text>
+  </g>
+  <g font-family="var(--font-mono)" font-size="13" fill="var(--fg)" text-anchor="middle" stroke="var(--border)" stroke-width="2">
+    <g data-cue="low">
+      <rect x="110" y="54" width="120" height="50" fill="var(--surface-2)"/>
+      <rect x="230" y="54" width="120" height="50" fill="var(--surface-2)"/>
+      <rect x="110" y="104" width="120" height="50" fill="var(--surface-2)"/>
+      <text x="170" y="84" stroke="none">Low</text>
+      <text x="290" y="84" stroke="none">Low</text>
+      <text x="170" y="134" stroke="none">Low</text>
+    </g>
+    <g data-cue="medium">
+      <rect x="350" y="54" width="120" height="50" fill="var(--surface-3)"/>
+      <rect x="230" y="104" width="120" height="50" fill="var(--surface-3)"/>
+      <rect x="110" y="154" width="120" height="50" fill="var(--surface-3)"/>
+      <text x="410" y="84" stroke="none">Medium</text>
+      <text x="290" y="134" stroke="none">Medium</text>
+      <text x="170" y="184" stroke="none">Medium</text>
+    </g>
+    <g data-cue="high">
+      <rect x="350" y="104" width="120" height="50" fill="var(--primary-container)"/>
+      <rect x="230" y="154" width="120" height="50" fill="var(--primary-container)"/>
+      <rect x="350" y="154" width="120" height="50" fill="var(--primary-container)" stroke-width="4"/>
+      <text x="410" y="134" stroke="none">High</text>
+      <text x="290" y="184" stroke="none">High</text>
+      <text x="410" y="184" stroke="none">High</text>
+    </g>
+  </g>
+</svg>
+```
+
 ```narrate
-A queue without order turns into a bottleneck. Each ticket gets a priority from two questions: how urgent is it, and how many people does it stop? High means work has stopped, like a crashed server. Medium hurts but does not stop the business. Low is routine, like installing software. The priority follows business impact, not who complains the loudest.
+A queue without order turns into a bottleneck. Each ticket gets a priority from two questions: how urgent is it, and how many people does it stop? [[high]] High means work has stopped, like a crashed server. [[medium]] Medium hurts but does not stop the business. [[low]] Low is routine, like installing software. The priority follows business impact, not who complains the loudest.
 ```
 
 ## The SLA turns priority into a clock
