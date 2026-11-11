@@ -15,7 +15,11 @@ import {
   voiceStatusOrNoneSchema
 } from "@interview-prep/gemini-live/src/lib/site-bridge.ts";
 import { startTutorSession, type TutorSession } from "@interview-prep/gemini-live/src/voice/tutor-session.ts";
-import { GEMINI_LIVE_VERSION_ATTRIBUTE } from "#scripts/lib/gemini-live-extension.ts";
+import {
+  GEMINI_LIVE_VERSION_ATTRIBUTE,
+  GeminiLiveAsset,
+  geminiLiveDownloadUrl
+} from "#scripts/lib/gemini-live-extension.ts";
 import { INDEX_RELATIVE_PATH } from "#scripts/lib/layout.ts";
 import { lessonIndexSchema, tutorNotesSchema } from "#scripts/lib/schema.ts";
 import type { TutorView } from "#scripts/lib/tutor-view.ts";
@@ -41,7 +45,8 @@ const KEY_INVALID = "That does not look like a Gemini API key";
 const CHANGE_KEY_LABEL = "Change API key";
 const FORGET_KEY_LABEL = "Forget API key";
 const KEY_LINK_LABEL = "Get a free API key";
-const EXTENSION_BUTTON_TOOLTIP = "Use your Gemini subscription instead: add the Gemini Live extension";
+const EXTENSION_BUTTON_TOOLTIP = "How to add the Gemini Live extension and use your Gemini subscription instead";
+const DOWNLOAD_BUTTON_TOOLTIP = "Download the Gemini Live extension (.zip)";
 const KEY_URL = "https://aistudio.google.com/apikey";
 
 export function isExtensionInstalled() {
@@ -135,7 +140,7 @@ export function createVoiceTutor({ api, onChange }: {
       tooltip: KEY_LINK_LABEL
     };
     input.title = KEY_LINK_LABEL;
-    input.prompt = `${KEY_PROMPT}. Get one free at ${KEY_URL}, or use the extension button to ride your Gemini subscription instead`;
+    input.prompt = `${KEY_PROMPT}. Get one free at ${KEY_URL}, or use the extension buttons to download it or see how to add it, and ride your Gemini subscription instead`;
     input.placeholder = KEY_PLACEHOLDER;
     input.password = true;
     input.ignoreFocusOut = true;
@@ -143,8 +148,17 @@ export function createVoiceTutor({ api, onChange }: {
       iconPath: new api.ThemeIcon("extensions"),
       tooltip: EXTENSION_BUTTON_TOOLTIP
     };
-    input.buttons = [linkButton, extensionButton];
+    const downloadButton = {
+      iconPath: new api.ThemeIcon("cloud-download"),
+      tooltip: DOWNLOAD_BUTTON_TOOLTIP
+    };
+    input.buttons = [linkButton, downloadButton, extensionButton];
     input.onDidTriggerButton(button => {
+      if (button === downloadButton) {
+        void api.env.openExternal(api.Uri.parse(geminiLiveDownloadUrl(GeminiLiveAsset.ZIP)));
+        return;
+      }
+
       if (button === extensionButton) {
         resolve(undefined);
         input.dispose();
