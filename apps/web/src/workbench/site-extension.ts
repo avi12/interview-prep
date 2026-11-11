@@ -277,6 +277,9 @@ const VOICE_STATE_TEXT: Record<LiveState, string> = {
   [LiveState.FAILED]: "Failed"
 };
 const START_LABEL = "Start voice tutor";
+const MUTED_TEXT = "Muted";
+const MUTED_TOOLTIP = "The microphone is off, so the tutor cannot hear you. Click for options";
+const MUTED_BACKGROUND_COLOR = "statusBarItem.warningBackground";
 const STOP_LABEL = "Stop voice tutor";
 const MUTE_LABEL = "Mute the microphone";
 const UNMUTE_LABEL = "Turn the microphone on";
@@ -284,13 +287,29 @@ const KEY_LABEL = "API key";
 const START_TOOLTIP = "Talk through the lesson with Gemini Live. It sees your screen and reads your lesson";
 const RUNNING_TOOLTIP = "The voice tutor is running. Click for options";
 
+function tooltipOf({ status, isMuted }: {
+  status: VoiceTutorStatus | null;
+  isMuted: boolean;
+}) {
+  if (isMuted) {
+    return MUTED_TOOLTIP;
+  }
+
+  return status ? RUNNING_TOOLTIP : START_TOOLTIP;
+}
+
 function showVoiceTutor(api: Api) {
   const item = api.window.createStatusBarItem(VOICE_TUTOR_ITEM_ID, api.StatusBarAlignment.Right, STATUS_PRIORITY);
   function render(status: VoiceTutorStatus | null) {
     item.command = status ? SiteCommand.voiceTutorMenu : SiteCommand.startVoiceTutor;
-    item.tooltip = status ? RUNNING_TOOLTIP : START_TOOLTIP;
+    const isMuted = status?.isMicOpen === false;
+    item.backgroundColor = isMuted ? new api.ThemeColor(MUTED_BACKGROUND_COLOR) : undefined;
+    item.tooltip = tooltipOf({
+      status,
+      isMuted
+    });
     item.text = status
-      ? `$(${status.isMicOpen ? "mic" : "mute"}) ${VOICE_STATE_TEXT[status.state]}`
+      ? `$(${isMuted ? "mute" : "mic"}) ${isMuted ? MUTED_TEXT : VOICE_STATE_TEXT[status.state]}`
       : `$(mic) ${START_LABEL}`;
   }
 
