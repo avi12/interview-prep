@@ -301,7 +301,7 @@
   }
 
   .ip-tutor-tip {
-    position: absolute;
+    position: fixed;
     z-index: 1;
     inline-size: max-content;
     max-inline-size: 320px;
@@ -350,6 +350,7 @@
   .ip-tutor:is(:hover, :focus-visible) + .ip-tutor-tip {
     opacity: 100%;
     visibility: visible;
+    transition-delay: 300ms;
     translate: 0;
   }
 
