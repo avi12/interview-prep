@@ -1,10 +1,10 @@
 ---
 title: How a device is identified on a network
-lang: ts
+lang: none
 minutes: 25
 level: junior
 roles: [support, backend]
-files: [network.ts]
+files: []
 sources:
   - https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig
   - https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/hostname
@@ -178,28 +178,56 @@ answer: 2
 why: The local network works, so the fault is further out; pinging a public IP like 8.8.8.8 splits internet from DNS.
 ```
 
-## Your turn
+## Practice: diagnose the desk
 
-Open `network.ts`. Write two functions.
+```quiz
+q: ipconfig shows 169.254.31.8 on a laptop that worked yesterday. What do you check first?
+options:
+  - Replace the network card
+  - Whether the cable, Wi-Fi and DHCP server are working
+  - Type a static IP on the laptop
+  - Ping google.com
+answer: 1
+why: That prefix means no DHCP server answered, so the device never got a lease. Fix the path to the server before anything else.
+```
 
-**`readAdapter(ipconfigOutput)`** reads `ipconfig /all` text and returns `{ hostName, ipv4, mac, gateway, isDhcpEnabled }` for the **active** adapter: the first one that has an IPv4 line (`IPv4 Address` or `Autoconfiguration IPv4 Address`). Drop `(Preferred)`. Missing values are `""`.
+```quiz
+q: A device has a real IP and the gateway replies, but ping 8.8.8.8 gets no reply. Where does the fault live?
+options:
+  - The device's network card
+  - The local cable
+  - The router's link to the internet provider
+  - DNS
+answer: 2
+why: The local network works, and a public IP needs no name lookup, so the fault is past the router, in its link out or at the provider.
+```
 
-**`diagnose({ adapter, pings })`** walks the ping ladder and returns one `VERDICT`. `pings` says which rungs got a reply.
-
-Run `pnpm lesson test networking/01-how-a-device-is-identified`.
+```quiz
+q: Two printers lose the network after someone types the same static IP into both. What prevents this at scale?
+options:
+  - Longer cables
+  - A DHCP server, or a reservation for each printer
+  - Renaming the host names
+  - Changing the MAC addresses
+answer: 1
+why: DHCP keeps one list of who holds each address, so it never lends the same one twice.
+```
 
 ```narrate
-Write two functions. The first reads the output of the network adapter listing and returns the host name, address, hardware address, gateway and whether automatic addressing is on, for the active adapter, the first one with an address. Missing values are empty text. The second walks the ping ladder and returns one verdict. Press Run my tests when you are ready.
+Test yourself on the ladder. Read each symptom, then decide which rung failed first: the address, the gateway, a public address, or the name. Say your reasoning out loud, the way you would in an interview.
 ```
 
-```hint
-Split into lines. A line that does not start with a space is a section header. Every other line looks like `   Key . . . . : value`.
-```
+## Optional: build it yourself
 
-```hint
-This regex splits a value line: `/^\s+(\S.*?)[ .]*:\s*(.*)$/`. Group 1 is the key, group 2 the value. Remember the host name lives in the first section, the adapters come after.
-```
+Nothing here needs code. If you want to go further, write it in TypeScript or any language you like:
 
-```hint
-In `diagnose`, check in ladder order with early returns: no IPv4, then `169.254.`, then gateway, public address, public name. The APIPA check must come before the gateway check.
+- Parse the text of `ipconfig /all` into the host name, IPv4, MAC, gateway and whether DHCP is on
+- Walk the ping ladder from the results and return one verdict: no address, no DHCP, local network, internet or DNS
+
+> **Why:** writing the ladder as early returns shows you the order of the checks, which is the part an interviewer listens for.
+
+> **Not this:** one big if-else on every combination. The ladder only needs the first rung that fails.
+
+```narrate
+This part is optional and has no tests. If you want to go further, write a small program in TypeScript or any language you like. Parse the adapter listing, then walk the ladder with early returns and return one verdict for the first rung that fails.
 ```
