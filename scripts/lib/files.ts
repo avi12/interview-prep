@@ -1,6 +1,12 @@
 import type { z } from "#scripts/lib/zod.ts";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname } from "node:path";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync
+} from "node:fs";
+import { dirname, relative, resolve, sep } from "node:path";
 
 export function ensureParentDir(path: string) {
   return mkdirSync(dirname(path), { recursive: true });
@@ -38,4 +44,27 @@ export function readJsonFile<Schema extends z.ZodType>({
   }
 
   throw parsed.error;
+}
+
+const TEXT_TREE_IGNORED_NAMES = new Set(["__pycache__", ".pytest_cache", "node_modules"]);
+
+export function readTextTree(dir: string) {
+  const files: Record<string, string> = {};
+  if (!existsSync(dir)) {
+    return files;
+  }
+
+  for (const entry of readdirSync(dir, {
+    recursive: true,
+    withFileTypes: true
+  })) {
+    const path = resolve(entry.parentPath, entry.name);
+    const segments = relative(dir, path).split(sep);
+    if (!entry.isFile() || segments.some(segment => TEXT_TREE_IGNORED_NAMES.has(segment))) {
+      continue;
+    }
+
+    files[segments.join("/")] = readFileSync(path, "utf8");
+  }
+  return files;
 }

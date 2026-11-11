@@ -5,6 +5,7 @@ type Orderable = {
 };
 
 export const ALL_ROLES = "all";
+export const ALL_ROLES_TITLE = "All roles";
 
 function queuesByTrack(lessons: Orderable[]) {
   const queues = new Map<string, string[]>();

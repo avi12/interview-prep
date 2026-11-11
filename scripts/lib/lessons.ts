@@ -1,14 +1,16 @@
 import { readJsonFile } from "#scripts/lib/files.ts";
+import { KIT_DIR_NAME } from "#scripts/lib/layout.ts";
 import { buildOrders } from "#scripts/lib/path.ts";
 import {
+  CATEGORIES_FILE,
   CURRICULUM_DIR,
-  KIT_DIR_NAME,
   PATH_FILE,
   ROLES_FILE,
   TRACKS_FILE,
   WORK_DIR
 } from "#scripts/lib/paths.ts";
 import {
+  categoriesSchema,
   lessonMetaSchema,
   type Quiz,
   quizSchema,
@@ -47,11 +49,25 @@ export function readRoles() {
   });
 }
 
-export function readTracks() {
+export function readCategories() {
   return readJsonFile({
+    path: CATEGORIES_FILE,
+    schema: categoriesSchema
+  });
+}
+
+export function readTracks() {
+  const tracks = readJsonFile({
     path: TRACKS_FILE,
     schema: tracksSchema
   });
+  const knownCategories = new Set(readCategories().map(({ id }) => id));
+  const strayTrack = tracks.find(track => !knownCategories.has(track.category));
+  if (strayTrack) {
+    throw new Error(`track "${strayTrack.id}" names category "${strayTrack.category}", which is not in curriculum/categories.json`);
+  }
+
+  return tracks;
 }
 
 function isDirectory(path: string) {

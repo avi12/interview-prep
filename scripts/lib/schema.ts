@@ -25,11 +25,20 @@ export const lessonMetaSchema = z.object({
   sources: z.array(z.url()).default([])
 });
 
-export const tracksSchema = z.array(
+export const categoriesSchema = z.array(
   z.object({
     id: z.string(),
     title: z.string(),
     blurb: z.string()
+  })
+);
+
+export const tracksSchema = z.array(
+  z.object({
+    id: z.string(),
+    title: z.string(),
+    blurb: z.string(),
+    category: z.string()
   })
 );
 
@@ -79,6 +88,7 @@ export const rolesSchema = z.array(
 );
 
 export const lessonIndexSchema = z.object({
+  categories: categoriesSchema,
   tracks: tracksSchema,
   roles: rolesSchema,
   orders: z.record(z.string(), z.array(z.string())),
