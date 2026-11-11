@@ -45,13 +45,13 @@ const SYNC_STATUS = {
   },
   [SyncState.synced]: {
     text: "$(cloud) Progress synced",
-    tooltip: "Your progress is saved to your account. Click to sign out; it stays on this device",
+    tooltip: "Your progress is saved to your account and kept on this device",
     isSignInOffered: false,
     isSignOutOffered: true
   },
   [SyncState.failed]: {
     text: "$(warning) Progress not synced",
-    tooltip: "Your progress is kept on this device until the sync works again. Click to sign out",
+    tooltip: "Your progress is kept on this device until the sync works again",
     isSignInOffered: false,
     isSignOutOffered: true
   }
@@ -118,7 +118,7 @@ function registerAuthProviders({ api, session }: {
     STATUS_PRIORITY + 1
   );
   accountItem.command = SiteCommand.account;
-  accountItem.tooltip = "Account options, including sign out. Your progress stays on this device";
+  accountItem.tooltip = "Account options";
 
   async function showAccount(signedIn: Account | null) {
     const previous = account;
@@ -245,10 +245,6 @@ function showSyncStatus({ api, session }: {
 
     if (isSignInOffered) {
       item.command = SiteCommand.signIn;
-    }
-
-    if (isSignOutOffered) {
-      item.command = SiteCommand.account;
     }
 
     void api.commands.executeCommand(SET_CONTEXT_COMMAND, SIGNED_OUT_CONTEXT_KEY, isSignInOffered);
