@@ -2,6 +2,7 @@ import { apiKeySchema, clearGeminiKey, loadGeminiKey, saveGeminiKey } from "@/li
 import { lessonIdFromUrl } from "@/lib/lesson-address.ts";
 import { buildSiteTutorView } from "@/lib/site-tutor-view.ts";
 import { COURSE_PATH } from "@/lib/web-paths.ts";
+import { SiteCommand } from "@/workbench/site-manifest.ts";
 import { fetchParsed } from "@interview-prep/gemini-live/src/lib/fetch-parsed.ts";
 import { DEFAULT_LANGUAGE } from "@interview-prep/gemini-live/src/lib/language.ts";
 import { startScreenShare } from "@interview-prep/gemini-live/src/lib/live-api/screen-share.ts";
@@ -40,6 +41,7 @@ const KEY_INVALID = "That does not look like a Gemini API key";
 const CHANGE_KEY_LABEL = "Change API key";
 const FORGET_KEY_LABEL = "Forget API key";
 const KEY_LINK_LABEL = "Get a free API key";
+const EXTENSION_BUTTON_TOOLTIP = "Use your Gemini subscription instead: add the Gemini Live extension";
 const KEY_URL = "https://aistudio.google.com/apikey";
 
 export function isExtensionInstalled() {
@@ -133,12 +135,25 @@ export function createVoiceTutor({ api, onChange }: {
       tooltip: KEY_LINK_LABEL
     };
     input.title = KEY_LINK_LABEL;
-    input.prompt = `${KEY_PROMPT}. Get one free at ${KEY_URL}`;
+    input.prompt = `${KEY_PROMPT}. Get one free at ${KEY_URL}, or use the extension button to ride your Gemini subscription instead`;
     input.placeholder = KEY_PLACEHOLDER;
     input.password = true;
     input.ignoreFocusOut = true;
-    input.buttons = [linkButton];
-    input.onDidTriggerButton(() => void api.env.openExternal(api.Uri.parse(KEY_URL)));
+    const extensionButton = {
+      iconPath: new api.ThemeIcon("extensions"),
+      tooltip: EXTENSION_BUTTON_TOOLTIP
+    };
+    input.buttons = [linkButton, extensionButton];
+    input.onDidTriggerButton(button => {
+      if (button === extensionButton) {
+        resolve(undefined);
+        input.dispose();
+        void api.commands.executeCommand(SiteCommand.showGeminiLive);
+        return;
+      }
+
+      void api.env.openExternal(api.Uri.parse(KEY_URL));
+    });
     input.onDidChangeValue(value => {
       input.validationMessage = !value || apiKeySchema.safeParse(value).success ? undefined : KEY_INVALID;
     });
