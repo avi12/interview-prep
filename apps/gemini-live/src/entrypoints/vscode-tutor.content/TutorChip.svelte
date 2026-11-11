@@ -261,9 +261,37 @@
   }
 
   .ip-tutor-engine {
-    max-width: 160px;
-    padding-inline: 6px;
+    --chevron: var(--vscode-dropdown-foreground, canvastext);
+
+    appearance: none;
+    max-width: 190px;
+    padding-inline: 8px 24px;
+    border-color: var(--vscode-dropdown-border, var(--vscode-button-border, transparent));
+    background:
+      linear-gradient(45deg, transparent 50%, var(--chevron) 50%) calc(100% - 13px) 50% / 5px 5px no-repeat,
+      linear-gradient(-45deg, transparent 50%, var(--chevron) 50%) calc(100% - 9px) 50% / 5px 5px no-repeat,
+      var(--vscode-dropdown-background, transparent);
+    color: var(--vscode-dropdown-foreground, canvastext);
+    font-weight: 400;
     anchor-name: --ip-tutor-engine;
+
+    &:hover {
+      background:
+        linear-gradient(45deg, transparent 50%, var(--chevron) 50%) calc(100% - 13px) 50% / 5px 5px no-repeat,
+        linear-gradient(-45deg, transparent 50%, var(--chevron) 50%) calc(100% - 9px) 50% / 5px 5px no-repeat,
+        var(--vscode-dropdown-background, transparent);
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 1px solid var(--vscode-focusBorder, transparent);
+      outline-offset: -1px;
+    }
+
+    & option {
+      background: var(--vscode-dropdown-listBackground, canvas);
+      color: var(--vscode-dropdown-foreground, canvastext);
+    }
   }
 
   .ip-tutor-mic {
@@ -347,7 +375,7 @@
   }
 
   .ip-tutor-panel:hover:not(:has(.ip-tutor:hover)) > .ip-tutor-status-tip,
-  .ip-tutor:is(:hover, :focus-visible) + .ip-tutor-tip {
+  .ip-tutor:is(:hover, :focus-visible:not(.ip-tutor-engine)) + .ip-tutor-tip {
     opacity: 100%;
     visibility: visible;
     transition-delay: 300ms;
