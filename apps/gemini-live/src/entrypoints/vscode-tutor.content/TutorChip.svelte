@@ -25,6 +25,8 @@
   const statusTipId = `${uid}-status-tip`;
   const micTipId = `${uid}-mic-tip`;
   const stopTipId = `${uid}-stop-tip`;
+  const engineTipId = `${uid}-engine-tip`;
+  const keyTipId = `${uid}-key-tip`;
 
   let session = $state<Session | null>(null);
   let failure = $state("");
@@ -130,26 +132,28 @@
   {:else}
     <select
       class="ip-tutor ip-tutor-secondary ip-tutor-engine"
+      aria-describedby={engineTipId}
       aria-label={ENGINE_TITLE}
       disabled={!!session}
       onchange={chooseEngine}
-      title={ENGINE_TITLE}
       value={engine}
     >
       {#each Object.values(Engine) as option (option)}
         <option value={option}>{ENGINE_LABEL[option]}</option>
       {/each}
     </select>
+    <span id={engineTipId} class="ip-tutor-tip ip-tutor-engine-tip" role="tooltip">{ENGINE_TITLE}</span>
     {#if engine === Engine.API_KEY}
       <a
         class="ip-tutor ip-tutor-secondary ip-tutor-link"
+        aria-describedby={keyTipId}
         href={VOICE_URL}
         rel="noreferrer"
         target="_blank"
-        title={API_KEY_TITLE}
       >
         {API_KEY_LABEL}
       </a>
+      <span id={keyTipId} class="ip-tutor-tip ip-tutor-key-tip" role="tooltip">{API_KEY_TITLE}</span>
     {/if}
     <button class="ip-tutor" data-tutor-action={TutorAction.START} onclick={start} type="button">{START_LABEL}</button>
   {/if}
@@ -253,11 +257,13 @@
     display: inline-flex;
     align-items: center;
     text-decoration: none;
+    anchor-name: --ip-tutor-key;
   }
 
   .ip-tutor-engine {
     max-width: 160px;
     padding-inline: 6px;
+    anchor-name: --ip-tutor-engine;
   }
 
   .ip-tutor-mic {
@@ -330,6 +336,14 @@
 
   .ip-tutor-stop-tip {
     position-anchor: --ip-tutor-stop;
+  }
+
+  .ip-tutor-engine-tip {
+    position-anchor: --ip-tutor-engine;
+  }
+
+  .ip-tutor-key-tip {
+    position-anchor: --ip-tutor-key;
   }
 
   .ip-tutor-panel:hover:not(:has(.ip-tutor:hover)) > .ip-tutor-status-tip,
