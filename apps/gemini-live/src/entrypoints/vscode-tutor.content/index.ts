@@ -2,7 +2,7 @@ import TutorChip from "./TutorChip.svelte";
 import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
 import { focusRect } from "@/lib/focus-rect.ts";
 import { listenToMicCombo } from "@/lib/mic-combo-listener.ts";
-import { VSCODE_ORIGIN } from "@/lib/vscode.ts";
+import { VSCODE_MATCHES } from "@/lib/vscode.ts";
 import { VOICE_STATUS_ITEM_ID } from "@scripts/lib/voice.ts";
 import { defineContentScript } from "#imports";
 import { mount } from "svelte";
@@ -44,7 +44,7 @@ function waitForElement(selector: string) {
 }
 
 export default defineContentScript({
-  matches: [`${VSCODE_ORIGIN}/*`],
+  matches: VSCODE_MATCHES,
   runAt: "document_idle",
   cssInjectionMode: "manifest",
   async main() {
