@@ -26,6 +26,7 @@ const NO_SESSIONS: readonly vscode.AuthenticationSession[] = [];
 const REPOSITORY_ITEM_ID = "interviewPrepSite.repository";
 const SYNC_ITEM_ID = "interviewPrepSite.sync";
 const ACCOUNT_ITEM_ID = "interviewPrepSite.account";
+const VOICE_TUTOR_ITEM_ID = "interviewPrepSite.voiceTutor";
 const STATUS_PRIORITY = 100;
 const SET_CONTEXT_COMMAND = "setContext";
 
@@ -269,6 +270,15 @@ function showRepositoryLink(api: Api) {
   return item;
 }
 
+function showVoiceTutorLink(api: Api) {
+  const item = api.window.createStatusBarItem(VOICE_TUTOR_ITEM_ID, api.StatusBarAlignment.Right, STATUS_PRIORITY);
+  item.text = "$(mic) Voice tutor";
+  item.tooltip = "Get the Gemini Live voice tutor, a spoken coach that sees your lesson and your code";
+  item.command = SiteCommand.showGeminiLive;
+  item.show();
+  return item;
+}
+
 function reloadOnDeploy(api: Api) {
   const stopWatching = watchForUpdates({
     currentVersion: __APP_VERSION__,
@@ -296,6 +306,7 @@ export async function activateSiteExtension({ extension, session }: {
       session
     }),
     showRepositoryLink(api),
+    showVoiceTutorLink(api),
     reloadOnDeploy(api),
     api.commands.registerCommand(SiteCommand.openRepository, () => api.env.openExternal(api.Uri.parse(REPOSITORY_URL))),
     api.commands.registerCommand(SiteCommand.signIn, auth.signIn),
