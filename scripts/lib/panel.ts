@@ -1,3 +1,4 @@
+import { scriptJson } from "#scripts/lib/html.ts";
 import { z } from "#scripts/lib/zod.ts";
 
 export const PanelAction = {
@@ -6,6 +7,7 @@ export const PanelAction = {
   resetExercise: "resetExercise",
   markDone: "markDone",
   nextLesson: "nextLesson",
+  openFile: "openFile",
   viewing: "viewing"
 } as const;
 
@@ -20,6 +22,10 @@ const PANEL_COMMANDS = [
 export const panelMessageSchema = z.union([
   z.object({ action: z.enum(PANEL_COMMANDS) }),
   z.object({
+    action: z.literal(PanelAction.openFile),
+    file: z.string()
+  }),
+  z.object({
     action: z.literal(PanelAction.viewing),
     section: z.string()
   })
@@ -32,6 +38,21 @@ export const PASSED_SCRIPT = `document.documentElement.classList.add(${JSON.stri
 export const SCROLL_TO_TOP_SCRIPT = `addEventListener("load", () => setTimeout(() => scrollTo(0, 0)));`;
 
 export const DONE_COMMAND = "done";
+
+const NAMED_NEXT_LABELS = {
+  [PanelAction.nextLesson]: "Next: ",
+  [PanelAction.markDone]: "Done - next: "
+};
+
+export function nextLessonScript(nextName: string) {
+  const labels = scriptJson(NAMED_NEXT_LABELS);
+  const name = scriptJson(nextName);
+  return `
+for (const [action, prefix] of Object.entries(${labels})) {
+  const elButton = document.querySelector(\`button[data-action="\${action}"]\`);
+  if (elButton) elButton.textContent = prefix + ${name};
+}`;
+}
 
 export const VIEWING_SCRIPT = `
 if (typeof host !== "undefined" && host) {

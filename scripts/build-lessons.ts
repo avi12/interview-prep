@@ -1,9 +1,16 @@
 import { writeFileDeep } from "#scripts/lib/files.ts";
-import { LESSONS_DIST_RELATIVE_DIR } from "#scripts/lib/layout.ts";
-import { readLessons, readRoles, readStudyOrders, readTracks } from "#scripts/lib/lessons.ts";
+import { LESSONS_DIST_RELATIVE_DIR, RUNNER_DIST_RELATIVE_DIR } from "#scripts/lib/layout.ts";
+import {
+  readCategories,
+  readLessons,
+  readRoles,
+  readStudyOrders,
+  readTracks
+} from "#scripts/lib/lessons.ts";
 import { withCachedNarration } from "#scripts/lib/narration-cache.ts";
 import { INDEX_FILE, LESSONS_DIST_DIR, ROOT } from "#scripts/lib/paths.ts";
 import { renderLesson } from "#scripts/lib/render.ts";
+import { writeRunnerData } from "#scripts/lib/runner-data.ts";
 import { createSqlSchemaReader } from "#scripts/lib/sql-schema.ts";
 import { tutorNotes } from "#scripts/lib/tutor-notes.ts";
 import { rmSync } from "node:fs";
@@ -67,6 +74,7 @@ for (const lesson of lessons) {
 await sqlSchema.close();
 
 const index = {
+  categories: readCategories(),
   tracks: readTracks(),
   roles: readRoles(),
   orders: readStudyOrders(lessons),
@@ -97,3 +105,5 @@ writeFileDeep({
   content: JSON.stringify(index, null, 2)
 });
 console.log(`Built ${lessons.length} lessons into ${LESSONS_DIST_RELATIVE_DIR} (${narratedIds.size} narrated)`);
+const runnableCount = await writeRunnerData(lessons);
+console.log(`Wrote browser test data for ${runnableCount} lessons into ${RUNNER_DIST_RELATIVE_DIR}`);

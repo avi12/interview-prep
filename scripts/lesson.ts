@@ -6,6 +6,7 @@ import { readProgress, recordAttempt, recordLastTest } from "#scripts/lib/progre
 import { formatQueryResult } from "#scripts/lib/query-result.ts";
 import { ensureWorkCopy, prepareSolutionDir, resetWorkCopy, runQuiet } from "#scripts/lib/run.ts";
 import { groupByTrack, isPassed, nextUnpassedId } from "#scripts/lib/study.ts";
+import { formatTestCases } from "#scripts/lib/test-cases.ts";
 import { resolve } from "node:path";
 
 const [command, idArgument, ...flags] = process.argv.slice(2);
@@ -51,11 +52,16 @@ async function testLesson(id: string) {
 
   ensureWorkCopy(lesson);
   const implDir = isSolutionRequested ? prepareSolutionDir(lesson) : lesson.workDir;
-  const { isPass, output, queryResults } = await runQuiet({
+  const { isPass, output, queryResults, testCases } = await runQuiet({
     lesson,
     implDir
   });
   console.log(output);
+
+  if (isResultTableShown) {
+    console.log(formatTestCases(testCases));
+  }
+
   for (const result of isResultTableShown ? queryResults : []) {
     console.log(formatQueryResult(result));
   }

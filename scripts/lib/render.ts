@@ -1,14 +1,16 @@
+import { FONTS_URL } from "#scripts/lib/fonts.ts";
+import { escapeHtml } from "#scripts/lib/html.ts";
+import { PAGE_STYLE_FILES } from "#scripts/lib/layout.ts";
 import type { Block, Card, Figure, Lesson } from "#scripts/lib/lessons.ts";
 import { PanelAction } from "#scripts/lib/panel.ts";
 import { ASSETS_DIR } from "#scripts/lib/paths.ts";
+import { escapeRegex } from "#scripts/lib/regex.ts";
 import { EXERCISE_CARD_TITLE, type Quiz } from "#scripts/lib/schema.ts";
 import hljs from "highlight.js";
 import { Marked } from "marked";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const FONTS_URL =
-  "https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&display=swap";
 const CALLOUT_KINDS = {
   Why: "ok",
   "Not this": "danger",
@@ -25,10 +27,6 @@ const HLJS_ALIASES: Record<string, string> = {
   sh: "bash",
   js: "javascript"
 };
-
-function escapeHtml(text: string) {
-  return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;");
-}
 
 function highlight({ text, lang }: {
   text: string;
@@ -147,6 +145,21 @@ function renderBlock({ block, hintCounter, quizId }: {
   return `<details class="hint"><summary>Hint ${hintCounter.count}</summary><p>${markdown.parseInline(block.text)}</p></details>`;
 }
 
+function linkExerciseFiles({ html, files }: {
+  html: string;
+  files: string[];
+}) {
+  if (files.length === 0) {
+    return html;
+  }
+
+  const names = files.map(file => escapeRegex(escapeHtml(file))).join("|");
+  return html.replace(
+    new RegExp(`<code>(${names})</code>`, "g"),
+    (code, file: string) => `<button class="file-link" data-needs-host data-action="${PanelAction.openFile}" data-file="${file}">${code}</button>`
+  );
+}
+
 function renderCard({ lesson, card, index }: {
   lesson: Lesson;
   card: Card;
@@ -168,7 +181,11 @@ function renderCard({ lesson, card, index }: {
     isExercise ? renderExerciseActions(lesson) : ""
   ].join("\n");
   const readingActions = !lesson.hasExercise && isLastCard ? renderReadingActions(lesson) : "";
-  return `<section class="card chamfer"${kind}${narrateAttributes} id="card-${index + 1}"><h2 class="card-head">${escapeHtml(card.title)}</h2>\n${body}${readingActions}</section>`;
+  const linkedBody = lesson.hasExercise ? linkExerciseFiles({
+    html: body,
+    files: lesson.meta.files
+  }) : body;
+  return `<section class="card chamfer"${kind}${narrateAttributes} id="card-${index + 1}"><h2 class="card-head">${escapeHtml(card.title)}</h2>\n${linkedBody}${readingActions}</section>`;
 }
 
 function renderSources(sources: string[]) {
@@ -184,8 +201,10 @@ const host = typeof acquireVsCodeApi === "function" ? acquireVsCodeApi() : null;
 if (host) {
   document.documentElement.classList.add("has-host");
   document.addEventListener("click", e => {
-    const action = e.target.closest("[data-action]")?.dataset.action;
-    if (action) host.postMessage({ action });
+    const elAction = e.target.closest("[data-action]");
+    if (!elAction) return;
+    const { action, file } = elAction.dataset;
+    host.postMessage(file ? { action, file } : { action });
   });
 }`;
 
@@ -210,8 +229,7 @@ export function renderLesson(lesson: Lesson) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(meta.title)}</title>
 <link rel="stylesheet" href="${FONTS_URL}">
-<style>${readAsset("skin.css")}
-${readAsset("lesson.css")}</style>
+<style>${PAGE_STYLE_FILES.map(readAsset).join("\n")}</style>
 </head>
 <body>
 <main class="page">
