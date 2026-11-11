@@ -25,7 +25,6 @@ const LESSON: LessonEntry = {
   roles: ["backend"],
   files: ["twoSum.ts"],
   hasExercise: true,
-  isNarrated: true,
   html: "dist/lessons/foundations/01-two-sum.html",
   tutor: "dist/lessons/foundations/01-two-sum.tutor.json",
   sqlTables: []

@@ -102,7 +102,6 @@ export const lessonIndexSchema = z.object({
       roles: z.array(z.string()),
       files: z.array(z.string()),
       hasExercise: z.boolean(),
-      isNarrated: z.boolean(),
       html: z.string(),
       tutor: z.string(),
       sqlTables: z.array(sqlTableSchema).default([])

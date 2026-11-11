@@ -7,7 +7,6 @@ import {
   readStudyOrders,
   readTracks
 } from "#scripts/lib/lessons.ts";
-import { withCachedNarration } from "#scripts/lib/narration-cache.ts";
 import { INDEX_FILE, LESSONS_DIST_DIR, ROOT } from "#scripts/lib/paths.ts";
 import { renderLesson } from "#scripts/lib/render.ts";
 import { writeRunnerData } from "#scripts/lib/runner-data.ts";
@@ -36,16 +35,8 @@ rmSync(LESSONS_DIST_DIR, {
   retryDelay: RM_RETRY_DELAY_MS
 });
 
-const narratedIds = new Set<string>();
 for (const lesson of lessons) {
-  const { html, isNarrated } = withCachedNarration({
-    id: lesson.id,
-    html: renderLesson(lesson)
-  });
-  if (isNarrated) {
-    narratedIds.add(lesson.id);
-  }
-
+  const html = renderLesson(lesson);
   writeFileDeep({
     path: resolve(
       ROOT, distPath({
@@ -87,7 +78,6 @@ const index = {
     roles: lesson.meta.roles,
     files: lesson.meta.files,
     hasExercise: lesson.hasExercise,
-    isNarrated: narratedIds.has(lesson.id),
     html: distPath({
       id: lesson.id,
       extension: HTML_EXTENSION
@@ -104,6 +94,6 @@ writeFileDeep({
   path: INDEX_FILE,
   content: JSON.stringify(index, null, 2)
 });
-console.log(`Built ${lessons.length} lessons into ${LESSONS_DIST_RELATIVE_DIR} (${narratedIds.size} narrated)`);
+console.log(`Built ${lessons.length} lessons into ${LESSONS_DIST_RELATIVE_DIR}`);
 const runnableCount = await writeRunnerData(lessons);
 console.log(`Wrote browser test data for ${runnableCount} lessons into ${RUNNER_DIST_RELATIVE_DIR}`);

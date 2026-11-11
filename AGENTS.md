@@ -32,7 +32,6 @@ pnpm start                 # build lessons, install the extension, open VS Code 
 pnpm dev                   # same, but rebuilds on save: extension changes restart its host, lesson changes refresh the panel
 pnpm lesson list | next | open <id> | test <id> | reset <id>
 pnpm verify [track]        # structure rules, solution passes, starter fails
-pnpm narrate [id-prefix]   # record voices for lessons whose scripts changed (sets up vendor/ on first run)
 pnpm build                 # lessons -> dist/, plus each lesson's tests and starter for the browser runner (never solutions)
 pnpm build:engines         # self-host esbuild-wasm, PGlite and Pyodide (with its wheels) in dist/runner/engines
 pnpm test:browser-runner   # grade every ts, sql and py lesson in headless Chrome: starter fails, solution passes

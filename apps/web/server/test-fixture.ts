@@ -42,7 +42,6 @@ function lessonEntry(id: string) {
     roles: [],
     files: [],
     hasExercise: false,
-    isNarrated: false,
     html: `dist/lessons/${id}.html`,
     tutor: `dist/lessons/${id}.tutor.json`,
     sqlTables: []

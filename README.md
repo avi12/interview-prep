@@ -31,16 +31,7 @@ The same trainer runs in the browser at https://avi-interview-prep.web.app, with
 
 ## Voice
 
-```sh
-pnpm narrate          # records the spoken script of every lesson with Edge Read Aloud voices, cached
-pnpm build            # rebuilds pages with the audio
-```
-
-Every narrated card has a play button. Parts of each diagram light up as the voice reaches them.
-
-![A card being narrated: the diagram's parts light up in the order the voice names them, with live subtitles](https://github.com/user-attachments/assets/0c1d2aee-c568-4f8d-a663-03d507ca85aa)
-
-The voices come from [edge-tts-as-extension](https://github.com/avi12/edge-tts-as-extension), a git submodule in `vendor/`. The first `pnpm start` or `pnpm narrate` checks it out and installs it, with no other setup. `pnpm start` also builds its recorder, so the voice in a lesson's narration panel can be switched to any Edge voice.
+Every card has a spoken script, but lessons ship **no audio files**. Install the [Edge Read Aloud extension](https://github.com/avi12/edge-tts-as-extension) (sideload it) and it injects a speaker button into each narrated card, speaks the script live and lets you pick any Edge voice in one place. Without the extension the pages are plain text.
 
 ## Tutors
 
@@ -70,7 +61,7 @@ https://github.com/user-attachments/assets/5054318b-fd63-47ef-8363-2ae6b4b1abcf
 | `curriculum/tracks.json`, `roles.json`, `path.json` | tracks, target roles and the study order |
 | `work/` | your copies of the exercises (git-ignored) |
 | `.progress/` | what you passed (git-ignored) |
-| `scripts/` | CLI (`pnpm lesson`), build, narrate, verify, start; `scripts/lib` holds the shared helpers |
+| `scripts/` | CLI (`pnpm lesson`), build, verify, start; `scripts/lib` holds the shared helpers |
 | `apps/vscode-ext/` | the VS Code extension |
 | `apps/web/` | the hosted version: VS Code in the browser, in-browser test runner, server and sign-in |
 | `apps/gemini-live/` | the Gemini Live bridge |

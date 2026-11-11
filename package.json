@@ -21,7 +21,6 @@
     "build": "node scripts/build-lessons.ts",
     "build:engines": "node scripts/build-runner-engines.ts",
     "test:browser-runner": "pnpm -C apps/web test:browser-runner",
-    "narrate": "node scripts/narrate-lessons.ts",
     "verify": "node scripts/verify.ts",
     "start": "node scripts/start.ts",
     "dev": "node scripts/dev.ts",
