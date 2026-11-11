@@ -87,6 +87,10 @@ Implement `is_valid(text)` in `valid_parentheses.py`.
 - Use a `dict` that maps each closer to its opener, so there is no chain of `if`
 - Early return on the first mismatch
 
+```narrate
+Write the valid parentheses check. It tells whether every bracket in the text is closed by the right kind, in the right order. Use a dictionary that maps each closing bracket to its opening one, and return early on the first mismatch. Press Run my tests when you are ready.
+```
+
 ```hint
 PAIRS = {")": "(", "]": "[", "}": "{"}
 ```

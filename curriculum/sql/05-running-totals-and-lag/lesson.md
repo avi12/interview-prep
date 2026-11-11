@@ -215,6 +215,10 @@ why: LAG takes the previous row, and that row is February. Generate the missing 
 - Sort: `paid_on`, then `id`
 - The tests run two datasets, so no hardcoding
 
+```narrate
+Your turn. Return one row per payment, with a running total and the change from the previous payment. Order by date, then id, so payments on the same day add one at a time. The change is empty for the first payment. Press Run my tests when you are ready.
+```
+
 ```hint
 Both columns need the same ordering: paid_on, then id. A WINDOW clause lets you name it once and reuse it.
 ```

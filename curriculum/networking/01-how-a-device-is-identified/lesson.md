@@ -188,6 +188,10 @@ Open `network.ts`. Write two functions.
 
 Run `pnpm lesson test networking/01-how-a-device-is-identified`.
 
+```narrate
+Write two functions. The first reads the output of the network adapter listing and returns the host name, address, hardware address, gateway and whether automatic addressing is on, for the active adapter, the first one with an address. Missing values are empty text. The second walks the ping ladder and returns one verdict. Press Run my tests when you are ready.
+```
+
 ```hint
 Split into lines. A line that does not start with a space is a section header. Every other line looks like `   Key . . . . : value`.
 ```

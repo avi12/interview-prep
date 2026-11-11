@@ -161,6 +161,10 @@ why: Only separate parameters keep the input out of the SQL text. The other two 
 
 The tests throw classic payloads at both: a login bypass, a comment trick, `UNION SELECT`, a stacked `DROP TABLE`, and the name `O'Brien`.
 
+```narrate
+Your turn. Two functions are vulnerable to injection, and you fix both. The first finds a user by name, so pass the name as a parameter. The second lists users sorted by id, username, or role, and must throw for anything else, even a real column. The tests attack both with classic payloads. Press Run my tests when you are ready.
+```
+
 ```hint
 findUser: replace the template string with $1 and pass [username] as the second argument to db.query.
 ```

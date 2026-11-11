@@ -357,6 +357,10 @@ The tests also plug in rules, senders and gateways **written inside the test**. 
 
 Run `pnpm lesson test oop/07-solid-without-the-slogans`.
 
+```narrate
+Split the god class. Move each job into its own small collaborator, then replace the class with a conductor that only calls them. Leave the given contracts alone. One factory, the no receipt sender, currently throws, so fix it to keep its promise. The tests plug in rules, senders and gateways written inside the test, so your code must work with no edits. Press Run my tests when you are ready.
+```
+
 ```hint
 Copy each job out of `placeOrder` into the matching factory in `collaborators.ts`. Keep the exact problem messages the god class uses.
 ```

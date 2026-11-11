@@ -223,6 +223,10 @@ The tests bring a state you have never seen. If `Order` decides transitions itse
 
 Run `pnpm lesson test oop/05-state-pattern-order-lifecycle`.
 
+```narrate
+Open the legal moves of the order lifecycle. Pending can be paid or cancelled. Paid can be shipped, or cancelled with a full refund. Shipped can be delivered, and delivered and cancelled allow nothing. Then write the order itself, which only forwards each action to its current state. The order must not decide transitions, because the tests bring a state you have never seen. Press Run my tests when you are ready.
+```
+
 ```hint
 Start with `Order`. It holds `#state`, and its four methods are one line each: `this.#state.pay(this.#context)` and so on.
 ```

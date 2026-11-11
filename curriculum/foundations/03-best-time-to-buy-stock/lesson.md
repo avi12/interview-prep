@@ -141,6 +141,10 @@ Open `maxProfit.ts` in your copy and make the tests pass. The file exports `maxP
 
 Two big tests catch a check of every pair. One counts how many times you read the prices, the other has a time limit.
 
+```narrate
+Write the max profit function. Given daily prices, return the best profit from one buy followed by one later sell. Use one loop and two variables, and return zero for an empty list or a falling market. Checking every pair is too slow. Press Run my tests when you are ready.
+```
+
 ```hint
 Make two variables before the loop: `lowestPrice` starting at `Infinity` and `bestProfit` starting at `0`.
 ```

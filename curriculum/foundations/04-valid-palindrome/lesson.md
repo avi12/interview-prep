@@ -144,6 +144,10 @@ Implement `is_palindrome(text)` in `valid_palindrome.py`.
 
 The last test measures extra memory on a text of 1.8 million characters. Any copy of the text fails it.
 
+```narrate
+Write the valid palindrome check. Walk two pointers inward from both ends, and return early on the first mismatch. Do not build a cleaned copy of the text or reverse it, because the last test measures extra memory on a very long text. Press Run my tests when you are ready.
+```
+
 ```hint
 Start with `left = 0` and `right = len(text) - 1`, and loop `while left < right`.
 ```

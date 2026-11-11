@@ -212,6 +212,10 @@ List **every** employee, including those with no department.
 - Sort by the employee's `id`
 - The tests run it on two datasets, so no hardcoding
 
+```narrate
+Your turn. The starter uses an inner join, so one employee goes missing. List every employee, including those with no department, showing the employee and the department name, empty when there is none. Sort by the employee id. Press Run my tests when you are ready.
+```
+
 ```hint
 Ask the join question: which rows disappear right now, and why?
 ```

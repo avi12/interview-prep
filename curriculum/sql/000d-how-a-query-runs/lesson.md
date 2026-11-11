@@ -237,6 +237,10 @@ why: FROM loads the table every later step works on. SELECT is written first but
 - Sort by `yearly_salary` descending, then `name`
 - The tests run it on two different datasets, so no hardcoding
 
+```narrate
+Your turn. The starter fails because the filter uses a name that does not exist yet when it runs. Fix it so it returns the name and the yearly salary, only for people whose yearly salary is over ninety thousand. Sort by yearly salary, highest first, then by name. Think about the order a query runs in. Press Run my tests when you are ready.
+```
+
 ```hint
 Walk the run order. Which step creates the name yearly_salary, and does WHERE come before or after it?
 ```

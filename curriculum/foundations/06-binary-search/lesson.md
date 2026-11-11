@@ -191,6 +191,10 @@ Implement `search(nums, target)` in `binary_search.py`.
 
 The tests try every size from 0 to 40 with every target inside and between the numbers. Then they hand you a **billion-item array that exists only on paper**, count your reads, and stop you at 100. A linear scan and slicing both fail.
 
+```narrate
+Write binary search. Given a sorted list and a target, return the target's position, or minus one if it is missing. Keep a closed range with a low and a high end, and loop while low is not past high. The tests include a billion item list and count your reads, so a linear scan or slicing fails. Press Run my tests when you are ready.
+```
+
 ```hint
 Start with `low = 0` and `high = len(nums) - 1`, then `while low <= high:`.
 ```

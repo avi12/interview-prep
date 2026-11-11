@@ -207,6 +207,10 @@ The tests also bring a rule you have never seen. If `Checkout` mentions a rule c
 
 Run `pnpm lesson test oop/02-polymorphism-replaces-conditionals`.
 
+```narrate
+Write three discount rules and a checkout that applies them. The rules are a percentage off, buy two get one free, and free shipping above a threshold. The checkout calls every rule once, lists the ones that gave a discount, and never lets the total go below zero. It must not mention any rule by name, because the tests bring a rule you have never seen. Press Run my tests when you are ready.
+```
+
 ```hint
 Start with `PercentOff`. `Money` already has `percentage`, and `name` can be built in the constructor.
 ```

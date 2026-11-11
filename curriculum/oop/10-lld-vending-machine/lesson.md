@@ -247,6 +247,10 @@ The tests add a new coin and new purchase rules **in the test**. Your code must 
 
 Run `pnpm lesson test oop/10-lld-vending-machine`.
 
+```narrate
+Implement the vending machine with four states: idle, has money, dispensing and out of stock, each as its own object. Give change and refunds with the largest coin first. If the dispenser rejects, refund everything, keep the stock, and go back to idle. Restocking revives an out of stock machine. The tests add new coins and purchase rules, so your code must accept them unchanged. Press Run my tests when you are ready.
+```
+
 ```hint
 Copy the products into a `Map` so you never mutate the caller's objects. Keep `balanceCents` and a `state` variable in the closure.
 ```

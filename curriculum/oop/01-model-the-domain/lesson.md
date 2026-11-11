@@ -216,6 +216,10 @@ Open `money.ts` and `cart.ts`. They work, but they leak. Make the tests pass **w
 
 Run `pnpm lesson test oop/01-model-the-domain`.
 
+```narrate
+Your job is to stop the bookstore money and cart classes from leaking. Money must hold whole cents, reject bad input, and never change after it is made. The cart must accept only quantities from one to ten, and hand out copies of its lines, not the real ones. Callers must still be able to do everything they did before. Press Run my tests when you are ready.
+```
+
 ```hint
 Turn the public fields of Money into `readonly #cents` and `readonly #currency`, set only in the constructor, and add getters. Then every method that changes something returns `new Money(...)`.
 ```

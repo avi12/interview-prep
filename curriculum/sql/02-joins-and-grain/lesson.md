@@ -207,6 +207,10 @@ One row per customer:
 - Sort: `revenue` descending, then `name`
 - The tests run it on two datasets, so no hardcoding
 
+```narrate
+Your turn. The starter runs, but the numbers are wrong and some customers are missing. Return one row per customer with the name, the revenue, and the units. Customers with no orders stay with zero, and an order with no items still counts its revenue. Think about the grain of each table. Press Run my tests when you are ready.
+```
+
 ```hint
 Say the grain of each table out loud. Which two disagree, and which column gets repeated?
 ```

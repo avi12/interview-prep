@@ -141,6 +141,10 @@ Implement `group_anagrams(words)` in `group_anagrams.py`.
 - Use `defaultdict(list)` so you never ask "is the key there yet?"
 - The tests send 30,000 words, so comparing words pair by pair will time out
 
+```narrate
+Write the function that groups words that are anagrams of each other. Return a list of lists, in any order. Use a dictionary that starts each key with an empty list, so you never check whether a key exists. The tests send thirty thousand words, so comparing words pair by pair times out. Press Run my tests when you are ready.
+```
+
 ```hint
 Make the dict first: `groups = defaultdict(list)`, from `collections`.
 ```

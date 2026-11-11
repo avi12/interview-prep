@@ -113,6 +113,10 @@ Open `query.sql` and write one query on `employees`. Return departments with **a
 - `average_salary` is `ROUND(AVG(salary))`
 - Sort by `department`
 
+```narrate
+Your turn. Write one query that returns departments with at least two people. Show the department, the headcount, and the average salary rounded to a whole number. Sort by department. Remember that a filter on a group belongs after the grouping. Press Run my tests when you are ready.
+```
+
 ```hint
 You need GROUP BY department and two summaries: COUNT(*) and AVG(salary).
 ```

@@ -213,6 +213,10 @@ The starter finds customers whose total is above the average **payment**. That i
 - Sort: `total` descending, then `customer`
 - The tests run two datasets, and check that you wrote two CTEs
 
+```narrate
+Your turn. The starter compares totals to the average payment, which is the wrong average. Rewrite it with two chained common table expressions. The first computes the total per customer, and the second averages those totals. Return customers whose total is strictly above that average, with customer and total, highest first. Press Run my tests when you are ready.
+```
+
 ```hint
 Average over customers, one row each, not over payments. That means the average must read the per-customer totals.
 ```

@@ -252,6 +252,10 @@ The tests add a new vehicle type, a new fee policy and a new slot chooser **insi
 
 Run `pnpm lesson test oop/09-lld-parking-lot`.
 
+```narrate
+Implement the parking lot from the class diagram you were given, without editing it. Write a best fit chooser that picks the smallest slot that fits, an hourly fee that charges for started hours with a one hour minimum, and the lot itself with park, leave and a free slot count. Reject a plate that is already parked. The tests add new vehicle types, fee policies and choosers, so the lot must accept them unchanged. Press Run my tests when you are ready.
+```
+
 ```hint
 Keep three things inside `createParkingLot`: a `Set` of occupied slot ids, a `Set` of parked plates, and a `Map` from ticket id to the ticket and its vehicle.
 ```

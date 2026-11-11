@@ -104,6 +104,10 @@ Open `query.sql` and write one query on `employees`. For **every** employee, sho
 - `gap` is `salary - ROUND(AVG(salary) OVER (PARTITION BY department))`
 - Sort by `department`, then `name`
 
+```narrate
+Your turn. For every employee, show how far their salary is from their department average. Return name, department, salary, and the gap, which is the salary minus the rounded department average. Keep every row, and sort by department, then name. Press Run my tests when you are ready.
+```
+
 ```hint
 Start from SELECT name, department, salary FROM employees.
 ```

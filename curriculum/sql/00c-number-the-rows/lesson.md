@@ -110,6 +110,10 @@ Open `query.sql` and write one query on `employees`. Return the **single highest
 - Columns, in this order: `department`, `name`, `salary`
 - Sort by `department`
 
+```narrate
+Your turn. Return the single highest paid person of each department. If two earn the same, the earlier name wins. Show department, name and salary, sorted by department. Number the rows first, then keep the first of each department. Press Run my tests when you are ready.
+```
+
 ```hint
 Number the rows with ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary DESC, name).
 ```

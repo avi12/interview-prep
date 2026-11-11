@@ -168,6 +168,10 @@ Implement `climbStairs(n)` in `climbStairs.ts`. The tests ask for 45 steps and g
 - Pick either fix: memoization with a `Map`, or a bottom-up table
 - Say which one you picked and its time and memory cost
 
+```narrate
+Write the climb stairs function, which counts the ways to climb a staircase taking one or two steps at a time. Plain recursion makes billions of calls, and the test asks for forty-five steps within one second. Fix it with memoization or a bottom-up table, and be ready to say its time and memory cost. Press Run my tests when you are ready.
+```
+
 ```hint
 `n = 1` and `n = 2` are the base cases: the answer is `n`. Return early for them.
 ```

@@ -109,6 +109,10 @@ Open `twoSum.ts` in your copy and make the tests pass. The file exports `twoSum(
 
 Run the tests from the Run button, or `pnpm lesson test foundations/01-two-sum`.
 
+```narrate
+Write the two sum function. It takes a list of numbers and a target, and returns the two positions that add up to the target. Use one loop and one map. If nothing matches, return an empty list. Press Run my tests when you are ready.
+```
+
 ```hint
 Create a `Map<number, number>` from value to index before the loop.
 ```

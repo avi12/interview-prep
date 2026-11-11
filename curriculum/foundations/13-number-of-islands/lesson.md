@@ -138,6 +138,10 @@ Implement `num_islands(grid)` in `number_of_islands.py`. Cells are the strings `
 - No recursion, and do not touch `sys.setrecursionlimit`
 - Tests include a 300 by 300 island and 45,000 tiny islands
 
+```narrate
+Write the function that counts islands in a grid of ones and zeros. Leave the grid unchanged. Use no recursion, and do not raise the recursion limit. The tests include one huge island and forty-five thousand tiny ones. Press Run my tests when you are ready.
+```
+
 ```hint
 Scan with two loops. Skip water, and skip any cell already in the `visited` set. Each new land cell is one more island.
 ```

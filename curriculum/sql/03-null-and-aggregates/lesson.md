@@ -193,6 +193,10 @@ Per agent, count **closed** tickets, but skip those escalated to `legal`. A tick
 - Sort: `agent`
 - The tests run two datasets, so no hardcoding
 
+```narrate
+Your turn. For each support agent, count closed tickets, but skip those escalated to legal. A ticket that was never escalated has no value there and must stay. Keep only agents with at least two such tickets, and return the agent, the tickets, the rated count, the average rating, and the total minutes. Watch out for empty values. Press Run my tests when you are ready.
+```
+
 ```hint
 Rows go in WHERE, groups go in HAVING. Which of your conditions is about one ticket, and which is about a whole agent?
 ```

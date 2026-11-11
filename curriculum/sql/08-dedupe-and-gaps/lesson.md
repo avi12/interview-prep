@@ -204,6 +204,10 @@ Two queries, two files. Both run on two different datasets.
 - A single day is a streak of 1
 - Sort by `user_id`, then `streak_start`
 
+```narrate
+Your turn. You write two queries in two files. The first deletes duplicate contacts, ignoring upper and lower case in emails, and keeps the newest row per email. It must return the ids it deleted. The second finds every streak of consecutive login days per user, where a single day counts as a streak of one. Press Run my tests when you are ready.
+```
+
 ```hint
 Dedupe: the starter is a SELECT preview. Fix its PARTITION BY and ORDER BY, then wrap it in a CTE and delete the rows with copy_number above 1.
 ```

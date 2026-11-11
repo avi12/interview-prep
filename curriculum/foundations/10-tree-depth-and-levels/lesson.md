@@ -145,6 +145,10 @@ Open `treeTraversal.ts`. `TreeNode` is already written. Implement both functions
 - `levelOrder(root)` with a queue and a loop, no recursion
 - Both accept `null`
 
+```narrate
+Write two tree functions. The first finds the maximum depth of a tree, using recursion. The second lists the values level by level, using a queue and a loop, with no recursion. Both must accept an empty tree. Press Run my tests when you are ready.
+```
+
 ```hint
 maxDepth: return 0 for null first. Then ask both children for their depth.
 ```

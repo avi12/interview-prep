@@ -177,6 +177,10 @@ The starter uses `NOT IN` and returns nothing. Fix `query.sql`.
 - Sort: `id`
 - The tests run two datasets, so no hardcoding
 
+```narrate
+Your turn. Return the customers with no paid order. A customer with only cancelled or pending orders counts. Some guest orders have no customer, which breaks the starter. Fix it, and return the id and name, sorted by id. Press Run my tests when you are ready.
+```
+
 ```hint
 Run the subquery by itself. Besides customer ids, what else does it return?
 ```

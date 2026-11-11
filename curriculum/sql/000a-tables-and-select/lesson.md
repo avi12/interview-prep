@@ -173,6 +173,10 @@ Open `query.sql`. It uses `SELECT *`, which returns the wrong columns. Rewrite i
 
 The tests run it on two different tables, so no hardcoding.
 
+```narrate
+Your turn. The starter selects every column, and that is wrong. Return only the name, the department, and the yearly salary, which is the monthly salary times twelve. Keep the sort by id at the end, and do not hardcode anything, because the tests use two different tables. Press Run my tests when you are ready.
+```
+
 ```hint
 Replace the star with a comma-separated list of the columns you want, in the order asked.
 ```

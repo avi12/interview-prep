@@ -208,6 +208,10 @@ The tests bring their own gateways, repositories and mailers. If `Checkout` buil
 
 Run `pnpm lesson test oop/04-depend-on-interfaces`.
 
+```narrate
+Write a checkout that depends only on interfaces. It charges the payment gateway once. If the payment is declined, it returns the reason and saves and emails nothing. If approved, it saves the order and only then sends the confirmation email. Also write an in-memory order store and a recording mailer. The checkout must never build a gateway, store or mailer itself. Press Run my tests when you are ready.
+```
+
 ```hint
 Store the four dependencies in private fields in the constructor. Nothing in `Checkout` should say `new` for a gateway, repository or mailer.
 ```

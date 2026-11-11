@@ -122,6 +122,10 @@ Write one query in `query.sql`. For each department return the people with the *
 - Sort: `department`, then `salary` descending, then `name`
 - The tests run it on two different datasets, so no hardcoding
 
+```narrate
+Your turn. For each department, return the people with the two highest distinct salaries, and keep ties. Show department, name and salary, sorted by department, then salary descending, then name. Do not hardcode anything, because the tests use two datasets. Press Run my tests when you are ready.
+```
+
 ```hint
 You need a ranking function with PARTITION BY department.
 ```

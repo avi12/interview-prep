@@ -186,6 +186,10 @@ The tests also bring a channel and a formatter you have never seen. `Notifier` m
 
 Run `pnpm lesson test oop/03-composition-over-inheritance`.
 
+```narrate
+Build a notifier from parts. Write a Slack channel, an urgent formatter, and a digest formatter. Then write the notifier itself, which takes a channel and a formatter, sends once per call, and sends nothing for an empty list. The notifier must not extend anything or name a part, because the tests bring a channel and a formatter you have never seen. Press Run my tests when you are ready.
+```
+
 ```hint
 `Notifier` only needs two private fields, `#channel` and `#formatter`. `notify` is one line: format, then send.
 ```

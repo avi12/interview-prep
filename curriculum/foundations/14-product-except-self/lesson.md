@@ -137,6 +137,10 @@ Implement `productExceptSelf(numbers)` in `productExceptSelf.ts`.
 - The tests send 100,000 numbers, with zeros and negatives too
 - Return a new array. Do not change `numbers`
 
+```narrate
+Write the function that returns, for each position, the product of all the other numbers. Use two loops, no division and no nested loops. The tests send one hundred thousand numbers, including zeros and negatives. Return a new array and leave the input alone. Press Run my tests when you are ready.
+```
+
 ```hint
 Start with an output array as long as the input. You can fill it with `numbers.map(() => 1)`.
 ```

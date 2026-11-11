@@ -238,6 +238,10 @@ The tests use only `index.ts`. Rules, gateways and listeners written **in the te
 
 Run `pnpm lesson test oop/12-ship-the-capstone`. Then do the git and README steps in your own repo.
 
+```narrate
+Fill in the capstone package using your earlier lessons as a base. Write the discount functions, the order transition table, the event bus, and the checkout. Then export only the five public names from the index file. The tests use only that index, and rules, gateways and listeners written in the test must plug in unchanged. Press Run my tests when you are ready, then finish the git and readme steps in your own repository.
+```
+
 ```hint
 Start with `discounts.ts` and `order.ts`: they are small and pure. `transitionFor` is a table, `Record<status, Partial<Record<action, { to, refunds }>>>`, and it throws a `CheckoutError` for a missing entry.
 ```

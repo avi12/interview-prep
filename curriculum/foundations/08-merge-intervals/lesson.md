@@ -118,6 +118,10 @@ Open `mergeIntervals.ts` in your copy and make the tests pass. The file exports 
 
 The tests include touching intervals, nested intervals, input that must stay unchanged, and 60,000 shuffled intervals with a 400 millisecond limit.
 
+```narrate
+Write the function that merges overlapping intervals. Sort a copy by start, then make one pass. Return an empty list for empty input, and never change the input itself. The tests include touching and nested intervals, and sixty thousand shuffled ones against a time limit. Press Run my tests when you are ready.
+```
+
 ```hint
 Copy and sort in one line: `[...intervals].sort(([startA], [startB]) => startA - startB)`.
 ```

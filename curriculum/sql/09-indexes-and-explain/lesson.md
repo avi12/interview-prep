@@ -267,6 +267,10 @@ Rules:
 - At most **two** indexes beyond the primary keys, and none on `status`
 - The tests load the data, run your file, run `ANALYZE`, then read `EXPLAIN (FORMAT JSON)`. Any index node counts: Index Scan, Index Only Scan or Bitmap Index Scan
 
+```narrate
+Your turn. The users and orders tables are loaded, with twenty thousand rows each. Write index statements in the setup file so three given queries use an index. One looks up a lowercased email, and two filter orders by customer, one of them with a date range. Use at most two indexes, and none on status. Press Run my tests when you are ready.
+```
+
 ```hint
 Query 1 wraps the column in lower(). Index the expression itself, not the plain column.
 ```

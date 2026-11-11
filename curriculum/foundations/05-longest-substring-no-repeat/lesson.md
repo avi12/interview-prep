@@ -146,6 +146,10 @@ Open `lengthOfLongestSubstring.ts` in your copy and make the tests pass. The fil
 
 The last test uses a 20,000 character text with a 4,000 character window, and gives you 150 milliseconds. Rescanning from every start is too slow.
 
+```narrate
+Write the function that finds the length of the longest stretch of text with no repeated character. Use one loop and one map from each character to the last place you saw it. Return zero for an empty string. Rescanning from every start is too slow for the last test. Press Run my tests when you are ready.
+```
+
 ```hint
 Create `lastIndexByChar` as a `Map<string, number>`, plus `windowStart = 0` and `longest = 0`.
 ```

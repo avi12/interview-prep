@@ -178,6 +178,10 @@ The tests bring a listener and an event type you have never seen. If `placeOrder
 
 Run `pnpm lesson test oop/06-observer-and-domain-events`.
 
+```narrate
+Build an event bus, a place order function, and two listeners. The bus calls listeners in the order they subscribed, waits for each one, and sends a failing listener's error to a handler while the rest still run. Placing an order saves it first and then publishes the event. The stock and loyalty listeners react to it. Neither the bus nor place order may name a listener. Press Run my tests when you are ready.
+```
+
 ```hint
 Start with the bus. A `Map` from event type to a list of subscriptions is enough. `publish` is a `for...of` with `try` and `await listener.handle(event)`.
 ```

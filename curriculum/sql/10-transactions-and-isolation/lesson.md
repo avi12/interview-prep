@@ -188,6 +188,10 @@ Make it safe:
 - Simultaneous transfers must not overdraw the sender. PGlite has one connection, so no test can show a real race: use the guarded `UPDATE`
 - PGlite: `db.transaction(async tx => { ... })` rolls back when the callback throws, and `result.affectedRows` tells how many rows an `UPDATE` changed
 
+```narrate
+Your turn. The starter credits one account and then debits another, with no transaction. Make the transfer safe by moving the money in one transaction, so any failure leaves both balances unchanged. Throw when the sender lacks the money, when the recipient does not exist, or when the amount is not above zero. Guard the debit so simultaneous transfers cannot overdraw. Press Run my tests when you are ready.
+```
+
 ```hint
 Wrap both UPDATE statements in db.transaction(async tx => ...) and use tx.query, not db.query, inside it.
 ```

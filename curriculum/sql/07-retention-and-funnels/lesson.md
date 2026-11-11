@@ -246,6 +246,10 @@ Two queries, two files, same data model. Both run on two different datasets.
 - Columns: `step`, `users` (distinct people), `pct_of_previous` (1 decimal, `NULL` for the first step)
 - One row per step in `position` order, even a step with 0 users
 
+```narrate
+Your turn. You write two queries in two files. The first measures week one retention: for each signup week, how many users came back in the next calendar week. A cohort nobody came back to still appears with zero. The second is a funnel, with one row per step, the distinct users, and the percent of the previous step. Press Run my tests when you are ready.
+```
+
 ```hint
 Retention: build the cohort with DATE_TRUNC('week', signed_up_at)::date. A date plus 7 is the same weekday one week later.
 ```

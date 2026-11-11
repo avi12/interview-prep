@@ -171,6 +171,10 @@ Open `query.sql`. It has the bug from this lesson. Return people in **engineerin
 - Sort by `id`
 - The tests use two datasets, with low-paid engineers that only the bug lets through
 
+```narrate
+Your turn. The starter has the bug from this lesson. Return people in engineering or data who earn at least six thousand. Show name, department and salary, sorted by id. Remember that and is applied before or, so group the department checks. Press Run my tests when you are ready.
+```
+
 ```hint
 Run the starter in your head on an engineer earning 5000. Does the salary check ever look at that row?
 ```

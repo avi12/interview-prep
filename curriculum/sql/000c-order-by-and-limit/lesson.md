@@ -165,6 +165,10 @@ Open `query.sql` and write one query on `employees`. Return the **3 highest-paid
 - Ties broken by `name`, alphabetically
 - The tests use two datasets with ties right at the cut, so a missing tie-breaker fails
 
+```narrate
+Your turn. Write one query that returns the three highest-paid people. Show name and salary, highest salary first, and break ties by name, alphabetically. The tests have ties right at the cut, so a missing tie-breaker will fail. Press Run my tests when you are ready.
+```
+
 ```hint
 Run the starter and compare: is the order fully decided when two people earn the same?
 ```

@@ -179,6 +179,10 @@ Open `query.sql` and write one query on `employees`. Show every employee with th
 - `percent_of_total` is the salary as a percent of that total, rounded to **1 decimal**
 - Sort by `id`
 
+```narrate
+Your turn. Show every employee with the company total and their share of it. Return name, salary, the sum of all salaries on every row, and the salary as a percent of that total, rounded to one decimal. Sort by id. Do not collapse the rows. Press Run my tests when you are ready.
+```
+
 ```hint
 GROUP BY gives you one row. You need every employee, so drop GROUP BY and use SUM(salary) OVER ().
 ```

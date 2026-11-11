@@ -121,6 +121,10 @@ Implement `top_k_frequent(nums, k)` in `top_k_frequent.py`.
 - Return the `k` values in any order. The tests send 66,000 numbers, so counting inside a loop will time out
 - `Counter.most_common(k)` is a one-line shortcut that uses a heap inside. Mention it in an interview, then write the heap so the idea shows
 
+```narrate
+Write the function that returns the k most frequent numbers, in any order. Count with a counter, then keep a min heap holding at most k pairs of count and value. The tests send sixty-six thousand numbers, so counting inside a loop times out. Press Run my tests when you are ready.
+```
+
 ```hint
 `counts = Counter(nums)` gives you value to count in one pass.
 ```

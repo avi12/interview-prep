@@ -238,6 +238,10 @@ Open `inventory.py`. It works for happy paths but nothing guards it. Make it:
 
 Run `pnpm lesson test oop/08-pythonic-oop`.
 
+```narrate
+Make the inventory module safe. The stock code is a frozen, ordered value that rejects a bad format. An item's quantity must be a whole number of zero or more, checked on creation and on every assignment. Taking more than is in stock raises an error and changes nothing. The inventory rejects duplicates, and the pricing hook is a protocol, so plain objects work without inheriting anything. Press Run my tests when you are ready.
+```
+
 ```hint
 `@dataclass(frozen=True, order=True)` on `Sku`, then a `__post_init__` that checks `SKU_PATTERN.fullmatch(self.code)`. Define `SKU_PATTERN = re.compile(r"[A-Z]{2,4}-\d{3,5}")` once, at the top.
 ```

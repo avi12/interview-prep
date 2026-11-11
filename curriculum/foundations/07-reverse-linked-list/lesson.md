@@ -171,6 +171,10 @@ Implement `reverse_list(head)` in `reverse_linked_list.py`. `ListNode` is alread
 
 The tests check the order, that you reuse the **same nodes**, that a **100,000 node** list works, and that you do not copy the list into a Python list.
 
+```narrate
+Write the function that reverses a linked list and returns the new head. Use a loop with a previous node, a current node and one saved variable. Reuse the same nodes, and do not copy the list into another list. It must handle one hundred thousand nodes. Press Run my tests when you are ready.
+```
+
 ```hint
 Start with `previous = None` and `current = head`, then `while current:`.
 ```
