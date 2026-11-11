@@ -1,6 +1,9 @@
 import importlib.util
+import inspect
 import os
 from pathlib import Path
+
+from calls import recorded
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -22,4 +25,11 @@ def load_impl(test_file, name):
     spec = importlib.util.spec_from_file_location(path.stem, path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    _record_calls(module)
     return module
+
+
+def _record_calls(module):
+    for name, value in list(vars(module).items()):
+        if inspect.isfunction(value) and value.__module__ == module.__name__:
+            setattr(module, name, recorded(name, value))

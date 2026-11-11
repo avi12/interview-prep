@@ -12,11 +12,22 @@ LARGE_SIZE = 100_000
 DEFAULT_RECURSION_LIMIT = 1000
 EXTRA_MEMORY_LIMIT_BYTES = 100_000
 
+built_nodes = []
+
+
+@pytest.fixture(autouse=True)
+def break_chains_after_each_test():
+    yield
+    for node in built_nodes:
+        node.next = None
+    built_nodes.clear()
+
 
 def build(values):
     head = None
     for value in reversed(values):
         head = ListNode(value, head)
+        built_nodes.append(head)
     return head
 
 

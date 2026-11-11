@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { loadImpl } from "#kit/impl.ts";
+import { measureMs } from "#kit/timing.ts";
 
 type Module = { mergeIntervals: (intervals: number[][]) => number[][] };
 
@@ -7,13 +8,7 @@ const { mergeIntervals } = await loadImpl<Module>({ testUrl: import.meta.url, fi
 
 const LARGE_SIZE = 60_000;
 const SHUFFLE_STRIDE = 7_919;
-const CPU_TIME_LIMIT_MS = 400;
-const MICROSECONDS_PER_MILLISECOND = 1_000;
-
-const cpuMilliseconds = () => {
-  const { user, system } = process.cpuUsage();
-  return (user + system) / MICROSECONDS_PER_MILLISECOND;
-};
+const TIME_LIMIT_MS = 400;
 
 const shuffledIndexes = () => Array.from({ length: LARGE_SIZE }, (_, i) => (i * SHUFFLE_STRIDE) % LARGE_SIZE);
 
@@ -74,9 +69,8 @@ describe("mergeIntervals", () => {
 
   it("stays fast on 60,000 separate intervals in shuffled order (O(n log n), not O(n squared))", () => {
     const intervals = shuffledIndexes().map(i => [i * 2, i * 2 + 1]);
-    const startedAt = cpuMilliseconds();
-    const merged = mergeIntervals(intervals);
-    expect(cpuMilliseconds() - startedAt).toBeLessThan(CPU_TIME_LIMIT_MS);
+    const { result: merged, elapsedMs } = measureMs(() => mergeIntervals(intervals));
+    expect(elapsedMs).toBeLessThan(TIME_LIMIT_MS);
     expect(merged).toHaveLength(LARGE_SIZE);
     expect(merged[0]).toEqual([0, 1]);
     expect(merged.at(-1)).toEqual([(LARGE_SIZE - 1) * 2, (LARGE_SIZE - 1) * 2 + 1]);
@@ -84,9 +78,8 @@ describe("mergeIntervals", () => {
 
   it("stays fast on 60,000 shuffled intervals that all merge into one", () => {
     const intervals = shuffledIndexes().map(i => [i, i + 2]);
-    const startedAt = cpuMilliseconds();
-    const merged = mergeIntervals(intervals);
-    expect(cpuMilliseconds() - startedAt).toBeLessThan(CPU_TIME_LIMIT_MS);
+    const { result: merged, elapsedMs } = measureMs(() => mergeIntervals(intervals));
+    expect(elapsedMs).toBeLessThan(TIME_LIMIT_MS);
     expect(merged).toEqual([[0, LARGE_SIZE + 1]]);
   });
 });

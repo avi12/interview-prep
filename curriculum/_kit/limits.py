@@ -16,6 +16,16 @@ def measure_seconds(function, *args):
     return result, stopwatch.elapsed_seconds()
 
 
+def _too_slow_message(seconds, too_slow_for):
+    return f"still running after {seconds} seconds: too slow for {too_slow_for}"
+
+
+def _run_inline(seconds, function, args, too_slow_for):
+    result, elapsed = measure_seconds(function, *args)
+    assert elapsed <= seconds, _too_slow_message(seconds, too_slow_for)
+    return result
+
+
 def run_within(seconds, function, *args, too_slow_for="this input"):
     outcome = {}
 
@@ -26,9 +36,12 @@ def run_within(seconds, function, *args, too_slow_for="this input"):
             outcome["error"] = error
 
     worker = threading.Thread(target=target, daemon=True)
-    worker.start()
+    try:
+        worker.start()
+    except RuntimeError:
+        return _run_inline(seconds, function, args, too_slow_for)
     worker.join(seconds)
-    assert not worker.is_alive(), f"still running after {seconds} seconds: too slow for {too_slow_for}"
+    assert not worker.is_alive(), _too_slow_message(seconds, too_slow_for)
     if "error" in outcome:
         raise outcome["error"]
     return outcome["result"]

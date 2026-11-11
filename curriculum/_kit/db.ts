@@ -1,7 +1,7 @@
-import { implPath } from "./impl.ts";
 import { PGlite } from "@electric-sql/pglite";
-import { QUERY_RESULT_ENV } from "#scripts/lib/query-result.ts";
-import { appendFileSync, readFileSync } from "node:fs";
+import { kitHost } from "#kit/host.ts";
+import { implPath } from "#kit/impl.ts";
+import { RecordKind } from "#scripts/lib/record-env.ts";
 
 type Row = Record<string, unknown>;
 
@@ -30,19 +30,14 @@ function recordQueryResult({ file, columns, rows }: {
   columns: string[];
   rows: Row[];
 }) {
-  const path = process.env[QUERY_RESULT_ENV];
-  if (!path) {
-    return;
-  }
-
-  const cells = rows.map(row => columns.map(column => cellText(row[column])));
-  appendFileSync(
-    path, `${JSON.stringify({
+  kitHost.appendRecord({
+    kind: RecordKind.queryResults,
+    record: {
       file,
       columns,
-      rows: cells
-    })}\n`
-  );
+      rows: rows.map(row => columns.map(column => cellText(row[column])))
+    }
+  });
 }
 
 export async function openDb(seedSql: string) {
@@ -55,11 +50,11 @@ export function readQueryFile({ testUrl, file }: {
   testUrl: string;
   file: string;
 }) {
-  return readFileSync(
+  return kitHost.readText(
     implPath({
       testUrl,
       file
-    }), "utf8"
+    })
   ).trim().replace(/;\s*$/, "");
 }
 

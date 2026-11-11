@@ -1,7 +1,7 @@
-import { implPath } from "./impl.ts";
 import { PGlite } from "@electric-sql/pglite";
+import { kitHost } from "#kit/host.ts";
+import { implPath } from "#kit/impl.ts";
 import { z } from "#scripts/lib/zod.ts";
-import { readFileSync } from "node:fs";
 
 const postgresErrorSchema = z.object({
   code: z.string().optional(),
@@ -22,11 +22,11 @@ export async function openSchemaDb({ testUrl, file }: {
 }) {
   const db = new PGlite();
   await db.exec(
-    readFileSync(
+    kitHost.readText(
       implPath({
         testUrl,
         file
-      }), "utf8"
+      })
     )
   );
   return db;
