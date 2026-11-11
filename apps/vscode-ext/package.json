@@ -23,6 +23,13 @@
           "id": "interviewPrep.lessons",
           "name": "Lessons"
         }
+      ],
+      "interviewPrepResults": [
+        {
+          "type": "webview",
+          "id": "interviewPrep.testResults",
+          "name": "Test Results"
+        }
       ]
     },
     "commands": [
@@ -73,10 +80,34 @@
         "icon": "$(person)"
       },
       {
+        "command": "interviewPrep.chooseTracks",
+        "title": "Choose Topics and See Progress",
+        "category": "Interview Prep",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "interviewPrep.addTopic",
+        "title": "Add Topic",
+        "category": "Interview Prep",
+        "icon": "$(add)"
+      },
+      {
         "command": "interviewPrep.refresh",
         "title": "Refresh Lessons",
         "category": "Interview Prep",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "interviewPrep.showTracks",
+        "title": "Group Lessons by Track",
+        "category": "Interview Prep",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "interviewPrep.showPath",
+        "title": "List Lessons in Study Order",
+        "category": "Interview Prep",
+        "icon": "$(list-ordered)"
       },
       {
         "command": "interviewPrep.openVoiceTutor",
@@ -110,7 +141,7 @@
         },
         {
           "command": "interviewPrep.askClaude",
-          "when": "view == interviewPrep.lessons",
+          "when": "view == interviewPrep.lessons && interviewPrep.isLocal",
           "group": "navigation@3"
         },
         {
@@ -119,9 +150,47 @@
           "group": "navigation@4"
         },
         {
+          "command": "interviewPrep.chooseTracks",
+          "when": "view == interviewPrep.lessons",
+          "group": "navigation@4"
+        },
+        {
+          "command": "interviewPrep.addTopic",
+          "when": "view == interviewPrep.lessons",
+          "group": "navigation@4"
+        },
+        {
+          "command": "interviewPrep.showTracks",
+          "when": "view == interviewPrep.lessons && interviewPrep.lessonView != tracks",
+          "group": "navigation@5"
+        },
+        {
+          "command": "interviewPrep.showPath",
+          "when": "view == interviewPrep.lessons && interviewPrep.lessonView == tracks",
+          "group": "navigation@5"
+        },
+        {
           "command": "interviewPrep.refresh",
           "when": "view == interviewPrep.lessons",
-          "group": "navigation@5"
+          "group": "navigation@6"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "interviewPrep.askClaude",
+          "when": "interviewPrep.isLocal"
+        },
+        {
+          "command": "interviewPrep.openVoiceTutor",
+          "when": "interviewPrep.isLocal"
+        },
+        {
+          "command": "interviewPrep.setGeminiApiKey",
+          "when": "interviewPrep.isLocal"
+        },
+        {
+          "command": "interviewPrep.clearGeminiApiKey",
+          "when": "interviewPrep.isLocal"
         }
       ],
       "editor/title": [
@@ -145,6 +214,14 @@
           "default": "all",
           "description": "Show only the lessons that matter for this role: \"all\" or a role id from curriculum/roles.json. Pick one with Interview Prep: Choose Role"
         },
+        "interviewPrep.tracks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Study only these topics: track ids from curriculum/tracks.json. Empty means every topic. Pick them with Interview Prep: Choose Topics"
+        },
         "interviewPrep.hotReload": {
           "type": "boolean",
           "default": false,
@@ -156,10 +233,6 @@
       {
         "type": "interviewPrep",
         "properties": {}
-      },
-      {
-        "type": "interviewPrepResult",
-        "properties": {}
       }
     ],
     "viewsContainers": {
@@ -167,6 +240,13 @@
         {
           "id": "interviewPrep",
           "title": "Interview Prep",
+          "icon": "media/icon.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "interviewPrepResults",
+          "title": "Test Results",
           "icon": "media/icon.svg"
         }
       ]
@@ -186,5 +266,8 @@
     "untrustedWorkspaces": {
       "supported": true
     }
+  },
+  "dependencies": {
+    "@vscode-elements/elements": "^2.5.1"
   }
 }

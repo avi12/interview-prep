@@ -1,24 +1,41 @@
+import { SOURCE_ALIASES } from "./src/aliases.mts";
 import { context } from "esbuild";
+
+const webviewElements = await context({
+  entryPoints: {
+    elements: "src/webview/elements.ts"
+  },
+  outdir: "dist/webview",
+  bundle: true,
+  platform: "browser",
+  format: "iife",
+  target: "es2022",
+  minify: true
+});
 
 const isWatching = process.argv.includes("--watch");
 
 const bundle = await context({
-  entryPoints: ["src/extension.ts"],
-  outfile: "dist/extension.js",
+  entryPoints: {
+    extension: "src/loader.ts",
+    app: "src/extension.ts"
+  },
+  outdir: "dist",
   bundle: true,
   platform: "node",
   format: "cjs",
   target: "node20",
   external: ["vscode"],
-  alias: {
-    "@scripts": "../../scripts",
-    "@": "./src"
-  },
+  alias: SOURCE_ALIASES,
   sourcemap: true,
   minify: false
-});if (isWatching) {
+});
+if (isWatching) {
   await bundle.watch();
+  await webviewElements.watch();
 } else {
   await bundle.rebuild();
   await bundle.dispose();
+  await webviewElements.rebuild();
+  await webviewElements.dispose();
 }

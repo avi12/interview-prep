@@ -1,13 +1,8 @@
 import type { ApiKeyStore } from "@/apiKey.ts";
+import { VoiceCommand } from "@/contributions.ts";
 import { voiceUrl } from "@scripts/lib/server.ts";
 import { API_KEY_CREATE_URL, API_KEY_ENV, ApiKeySource, VOICE_STATUS_ITEM_ID } from "@scripts/lib/voice.ts";
 import * as vscode from "vscode";
-
-const VoiceCommand = {
-  openVoiceTutor: "interviewPrep.openVoiceTutor",
-  setGeminiApiKey: "interviewPrep.setGeminiApiKey",
-  clearGeminiApiKey: "interviewPrep.clearGeminiApiKey"
-} as const;
 
 const STATUS_ITEM_PRIORITY = 100;
 const STATUS_ITEM_NAME = "Voice tutor";

@@ -1,10 +1,10 @@
-import type { LessonEntry } from "@/lessonData.ts";
+import type { LessonEntry } from "@/courseHost.ts";
 import { lessonPanelState } from "@/lessonPanel.ts";
+import { readLastTest } from "@/nodeHost.ts";
 import { HttpStatus, sendJson, sendStatus } from "@/server/respond.ts";
 import type { Route } from "@/server/router.ts";
 import { readJsonFile } from "@scripts/lib/files.ts";
-import { LAST_TEST_RELATIVE_PATH } from "@scripts/lib/layout.ts";
-import { lastTestSchema, tutorNotesSchema } from "@scripts/lib/schema.ts";
+import { tutorNotesSchema } from "@scripts/lib/schema.ts";
 import {
   TUTOR_VIEW_PATH,
   type TutorBlock,
@@ -82,18 +82,6 @@ function codeBlocks({ root, editor }: {
     tutorParagraph(numbered || "(the file is empty)"),
     ...(problems.length > 0 ? [tutorHeading("Problems VS Code shows in this file"), tutorParagraph(problems.join("\n"))] : [])
   ];
-}
-
-function readLastTest({ root, lessonId }: {
-  root: string;
-  lessonId: string;
-}) {
-  const lastTest = readJsonFile({
-    path: resolve(root, LAST_TEST_RELATIVE_PATH),
-    schema: lastTestSchema.nullable(),
-    fallback: null
-  });
-  return lastTest?.id === lessonId ? lastTest : null;
 }
 
 function testBlocks({ root, lessonId }: {

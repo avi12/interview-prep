@@ -1,20 +1,19 @@
-import { findNextLesson, readCourse } from "@/lessonData.ts";
+import { Command } from "@/contributions.ts";
+import type { Course } from "@/course.ts";
 import { groupByTrack, isPassed, nextUnpassedId } from "@scripts/lib/study.ts";
 import * as vscode from "vscode";
 
-export const Command = {
-  openLesson: "interviewPrep.openLesson",
-  nextLesson: "interviewPrep.nextLesson",
-  goToCurrentLesson: "interviewPrep.goToCurrentLesson",
-  runTests: "interviewPrep.runTests",
-  resetExercise: "interviewPrep.resetExercise",
-  markDone: "interviewPrep.markDone",
-  askClaude: "interviewPrep.askClaude",
-  chooseRole: "interviewPrep.chooseRole",
-  refresh: "interviewPrep.refresh"
+export const LessonView = {
+  path: "path",
+  tracks: "tracks"
 } as const;
 
+type LessonView = (typeof LessonView)[keyof typeof LessonView];
+
+const LESSON_VIEW_KEY = "interviewPrep.lessonView";
+const SET_CONTEXT_COMMAND = "setContext";
 const CURRENT_LESSON_NOTE = "current";
+const NEXT_LESSON_NOTE = "next";
 
 const NodeKind = {
   track: "track",
@@ -48,22 +47,39 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
   private readonly changeEmitter = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this.changeEmitter.event;
 
-  private readonly root: string;
+  private readonly course: Course;
   private readonly currentLessonId: () => string | undefined;
+  private readonly state: vscode.Memento;
 
-  constructor({ root, currentLessonId }: {
-    root: string;
+  constructor({ course, currentLessonId, state }: {
+    course: Course;
     currentLessonId: () => string | undefined;
+    state: vscode.Memento;
   }) {
-    this.root = root;
+    this.course = course;
     this.currentLessonId = currentLessonId;
+    this.state = state;
+    void this.announceView();
   }
 
   refresh() {
     this.changeEmitter.fire();
   }
 
+  async showView(view: LessonView) {
+    await this.state.update(LESSON_VIEW_KEY, view);
+    await this.announceView();
+    this.refresh();
+  }
+
   getChildren(node?: Node) {
+    if (!node && this.isPathView()) {
+      return this.course.selected().lessons.map(({ id }): Node => ({
+        kind: NodeKind.lesson,
+        id
+      }));
+    }
+
     if (!node) {
       return this.trackGroups().map(({ track }): Node => ({
         kind: NodeKind.track,
@@ -84,11 +100,11 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
   }
 
   getParent({ kind, id }: Node) {
-    if (kind === NodeKind.track) {
+    if (kind === NodeKind.track || this.isPathView()) {
       return undefined;
     }
 
-    const track = readCourse(this.root).lessons.find(lesson => lesson.id === id)?.track;
+    const track = this.course.selected().lessons.find(lesson => lesson.id === id)?.track;
     return track ? {
       kind: NodeKind.track,
       id: track
@@ -96,7 +112,7 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
   }
 
   lessonNode(id: string) {
-    const isListed = readCourse(this.root).lessons.some(lesson => lesson.id === id);
+    const isListed = this.course.selected().lessons.some(lesson => lesson.id === id);
     return isListed ? {
       kind: NodeKind.lesson,
       id
@@ -107,8 +123,20 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
     return kind === NodeKind.track ? this.trackItem(id) : this.lessonItem(id);
   }
 
+  private view() {
+    return this.state.get<LessonView>(LESSON_VIEW_KEY, LessonView.path);
+  }
+
+  private isPathView() {
+    return this.view() === LessonView.path;
+  }
+
+  private async announceView() {
+    await vscode.commands.executeCommand(SET_CONTEXT_COMMAND, LESSON_VIEW_KEY, this.view());
+  }
+
   private trackGroups() {
-    const { tracks, lessons } = readCourse(this.root);
+    const { tracks, lessons } = this.course.selected();
     return groupByTrack({
       tracks,
       lessons
@@ -120,14 +148,14 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
   }
 
   private trackItem(id: string) {
-    const { progress } = readCourse(this.root);
+    const { progress } = this.course.selected();
     const group = this.trackGroup(id);
     const lessons = group?.lessons ?? [];
     const passedCount = lessons.filter(lesson => isPassed({
       progress,
       id: lesson.id
     })).length;
-    const isNextLessonInside = findNextLesson(this.root)?.track === id;
+    const isNextLessonInside = this.course.findNextLesson()?.track === id;
     const collapsibleState = isNextLessonInside
       ? vscode.TreeItemCollapsibleState.Expanded
       : vscode.TreeItemCollapsibleState.Collapsed;
@@ -139,7 +167,7 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
   }
 
   private lessonItem(id: string) {
-    const { lessons, order, progress } = readCourse(this.root);
+    const { lessons, order, progress } = this.course.selected();
     const lesson = lessons.find(candidate => candidate.id === id);
     const isDone = isPassed({
       progress,
@@ -150,7 +178,8 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
       progress
     });
     const isCurrent = id === this.currentLessonId();
-    const title = lesson?.title ?? id;
+    const isPathView = this.isPathView();
+    const title = isPathView ? `${order.indexOf(id) + 1}. ${lesson?.title ?? id}` : lesson?.title ?? id;
     const label = isCurrent ? {
       label: title,
       highlights: [[0, title.length] satisfies [number, number]]
@@ -162,8 +191,13 @@ export class LessonTree implements vscode.TreeDataProvider<Node> {
       isNext,
       hasExercise: !!lesson?.hasExercise
     }));
-    const progressNote = isNext ? "next" : `${lesson?.minutes ?? "?"} min`;
-    item.description = isCurrent ? `${CURRENT_LESSON_NOTE} · ${progressNote}` : progressNote;
+    const progressNote = isNext ? NEXT_LESSON_NOTE : `${lesson?.minutes ?? "?"} min`;
+    const notes = [
+      isCurrent ? CURRENT_LESSON_NOTE : "",
+      isPathView && lesson ? this.course.trackTitleOf(lesson) : "",
+      progressNote
+    ];
+    item.description = notes.filter(Boolean).join(" · ");
     item.command = {
       command: Command.openLesson,
       title: "Open lesson",

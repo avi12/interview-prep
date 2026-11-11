@@ -80,5 +80,8 @@ export function serveRoutes(routes: readonly Route[]) {
   });
   server.on("error", () => server.close());
   server.listen(TUTOR_VIEW_PORT, SERVER_HOST);
-  return new vscode.Disposable(() => server.close());
+  return new vscode.Disposable(() => {
+    server.close();
+    server.closeAllConnections();
+  });
 }

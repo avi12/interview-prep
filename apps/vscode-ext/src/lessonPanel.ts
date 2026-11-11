@@ -1,4 +1,4 @@
-import type { LessonEntry } from "@/lessonData.ts";
+import type { LessonEntry } from "@/courseHost.ts";
 import {
   NARRATION_HOST_SCRIPT,
   type NarrationReply,
@@ -6,6 +6,7 @@ import {
   narrationRequestSchema
 } from "@scripts/lib/narration-host.ts";
 import {
+  nextLessonScript,
   PanelAction,
   type PanelCommand,
   panelMessageSchema,
@@ -13,27 +14,36 @@ import {
   SCROLL_TO_TOP_SCRIPT,
   VIEWING_SCRIPT
 } from "@scripts/lib/panel.ts";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import * as vscode from "vscode";
 
 const VIEW_TYPE = "interviewPrep.lesson";
 const BODY_END = "</body>";
 
-function panelHtml({ root, lesson, isPassed, isScrolledToTop }: {
-  root: string;
-  lesson: LessonEntry;
+function panelHtml({ page, isPassed, isScrolledToTop, nextName }: {
+  page: string;
   isPassed: boolean;
   isScrolledToTop: boolean;
+  nextName: string | undefined;
 }) {
-  const scripts = [VIEWING_SCRIPT, NARRATION_HOST_SCRIPT, isPassed ? PASSED_SCRIPT : "", isScrolledToTop ? SCROLL_TO_TOP_SCRIPT : ""].join("\n");
+  const scripts = [
+    VIEWING_SCRIPT,
+    NARRATION_HOST_SCRIPT,
+    isPassed ? PASSED_SCRIPT : "",
+    isScrolledToTop ? SCROLL_TO_TOP_SCRIPT : "",
+    nextName ? nextLessonScript(nextName) : ""
+  ].join("\n");
   const openedAt = isScrolledToTop ? `<!-- opened ${Date.now()} -->` : "";
-  return readFileSync(resolve(root, lesson.html), "utf8").replace(BODY_END, `<script>${scripts}</script>${openedAt}${BODY_END}`);
+  return page.replace(BODY_END, `<script>${scripts}</script>${openedAt}${BODY_END}`);
 }
 
 let panel: vscode.WebviewPanel | undefined;
 let messageSubscription: vscode.Disposable | undefined;
 let viewingSection = "";
+
+export function closeLessonPanel() {
+  messageSubscription?.dispose();
+  panel?.dispose();
+}
 
 export function lessonPanelState() {
   return {
@@ -43,27 +53,31 @@ export function lessonPanelState() {
 }
 
 export function showLesson({
-  root,
+  page,
   lesson,
   viewColumn,
   isPassed,
   isScrolledToTop,
+  nextName,
   onAction,
+  onOpenFile,
   onNarration
 }: {
-  root: string;
+  page: string;
   lesson: LessonEntry;
   viewColumn: vscode.ViewColumn;
   isPassed: boolean;
   isScrolledToTop: boolean;
+  nextName: string | undefined;
   onAction: (action: PanelCommand) => void;
+  onOpenFile: (file: string) => void;
   onNarration: (request: NarrationRequest) => Promise<NarrationReply>;
 }) {
   const html = panelHtml({
-    root,
-    lesson,
+    page,
     isPassed,
-    isScrolledToTop
+    isScrolledToTop,
+    nextName
   });
   if (!panel) {
     panel = vscode.window.createWebviewPanel(VIEW_TYPE, lesson.title, {
@@ -94,10 +108,15 @@ export function showLesson({
     }
 
     const message = parsed.data;
-    if (message.action !== PanelAction.viewing) {
-      return onAction(message.action);
+    if (message.action === PanelAction.viewing) {
+      viewingSection = message.section;
+      return;
     }
 
-    viewingSection = message.section;
+    if (message.action === PanelAction.openFile) {
+      return onOpenFile(message.file);
+    }
+
+    onAction(message.action);
   });
 }

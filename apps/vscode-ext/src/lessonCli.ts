@@ -3,9 +3,7 @@ import { spawn } from "node:child_process";
 import * as vscode from "vscode";
 
 const TASK_TYPE = "interviewPrep";
-export const TASK_SOURCE = "interview-prep";
-const TEST_TERMINAL_GROUP = "interviewPrepTests";
-const OPEN_OUTPUT_FILE_PATTERN = /^ {2}(.+)$/gm;
+const TASK_SOURCE = "interview-prep";
 
 export function runLessonCli({ root, args }: {
   root: string;
@@ -24,27 +22,6 @@ export function runLessonCli({ root, args }: {
   });
 }
 
-export async function ensureExerciseFiles({ root, id }: {
-  root: string;
-  id: string;
-}) {
-  const output = await runLessonCli({
-    root,
-    args: ["open", id]
-  });
-  return [...output.matchAll(OPEN_OUTPUT_FILE_PATTERN)].map(match => match[1].trim());
-}
-
-export function besideTestsPresentation() {
-  return {
-    reveal: vscode.TaskRevealKind.Always,
-    clear: true,
-    focus: false,
-    panel: vscode.TaskPanelKind.Dedicated,
-    group: TEST_TERMINAL_GROUP
-  };
-}
-
 export async function runTestsInTerminal({ root, id }: {
   root: string;
   id: string;
@@ -54,7 +31,12 @@ export async function runTestsInTerminal({ root, id }: {
     type: TASK_TYPE,
     lesson: id
   }, vscode.TaskScope.Workspace, `Tests: ${id}`, TASK_SOURCE, execution);
-  task.presentationOptions = besideTestsPresentation();
+  task.presentationOptions = {
+    reveal: vscode.TaskRevealKind.Never,
+    clear: true,
+    focus: false,
+    panel: vscode.TaskPanelKind.Dedicated
+  };
   await vscode.tasks.executeTask(task);
 }
 

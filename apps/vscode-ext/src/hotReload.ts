@@ -3,10 +3,12 @@ import { relative, resolve } from "node:path";
 import * as vscode from "vscode";
 
 const DEBOUNCE_MS = 300;
-const EXTENSION_BUNDLE_RELATIVE_PATH = "dist/extension.js";
-const RESTART_EXTENSION_HOST_COMMAND = "workbench.action.restartExtensionHost";
 
-function onFileChanged({ base, path, handler }: {
+export function isHotReloadEnabled() {
+  return vscode.workspace.getConfiguration("interviewPrep").get<boolean>("hotReload", false);
+}
+
+export function onFileChanged({ base, path, handler }: {
   base: string;
   path: string;
   handler: () => void;
@@ -19,16 +21,17 @@ function onFileChanged({ base, path, handler }: {
   }
   watcher.onDidChange(schedule);
   watcher.onDidCreate(schedule);
-  return watcher;
+  return new vscode.Disposable(() => {
+    clearTimeout(timer);
+    watcher.dispose();
+  });
 }
 
-export function watchForChanges({ root, extensionPath, onLessonsChanged }: {
+export function watchLessons({ root, onLessonsChanged }: {
   root: string;
-  extensionPath: string;
   onLessonsChanged: () => void;
 }) {
-  const isEnabled = vscode.workspace.getConfiguration("interviewPrep").get<boolean>("hotReload", false);
-  if (!isEnabled) {
+  if (!isHotReloadEnabled()) {
     return [];
   }
 
@@ -37,11 +40,6 @@ export function watchForChanges({ root, extensionPath, onLessonsChanged }: {
       base: root,
       path: INDEX_RELATIVE_PATH,
       handler: onLessonsChanged
-    }),
-    onFileChanged({
-      base: extensionPath,
-      path: EXTENSION_BUNDLE_RELATIVE_PATH,
-      handler: () => vscode.commands.executeCommand(RESTART_EXTENSION_HOST_COMMAND)
     })
   ];
 }
