@@ -197,6 +197,11 @@ export async function activateCourse({ context, host, isHotSwap }: {
   }
 
   function otherLessonTabs(id: string) {
+    const currentFileUris = new Set(workFileUris({
+      root,
+      lessonId: id,
+      files: course.findLesson(id)?.files ?? []
+    }).map(uri => uri.toString()));
     return vscode.window.tabGroups.all
       .flatMap(group => group.tabs)
       .flatMap(tab => {
@@ -205,9 +210,11 @@ export async function activateCourse({ context, host, isHotSwap }: {
         }
 
         const tabLessonId = lessonIdOf(tab.input.uri);
-        return tabLessonId !== undefined && tabLessonId !== id ? [{
+        const uri = tab.input.uri.toString();
+        const isStale = tabLessonId !== id || !currentFileUris.has(uri);
+        return tabLessonId !== undefined && isStale ? [{
           tab,
-          uri: tab.input.uri.toString()
+          uri
         }] : [];
       });
   }
@@ -339,6 +346,7 @@ export async function activateCourse({ context, host, isHotSwap }: {
     await refreshCourse();
 
     if (openLessonId) {
+      await closeOtherLessonTabs(openLessonId);
       await showLessonPanel({
         id: openLessonId,
         isScrolledToTop: false
