@@ -5,7 +5,7 @@ Every lesson, hint and tutor reply is written for this person. To retarget the c
 ## Who
 
 - A career changer preparing for **junior** interviews
-- Target roles are listed in `roles.json`: backend engineer, data analyst and AI engineer, on one shared core
+- Target roles are listed in `roles.json`: backend engineer, data analyst and AI engineer, on one shared core, plus IT support technician (help desk and networking basics)
 - Languages: TypeScript, Python and SQL
 
 ## How they learn

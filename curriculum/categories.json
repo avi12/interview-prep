@@ -1,0 +1,12 @@
+[
+  {
+    "id": "interview",
+    "title": "Coding interview prep",
+    "blurb": "Algorithms, SQL, design, AI and the interview loop for developer roles"
+  },
+  {
+    "id": "it-course",
+    "title": "IT course: tech support and cyber fundamentals",
+    "blurb": "Help desk work, networking and security basics, following the IT support course"
+  }
+]
