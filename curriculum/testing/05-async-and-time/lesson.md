@@ -159,6 +159,10 @@ Open `timing.ts`. It exports two functions to implement.
 
 Run `pnpm lesson test testing/05-async-and-time`. The tests use fake timers and an injected clock.
 
+```narrate
+Implement two functions. Retry calls a task up to the given number of attempts, waits between tries but not after the last, resolves with the first success, and rejects with the last error if all fail. It rejects with a range error for fewer than one attempt. Is expired is true once the time to live has fully passed, so exactly equal counts. The tests use fake timers and an injected clock. Press Run my tests when you are ready.
+```
+
 ```hint
 `retry` is a loop over attempts. Use `try`, `catch`, and a small `sleep` helper built on `setTimeout`.
 ```

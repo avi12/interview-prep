@@ -159,6 +159,10 @@ Open `webSocket.ts` and write two functions.
 - `computeAccept(key)`: the `Sec-WebSocket-Accept` for a `Sec-WebSocket-Key`. Use `node:crypto`
 - `unmaskFrame(frame)`: takes a whole client frame as `Uint8Array`, returns `{ isFinal, opcode, payload }` with the **unmasked** payload. Support the 7-bit, 16-bit and 64-bit length forms. Throw if the frame is not masked or is shorter than its header says. Do not change the input
 
+```narrate
+Your task is to write two functions for the web socket handshake. The first computes the accept value from a client key. The second takes a whole client frame and returns its final flag, opcode and unmasked payload, supporting all three length forms. Throw if the frame is not masked or is too short, and never change the input. Press Run my tests when you are ready.
+```
+
 ```hint
 `createHash("sha1").update(key + GUID).digest("base64")` is the whole of computeAccept.
 ```

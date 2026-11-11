@@ -160,6 +160,10 @@ Tools carry a `run` function. **Do not send `run` to the model.** The scripted `
 
 Two tools in the tests: `lookup_order` and `issue_refund`.
 
+```narrate
+Your task is to run a tool, and then to build the agent loop around it. An unknown tool or a failing tool becomes an error result, not a crash. Stop with an error after too many rounds. Never send the tool's own function to the model. Press Run my tests when you are ready.
+```
+
 ```hint
 Keep one `messages` array starting with the task. Each lap: call the model, then if `stop_reason` is not `tool_use`, return the text.
 ```

@@ -322,6 +322,10 @@ Open `shortener.ts` and make the tests pass. The file already has the alphabet, 
 
 Run the tests from the Run button, or `pnpm lesson test systemdesign/02-url-shortener`.
 
+```narrate
+Your task is to build a URL shortener. Write encode and decode functions for base sixty-two that undo each other. Then write shorten, which hashes the long address, turns it into a code, and writes only through the store's set-if-absent call. Return the code if the same address already owns it, and throw after too many collisions. Press Run my tests when you are ready.
+```
+
 ```hint
 For encode, repeat: take `rest % BASE` as a digit, put it in front of the code, then `rest = Math.floor(rest / BASE)`. Stop when `rest` is 0, and handle `0` first.
 ```

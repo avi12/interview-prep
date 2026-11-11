@@ -320,6 +320,10 @@ Open `retry.ts` and implement two functions.
 
 Run the tests from the Run button, or `pnpm lesson test systemdesign/05-retries-timeouts-backoff`.
 
+```narrate
+Your task is to write two functions. The first computes a full jitter delay, a random fraction of a capped, exponentially growing ceiling. The second retries an operation. On an error, throw if it was the last attempt or the error is not retryable, otherwise sleep and try again. Never sleep after the last attempt. Press Run my tests when you are ready.
+```
+
 ```hint
 Start with `backoffDelayMs`. It is one line: the random fraction times the capped ceiling.
 ```

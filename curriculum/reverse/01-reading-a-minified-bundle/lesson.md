@@ -163,6 +163,10 @@ Open `extractEndpoints.ts` in your copy. `bundle.min.js` sits next to it: read i
 
 The tests also run a second bundle with other names, so no hard-coding.
 
+```narrate
+Your task is to write a function that reads a minified script and lists every network call in it, in order, with its method and address. A fetch call without options is a get. Addresses can be built by joining literals, constants and table entries, and the tests use a second bundle with other names, so do not hard-code anything. Press Run my tests when you are ready.
+```
+
 ```hint
 Start with two pre-passes over the source: one map of `name="literal"` constants, one map of `name=["a","b"]` tables.
 ```

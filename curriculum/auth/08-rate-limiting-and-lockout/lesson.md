@@ -176,6 +176,10 @@ Open `limiter.ts` in your copy. Write `createTokenBucketLimiter({ capacity, refi
 
 Run the tests from the Run button, or `pnpm lesson test auth/08-rate-limiting-and-lockout`.
 
+```narrate
+Your turn. Write a token bucket limiter. A new key starts full, and tokens refill from the time that has passed, with no timers. An allowed call takes one token. A blocked call takes nothing and says how many whole seconds to wait, rounded up. The tests inject a fake clock. Press Run my tests when you are ready.
+```
+
 ```hint
 Keep a Map from key to `{ tokens, updatedAt }`. On each call, read `now()`, compute the refilled token count, then decide.
 ```

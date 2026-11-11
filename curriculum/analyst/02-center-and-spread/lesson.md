@@ -198,6 +198,10 @@ Open `summary_stats.py`. Implement these **without** `statistics`, `numpy` or `p
 
 Empty input raises `ValueError`. So does `sample_std` with fewer than 2 values, and a percent outside 0 to 100.
 
+```narrate
+Your task is to write summary statistics by hand: mean, median, modes, percentile, sample standard deviation, and outliers by the interquartile rule. Use no statistics libraries. Empty input must raise an error, and so must a bad percent. Press Run my tests when you are ready.
+```
+
 ```hint
 median is just the 50th percentile, so build percentile first and reuse it.
 ```

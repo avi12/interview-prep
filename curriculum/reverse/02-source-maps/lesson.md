@@ -207,6 +207,10 @@ Open `sourceMap.ts`. Implement two functions. Lines and columns count from **0**
 
 The tests use small hand-checked maps (including the spec's `iB` = 17) and 40 seeded random lines.
 
+```narrate
+Your task has two parts. First, decode the mappings string of a source map into one list of segments per generated line. Second, look up the original position for a generated line and column. Lines and columns count from zero, and bad input must throw. Press Run my tests when you are ready.
+```
+
 ```hint
 Write a small `decodeValues(text)` first: it turns "iB,..." style letters into a list of numbers using the continue bit and the sign bit.
 ```

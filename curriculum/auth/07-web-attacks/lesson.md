@@ -199,6 +199,10 @@ Open `defenses.ts` in your copy. Three small functions:
 
 Run the tests from the Run button, or `pnpm lesson test auth/07-web-attacks`.
 
+```narrate
+Your turn. Write three small defenses. One escapes the five dangerous characters in a single pass. One makes a random token for cross site request forgery protection. The last decides whether a request is allowed: safe methods pass, and every other method needs a non-empty token that matches the session token, compared in constant time. Press Run my tests when you are ready.
+```
+
 ```hint
 Keep the five replacements in a lookup object, and use one regular expression for the five characters with `replace` and a function. One pass means your own `&` is never escaped twice.
 ```

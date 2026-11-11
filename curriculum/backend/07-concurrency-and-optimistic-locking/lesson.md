@@ -154,6 +154,10 @@ Open `products.ts`. `findProduct` is given. Implement three functions on the `pr
 - `updateWithRetry({ db, id, change, maxAttempts })`: read the row, call `change(current)` to get the new values, try the update. On conflict read again and retry, up to `maxAttempts` tries. Then return the last conflict
 - `toResponse(result)`: `200` with the product, `409` with `{ error, current }`, `404`
 
+```narrate
+Your turn. Write three functions for updating products safely. The first updates only if the version still matches, bumps the version, and tells apart updated, conflict and not found. The second reads, changes and retries on conflict, up to a limit. The third turns a result into a response. Press Run my tests when you are ready.
+```
+
 ```hint
 Use `RETURNING id, name, stock, version`. If `rows[0]` exists you won. If not, call `findProduct` to tell a conflict from a missing row.
 ```

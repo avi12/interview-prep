@@ -215,6 +215,10 @@ Open `evalHarness.ts`. The judge is any `MessagesClient`, so the tests use a scr
 
 `askJudge`, `parseWinner`, `pairText` and `verdictSchema` are given.
 
+```narrate
+Your task is to build a small evaluation harness around a model that acts as judge. Read the verdict, and treat anything unreadable as a failure. Run every case, report the pass rate, and compare two answers in both orders so position bias cannot win. Press Run my tests when you are ready.
+```
+
 ```hint
 parseVerdict: `verdictSchema.safeParse(parseJson(text))`. When `success` is false, return `{ verdict: "fail", reason: UNREADABLE_VERDICT_REASON }`.
 ```

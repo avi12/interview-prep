@@ -161,6 +161,10 @@ Open `api.ts` and implement `createApi()`. It returns `{ handle }`, a function f
 - Unknown path: 404. Known path, wrong method: 405 with an `allow` header
 - Ids start at 1, never repeat, and the client cannot set them. Two `createApi()` calls share nothing
 
+```narrate
+Your turn. Build the routing logic for a small tasks API, with no server. Pick the right status for every case: created, not found, conflict, bad body, invalid title, and a wrong method with an allow header. Ids start at one, never repeat, and the client cannot choose them. Two apis share nothing. Press Run my tests when you are ready.
+```
+
 ```hint
 Keep a `Map` from id to task inside `createApi`, plus a `nextId` counter. Both live in the closure, so each call gets fresh state.
 ```

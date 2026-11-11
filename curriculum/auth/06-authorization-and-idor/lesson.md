@@ -142,6 +142,10 @@ Users read their own. Auditors and admins read all. Only admins delete someone e
 
 Run the tests from the Run button, or `pnpm lesson test auth/06-authorization-and-idor`.
 
+```narrate
+Your turn. Three invoice handlers are vulnerable, and your job is to fix them. Users read their own invoices, auditors and admins read all of them, and only admins delete someone else's. A missing invoice and one you may not read must look exactly the same, a not found. The list must return only what the caller may read. Press Run my tests when you are ready.
+```
+
 ```hint
 Put the rules in data, not in `if` chains: a table from role to `{ canReadAny, canDeleteAny }`. A role missing from the table is your "unknown role" case. Careful: `table["constructor"]` is not missing, so test with `Object.hasOwn` or use a `Map`.
 ```

@@ -269,6 +269,10 @@ Open `llmApi.ts`. Four small functions:
 
 The tests use `FakeModel`, a scripted stand-in with the same `messages.create` shape. No network, no key. It rejects bad requests like the real API does. Try `maxTokens` and read the error.
 
+```narrate
+Your task is four small functions that talk to a language model. Build the request with the system prompt at the top level and never change the history. Read the reply, flag a cut-off answer, and price every kind of token. A scripted fake model stands in, so no network is needed. Press Run my tests when you are ready.
+```
+
 ```hint
 Request fields are snake_case: `max_tokens`, `stop_sequences`. Build the list as `[...history, { role: "user", content: userText }]`.
 ```

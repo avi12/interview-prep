@@ -222,6 +222,10 @@ The tests forge tokens by hand: tampered, expired, `alg: none`, and an HS512 tok
 
 Run the tests from the Run button, or `pnpm lesson test auth/04-jwt-by-hand`.
 
+```narrate
+Your turn. Write a function that signs a token and a function that verifies one, with strict checks. Verification must reject a wrong algorithm, a bad signature, an expired token, and the wrong issuer or audience, and it throws on any failure. Both functions also refuse a secret shorter than thirty two bytes. The tests forge tokens by hand, so check the algorithm before you trust anything. Press Run my tests when you are ready.
+```
+
 ```hint
 Write small helpers first: encode a value to a base64url JSON segment, decode a segment back, and compute the signature of a signing input. Both sign and verify use them.
 ```

@@ -306,6 +306,10 @@ Open `visibility_queue.py` and implement `VisibilityQueue(visibility_timeout, ma
 
 Run the tests from the Run button, or `pnpm lesson test systemdesign/06-queues-and-async-work`.
 
+```narrate
+Your task is to build a queue with a visibility timeout. Send returns a new id. Receive returns the oldest visible message, hides it for the timeout, and counts the receive. A message received too many times moves to the dead letters. Ack deletes a message, and nack makes it visible again now. Press Run my tests when you are ready.
+```
+
 ```hint
 Keep two dicts: the messages by id, and the time each one becomes visible (`visible_at`). A new message is visible at `now()`.
 ```

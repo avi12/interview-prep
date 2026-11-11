@@ -168,6 +168,10 @@ Open `test_pricing.py`. `pricing.py` sits beside it; read it, do not change it. 
 
 Run `pnpm lesson test testing/06-pytest-fixtures-and-parametrize`. You need 10 or more tests, using a fixture, `parametrize`, `tmp_path` and `monkeypatch`. They must pass on the correct code and fail on **16 buggy copies**.
 
+```narrate
+You write the tests for the pricing module, and you leave the module itself alone. Cover shipping, the cart, discounts, and tax. Write ten or more tests that use a fixture, parametrize, a temporary path, and monkeypatch. They must pass on the correct code and fail on all sixteen buggy copies. Press Run my tests when you are ready.
+```
+
 ```hint
 Start by moving `Cart()` into a fixture, then a second fixture that adds a few items to it.
 ```

@@ -150,6 +150,10 @@ Open `roman.ts` and implement `toRoman(value)` for whole numbers from 1 to 3999.
 
 The tests come in **7 stages**. Work like TDD: run `pnpm lesson test testing/04-tdd-kata`, find the **first** red stage, make only that pass, tidy, repeat. Stage 6 checks all 3999 numbers, so hard-coding the examples fails.
 
+```narrate
+Write a function that turns whole numbers from one to three thousand nine hundred ninety nine into Roman numerals. Only six subtractive pairs exist, and anything else, such as zero, a negative, or a fraction, raises a range error. The tests come in seven stages. Work like TDD: find the first red stage, make only that pass, tidy, and repeat. Hard-coding the examples will fail. Press Run my tests when you are ready.
+```
+
 ```hint
 Stage 1 only needs the letter I repeated. Stage 2 adds one more rule: five. Do not look at stage 3 yet.
 ```

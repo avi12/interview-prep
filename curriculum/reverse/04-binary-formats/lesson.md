@@ -146,6 +146,10 @@ Open `frames.py`. `audio-frame.hex` is one real-looking frame as hex text: load 
 
 Tests build their own frames with a different encoder, including headers with non-ASCII text and payloads with `\r\n\r\n` inside.
 
+```narrate
+Your task is to parse a binary audio frame. Read the two byte length prefix, decode the text headers, and return them with the raw payload. Then write a second function that joins the payloads of the audio frames, skipping empty ones. Raise an error when the data is too short. Press Run my tests when you are ready.
+```
+
 ```hint
 `struct.unpack_from(">H", data)` returns a tuple, so unpack it as `(header_length,)`. The payload starts at `2 + header_length`.
 ```

@@ -123,6 +123,10 @@ Open `paginate.test.ts`. `paginate.ts` sits next to it; read it, do not change i
 
 Run `pnpm lesson test testing/02-edge-cases-and-boundaries`. Your tests must pass on the correct code and go red on **12 buggy copies**. Use 8 or more tests with names of 3 or more words.
 
+```narrate
+Write tests for the paginate function, without changing it. Pages start at one, a page past the end gives no items, an empty list has zero pages, and a bad page or page size raises an error. Write eight or more tests with names of three or more words. They must pass on the correct code and fail on all twelve buggy copies. Press Run my tests when you are ready.
+```
+
 ```hint
 Walk the checklist card one row at a time: empty, exactly full, one over, beyond the end, invalid.
 ```

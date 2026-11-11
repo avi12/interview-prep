@@ -152,6 +152,10 @@ Open `similarity.py`. Two functions:
 
 Do not change `query` or `matrix`. Use the toy `embed` and `embed_many` in your own experiments: `from toy_embedding import embed, embed_many` (the file is `curriculum/_kit/toy_embedding.py`).
 
+```narrate
+Your task is two functions. The first measures how alike two vectors are, and a zero vector must give zero. The second returns the best matches, best first, with ties keeping the lower position. Do not change the inputs. Press Run my tests when you are ready.
+```
+
 ```hint
 `np.asarray(a, dtype=float)` accepts lists and arrays. `np.linalg.norm(a)` is the length. If the product of both lengths is 0, return `0.0`.
 ```

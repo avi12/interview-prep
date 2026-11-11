@@ -169,6 +169,10 @@ Open `password.ts` in your copy. It exports two async functions.
 
 Run the tests from the Run button, or `pnpm lesson test auth/02-password-storage`.
 
+```narrate
+Your turn. Write two functions for storing passwords. The first one hashes a password with scrypt and returns one string that holds the settings, the salt and the hash. The second one reads the settings from that string, derives the key again, and compares in constant time. Anything malformed must return false and never throw, and an empty salt or hash must never accept a password. Press Run my tests when you are ready.
+```
+
 ```hint
 `deriveKey(password, salt, KEY_BYTES, options)` returns a Buffer. The option names are `cost`, `blockSize`, `parallelization` and `maxmem`.
 ```

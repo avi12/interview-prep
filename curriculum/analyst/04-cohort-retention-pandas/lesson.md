@@ -162,6 +162,10 @@ Open `retention.py` and implement `retention_matrix(events)`.
 - A cell for a month after the last month in the data is `NaN`
 - Do not change the frame you were given
 
+```narrate
+Your task is to build a retention table from raw events. Group users into cohorts by their first month, then for each month since joining, find the share still active, from zero to one. Months beyond the end of the data stay empty. Do not change the frame you were given. Press Run my tests when you are ready.
+```
+
 ```hint
 Month of each event: dt.to_period("M"). A user's cohort is the smallest month among their events: groupby("user_id") with transform("min").
 ```

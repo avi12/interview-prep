@@ -172,6 +172,10 @@ Open `vm.py`. The opcode table is given. Write:
 
 Then crack it. `crackme.hex` is a program that reads one input byte. Disassemble it, or run all 256 inputs. Set `PASSCODE` in `vm.py` to the byte that unlocks it.
 
+```narrate
+Your task is to build a tiny virtual machine. Write a run function that executes a program and returns what it printed, raising an error for bad programs or too many steps. Write a disassembler that lists each instruction. Then crack the puzzle program and set the passcode byte that unlocks it. Press Run my tests when you are ready.
+```
+
 ```hint
 Decode first, then execute: look up `INSTRUCTIONS[opcode]`, read the operand if there is one, move the address forward, and only then run the instruction. Jumps just overwrite the address.
 ```

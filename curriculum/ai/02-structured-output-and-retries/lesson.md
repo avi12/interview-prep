@@ -181,6 +181,10 @@ Rules the tests check:
 
 `FakeModel` plays a model that answers badly first. No network.
 
+```narrate
+Your task is to check a model reply against a schema, and to retry when it fails. Feed each bad reply back to the model along with the problem. Never call the model more than the allowed number of attempts. Press Run my tests when you are ready.
+```
+
 ```hint
 Wrap `JSON.parse` in `try/catch` inside `checkReply` and return a `problem` that says the reply was not valid JSON. Then `schema.safeParse(parsed)`.
 ```

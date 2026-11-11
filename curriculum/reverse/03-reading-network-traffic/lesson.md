@@ -177,6 +177,10 @@ why: 304 Not Modified tells the browser to reuse its cache. Only 301, 302, 303, 
 - `"authorized"`: requests with an `Authorization` header, in order, each `{"url", "scheme"}`. **Never** the secret
 - `"redirect_chain"`: URLs from the first entry, following `redirectURL` on `301/302/303/307/308`. Stop at a loop, a missing target or a final page
 
+```narrate
+Your task is to summarize a recorded traffic file. Report the three slowest requests with the phase that took longest, list the requests that carried an authorization header with only the scheme, and follow the redirect chain from the first request. Never return the secret itself, and stop safely at a loop. Press Run my tests when you are ready.
+```
+
 ```hint
 `sorted(entries, key=..., reverse=True)` keeps equal items in their original order, so ties are already handled.
 ```

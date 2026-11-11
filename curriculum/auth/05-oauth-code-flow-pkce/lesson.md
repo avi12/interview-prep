@@ -190,6 +190,10 @@ One test replays the example in RFC 7636 Appendix B.
 
 Run the tests from the Run button, or `pnpm lesson test auth/05-oauth-code-flow-pkce`.
 
+```narrate
+Your turn. Write two functions for the sign-in flow. The first makes a verifier and its challenge, using thirty two random bytes and a hash. The second checks the callback address and returns either the code or a reason for failing. Check in this order: the state first, then a provider error, then a missing code. Press Run my tests when you are ready.
+```
+
 ```hint
 `createHash("sha256").update(codeVerifier).digest("base64url")` gives the challenge. The random bytes come from `getRandomBytes(VERIFIER_BYTES)`, encoded with `.toString("base64url")`.
 ```

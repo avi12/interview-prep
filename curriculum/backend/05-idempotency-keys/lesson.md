@@ -153,6 +153,10 @@ Open `idempotent.ts`. `fingerprintOf(body)` is given. Implement `createIdempoten
 - Same key while the first is still running: `409`
 - If `handler` throws, forget the key and rethrow
 
+```narrate
+Your turn. Wrap a handler so a repeated request does not run twice. No key is a bad request. A new key runs the handler and saves the response. The same key and body replays the saved response. The same key with a different body is rejected, and the same key while the first is still running is a conflict. If the handler throws, forget the key. Press Run my tests when you are ready.
+```
+
 ```hint
 Keep a `Map` from key to `{ fingerprint, response? }`. A record without a `response` means "still running".
 ```

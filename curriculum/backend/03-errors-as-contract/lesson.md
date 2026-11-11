@@ -151,6 +151,10 @@ Open `app.py`. The routes already exist. Add `problem_response` and the exceptio
 - Other HTTP errors: the status and its standard phrase as `title`, `type` is `about:blank`. Keep headers such as `Allow`
 - Anything else: 500, a generic `detail`, **logged** with `logger.exception`
 
+```narrate
+Your turn. The routes already exist. Add the error handlers so every error follows the same problem details format. Not found, validation errors and other web errors each get their own type and status. Anything unexpected becomes a generic server error that is logged, and never leaks the real message. Never echo the input back. Press Run my tests when you are ready.
+```
+
 ```hint
 `problem_response` returns a `JSONResponse` with `media_type=PROBLEM_MEDIA_TYPE`. Put the five members in a dict and add any extras with `**extensions`.
 ```

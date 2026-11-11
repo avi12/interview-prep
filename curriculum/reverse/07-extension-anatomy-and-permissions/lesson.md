@@ -156,6 +156,10 @@ Open `auditManifest.ts` and write `auditManifest(manifest)`. It returns findings
 - `open-web-accessible-resources` (medium): broad `matches` in version 3 `web_accessible_resources` objects
 - `old-manifest-version` (medium): `manifest_version` is not 3, subject is the number
 
+```narrate
+Your task is to audit a browser extension manifest. Return a list of findings, each with a rule, a severity and a subject, and report each finding only once. Check for broad host access, broad content scripts, risky permissions, remote code, open web accessible resources and old manifest versions. Order does not matter. Press Run my tests when you are ready.
+```
+
 ```hint
 Make one small function per rule that returns an array of findings, then spread them all into one list.
 ```

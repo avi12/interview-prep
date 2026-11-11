@@ -221,6 +221,10 @@ Open `ab_test.py`. Implement two functions with keyword arguments. No scipy: use
 
 The tests compare your numbers with scipy.
 
+```narrate
+Your task is two functions for an A B test. The first returns the z score, a two sided p value, and a confidence interval for the lift of the variant over the control. The second returns the people needed per variant, rounded up. Use only the standard normal tools. Press Run my tests when you are ready.
+```
+
 ```hint
 NormalDist().cdf gives the area to the left of a value. The two-sided p-value is 2 * NormalDist().cdf(-abs(z)). The 1.96 comes from NormalDist().inv_cdf(1 - (1 - confidence) / 2).
 ```

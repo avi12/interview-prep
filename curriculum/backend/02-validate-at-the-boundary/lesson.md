@@ -167,6 +167,10 @@ Open `createUser.ts`.
 - Bad fields: `422` with `{ errors: { field: [messages] } }`, bad fields only
 - Valid: `201` with `{ user }`, the **parsed** user
 
+```narrate
+Your turn. Write a schema for a new user, then a handler that uses it. A body that is not an object gets a bad request. Bad fields get an unprocessable answer that lists errors per field. A valid body returns the parsed user, not the raw one. The age must be a real number, so the text twenty nine fails. Press Run my tests when you are ready.
+```
+
 ```hint
 Build the schema with `z.object({ name, email, age })`. Start `name` with `z.string().trim()` and add `.min` and `.max`.
 ```

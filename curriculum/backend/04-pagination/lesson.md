@@ -161,6 +161,10 @@ Open `listPosts.ts`. `encodeCursor` and `decodeCursor` are given. Implement `lis
 
 The tests insert and delete rows between pages on three datasets, one with posts that tie to the microsecond.
 
+```narrate
+Your turn. Write the function that lists posts, newest first, one page at a time with a cursor. Sort by time and then by id, and return only rows after the cursor. The next cursor is empty on the last page, and an exact fit gives no empty page. A bad cursor must throw. The tests change rows between pages. Press Run my tests when you are ready.
+```
+
 ```hint
 Two queries are easiest: one for the first page (no `WHERE`), one with `WHERE (created_at, id) < ($1::timestamptz, $2::int)`. Both end with the same `ORDER BY` and `LIMIT`.
 ```

@@ -138,6 +138,10 @@ Open `conditional.ts`.
 - Otherwise `200` with the body
 - The header may hold a list (`"a", "b"`), the wildcard `*`, and weak tags (`W/"a"`). Weak comparison ignores the `W/`
 
+```narrate
+Your turn. Write a function that makes a strong entity tag from a hash of the resource, and a function that builds the response. It always sends the tag and a cache control header. If the client's tag matches, answer not modified with no body. Otherwise send the full body. The header may hold a list, a wildcard, and weak tags. Press Run my tests when you are ready.
+```
+
 ```hint
 Build the ETag first: `"` + sha256 hex of `JSON.stringify(resource)` + `"`. Compute it once and reuse it for the header and the comparison.
 ```

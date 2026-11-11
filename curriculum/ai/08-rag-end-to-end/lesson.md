@@ -195,6 +195,10 @@ class ScriptedModel:
         return self.replies.pop(0)
 ```
 
+```narrate
+Your task is to finish a retrieval augmented generation pipeline: fetch sources, build a prompt, read the citations, and answer. When nothing relevant is found, return the no answer text and never call the model. Otherwise make exactly one call. A stub model means no network. Press Run my tests when you are ready.
+```
+
 ```hint
 retrieve: build `Hit(chunk=chunk, score=cosine(toy_embed(question), chunk.vector))` for every chunk, sort by `score` with `reverse=True`, slice `[:top_k]`, then filter on `min_score`.
 ```

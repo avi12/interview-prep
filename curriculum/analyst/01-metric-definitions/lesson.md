@@ -199,6 +199,10 @@ Write one query, one row per channel:
 
 The tests run it on two different datasets, so no hardcoding.
 
+```narrate
+Your task is one query that returns a row per channel, with distinct visitors, distinct buyers, and the conversion rate rounded to three decimals. A visitor with many orders counts once. A channel with no buyers still appears, with rate zero. The tests use two datasets, so do not hardcode. Press Run my tests when you are ready.
+```
+
 ```hint
 Start the query from visitors, not orders. Every visitor must stay in the result, buyer or not.
 ```

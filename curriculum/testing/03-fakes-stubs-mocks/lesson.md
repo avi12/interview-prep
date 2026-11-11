@@ -156,6 +156,10 @@ Open `fakeUserRepository.ts` and implement `createInMemoryUserRepository()`. It 
 
 Run `pnpm lesson test testing/03-fakes-stubs-mocks`.
 
+```narrate
+Write an in-memory user repository that can find a user by email, save a user, and list all users. Leave the register user service alone. The tests first check your fake by itself, then run the service on top of it. Make the fake store and return copies, so callers cannot change what is stored. Press Run my tests when you are ready.
+```
+
 ```hint
 Keep a `Map` inside the function, keyed by user `id`.
 ```

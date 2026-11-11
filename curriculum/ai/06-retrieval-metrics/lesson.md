@@ -144,6 +144,10 @@ Open `retrieval_metrics.py`. Implement five functions. All take keyword argument
 
 Interview angle: say which metric you would watch first and why (recall@k), then name one trap out loud.
 
+```narrate
+Your task is five scoring functions for a retriever: hit rate, precision, recall, reciprocal rank, and one that averages them over a golden set. Only the first few results count. Then say aloud which metric you would watch first, and name one trap. Press Run my tests when you are ready.
+```
+
 ```hint
 Cut first: `top = retrieved[:k]`. Then count distinct hits with `len(set(top) & set(relevant))`. Every metric reuses that number.
 ```

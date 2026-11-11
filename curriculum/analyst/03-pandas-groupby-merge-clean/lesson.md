@@ -232,6 +232,10 @@ Rules:
 - Return columns `segment`, `order_count`, `revenue`, `average_order_value`, one row per segment, sorted by `segment`
 - Do not change the frames you were given
 
+```narrate
+Your task is to clean orders and customers, join them, and summarize by segment. Drop duplicate orders, turn money text into numbers, and drop values that are not numbers instead of counting them as zero. Missing segments become unknown. Do not change the frames you were given. Press Run my tests when you are ready.
+```
+
 ```hint
 Write small helpers: one that cleans orders, one that cleans customers, then summarize_orders just merges and aggregates them.
 ```

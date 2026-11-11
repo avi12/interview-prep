@@ -229,6 +229,10 @@ The tests play a **fooled** model that obeys every injection. Your code must hol
 
 Interview angle: say "assume the model will be fooled", then name the layer that stops each attack.
 
+```narrate
+Your task is four defenses for an agent. Clean and wrap untrusted text, check every tool call against an allow list and an approval, and strip links to hosts that are not allowed. The tests use a fooled model that obeys every injection, so your code must hold anyway. Press Run my tests when you are ready.
+```
+
 ```hint
 sanitizeUntrusted: `[...text]` splits by code point, so tag characters and emoji stay whole. Filter with `isHiddenCharacter`, join, then cut.
 ```

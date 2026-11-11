@@ -193,6 +193,10 @@ Open `retrieval.py`. Two functions. Your `embed` is the toy from lesson 4: `from
 
 Tests include a fact that straddles a boundary: overlap must rescue it.
 
+```narrate
+Your task is to split text into overlapping chunks of words, and then to fetch the best chunks for a question. Reject bad sizes and bad overlaps with an error. Keep only chunks that score above zero. A fact that straddles a boundary must survive. Press Run my tests when you are ready.
+```
+
 ```hint
 Step is `size - overlap`. Use `range(0, last_start, step)` and slice `words[start:start + size]`.
 ```

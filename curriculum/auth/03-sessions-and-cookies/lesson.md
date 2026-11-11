@@ -167,6 +167,10 @@ Open `sessions.ts` in your copy. It exports three things.
 
 Run the tests from the Run button, or `pnpm lesson test auth/03-sessions-and-cookies`.
 
+```narrate
+Your turn. Build three pieces: a session id generator with at least one hundred twenty eight bits of randomness, a function that writes the session cookie with the safe attributes, and a session manager. Logging in must give a brand new id and destroy the old one, and an expired session must come back empty. The clock is injected, so the tests never wait. Press Run my tests when you are ready.
+```
+
 ```hint
 Keep the fixed attributes in a constant list. Build the value from `name=id`, then `Max-Age=n`, then that list, joined with "; ".
 ```

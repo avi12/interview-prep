@@ -161,6 +161,10 @@ Run `pnpm lesson test testing/01-anatomy-of-a-test`. The check runs your file ag
 - Names of 3 or more words, all different
 - Each test: arrange, act, assert
 
+```narrate
+This time you write the tests, not the code. Cover the slugify function with at least six tests, each with a name of three or more different words, and each following arrange, act, assert. Your tests must pass on the correct code and fail on all eight buggy copies, each with one bug. Do not change the slugify code. Press Run my tests when you are ready.
+```
+
 ```hint
 One rule, one test. Copy the example test and change only the input and the expected value.
 ```

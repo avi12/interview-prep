@@ -370,6 +370,10 @@ Open `rateLimiter.ts` and implement `createRateLimiter({ capacity, refillPerSeco
 
 Run the tests from the Run button, or `pnpm lesson test systemdesign/03-rate-limiter`.
 
+```narrate
+Your task is to build a token bucket rate limiter. Each check returns whether the request is allowed, how many whole tokens remain, and how long to wait, rounded up. A new key starts full, refill happens lazily, and the store is updated once per check. If the store throws, fail open. Press Run my tests when you are ready.
+```
+
 ```hint
 Split it up: one small function that refills a state (a missing state means a full bucket), and one that takes a token and builds the `{ state, decision }` pair.
 ```

@@ -351,6 +351,10 @@ Open `lru_cache.py` and implement `LRUCache(capacity)`.
 
 Run the tests from the Run button, or `pnpm lesson test systemdesign/04-caching`.
 
+```narrate
+Your task is to build a least recently used cache. A get returns the value or minus one when missing, and counts as a use. A put stores the value, counts as a use, and drops the least recently used key when over capacity. Both operations must be constant time. Press Run my tests when you are ready.
+```
+
 ```hint
 `from collections import OrderedDict` keeps keys in order. The front is the oldest, the back is the newest.
 ```
