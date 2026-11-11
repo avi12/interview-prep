@@ -28,7 +28,7 @@ Body is a list of **cards**. A card starts at `## Title`. Rules enforced by `pnp
 
 - 4 or more cards. The last card of an exercise lesson is exactly `## Your turn`
 - At most **130 words of prose per card** (code, tables and diagrams do not count). Short cards are the whole point
-- Every card except `Your turn` has a fenced `narrate` block: the script a voice reads aloud, 15 to 110 words
+- Every card, `Your turn` included, has a fenced `narrate` block: the script a voice reads aloud, 15 to 110 words. For `Your turn` it states the task and the first step in plain spoken words, never code
 - At least one `> **Why:** ...` callout and one `> **Not this:** ...` callout (the rejected alternative and why it loses). `> **Trap:** ...` is optional and used for common mistakes
 - At least one `svg` diagram and one `quiz`
 - `Your turn` has at least 2 progressive `hint` blocks

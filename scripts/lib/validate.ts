@@ -45,14 +45,13 @@ function hasFiles({ dir, files }: {
 
 function cardProblems(card: Card) {
   const problems: string[] = [];
-  const isExerciseCard = card.title === EXERCISE_CARD_TITLE;
   const words = proseWords(card.tokens);
   if (words > MAX_CARD_WORDS) {
     problems.push(`card "${card.title}" has ${words} words of prose (max ${MAX_CARD_WORDS})`);
   }
 
   const narrateWords = wordCount(card.narrate.replace(CUE_MARKER_PATTERN, ""));
-  if (!isExerciseCard && narrateWords < MIN_NARRATE_WORDS) {
+  if (narrateWords < MIN_NARRATE_WORDS) {
     problems.push(`card "${card.title}" needs a narrate script (min ${MIN_NARRATE_WORDS} words)`);
   }
 
