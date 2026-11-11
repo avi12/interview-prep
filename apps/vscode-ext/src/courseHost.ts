@@ -29,7 +29,13 @@ export type LocalFeatures = {
   register: (session: CourseSession) => vscode.Disposable[];
 };
 
+export type LessonAddress = {
+  initialLessonId: () => string | undefined;
+  showLesson: (lessonId: string) => void;
+};
+
 export type CourseHost = {
+  address?: LessonAddress;
   workspaceRoot: vscode.Uri;
   readCourseFile: (relativePath: string) => Promise<string | null>;
   readElementsBundle: () => Promise<string>;

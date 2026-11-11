@@ -1,4 +1,5 @@
 import { browserStorage } from "@/lib/browser-storage.ts";
+import { lessonIdFromUrl, urlForLesson } from "@/lib/lesson-address.ts";
 import type { ProgressSession } from "@/lib/progress-session.ts";
 import { COURSE_PATH } from "@/lib/web-paths.ts";
 import { z } from "@/lib/zod.ts";
@@ -88,6 +89,17 @@ export async function activateCourseExtension({ extension, session }: {
   await activateWeb({
     storage: keyValueStorage(),
     elementsBundle,
+    address: {
+      initialLessonId: () => lessonIdFromUrl(new URL(location.href)),
+      showLesson(lessonId) {
+        history.replaceState(
+          null, "", urlForLesson({
+            url: new URL(location.href),
+            lessonId
+          })
+        );
+      }
+    },
     courseBaseUrl: new URL(`${COURSE_PATH}/`, location.origin).href,
     workspaceRoot: WORKSPACE_ROOT,
     readStarter: loadStarterFiles,

@@ -253,6 +253,7 @@ export async function activateCourse({ context, host, isHotSwap }: {
     }
 
     openLessonId = id;
+    host.address?.showLesson(id);
     void context.workspaceState.update(OPEN_LESSON_KEY, id);
     tree.refresh();
 
@@ -435,7 +436,10 @@ export async function activateCourse({ context, host, isHotSwap }: {
   }
 
   const isAutoOpenEnabled = courseSettings().get<boolean>(AUTO_OPEN_SETTING, true);
-  if (!isOnboarded(context.workspaceState)) {
+  const linkedLessonId = host.address?.initialLessonId();
+  if (linkedLessonId && course.findLesson(linkedLessonId)) {
+    void openLesson(linkedLessonId);
+  } else if (!isOnboarded(context.workspaceState)) {
     void openOnboarding();
   } else if (isAutoOpenEnabled) {
     void openNextLesson();

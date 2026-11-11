@@ -1,4 +1,10 @@
-import type { CourseHost, LessonEntry, TestReport, TestsFinished } from "@/courseHost.ts";
+import type {
+  CourseHost,
+  LessonAddress,
+  LessonEntry,
+  TestReport,
+  TestsFinished
+} from "@/courseHost.ts";
 import { lessonWorkUri } from "@/workspaceLayout.ts";
 import type { Progress } from "@scripts/lib/progress-sync.ts";
 import type { RunResult } from "@scripts/lib/run-result.ts";
@@ -21,6 +27,7 @@ export type ProgressSource = {
 };
 
 export type WebHostDependencies = {
+  address: LessonAddress;
   courseBaseUrl: string;
   elementsBundle: string;
   workspaceRoot: vscode.Uri;
@@ -80,6 +87,7 @@ async function readTree({ dir, prefix }: {
 }
 
 export function createWebCourseHost({
+  address,
   courseBaseUrl,
   elementsBundle,
   workspaceRoot,
@@ -152,6 +160,7 @@ export function createWebCourseHost({
 
   return {
     workspaceRoot,
+    address,
     readElementsBundle: async () => elementsBundle,
     readCourseFile: relativePath => fetch(new URL(relativePath, courseBaseUrl)).then(
       response => response.ok ? response.text() : null,
