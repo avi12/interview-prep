@@ -1,5 +1,13 @@
 html {
   color-scheme: light dark;
+
+  &:has(:is(.vscode-light, .vscode-high-contrast-light)) {
+    color-scheme: light;
+  }
+
+  &:has(:is(.vscode-dark, .vscode-high-contrast:not(.vscode-high-contrast-light))) {
+    color-scheme: dark;
+  }
 }
 
 body {

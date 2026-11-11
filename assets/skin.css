@@ -112,7 +112,8 @@
 }
 
 /* --- DARK: explicit choice wins in both directions --------------------- */
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+:root:has(:is(.vscode-dark, .vscode-high-contrast:not(.vscode-high-contrast-light))) {
   --bg: #060d14;
   --bg-elev: #0a121b;
   --surface: #0c1620;
@@ -169,7 +170,7 @@
 
 /* --- DARK: OS default (no explicit choice stamped) --------------------- */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root:not([data-theme="light"], :has(:is(.vscode-light, .vscode-high-contrast-light))) {
     --bg: #060d14;
     --bg-elev: #0a121b;
     --surface: #0c1620;
