@@ -1,10 +1,10 @@
 ---
 title: Help desk triage and SLAs
-lang: ts
-minutes: 20
+lang: none
+minutes: 15
 level: junior
 roles: [support]
-files: [queue.ts]
+files: []
 sources:
   - https://www.atlassian.com/itsm/service-request-management/slas
   - https://www.atlassian.com/incident-management/kpis/common-metrics
@@ -164,25 +164,32 @@ answer: 2
 why: Matching a ticket to a specific person by skill and availability is routing; categorizing only labels the ticket.
 ```
 
-## Your turn
+## Practice: triage the queue
 
-Open `queue.ts`. Write `orderQueue(tickets)`: it returns the ticket ids in the order a technician should answer them.
+Four tickets are waiting. The rule to apply: priority follows **urgency and impact**, then the SLA clock decides ties.
 
-- A ticket's **deadline** is `openedAtMinute` plus `RESPONSE_MINUTES[priority]`. Earliest deadline first
-- Same deadline: the higher priority first
-- Still tied: keep the order they came in
-- Do not change the array you were given
-
-Run `pnpm lesson test support/01-help-desk-triage-and-sla`.
-
-```hint
-Compute the deadline for each ticket once, then sort a copy. `[...tickets]` makes the copy.
+```narrate
+Four tickets are waiting. Apply one rule: priority follows urgency and impact. Think about how many people each problem stops, and how soon, then answer.
 ```
 
-```hint
-Give priorities a rank so you can compare them: `{ high: 0, medium: 1, low: 2 }`. In the compare function, compare deadlines first, and only if they are equal compare ranks.
+```quiz
+q: Which order should the technician answer these? A critical app has crashed. The office network is slow. A user wants a password reset. A user wants a printer set up.
+options:
+  - Password reset, printer, slow network, app crash
+  - App crash, slow network, password reset or printer
+  - Slow network, app crash, printer, password reset
+  - Printer, password reset, app crash, slow network
+answer: 1
+why: The crash stops the business (high, 30 minutes), the slow network hurts everyone but works (medium, 2 hours), and a password or printer is routine (low, 24 hours).
 ```
 
-```hint
-`Array.prototype.sort` is stable in JavaScript, so if your compare returns 0 the input order is kept. Finish with `.map(ticket => ticket.id)`.
+```quiz
+q: A user's critical application is down and the Level 1 technician has opened a ticket and found the fix needs access they do not have. What is the right next step?
+options:
+  - Close the ticket and ask the user to try again later
+  - Escalate to a senior technician with exact notes of what was tried
+  - Leave it until the response deadline is close
+  - Reassign it to a random team
+answer: 1
+why: When the problem is too complex or beyond your authority, escalate, and write down exactly what you checked so the next tier does not start from zero.
 ```
