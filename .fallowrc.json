@@ -3,7 +3,24 @@
   "entry": [
     "apps/gemini-live/src/entrypoints/**",
     "apps/gemini-live/test/*.ts",
-    "apps/gemini-live/wxt.config.ts"
+    "apps/gemini-live/wxt.config.ts",
+    "apps/vscode-ext/src/loader.ts",
+    "apps/vscode-ext/src/web.ts",
+    "apps/vscode-ext/src/webview/elements.ts",
+    "apps/vscode-ext/src/aliases.mts",
+    "apps/web/server/main.ts",
+    "apps/web/build-server.ts",
+    "apps/web/src/main.ts",
+    "apps/web/src/runner/run-lesson.ts",
+    "apps/web/src/runner/*/worker.ts",
+    "apps/web/browser-runner.e2e.ts",
+    "apps/web/vitest.browser-runner.config.ts",
+    "apps/web/test/browser-runner/harness-page.ts",
+    "apps/web/vite.config.ts",
+    "apps/web/vitest.config.ts",
+    "apps/web/**/*.test.ts",
+    "scripts/**/*.test.ts",
+    "scripts/vitest.config.ts"
   ],
   "health": {
     "maxCognitive": 30,
@@ -19,6 +36,25 @@
   ],
   "ignoreDependencies": [
     "@electric-sql/pglite",
-    "postcss-html"
+    "postcss-html",
+    "monaco-editor"
+  ],
+  "ignoreExports": [
+    {
+      "file": "apps/web/src/runner/ts/node/util.ts",
+      "exports": [
+        "promisify"
+      ]
+    }
+  ],
+  "usedClassMembers": [
+    "onDidChangeTreeData",
+    "length",
+    "clear",
+    "getItem",
+    "key",
+    "removeItem",
+    "setItem",
+    "setKeysForSync"
   ]
 }

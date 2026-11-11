@@ -9,3 +9,5 @@ __pycache__/
 .fallow/
 .claude/worktrees/
 .svelte-check/
+apps/web/dist-client/
+apps/web/dist-server/

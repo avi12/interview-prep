@@ -278,6 +278,8 @@ export default [
     ".claude/worktrees/",
     "vendor/",
     "apps/vscode-ext/dist/",
+    "apps/web/dist-client/",
+    "apps/web/dist-server/",
     "curriculum/*",
     "!curriculum/_kit/"
   ]),

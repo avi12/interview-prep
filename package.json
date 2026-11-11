@@ -10,21 +10,31 @@
   },
   "imports": {
     "#scripts/*": "./scripts/*",
+    "#kit/host.ts": {
+      "browser": "./curriculum/_kit/host.browser.ts",
+      "default": "./curriculum/_kit/host.node.ts"
+    },
     "#kit/*": "./curriculum/_kit/*"
   },
   "scripts": {
     "lesson": "node scripts/lesson.ts",
     "build": "node scripts/build-lessons.ts",
+    "build:engines": "node scripts/build-runner-engines.ts",
+    "test:browser-runner": "pnpm -C apps/web test:browser-runner",
     "narrate": "node scripts/narrate-lessons.ts",
     "verify": "node scripts/verify.ts",
     "start": "node scripts/start.ts",
     "dev": "node scripts/dev.ts",
-    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.solutions.json",
+    "setup:gcp": "node scripts/setup-gcp.ts",
+    "deploy:web": "node scripts/deploy-web.ts",
+    "release:gemini-live": "node scripts/release-gemini-live.ts",
+    "typecheck": "tsrs -p tsconfig.json && tsrs -p tsconfig.solutions.json",
     "fallow": "fallow audit --base HEAD",
     "dev:lint": "pnpm fallow && pnpm lint",
     "prepare": "simple-git-hooks",
     "lint": "oxlint --type-aware --ignore-path .oxlintignore --fix -c .oxlintrc.fix.json && eslint --fix && oxlint --type-aware --ignore-path .oxlintignore",
-    "stylelint": "stylelint \"**/*.{css,html,svelte}\" --fix"
+    "stylelint": "stylelint \"**/*.{css,html,svelte}\" --fix",
+    "test:scripts": "vitest run -c scripts/vitest.config.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.10",
@@ -53,6 +63,7 @@
     "stylelint-config-ccb": "^3.32.0",
     "svelte": "^5.57.2",
     "svelte-eslint-parser": "^1.9.0",
+    "tsrs": "0.24.0-ts7.1.0-beta",
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.72.0",
     "vitest": "^3.2.0"

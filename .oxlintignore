@@ -12,3 +12,5 @@ work/**
 vendor/**
 apps/vscode-ext/dist/**
 curriculum/*/[0-9]*/**
+apps/web/dist-client/**
+apps/web/dist-server/**

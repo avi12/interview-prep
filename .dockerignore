@@ -1,0 +1,10 @@
+*
+!apps/web/Dockerfile
+!apps/web/dist-server/package.json
+!apps/web/dist-server/server.js
+!apps/web/dist-server/server.js.map
+!apps/web/dist-client/
+!dist/index.json
+!dist/lessons/**/*.html
+!dist/runner/**
+!assets/*.css
