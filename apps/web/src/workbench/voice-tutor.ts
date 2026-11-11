@@ -2,7 +2,6 @@ import { apiKeySchema, clearGeminiKey, loadGeminiKey, saveGeminiKey } from "@/li
 import { lessonIdFromUrl } from "@/lib/lesson-address.ts";
 import { buildSiteTutorView } from "@/lib/site-tutor-view.ts";
 import { COURSE_PATH } from "@/lib/web-paths.ts";
-import { Engine } from "@interview-prep/gemini-live/src/lib/engine.ts";
 import { fetchParsed } from "@interview-prep/gemini-live/src/lib/fetch-parsed.ts";
 import { DEFAULT_LANGUAGE } from "@interview-prep/gemini-live/src/lib/language.ts";
 import { startScreenShare } from "@interview-prep/gemini-live/src/lib/live-api/screen-share.ts";
@@ -126,14 +125,39 @@ export function createVoiceTutor({ api, onChange }: {
     });
   }
 
-  async function askForKey() {
-    const entered = await api.window.showInputBox({
-      prompt: KEY_PROMPT,
-      placeHolder: KEY_PLACEHOLDER,
-      password: true,
-      ignoreFocusOut: true,
-      validateInput: value => apiKeySchema.safeParse(value).success ? null : KEY_INVALID
+  function askForEnteredKey() {
+    const { promise, resolve } = Promise.withResolvers<string | undefined>();
+    const input = api.window.createInputBox();
+    const linkButton = {
+      iconPath: new api.ThemeIcon("link-external"),
+      tooltip: KEY_LINK_LABEL
+    };
+    input.title = KEY_LINK_LABEL;
+    input.prompt = `${KEY_PROMPT}. Get one free at ${KEY_URL}`;
+    input.placeholder = KEY_PLACEHOLDER;
+    input.password = true;
+    input.ignoreFocusOut = true;
+    input.buttons = [linkButton];
+    input.onDidTriggerButton(() => void api.env.openExternal(api.Uri.parse(KEY_URL)));
+    input.onDidChangeValue(value => {
+      input.validationMessage = !value || apiKeySchema.safeParse(value).success ? undefined : KEY_INVALID;
     });
+    input.onDidAccept(() => {
+      if (!apiKeySchema.safeParse(input.value).success) {
+        input.validationMessage = KEY_INVALID;
+        return;
+      }
+
+      resolve(input.value);
+      input.dispose();
+    });
+    input.onDidHide(() => resolve(undefined));
+    input.show();
+    return promise;
+  }
+
+  async function askForKey() {
+    const entered = await askForEnteredKey();
     if (entered === undefined || !saveGeminiKey(entered)) {
       return null;
     }
@@ -191,10 +215,7 @@ export function createVoiceTutor({ api, onChange }: {
   }
 
   async function start() {
-    const engine = isExtensionInstalled()
-      ? await siteMessenger.sendMessage(SiteBridgeMessage.GET_ENGINE).catch(() => null)
-      : null;
-    if (engine === Engine.SUBSCRIPTION) {
+    if (isExtensionInstalled()) {
       await startViaExtension();
       return;
     }

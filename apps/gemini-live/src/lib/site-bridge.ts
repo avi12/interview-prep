@@ -1,4 +1,4 @@
-import { type Engine, engineSchema } from "./engine.ts";
+import { engineSchema } from "./engine.ts";
 import { LiveState } from "./live-state.ts";
 import type { Session } from "./session-schema.ts";
 import { z } from "./zod.ts";
@@ -27,7 +27,6 @@ export const SiteBridgeMessage = {
   STOP: "siteStop",
   TOGGLE_MIC: "siteToggleMic",
   GET_STATUS: "siteGetStatus",
-  GET_ENGINE: "siteGetEngine",
   STATUS_CHANGED: "siteStatusChanged"
 } as const;
 
@@ -36,7 +35,6 @@ interface SiteBridgeProtocolMap {
   [SiteBridgeMessage.STOP](): void;
   [SiteBridgeMessage.TOGGLE_MIC](): void;
   [SiteBridgeMessage.GET_STATUS](): VoiceStatus | null;
-  [SiteBridgeMessage.GET_ENGINE](): Engine;
   [SiteBridgeMessage.STATUS_CHANGED](status: VoiceStatus | null): void;
 }
 
