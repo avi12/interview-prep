@@ -1,0 +1,17 @@
+{
+  "hosting": {
+    "site": "avi-interview-prep",
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "interview-prep-web",
+          "region": "europe-west1"
+        }
+      }
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}
