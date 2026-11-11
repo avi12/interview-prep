@@ -1,10 +1,10 @@
 ---
 title: How a device is identified on a network
-lang: none
+lang: ts
 minutes: 25
 level: junior
 roles: [support, backend]
-files: []
+files: [network.ts]
 sources:
   - https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig
   - https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/hostname
@@ -217,17 +217,28 @@ why: DHCP keeps one list of who holds each address, so it never lends the same o
 Test yourself on the ladder. Read each symptom, then decide which rung failed first: the address, the gateway, a public address, or the name. Say your reasoning out loud, the way you would in an interview.
 ```
 
-## Optional: build it yourself
+## Your turn
 
-Nothing here needs code. If you want to go further, write it in TypeScript or any language you like:
+This one is a tangent, and it is worth doing if you want to feel how the ladder works. Open `network.ts`. Write two functions.
 
-- Parse the text of `ipconfig /all` into the host name, IPv4, MAC, gateway and whether DHCP is on
-- Walk the ping ladder from the results and return one verdict: no address, no DHCP, local network, internet or DNS
+**`readAdapter(ipconfigOutput)`** reads `ipconfig /all` text and returns `{ hostName, ipv4, mac, gateway, isDhcpEnabled }` for the **active** adapter: the first one that has an IPv4 line (`IPv4 Address` or `Autoconfiguration IPv4 Address`). Drop `(Preferred)`. Missing values are `""`.
 
-> **Why:** writing the ladder as early returns shows you the order of the checks, which is the part an interviewer listens for.
+**`diagnose({ adapter, pings })`** walks the ping ladder and returns one `VERDICT`. `pings` says which rungs got a reply.
 
-> **Not this:** one big if-else on every combination. The ladder only needs the first rung that fails.
+Run `pnpm lesson test networking/01-how-a-device-is-identified`.
 
 ```narrate
-This part is optional and has no tests. If you want to go further, write a small program in TypeScript or any language you like. Parse the adapter listing, then walk the ladder with early returns and return one verdict for the first rung that fails.
+This last part is a tangent, and it is optional in spirit. Write two functions. The first reads the output of the network adapter listing and returns the host name, address, hardware address, gateway and whether automatic addressing is on, for the active adapter. The second walks the ping ladder and returns one verdict. Press Run my tests when you are ready.
+```
+
+```hint
+Split into lines. A line that does not start with a space is a section header. Every other line looks like `   Key . . . . : value`.
+```
+
+```hint
+This regex splits a value line: `/^\s+(\S.*?)[ .]*:\s*(.*)$/`. Group 1 is the key, group 2 the value. Remember the host name lives in the first section, the adapters come after.
+```
+
+```hint
+In `diagnose`, check in ladder order with early returns: no IPv4, then `169.254.`, then gateway, public address, public name. The APIPA check must come before the gateway check.
 ```
