@@ -1,3 +1,4 @@
+import { getHostColorSchemeOverride } from "@/workbench/host-color-scheme.ts";
 import { SITE_EXTENSION_ID } from "@/workbench/site-manifest.ts";
 import { WORKSPACE_ROOT } from "@/workbench/workspace-files.ts";
 import getAccessibilityServiceOverride from "@codingame/monaco-vscode-accessibility-service-override";
@@ -74,6 +75,7 @@ export async function startServices(container: HTMLElement) {
       ...getKeybindingsServiceOverride(),
       ...getTextmateServiceOverride(),
       ...getThemeServiceOverride(),
+      ...getHostColorSchemeOverride(),
       ...getLanguagesServiceOverride(),
       ...getPreferencesServiceOverride(),
       ...getOutputServiceOverride(),
