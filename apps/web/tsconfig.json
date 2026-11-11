@@ -13,7 +13,7 @@
     "skipLibCheck": true,
     "types": ["node", "vite/client"],
     "paths": {
-      "@/*": ["./src/*", "../vscode-ext/src/*"],
+      "@/*": ["./src/*", "../vscode-ext/src/*", "../gemini-live/src/*"],
       "@server/*": ["./server/*"],
       "@scripts/*": ["../../scripts/*"],
       "@manifest": ["../vscode-ext/package.json"],

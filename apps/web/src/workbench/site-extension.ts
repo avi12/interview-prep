@@ -13,7 +13,9 @@ import {
   SITE_EXTENSION_MANIFEST,
   SiteCommand
 } from "@/workbench/site-manifest.ts";
+import { createVoiceTutor, isExtensionInstalled, type VoiceTutorStatus } from "@/workbench/voice-tutor.ts";
 import { ExtensionHostKind, registerExtension } from "@codingame/monaco-vscode-api/extensions";
+import { LiveState } from "@interview-prep/gemini-live/src/lib/live-state.ts";
 import { AUTH_PROVIDERS } from "#scripts/lib/auth-providers.ts";
 import { REPOSITORY_URL } from "#scripts/lib/repository.ts";
 import type * as vscode from "vscode";
@@ -266,13 +268,62 @@ function showRepositoryLink(api: Api) {
   return item;
 }
 
-function showVoiceTutorLink(api: Api) {
+const VOICE_STATE_TEXT: Record<LiveState, string> = {
+  [LiveState.OPENING]: "Connecting",
+  [LiveState.BRIEFING]: "Connecting",
+  [LiveState.LIVE]: "Live",
+  [LiveState.PAUSED]: "Paused",
+  [LiveState.RECONNECTING]: "Reconnecting",
+  [LiveState.FAILED]: "Failed"
+};
+const START_LABEL = "Start voice tutor";
+const STOP_LABEL = "Stop voice tutor";
+const MUTE_LABEL = "Mute the microphone";
+const UNMUTE_LABEL = "Turn the microphone on";
+const KEY_LABEL = "API key";
+const START_TOOLTIP = "Talk through the lesson with Gemini Live. It sees your screen and reads your lesson";
+const RUNNING_TOOLTIP = "The voice tutor is running. Click for options";
+
+function showVoiceTutor(api: Api) {
   const item = api.window.createStatusBarItem(VOICE_TUTOR_ITEM_ID, api.StatusBarAlignment.Right, STATUS_PRIORITY);
-  item.text = "$(mic) Voice tutor";
-  item.tooltip = "Get the Gemini Live voice tutor, a spoken coach that sees your lesson and your code";
-  item.command = SiteCommand.showGeminiLive;
+  function render(status: VoiceTutorStatus | null) {
+    item.command = status ? SiteCommand.voiceTutorMenu : SiteCommand.startVoiceTutor;
+    item.tooltip = status ? RUNNING_TOOLTIP : START_TOOLTIP;
+    item.text = status
+      ? `$(${status.isMicOpen ? "mic" : "mute"}) ${VOICE_STATE_TEXT[status.state]}`
+      : `$(mic) ${START_LABEL}`;
+  }
+
+  render(null);
   item.show();
-  return item;
+  return {
+    item,
+    render
+  };
+}
+
+async function showVoiceTutorMenu({ api, tutor, status }: {
+  api: Api;
+  tutor: ReturnType<typeof createVoiceTutor>;
+  status: VoiceTutorStatus | null;
+}) {
+  const options = [
+    STOP_LABEL,
+    status?.isMicOpen === false ? UNMUTE_LABEL : MUTE_LABEL,
+    ...(isExtensionInstalled() ? [] : [KEY_LABEL])
+  ];
+  const picked = await api.window.showQuickPick(options);
+  if (picked === STOP_LABEL) {
+    await tutor.stop();
+  }
+
+  if (picked === MUTE_LABEL || picked === UNMUTE_LABEL) {
+    await tutor.toggleMic();
+  }
+
+  if (picked === KEY_LABEL) {
+    await tutor.manageKey();
+  }
 }
 
 function reloadOnDeploy(api: Api) {
@@ -291,6 +342,15 @@ export async function activateSiteExtension({ extension, session }: {
   session: ProgressSession;
 }) {
   const api = await extension.getApi();
+  const voice = showVoiceTutor(api);
+  let voiceStatus: VoiceTutorStatus | null = null;
+  const tutor = createVoiceTutor({
+    api,
+    onChange(status) {
+      voiceStatus = status;
+      voice.render(status);
+    }
+  });
   const auth = registerAuthProviders({
     api,
     session
@@ -302,7 +362,13 @@ export async function activateSiteExtension({ extension, session }: {
       session
     }),
     showRepositoryLink(api),
-    showVoiceTutorLink(api),
+    voice.item,
+    api.commands.registerCommand(SiteCommand.startVoiceTutor, tutor.start),
+    api.commands.registerCommand(SiteCommand.voiceTutorMenu, () => showVoiceTutorMenu({
+      api,
+      tutor,
+      status: voiceStatus
+    })),
     reloadOnDeploy(api),
     api.commands.registerCommand(SiteCommand.openRepository, () => api.env.openExternal(api.Uri.parse(REPOSITORY_URL))),
     api.commands.registerCommand(SiteCommand.signIn, auth.signIn),

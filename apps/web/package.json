@@ -51,6 +51,7 @@
     "@codingame/monaco-vscode-workspace-trust-service-override": "39.0.4",
     "@electric-sql/pglite": "0.5.10",
     "@hono/node-server": "^2.1.6",
+    "@interview-prep/gemini-live": "workspace:*",
     "@noble/hashes": "^2.4.0",
     "@sinonjs/fake-timers": "^15.4.0",
     "@vitest/expect": "3.2.7",

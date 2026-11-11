@@ -17,6 +17,9 @@ export const ALIASES = {
 };
 const APP_SOURCE_DIR = fileURLToPath(new URL("src", import.meta.url));
 const APP_DIR = fileURLToPath(new URL(".", import.meta.url));
+const GEMINI_LIVE_SOURCE_DIR = fileURLToPath(new URL("../gemini-live/src", import.meta.url)).replaceAll("\\", "/");
+const SCRIPTS_DIR = fileURLToPath(new URL("../../scripts", import.meta.url)).replaceAll("\\", "/");
+const SCRIPTS_ALIAS_PREFIX = "@scripts/";
 const APP_ALIAS_PREFIX = "@/";
 const DEPENDENCIES_DIR = "/node_modules/";
 const WORKER_FILE_NAMES = `${WORKERS_DIR_NAME}/[name]-[hash].js`;
@@ -85,6 +88,28 @@ export function appSourceAlias(): Plugin {
   };
 }
 
+function geminiLiveSourceAlias(): Plugin {
+  return {
+    name: "interview-prep-gemini-live-alias",
+    enforce: "pre",
+    resolveId(source, importer, options) {
+      if (importer === undefined || !posixPath(importer).startsWith(GEMINI_LIVE_SOURCE_DIR)) {
+        return null;
+      }
+
+      if (source.startsWith(SCRIPTS_ALIAS_PREFIX)) {
+        return this.resolve(`${SCRIPTS_DIR}/${source.slice(SCRIPTS_ALIAS_PREFIX.length)}`, importer, options);
+      }
+
+      if (!source.startsWith(APP_ALIAS_PREFIX)) {
+        return null;
+      }
+
+      return this.resolve(`${GEMINI_LIVE_SOURCE_DIR}/${source.slice(APP_ALIAS_PREFIX.length)}`, importer, options);
+    }
+  };
+}
+
 function inlineVscodeCss(): Plugin {
   return {
     name: "interview-prep-inline-vscode-css",
@@ -104,7 +129,7 @@ function inlineVscodeCss(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [extensionSourceAliases(), appSourceAlias(), inlineVscodeCss(), appVersion()],
+  plugins: [extensionSourceAliases(), geminiLiveSourceAlias(), appSourceAlias(), inlineVscodeCss(), appVersion()],
   resolve: {
     alias: ALIASES,
     dedupe: DEDUPED_PACKAGES

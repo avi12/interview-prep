@@ -16,7 +16,9 @@ export const SiteCommand = {
   openRepository: "interviewPrepSite.openRepository",
   signIn: "interviewPrepSite.signIn",
   account: "interviewPrepSite.account",
-  showGeminiLive: "interviewPrepSite.showGeminiLive"
+  showGeminiLive: "interviewPrepSite.showGeminiLive",
+  startVoiceTutor: "interviewPrepSite.startVoiceTutor",
+  voiceTutorMenu: "interviewPrepSite.voiceTutorMenu"
 } as const;
 
 export const SITE_EXTENSION_MANIFEST = {
@@ -72,6 +74,16 @@ export const SITE_EXTENSION_MANIFEST = {
         title: "Signed In Account and Sign Out",
         category: SITE_CATEGORY,
         icon: "$(account)"
+      },
+      {
+        command: SiteCommand.startVoiceTutor,
+        title: "Start the Voice Tutor",
+        category: SITE_CATEGORY
+      },
+      {
+        command: SiteCommand.voiceTutorMenu,
+        title: "Voice Tutor Options",
+        category: SITE_CATEGORY
       },
       {
         command: SiteCommand.showGeminiLive,
