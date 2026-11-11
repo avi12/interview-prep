@@ -21,7 +21,13 @@ pnpm start            # builds lessons, installs the extension, opens VS Code in
 
 VS Code opens with the next unfinished lesson on the right and your exercise file on the left. First time only: click **Trust** when VS Code asks (it is your own folder, served only to this machine, behind a token). The URL keeps the same token between runs, so you can bookmark it.
 
-Press **Run my tests** in the lesson, or `pnpm lesson test <track>/<lesson>`. Pass and the next lesson opens. A run that never finishes (an infinite loop in your code) is stopped after 90 seconds with a hint.
+Press **Run my tests** in the lesson, or `pnpm lesson test <track>/<lesson>`. A results table next to the test output lists each failing test with its input, the expected value and what your code returned. Pass and the next lesson opens. A run that never finishes (an infinite loop in your code) is stopped after 90 seconds with a hint.
+
+## Hosted version
+
+The same trainer runs in the browser at https://avi-interview-prep.web.app, with no install: VS Code in the page, tests run in the browser, and you can sign in with Google to keep your progress on every device. Sign out any time and your progress stays on that device. See [docs/DEPLOY.md](docs/DEPLOY.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+**Choose what to learn.** The first screen lets you pick topics and a target role, with how much of each you have finished. The **Topics** entry in the status bar reopens it at any time. **Add a topic** explains how to have a coding agent research and write one, then open a pull request.
 
 ## Voice
 
@@ -66,6 +72,7 @@ https://github.com/user-attachments/assets/5054318b-fd63-47ef-8363-2ae6b4b1abcf
 | `.progress/` | what you passed (git-ignored) |
 | `scripts/` | CLI (`pnpm lesson`), build, narrate, verify, start; `scripts/lib` holds the shared helpers |
 | `apps/vscode-ext/` | the VS Code extension |
+| `apps/web/` | the hosted version: VS Code in the browser, in-browser test runner, server and sign-in |
 | `apps/gemini-live/` | the Gemini Live bridge |
 | `vendor/edge-tts-as-extension/` | the voice tool (git submodule) |
 
@@ -75,8 +82,12 @@ https://github.com/user-attachments/assets/5054318b-fd63-47ef-8363-2ae6b4b1abcf
 pnpm lesson list | next | open <id> | test <id> | reset <id>
 pnpm verify [track]        # every solution passes, every starter fails, structure rules hold
 pnpm typecheck             # scripts, curriculum and every solution (run pnpm verify first)
+pnpm dev                   # pnpm start that rebuilds on save, for working on the trainer itself
 pnpm build                 # lessons -> dist/
+pnpm deploy:web            # build and release the hosted version
 ```
+
+Some lessons are reading and quiz only (`lang: none`), such as the help desk lesson, and need no exercise.
 
 ## Why it is built this way
 

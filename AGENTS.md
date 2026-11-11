@@ -1,6 +1,6 @@
 # Interview Prep - guide for coding agents
 
-This file is for any coding agent (Claude Code, Codex, Cursor, Copilot, Gemini CLI, and others) and for human contributors. `CLAUDE.md` imports it.
+This file is for any coding agent (Claude Code, Codex, Cursor, Copilot, and others) and for human contributors. `CLAUDE.md` imports it.
 
 ## What this is
 
@@ -29,13 +29,18 @@ The rules a lesson must meet live in one place, `curriculum/AUTHORING.md`, and `
 ```sh
 pnpm install
 pnpm start                 # build lessons, install the extension, open VS Code in the browser
+pnpm dev                   # same, but rebuilds on save: extension changes restart its host, lesson changes refresh the panel
 pnpm lesson list | next | open <id> | test <id> | reset <id>
 pnpm verify [track]        # structure rules, solution passes, starter fails
 pnpm narrate [id-prefix]   # record voices for lessons whose scripts changed (sets up vendor/ on first run)
-pnpm build                 # lessons -> dist/
+pnpm build                 # lessons -> dist/, plus each lesson's tests and starter for the browser runner (never solutions)
+pnpm build:engines         # self-host esbuild-wasm, PGlite and Pyodide (with its wheels) in dist/runner/engines
+pnpm test:browser-runner   # grade every ts, sql and py lesson in headless Chrome: starter fails, solution passes
 ```
 
-Before every commit run `pnpm lint && pnpm stylelint && pnpm typecheck && pnpm fallow`. Run `pnpm verify` when lessons change, and `pnpm -C apps/gemini-live compile` and `test` when the Gemini app changes.
+Before every commit run `pnpm lint && pnpm stylelint && pnpm typecheck && pnpm fallow`. Run `pnpm verify` when lessons change, `pnpm test:browser-runner` when `curriculum/_kit/` or `apps/web/src/runner/` changes, and `pnpm -C apps/gemini-live compile` and `test` when the Gemini app changes.
+
+After a bug fix or feature that changes the web trainer, its lessons or the extension it runs, pass those checks and then run `pnpm deploy:web`, so the live site at https://avi-interview-prep.web.app always runs the latest version. Open pages pick it up on their own within a minute.
 
 ## Code style
 
