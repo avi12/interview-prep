@@ -28,7 +28,7 @@ const NO_SESSIONS: readonly vscode.AuthenticationSession[] = [];
 const REPOSITORY_ITEM_ID = "interviewPrepSite.repository";
 const SYNC_ITEM_ID = "interviewPrepSite.sync";
 const ACCOUNT_ITEM_ID = "interviewPrepSite.account";
-const VOICE_TUTOR_ITEM_ID = "interviewPrepSite.voiceTutor";
+const VOICE_TUTOR_ITEM_ID = "interviewPrepSite.siteTutorVoice";
 const STATUS_PRIORITY = 100;
 const SET_CONTEXT_COMMAND = "setContext";
 
