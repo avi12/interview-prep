@@ -1,6 +1,7 @@
 import type { Activation, GlicCommandMap, GlicReportMap } from "./bridge-vocab.ts";
 import type { Frame } from "./frame.ts";
 import type { TeachResult } from "./mic-key.ts";
+import type { StartResult } from "./site-bridge.ts";
 import type { TeachRole } from "./taught-key.ts";
 import type { VoiceHello, VoiceReport } from "./voice-protocol.ts";
 import type { TutorView } from "@scripts/lib/tutor-view.ts";
@@ -36,11 +37,6 @@ export interface FocusRect {
   width: number;
   height: number;
   viewportWidth: number;
-}
-
-export interface StartResult {
-  isStarted: boolean;
-  detail: string;
 }
 
 interface ExtensionProtocolMap extends GlicCommandMap, GlicReportMap {

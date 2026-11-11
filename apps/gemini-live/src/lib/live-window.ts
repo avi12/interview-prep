@@ -1,7 +1,7 @@
 import type { Engine } from "./engine.ts";
-import type { StartResult } from "./extension-channel.ts";
 import { freshSession } from "./session-schema.ts";
 import { saveSession } from "./session.ts";
+import type { StartResult } from "./site-bridge.ts";
 import { browser } from "wxt/browser";
 
 const LIVE_WINDOW_SIZE = {

@@ -6,9 +6,8 @@ import { openMic } from "@/lib/live-api/mic.ts";
 import { createPlayback } from "@/lib/live-api/playback.ts";
 import { type LiveClosure, LiveConnection, type LiveSession, openLiveSession } from "@/lib/live-api/session.ts";
 import { LiveState } from "@/lib/live-state.ts";
-import { requestTutorView } from "@/lib/request-tutor-view.ts";
 import { tutorViewContext, tutorViewText } from "@/lib/tutor-view-text.ts";
-import { TUTOR_VIEW_PATH } from "@scripts/lib/tutor-view.ts";
+import type { TutorView } from "@scripts/lib/tutor-view.ts";
 
 const VIEW_POLL_MS = 1000;
 const FRAME_INTERVAL_MS = 1000;
@@ -34,6 +33,7 @@ export interface TutorSessionOptions {
   apiKey: string;
   language: Language;
   captureFrame: () => Promise<Frame | null>;
+  readView: () => Promise<TutorView | null>;
   events: TutorSessionEvents;
 }
 
@@ -55,7 +55,7 @@ function everyInterval({ intervalMs, task }: {
   return () => clearInterval(timer);
 }
 
-export async function startTutorSession({ apiKey, language, captureFrame, events }: TutorSessionOptions) {
+export async function startTutorSession({ apiKey, language, captureFrame, readView, events }: TutorSessionOptions) {
   let session: LiveSession | null = null;
   let isMicOpen = true;
   let sentVersion = "";
@@ -81,7 +81,7 @@ export async function startTutorSession({ apiKey, language, captureFrame, events
   });
   stoppers.push(() => mic.close());
 
-  const view = await requestTutorView(TUTOR_VIEW_PATH);
+  const view = await readView();
   const liveSession = openLiveSession({
     apiKey,
     systemInstruction: buildInstructions({
@@ -120,7 +120,7 @@ export async function startTutorSession({ apiKey, language, captureFrame, events
     everyInterval({
       intervalMs: VIEW_POLL_MS,
       async task() {
-        const latest = await requestTutorView(TUTOR_VIEW_PATH);
+        const latest = await readView();
         if (!latest || latest.version === sentVersion) {
           return;
         }

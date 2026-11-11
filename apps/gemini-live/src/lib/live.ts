@@ -1,5 +1,5 @@
 import { Engine } from "./engine.ts";
-import { ExtensionMessage, extensionMessenger, type StartResult } from "./extension-channel.ts";
+import { ExtensionMessage, extensionMessenger } from "./extension-channel.ts";
 import { glicEngine, installGlic } from "./glic-live.ts";
 import type { LiveEngine } from "./live-engine.ts";
 import { isRunning } from "./live-state.ts";
@@ -8,8 +8,9 @@ import { listenToMicKey } from "./mic-key.ts";
 import type { Session } from "./session-schema.ts";
 import { clearSession, loadSession, updateSession } from "./session.ts";
 import { loadEngine } from "./settings.ts";
+import { type StartResult } from "./site-bridge.ts";
 import { installVoice, voiceEngine } from "./voice-live.ts";
-import { findVscodeTab, isVscodeUrl, VSCODE_ORIGIN } from "./vscode.ts";
+import { findVscodeTab, isVscodeUrl, VSCODE_SITES_TEXT } from "./vscode.ts";
 import { browser } from "wxt/browser";
 
 const LIVE_ENGINE: Record<Engine, LiveEngine> = {
@@ -18,7 +19,7 @@ const LIVE_ENGINE: Record<Engine, LiveEngine> = {
 };
 
 const Text = {
-  NO_VSCODE_TAB: `Open VS Code in this browser first (${VSCODE_ORIGIN}), then press start`,
+  NO_VSCODE_TAB: `Open VS Code in this browser first (${VSCODE_SITES_TEXT}), then press start`,
   ALREADY_STARTING: "Already starting a session"
 } as const;
 

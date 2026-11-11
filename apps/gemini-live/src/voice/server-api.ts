@@ -1,3 +1,4 @@
+import { fetchParsed } from "@/lib/fetch-parsed.ts";
 import { z } from "@/lib/zod.ts";
 import {
   API_KEY_PATH,
@@ -27,13 +28,11 @@ async function requestJson<T>({ path, schema, method = HttpMethod.GET, body }: {
     headers: JSON_HEADERS,
     body: JSON.stringify(body)
   };
-  const response = await fetch(path, init).catch(() => null);
-  if (!response?.ok) {
-    return null;
-  }
-
-  const parsed = schema.safeParse(await response.json().catch(() => null));
-  return parsed.success ? parsed.data : null;
+  return fetchParsed({
+    input: path,
+    init,
+    schema
+  });
 }
 
 export function loadApiKey() {

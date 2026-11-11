@@ -5,7 +5,11 @@ export const VSCODE_ORIGIN = String(import.meta.env.WXT_VSCODE_ORIGIN);
 
 const VSCODE_ORIGINS = [VSCODE_ORIGIN, WEB_ORIGIN];
 
-export const VSCODE_MATCHES = VSCODE_ORIGINS.map(origin => `${origin}/*`);
+const VSCODE_MATCHES = VSCODE_ORIGINS.map(origin => `${origin}/*`);
+
+export const VSCODE_CHIP_MATCHES = [`${VSCODE_ORIGIN}/*`];
+
+export const VSCODE_SITES_TEXT = `${VSCODE_ORIGIN} or ${WEB_ORIGIN}`;
 
 export function isVscodeUrl(url: string | undefined) {
   if (!url || !URL.canParse(url)) {

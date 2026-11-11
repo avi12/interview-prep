@@ -15,8 +15,10 @@
   import { type ScreenShare, startScreenShare } from "@/lib/live-api/screen-share.ts";
   import { isRunning, LiveState } from "@/lib/live-state.ts";
   import { liveStateLabel, liveStateTone, Tone } from "@/lib/live-status.ts";
+  import { requestTutorView } from "@/lib/request-tutor-view.ts";
   import { VoiceMessage, voiceMessenger } from "@/lib/voice-channel.ts";
   import type { VoiceHello } from "@/lib/voice-protocol.ts";
+  import { TUTOR_VIEW_PATH } from "@scripts/lib/tutor-view.ts";
   import { onMount } from "svelte";
 
   const IDLE_LABEL = "Idle";
@@ -98,6 +100,7 @@
       apiKey,
       language,
       captureFrame,
+      readView: () => requestTutorView(TUTOR_VIEW_PATH),
       events: {
         onState(state) {
           liveState = state;

@@ -9,13 +9,14 @@
   import { sessionItem } from "@/lib/session.ts";
   import { loadEngine, loadLanguage, saveEngine, saveLanguage } from "@/lib/settings.ts";
   import { VOICE_URL } from "@/lib/voice-page.ts";
-  import { findVscodeTab, VSCODE_ORIGIN } from "@/lib/vscode.ts";
+  import { findVscodeTab, VSCODE_ORIGIN, VSCODE_SITES_TEXT } from "@/lib/vscode.ts";
+  import { WEB_ORIGIN } from "@scripts/lib/gcp.ts";
   import { onMount } from "svelte";
   import { browser } from "wxt/browser";
 
   const IDLE = "idle";
-  const READY_TEXT = "Start the voice tutor from the VS Code title bar";
-  const NEEDS_VSCODE_TEXT = `Open VS Code at ${VSCODE_ORIGIN} to begin`;
+  const READY_TEXT = `Start the voice tutor from the title bar at ${VSCODE_ORIGIN} or the status bar at ${WEB_ORIGIN}`;
+  const NEEDS_VSCODE_TEXT = `Open VS Code at ${VSCODE_SITES_TEXT} to begin`;
   const NEXT_SESSION_TEXT = "Applies to the next session";
   const SWITCH_LOCKED_TEXT = "Stop the voice tutor to switch";
   const TAB_EVENTS = [browser.tabs.onCreated, browser.tabs.onRemoved, browser.tabs.onUpdated];
