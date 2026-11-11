@@ -2,6 +2,7 @@ import { apiKeySchema, clearGeminiKey, loadGeminiKey, saveGeminiKey } from "@/li
 import { lessonIdFromUrl } from "@/lib/lesson-address.ts";
 import { buildSiteTutorView } from "@/lib/site-tutor-view.ts";
 import { COURSE_PATH } from "@/lib/web-paths.ts";
+import { Engine } from "@interview-prep/gemini-live/src/lib/engine.ts";
 import { fetchParsed } from "@interview-prep/gemini-live/src/lib/fetch-parsed.ts";
 import { DEFAULT_LANGUAGE } from "@interview-prep/gemini-live/src/lib/language.ts";
 import { startScreenShare } from "@interview-prep/gemini-live/src/lib/live-api/screen-share.ts";
@@ -190,7 +191,10 @@ export function createVoiceTutor({ api, onChange }: {
   }
 
   async function start() {
-    if (isExtensionInstalled()) {
+    const engine = isExtensionInstalled()
+      ? await siteMessenger.sendMessage(SiteBridgeMessage.GET_ENGINE).catch(() => null)
+      : null;
+    if (engine === Engine.SUBSCRIPTION) {
       await startViaExtension();
       return;
     }
