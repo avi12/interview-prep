@@ -91,84 +91,86 @@
 </script>
 
 <main data-state={sessionState}>
-  <header>
-    <h1>Gemini Live tutor</h1>
-    <span id="chip" class="chip" data-tone={sessionTone(session)}>{sessionState}</span>
-  </header>
-  <section class="card">
-    <output id="status">{status}</output>
+  <section class="plate" aria-labelledby="title">
+    <h1 id="title" class="tab">Gemini Live tutor</h1>
+    <span id="chip" class="tab alt" data-tone={sessionTone(session)}>{sessionState}</span>
+    <output id="status" class="term">
+      <span class="c-led" data-live={isLive || undefined}></span>
+      {status}
+    </output>
   </section>
-  <label class="field">
-    <span class="sub">Tutor language</span>
-    <select id="language" onchange={e => chooseLanguage(e.currentTarget.value)} value={language}>
-      {#each Object.entries(LANGUAGE_LABEL) as [value, label] (value)}
-        <option {value}>{label}</option>
+  <section class="plate">
+    <h2 class="tab">Language</h2>
+    <label class="c-field">
+      <span class="c-sr-only">Tutor language</span>
+      <select id="language" onchange={e => chooseLanguage(e.currentTarget.value)} value={language}>
+        {#each Object.entries(LANGUAGE_LABEL) as [value, label] (value)}
+          <option {value}>{label}</option>
+        {/each}
+      </select>
+      <small class="c-hint">Applies to the next session</small>
+    </label>
+  </section>
+  <section class="plate">
+    <h2 class="tab">Voice engine</h2>
+    <fieldset class="engine" disabled={isLive}>
+      <legend class="c-sr-only">Voice engine</legend>
+      {#each Object.values(Engine) as option (option)}
+        <label class="option">
+          <input
+            name="engine"
+            class="c-radio"
+            checked={engine === option}
+            onchange={() => chooseEngine(option)}
+            type="radio"
+            value={option}
+          />
+          <span>{ENGINE_LABEL[option]}</span>
+          <small class="c-hint" class:warning={option === Engine.SUBSCRIPTION}>{ENGINE_DETAIL[option]}</small>
+        </label>
       {/each}
-    </select>
-    <small class="sub">Applies to the next session</small>
-  </label>
-  <fieldset class="field engine" disabled={isLive}>
-    <legend class="sub">Voice engine</legend>
-    {#each Object.values(Engine) as option (option)}
-      <label class="option">
-        <input
-          name="engine"
-          checked={engine === option}
-          onchange={() => chooseEngine(option)}
-          type="radio"
-          value={option}
-        />
-        <span>{ENGINE_LABEL[option]}</span>
-        <small class="sub" class:warning={option === Engine.SUBSCRIPTION}>{ENGINE_DETAIL[option]}</small>
-      </label>
-    {/each}
-    {#if isLive}
-      <small class="sub">{SWITCH_LOCKED_TEXT}</small>
-    {:else}
-      <small class="sub">{NEXT_SESSION_TEXT}</small>
+      {#if isLive}
+        <small class="c-hint">{SWITCH_LOCKED_TEXT}</small>
+      {:else}
+        <small class="c-hint">{NEXT_SESSION_TEXT}</small>
+      {/if}
+    </fieldset>
+    {#if engine === Engine.API_KEY}
+      <button
+        id="api-key"
+        class="c-btn"
+        data-variant="primary"
+        onclick={() => browser.tabs.create({ url: VOICE_URL })}
+        type="button"
+      >
+        Set or change API key
+      </button>
     {/if}
-  </fieldset>
-  {#if engine === Engine.API_KEY}
-    <button id="api-key" class="btn" onclick={() => browser.tabs.create({ url: VOICE_URL })} type="button">Set or change API key</button>
-  {/if}
+  </section>
   <MicKey />
 </main>
 
 <style>
   main {
     display: grid;
-    gap: var(--s-4);
-    padding: var(--s-4);
+    gap: var(--s-3);
+    padding: var(--s-3);
   }
 
-  header {
+  h1,
+  h2 {
+    margin: 0;
+  }
+
+  .term {
     display: flex;
-    gap: var(--s-3);
-    justify-content: space-between;
+    gap: var(--s-2);
     align-items: center;
   }
 
-  h1 {
-    margin: 0;
-    font: var(--t-title-l);
-  }
-
-  .card {
-    display: grid;
-    gap: var(--s-2);
-    padding: var(--s-4);
-
-    & output {
-      font: var(--t-body-l);
-    }
-  }
-
-  .field {
-    display: grid;
-    gap: var(--s-1);
-  }
-
   .engine {
+    display: grid;
+    gap: var(--s-3);
     margin: 0;
     padding: 0;
     border: 0;
@@ -183,6 +185,7 @@
     grid-template-columns: auto 1fr;
     gap: var(--s-1) var(--s-2);
     align-items: center;
+    cursor: pointer;
 
     & small {
       grid-column: 2;

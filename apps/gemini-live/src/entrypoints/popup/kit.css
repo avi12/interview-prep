@@ -1,0 +1,264 @@
+:root {
+  --w-frame: #06182b;
+  --w-accent: #c8102e;
+  --w-readout: #06182b;
+  --w-yellow: #eeeb1a;
+  --w-tab-fg: #ffffff;
+  --w-cut: 14px;
+  --c-on: #06182b;
+  --c-on-fill: #56feff;
+  --c-off: #547a99;
+  --c-accent: #c8102e;
+  --c-label: #6e5200;
+  --c-panel: #edf5fc;
+  --c-panel-solid: #edf5fc;
+  --c-ink: #06182b;
+  --c-glow: none;
+  --c-cut: 7px;
+}
+
+:root[data-theme="dark"] {
+  --w-frame: #f72944;
+  --w-accent: #f72944;
+  --w-readout: #56feff;
+  --w-tab-fg: #000000;
+  --c-on: #56feff;
+  --c-off: #007979;
+  --c-accent: #f72944;
+  --c-label: #ffd540;
+  --c-panel: rgb(0 0 0 / 80%);
+  --c-panel-solid: #05080c;
+  --c-ink: #000000;
+  --c-glow: 0 0 10px rgb(86 254 255 / 45%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --w-frame: #f72944;
+    --w-accent: #f72944;
+    --w-readout: #56feff;
+    --w-tab-fg: #000000;
+    --c-on: #56feff;
+    --c-off: #007979;
+    --c-accent: #f72944;
+    --c-label: #ffd540;
+    --c-panel: rgb(0 0 0 / 80%);
+    --c-panel-solid: #05080c;
+    --c-ink: #000000;
+    --c-glow: 0 0 10px rgb(86 254 255 / 45%);
+  }
+}
+
+.plate {
+  position: relative;
+  display: grid;
+  gap: var(--s-3);
+  padding: 16px;
+  padding-block-start: 28px;
+  border: 2px solid var(--w-frame);
+  background: var(--surface);
+  clip-path: polygon(0 0, calc(100% - var(--w-cut)) 0, 100% var(--w-cut), 100% 100%, var(--w-cut) 100%, 0 calc(100% - var(--w-cut)));
+
+  &::after {
+    content: "";
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    width: 18px;
+    height: 18px;
+    border-right: 2px solid var(--w-frame);
+    border-bottom: 2px solid var(--w-frame);
+    pointer-events: none;
+  }
+}
+
+.tab {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding-block: 2px;
+  padding-inline: 10px 18px;
+  background: var(--w-accent);
+  color: var(--w-tab-fg);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  font: 700 12px/16px var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  &.alt {
+    right: 0;
+    left: auto;
+    padding-inline: 18px 10px;
+    background: var(--w-yellow);
+    color: #06182b;
+    clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
+  }
+}
+
+.term {
+  margin: 0;
+  padding: 10px 12px;
+  border: 2px solid var(--w-frame);
+  border-left-width: 6px;
+  background: var(--c-panel);
+  color: var(--w-readout);
+  font: 13px/1.6 var(--font-mono);
+  text-shadow: var(--c-glow);
+}
+
+.c-led {
+  display: inline-block;
+  block-size: 7px;
+  inline-size: 14px;
+  background: var(--c-accent);
+}
+
+.c-section-label {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--c-label);
+  font: 13px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  &::before {
+    content: "//";
+    color: var(--c-accent);
+  }
+}
+
+.c-hint {
+  color: var(--fg-muted);
+  font: 11px/1.5 var(--font-mono);
+}
+
+.c-radio {
+  appearance: none;
+  flex: none;
+  block-size: 22px;
+  inline-size: 20px;
+  margin: 0;
+  background: var(--c-off);
+  clip-path: polygon(50% 0, 100% 32%, 100% 100%, 0 100%, 0 32%);
+  cursor: pointer;
+
+  &::after {
+    content: "";
+    display: block;
+    block-size: 100%;
+    inline-size: 100%;
+    background: var(--c-panel-solid);
+    clip-path: polygon(50% 12%, 86% 38%, 86% 88%, 14% 88%, 14% 38%);
+  }
+
+  &:checked {
+    background: var(--c-accent);
+
+    &::after {
+      background: var(--c-ink);
+      clip-path: polygon(22% 58%, 78% 58%, 78% 70%, 22% 70%);
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.c-btn {
+  display: inline-flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  min-block-size: 34px;
+  padding: 0 14px;
+  border: 2px solid var(--c-off);
+  background: transparent;
+  color: var(--c-on);
+  clip-path: polygon(var(--c-cut) 0, 100% 0, 100% calc(100% - var(--c-cut)), calc(100% - var(--c-cut)) 100%, 0 100%, 0 var(--c-cut));
+  font: 600 12px/1 var(--font-sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--c-on);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--c-on);
+    outline-offset: -4px;
+  }
+
+  &[data-variant="primary"] {
+    border-color: var(--c-on-fill);
+    background: var(--c-on-fill);
+    color: #06182b;
+    box-shadow: var(--c-glow);
+  }
+}
+
+.c-field {
+  display: grid;
+  gap: 6px;
+
+  & :is(input, select) {
+    min-block-size: 36px;
+    padding: 6px 12px;
+    border: 1.5px solid var(--c-off);
+    background: var(--c-panel);
+    color: var(--fg);
+    clip-path: polygon(var(--c-cut) 0, 100% 0, 100% calc(100% - var(--c-cut)), calc(100% - var(--c-cut)) 100%, 0 100%, 0 var(--c-cut));
+    font: 14px/1.4 var(--font-mono);
+
+    &:focus-visible {
+      border-color: var(--c-on);
+      background:
+        linear-gradient(135deg, transparent calc(100% - 12px), var(--c-accent) 0) no-repeat,
+        var(--c-panel);
+      outline: none;
+    }
+  }
+
+  & select {
+    appearance: none;
+    padding-inline-end: 36px;
+    background:
+      linear-gradient(45deg, transparent 50%, var(--c-on) 50%) calc(100% - 20px) 50% / 6px 6px no-repeat,
+      linear-gradient(-45deg, transparent 50%, var(--c-on) 50%) calc(100% - 14px) 50% / 6px 6px no-repeat,
+      var(--c-panel);
+    cursor: pointer;
+
+    &:focus-visible {
+      background:
+        linear-gradient(45deg, transparent 50%, var(--c-on) 50%) calc(100% - 20px) 50% / 6px 6px no-repeat,
+        linear-gradient(-45deg, transparent 50%, var(--c-on) 50%) calc(100% - 14px) 50% / 6px 6px no-repeat,
+        linear-gradient(135deg, transparent calc(100% - 12px), var(--c-accent) 0) no-repeat,
+        var(--c-panel);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes c-led-blink {
+    50% {
+      opacity: 25%;
+    }
+  }
+
+  .c-led[data-live] {
+    animation: c-led-blink 1200ms steps(1) infinite;
+  }
+}
+
+.c-sr-only {
+  position: absolute;
+  overflow: hidden;
+  block-size: 1px;
+  inline-size: 1px;
+  margin: -1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

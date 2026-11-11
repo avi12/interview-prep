@@ -105,55 +105,58 @@
 
 <svelte:window onkeydown={onRecordedKey} />
 
-<section class="mic-key">
-  <span class="sub">Mic key</span>
+<section class="plate mic-key">
+  <h2 class="tab">Mic key</h2>
   <kbd id="mic-key-current" class="current">{micKeyText(micKey)}</kbd>
-  <small class="sub">{sourceText}</small>
+  <small class="c-hint">{sourceText}</small>
   {#each namedRoles as role (role)}
-    <input
-      aria-label={NAME_LABEL[role]}
-      onchange={e => rename({
-        role,
-        label: e.currentTarget.value
-      })}
-      value={taught?.[role]?.label}
-    />
+    <label class="c-field">
+      <span class="c-section-label">{NAME_LABEL[role]}</span>
+      <input
+        onchange={e => rename({
+          role,
+          label: e.currentTarget.value
+        })}
+        value={taught?.[role]?.label}
+      />
+    </label>
   {/each}
   {#if teachingRole || isRecording}
     <div class="row">
       <span class="waiting">{waitingText}</span>
-      <button id="cancel-teach" class="btn" onclick={cancel} type="button">Cancel</button>
+      <button id="cancel-teach" class="c-btn" onclick={cancel} type="button">Cancel</button>
     </div>
   {:else if taught}
     <div class="row">
-      <button class="btn" onclick={() => teach(TeachRole.KEY)} type="button">Teach again</button>
+      <button class="c-btn" onclick={() => teach(TeachRole.KEY)} type="button">Teach again</button>
       {#if taught.heldKey}
-        <button class="btn" onclick={() => saveMicKey(withoutHeldKey(micKey))} type="button">Drop held key</button>
+        <button class="c-btn" onclick={() => saveMicKey(withoutHeldKey(micKey))} type="button">Drop held key</button>
       {:else}
-        <button class="btn" onclick={() => teach(TeachRole.HELD_KEY)} type="button">Hold with…</button>
+        <button class="c-btn" onclick={() => teach(TeachRole.HELD_KEY)} type="button">Hold with…</button>
       {/if}
     </div>
-    <button class="btn" onclick={() => saveMicKey(DEFAULT_MIC_KEY)} type="button">Use a key combo</button>
+    <button class="c-btn" onclick={() => saveMicKey(DEFAULT_MIC_KEY)} type="button">Use a key combo</button>
   {:else}
     <div class="row">
-      <button id="record-combo" class="btn" onclick={record} type="button">Record a combo</button>
-      <button id="teach-key" class="btn" onclick={() => teach(TeachRole.KEY)} type="button">Teach a macro key</button>
+      <button id="record-combo" class="c-btn" onclick={record} type="button">Record a combo</button>
+      <button id="teach-key" class="c-btn" onclick={() => teach(TeachRole.KEY)} type="button">Teach a macro key</button>
     </div>
   {/if}
   {#if note}
-    <small class="sub">{note}</small>
+    <small class="c-hint">{note}</small>
   {/if}
 </section>
 
 <style>
-  .mic-key {
-    display: grid;
-    gap: var(--s-2);
+  .mic-key h2 {
+    margin: 0;
   }
 
   .current {
     justify-self: start;
-    font: var(--t-title-m);
+    color: var(--w-readout);
+    font: 26px/1 var(--font-mono);
+    text-shadow: var(--c-glow);
   }
 
   .row {
@@ -167,6 +170,8 @@
   }
 
   .waiting {
-    font: var(--t-body-m);
+    color: var(--c-label);
+    font: 12px/1.4 var(--font-mono);
+    text-transform: uppercase;
   }
 </style>

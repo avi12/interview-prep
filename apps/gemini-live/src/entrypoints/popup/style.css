@@ -1,5 +1,6 @@
 @import url("../../../../../assets/skin.css");
 @import url("../../lib/tone.css");
+@import url("./kit.css");
 
 body {
   width: 340px;
