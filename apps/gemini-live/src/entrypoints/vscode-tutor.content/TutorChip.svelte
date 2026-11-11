@@ -18,6 +18,11 @@
   const MUTE_ACTION = "mute";
   const TALK_ACTION = "talk";
 
+  const uid = $props.id();
+  const statusTipId = `${uid}-status-tip`;
+  const micTipId = `${uid}-mic-tip`;
+  const stopTipId = `${uid}-stop-tip`;
+
   let session = $state<Session | null>(null);
   let failure = $state("");
   let micKeyHint = $state("");
@@ -75,17 +80,20 @@
   });
 </script>
 
-<div class="ip-tutor-panel" data-tone={tone} {title}>
+<div class="ip-tutor-panel" aria-describedby={title ? statusTipId : undefined} data-tone={tone}>
   {#if label}
     <span class="ip-tutor-status">{label}</span>
+  {/if}
+  {#if title}
+    <span id={statusTipId} class="ip-tutor-tip ip-tutor-status-tip" role="tooltip">{title}</span>
   {/if}
   {#if isLive}
     <button
       class="ip-tutor ip-tutor-mic"
+      aria-describedby={micTipId}
       aria-pressed={isMicOpen}
       data-open={isMicOpen}
       onclick={toggleMic}
-      title={micTitle}
       type="button"
     >
       <svg aria-hidden="true" viewBox="0 0 16 16">
@@ -100,19 +108,21 @@
         <kbd>{micKeyHint}</kbd>
       {/if}
     </button>
+    <span id={micTipId} class="ip-tutor-tip ip-tutor-mic-tip" role="tooltip">{micTitle}</span>
   {:else}
     <button class="ip-tutor" data-tutor-action={TutorAction.START} onclick={start} type="button">{START_LABEL}</button>
   {/if}
   {#if session}
     <button
-      class="ip-tutor ip-tutor-secondary"
+      class="ip-tutor ip-tutor-secondary ip-tutor-stop"
+      aria-describedby={stopTipId}
       data-tutor-action={TutorAction.STOP}
       onclick={stop}
-      title={STOP_TITLE}
       type="button"
     >
       {STOP_LABEL}
     </button>
+    <span id={stopTipId} class="ip-tutor-tip ip-tutor-stop-tip" role="tooltip">{STOP_TITLE}</span>
   {/if}
 </div>
 
@@ -166,6 +176,7 @@
     min-width: 0;
     text-overflow: ellipsis;
     white-space: nowrap;
+    anchor-name: --ip-tutor-status;
   }
 
   .ip-tutor {
@@ -201,6 +212,7 @@
     display: inline-flex;
     gap: 6px;
     align-items: center;
+    anchor-name: --ip-tutor-mic;
 
     &[data-open="true"] {
       background: var(--vscode-statusBarItem-errorBackground, #c72e0f);
@@ -226,6 +238,55 @@
     }
   }
 
+  .ip-tutor-stop {
+    anchor-name: --ip-tutor-stop;
+  }
+
+  .ip-tutor-tip {
+    position: absolute;
+    z-index: 1;
+    inline-size: max-content;
+    max-inline-size: 320px;
+    margin: 4px;
+    padding: 4px 8px;
+    border: 1px solid var(--vscode-editorHoverWidget-border, var(--vscode-contrastBorder, transparent));
+    border-radius: 3px;
+    background: var(--vscode-editorHoverWidget-background, canvas);
+    color: var(--vscode-editorHoverWidget-foreground, var(--vscode-foreground, canvastext));
+    font: 12px var(--vscode-font-family, system-ui);
+    white-space: normal;
+    opacity: 0%;
+    visibility: hidden;
+    box-shadow: 0 2px 8px var(--vscode-widget-shadow, transparent);
+    pointer-events: none;
+    transition:
+      opacity 120ms ease-out,
+      translate 120ms ease-out,
+      visibility 120ms;
+    translate: 0 -2px;
+    position-area: block-end span-inline-start;
+    position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+  }
+
+  .ip-tutor-status-tip {
+    position-anchor: --ip-tutor-status;
+  }
+
+  .ip-tutor-mic-tip {
+    position-anchor: --ip-tutor-mic;
+  }
+
+  .ip-tutor-stop-tip {
+    position-anchor: --ip-tutor-stop;
+  }
+
+  .ip-tutor-panel:hover:not(:has(.ip-tutor:hover)) > .ip-tutor-status-tip,
+  .ip-tutor:is(:hover, :focus-visible) + .ip-tutor-tip {
+    opacity: 100%;
+    visibility: visible;
+    translate: 0;
+  }
+
   @keyframes ip-tutor-on-air {
     from {
       box-shadow: 0 0 0 0 var(--vscode-statusBarItem-errorBackground, #c72e0f);
@@ -239,6 +300,11 @@
   @media (prefers-reduced-motion: reduce) {
     .ip-tutor-mic[data-open="true"] {
       animation: none;
+    }
+
+    .ip-tutor-tip {
+      transition: none;
+      translate: 0;
     }
   }
 </style>

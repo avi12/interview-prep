@@ -1,9 +1,8 @@
 <script lang="ts">
   import CopyLine from "./CopyLine.svelte";
   import { Engine, ENGINE_LABEL, SUBSCRIPTION_CONSEQUENCE, SUBSCRIPTION_RISK } from "@/lib/engine.ts";
+  import { EXTENSIONS_PAGE, GeminiLiveAsset, geminiLiveDownloadUrl } from "@scripts/lib/gemini-live-extension.ts";
   import { EXTENSION_BUILD_COMMAND, EXTENSION_BUILD_RELATIVE_DIR, type VoiceSetup } from "@scripts/lib/voice.ts";
-
-  const EXTENSIONS_PAGE = "chrome://extensions";
 
   const { setup }: { setup: VoiceSetup | null } = $props();
 </script>
@@ -16,7 +15,10 @@
   </p>
   <ol class="steps">
     <li>
-      <span>Build the extension in a terminal at the repo root:</span>
+      <span>
+        Build the extension in a terminal at the repo root,
+        or <a href={geminiLiveDownloadUrl(GeminiLiveAsset.ZIP)}>download it ready-made</a> (no need to unzip):
+      </span>
       <CopyLine text={setup?.buildCommand ?? EXTENSION_BUILD_COMMAND} />
     </li>
     <li>
@@ -24,7 +26,7 @@
       <CopyLine text={EXTENSIONS_PAGE} />
     </li>
     <li>
-      <span>Click Load unpacked and pick this folder:</span>
+      <span>Click Load unpacked and pick this folder, or drag the downloaded zip onto the page instead:</span>
       <CopyLine text={setup?.extensionPath ?? EXTENSION_BUILD_RELATIVE_DIR} />
     </li>
     <li>Reload this page, then pick "{ENGINE_LABEL[Engine.SUBSCRIPTION]}" in the extension's popup.</li>

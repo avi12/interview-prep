@@ -18,6 +18,21 @@ Then in Chrome: `chrome://extensions`, turn on Developer mode, Load unpacked, pi
 
 You also need to be signed in to Google in that Chrome, so the Gemini window can start Live.
 
+## Gemini Live extension
+
+You can also skip the build and download a ready-made copy from GitHub. The hosted trainer shows these steps until the extension is installed.
+
+1. Download [interview-prep-gemini-live.zip](https://github.com/avi12/interview-prep/releases/latest/download/interview-prep-gemini-live.zip) (or the `.crx` from the same release). Do not unzip it.
+2. Open `chrome://extensions` and turn on Developer mode.
+3. Drag the downloaded file onto that page and confirm Add extension.
+4. To update, download it again and drag it onto the page again.
+
+Both files install the same way. Chrome on Windows and macOS may turn off a `.crx` that does not come from the Chrome Web Store; if that happens, drop the zip instead.
+
+The extension tells the trainer it is installed by setting `data-gemini-live-version` on the page's `<html>` (`src/entrypoints/install-marker.content.ts`), and the page hides the steps in CSS. It reads nothing from the page.
+
+To publish a new release, bump `version` in `apps/gemini-live/package.json` and run `pnpm release:gemini-live` at the repo root (`--dry-run` builds everything and prints the `gh` commands instead). The `.crx` is signed with the key at `GEMINI_LIVE_CRX_KEY`, by default `~/.config/interview-prep/gemini-live.pem`, created on first run. Keep it outside the repo and back it up.
+
 ## Use your own API key
 
 The API key engine needs no extension. Click **Voice tutor** in the VS Code status bar: it opens the voice page at `http://127.0.0.1:8766/voice/`, served by the trainer's VS Code extension. Paste your key there once and press Start. The page offers to sideload this extension when you want the subscription engine instead.
