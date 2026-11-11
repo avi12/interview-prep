@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Short narrated lessons and real exercises for junior tech interviews, in VS Code in your browser." />
+    <meta name="color-scheme" content="dark light" />
+    <title>Interview Prep</title>
+    <style>
+      :root {
+        --boot-bg: #1f1f1f;
+        --boot-fg: #9d9d9d;
+        --boot-danger: #f48771;
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root {
+          --boot-bg: #ffffff;
+          --boot-fg: #616161;
+          --boot-danger: #a1260d;
+        }
+      }
+
+      html,
+      body {
+        overflow: hidden;
+        block-size: 100%;
+        margin: 0;
+        background: var(--boot-bg);
+      }
+
+      #workbench {
+        block-size: 100dvh;
+      }
+
+      #boot-status {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        margin: 0;
+        color: var(--boot-fg);
+        font: 13px system-ui, sans-serif;
+
+        &[data-failed] {
+          color: var(--boot-danger);
+        }
+      }
+
+      body:has(.monaco-workbench) #boot-status:not([data-failed]) {
+        display: none;
+      }
+    </style>
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <main id="workbench"></main>
+    <p id="boot-status" role="status">Loading VS Code</p>
+  </body>
+</html>

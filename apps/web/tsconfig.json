@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@/*": ["./src/*", "../vscode-ext/src/*"],
+      "@server/*": ["./server/*"],
+      "@scripts/*": ["../../scripts/*"],
+      "@manifest": ["../vscode-ext/package.json"],
+      "#scripts/*": ["../../scripts/*"],
+      "#kit/*": ["../../curriculum/_kit/*"]
+    }
+  },
+  "include": ["src", "server", "test", "*.ts"]
+}
