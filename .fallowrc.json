@@ -3,6 +3,8 @@
   "extends": ["./node_modules/fallow-config-avi12/fallow.json"],
   "entry": [
     "apps/gemini-live/src/entrypoints/**",
+    "apps/gemini-live/src/voice/main.ts",
+    "assets/lesson.css",
     "apps/gemini-live/test/*.ts",
     "apps/gemini-live/wxt.config.ts",
     "apps/vscode-ext/src/loader.ts",

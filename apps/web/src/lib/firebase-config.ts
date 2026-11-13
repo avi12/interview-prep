@@ -13,7 +13,7 @@ export type FirebaseConfig = zod.infer<typeof firebaseConfigSchema>;
 
 export const NO_CONFIG_REASON = "Sign-in is not set up on this server";
 
-export type ConfigResult =
+type ConfigResult =
   | {
       isReady: true;
       config: FirebaseConfig;
