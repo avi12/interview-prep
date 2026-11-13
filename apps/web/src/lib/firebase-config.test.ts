@@ -1,7 +1,8 @@
+import { describe, expect, it, vi } from "vitest";
+
+import { GCP } from "#scripts/lib/gcp.ts";
 import { loadFirebaseConfig, NO_CONFIG_REASON } from "@/lib/firebase-config.ts";
 import { FIREBASE_INIT_PATH } from "@/lib/web-paths.ts";
-import { GCP } from "#scripts/lib/gcp.ts";
-import { describe, expect, it, vi } from "vitest";
 
 const HOSTING_CONFIG = {
   apiKey: "public-key",

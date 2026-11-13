@@ -21,19 +21,23 @@ const app = createApp({
   log: writeLogLine
 });
 
-const server = serve({
-  fetch: app.fetch,
-  hostname: LISTEN_HOST,
-  port: config.port
-}, info => writeLogLine({
-  severity: Severity.info,
-  message: `Listening on ${LISTEN_HOST}:${info.port}`
-}));
+const server = serve(
+  {
+    fetch: app.fetch,
+    hostname: LISTEN_HOST,
+    port: config.port
+  },
+  info =>
+    writeLogLine({
+      severity: Severity.INFO,
+      message: `Listening on ${LISTEN_HOST}:${info.port}`
+    })
+);
 
 for (const signal of SHUTDOWN_SIGNALS) {
   process.once(signal, () => {
     writeLogLine({
-      severity: Severity.info,
+      severity: Severity.INFO,
       message: `${signal} received, closing the server`
     });
     server.close(async () => {

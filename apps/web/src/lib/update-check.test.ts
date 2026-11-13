@@ -1,22 +1,13 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import { fetchDeployedVersion, VERSION_POLL_INTERVAL_MS, watchForUpdates } from "@/lib/update-check.ts";
 import { VERSION_PATH } from "@/lib/web-paths.ts";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi
-} from "vitest";
 
 const CURRENT_VERSION = "2026-11-10T10:00:00.000Z";
 const NEXT_VERSION = "2026-11-10T11:00:00.000Z";
 const NOT_FOUND_STATUS = 404;
 
-function versionFetch({ body, status }: {
-  body: unknown;
-  status?: number;
-}) {
+function versionFetch({ body, status }: { body: unknown; status?: number }) {
   return vi.fn<typeof fetch>(async () => new Response(JSON.stringify(body), { status }));
 }
 

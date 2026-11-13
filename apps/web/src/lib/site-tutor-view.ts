@@ -1,6 +1,6 @@
-import { z } from "@/lib/zod.ts";
 import { tutorNotesSchema } from "#scripts/lib/schema.ts";
-import { type TutorBlock, TutorBlockKind, type TutorView, tutorViewSchema } from "#scripts/lib/tutor-view.ts";
+import { TutorBlockKind, tutorViewSchema } from "#scripts/lib/tutor-view.ts";
+import { zod } from "@/lib/zod.ts";
 
 const NO_LESSON_TITLE = "No lesson open";
 const HASH_SEED = 5381;
@@ -8,19 +8,23 @@ const HASH_MULTIPLIER = 33;
 const HASH_RADIX = 36;
 const MAX_CODE_CHARACTERS = 6000;
 
-export const siteViewSourcesSchema = z.object({
-  lessonTitle: z.string().nullable(),
+export const siteViewSourcesSchema = zod.object({
+  lessonTitle: zod.string().nullable(),
   notes: tutorNotesSchema,
-  file: z.object({
-    name: z.string(),
-    code: z.string()
-  }).nullable(),
-  lastTest: z.object({
-    ranAt: z.string(),
-    isPass: z.boolean()
-  }).nullable()
+  file: zod
+    .object({
+      name: zod.string(),
+      code: zod.string()
+    })
+    .nullable(),
+  lastTest: zod
+    .object({
+      ranAt: zod.string(),
+      isPass: zod.boolean()
+    })
+    .nullable()
 });
-export type SiteViewSources = z.infer<typeof siteViewSourcesSchema>;
+export type SiteViewSources = zod.infer<typeof siteViewSourcesSchema>;
 
 function hashOf(text: string) {
   let hash = HASH_SEED;
@@ -30,14 +34,14 @@ function hashOf(text: string) {
   return hash.toString(HASH_RADIX);
 }
 
-function heading(text: string): TutorBlock {
+function heading(text: string) {
   return {
     kind: TutorBlockKind.HEADING,
     text
   };
 }
 
-function paragraph(text: string): TutorBlock {
+function paragraph(text: string) {
   return {
     kind: TutorBlockKind.PARAGRAPH,
     text
@@ -55,13 +59,9 @@ function fileBlocks(file: SiteViewSources["file"]) {
   ];
 }
 
-export function buildSiteTutorView(sources: SiteViewSources): TutorView {
+export function buildSiteTutorView(sources: SiteViewSources) {
   const { lessonTitle, notes, file, lastTest } = siteViewSourcesSchema.parse(sources);
-  const blocks = [
-    heading("What the learner is doing right now"),
-    ...fileBlocks(file),
-    ...notes
-  ];
+  const blocks = [heading("What the learner is doing right now"), ...fileBlocks(file), ...notes];
   const title = lessonTitle ?? NO_LESSON_TITLE;
   return tutorViewSchema.parse({
     version: hashOf(

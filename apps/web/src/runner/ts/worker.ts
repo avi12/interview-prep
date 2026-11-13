@@ -8,11 +8,11 @@ function reply(response: RunResponse) {
   workerScope.postMessage(response);
 }
 
-workerScope.addEventListener("message", async e => {
-  const parsed = runRequestSchema.safeParse(e.data);
+workerScope.addEventListener("message", async event => {
+  const parsed = runRequestSchema.safeParse(event.data);
   if (!parsed.success) {
     reply({
-      kind: WorkerReply.crash,
+      kind: WorkerReply.CRASH,
       message: `Bad run request: ${parsed.error.message}`
     });
     return;
@@ -23,7 +23,7 @@ workerScope.addEventListener("message", async e => {
     reply(await runSuite(parsed.data));
   } catch (error) {
     reply({
-      kind: WorkerReply.crash,
+      kind: WorkerReply.CRASH,
       message: errorText(error)
     });
   }

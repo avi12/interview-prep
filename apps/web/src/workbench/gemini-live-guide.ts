@@ -9,10 +9,12 @@ import {
 } from "#scripts/lib/gemini-live-extension.ts";
 
 function stepList(steps: GuideStep[]) {
-  return steps.map((step, iStep) => {
-    const copyLine = step.copy ? `\n\n   \`${step.copy}\`` : "";
-    return `${iStep + 1}. ${step.text}${copyLine}`;
-  }).join("\n");
+  return steps
+    .map((step, iStep) => {
+      const copyLine = step.copy ? `\n\n   \`${step.copy}\`` : "";
+      return `${iStep + 1}. ${step.text}${copyLine}`;
+    })
+    .join("\n");
 }
 
 export function geminiLiveGuide() {

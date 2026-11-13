@@ -1,4 +1,8 @@
-import { z } from "@/lib/zod.ts";
+import * as runner from "@vitest/runner";
+import * as pathe from "pathe";
+
+import { EnginePath, PgliteFile } from "#scripts/lib/runner-bundle.ts";
+import { zod } from "@/lib/zod.ts";
 import { engineUrl } from "@/runner/engine-url.ts";
 import { chai, createExpect } from "@/runner/ts/expect.ts";
 import { nodeBuffer } from "@/runner/ts/node/buffer.ts";
@@ -7,9 +11,6 @@ import { nodeFs, promises } from "@/runner/ts/node/fs.ts";
 import { fileURLToPath, nodeUrl } from "@/runner/ts/node/url.ts";
 import { nodeUtil } from "@/runner/ts/node/util.ts";
 import { createVi } from "@/runner/ts/vi.ts";
-import * as runner from "@vitest/runner";
-import { EnginePath, PgliteFile } from "#scripts/lib/runner-bundle.ts";
-import * as pathe from "pathe";
 
 type ModuleRecord = Record<string, unknown>;
 type Loader = () => ModuleRecord | Promise<ModuleRecord>;
@@ -38,29 +39,31 @@ const RUNNER_EXPORTS = {
   onTestFinished: runner.onTestFinished
 };
 
-const pgliteModuleSchema = z.looseObject({ PGlite: z.custom<PgliteConstructor>(value => typeof value === "function") });
+const pgliteModuleSchema = zod.looseObject({
+  PGlite: zod.custom<PgliteConstructor>(value => typeof value === "function")
+});
 
 export function hostNameOf(specifier: string) {
   return BARE_NODE_MODULES.has(specifier) ? `${NODE_PREFIX}${specifier}` : specifier;
 }
 
 function pgliteFileUrl(name: string) {
-  return engineUrl(`${EnginePath.pgliteDir}/${name}`);
+  return engineUrl(`${EnginePath.PGLITE_DIR}/${name}`);
 }
 
 async function loadPglite() {
   const [module, pgliteWasmModule, initdbWasmModule, fsBundle] = await Promise.all([
-    import(/* @vite-ignore */ pgliteFileUrl(PgliteFile.module).href),
-    WebAssembly.compileStreaming(fetch(pgliteFileUrl(PgliteFile.wasm))),
-    WebAssembly.compileStreaming(fetch(pgliteFileUrl(PgliteFile.initdbWasm))),
-    fetch(pgliteFileUrl(PgliteFile.fsBundle)).then(response => response.blob())
+    import(/* @vite-ignore */ pgliteFileUrl(PgliteFile.MODULE).href),
+    WebAssembly.compileStreaming(fetch(pgliteFileUrl(PgliteFile.WASM))),
+    WebAssembly.compileStreaming(fetch(pgliteFileUrl(PgliteFile.INITDB_WASM))),
+    fetch(pgliteFileUrl(PgliteFile.FS_BUNDLE)).then(response => response.blob())
   ]);
   const parsed = pgliteModuleSchema.safeParse(module);
   if (!parsed.success) {
     throw new Error("The database engine did not load");
   }
 
-  const Original = parsed.data.PGlite;
+  const originalPglite = parsed.data.PGlite;
   const engineAssets = {
     pgliteWasmModule,
     initdbWasmModule,
@@ -74,15 +77,15 @@ async function loadPglite() {
     };
   }
 
-  class PGlite extends Original {
+  class PGlite extends originalPglite {
     constructor(dataDirOrOptions?: unknown, options?: object) {
       super(withAssets(dataDirOrOptions, options));
     }
 
     static async create(dataDirOrOptions?: unknown, options?: object) {
-      const db = new PGlite(dataDirOrOptions, options);
-      await db.waitReady;
-      return db;
+      const database = new PGlite(dataDirOrOptions, options);
+      await database.waitReady;
+      return database;
     }
   }
 
@@ -96,9 +99,9 @@ export function createHost() {
   const expect = createExpect();
   const loaders: Record<string, Loader> = {
     [ZOD_MODULE]: () => ({
-      ...z,
-      z,
-      default: z
+      ...zod,
+      zod,
+      default: zod
     }),
     "node:fs": () => nodeFs,
     "node:fs/promises": () => ({
@@ -169,10 +172,7 @@ export function createHost() {
     };
     return {
       module: (name: string) => overrides.get(name) ?? (name === VITEST_MODULE ? vitest : originals.get(name)),
-      onSwap({ name, swap }: {
-        name: string;
-        swap: Swap;
-      }) {
+      onSwap({ name, swap }: { name: string; swap: Swap }) {
         const set = swaps.get(name) ?? new Set<Swap>();
         set.add(swap);
         swaps.set(name, set);
@@ -212,7 +212,8 @@ export function createHost() {
     },
     async load(specifier: string) {
       const name = hostNameOf(specifier);
-      if (name !== VITEST_MODULE) {
+      const isNotVitestModule = name !== VITEST_MODULE;
+      if (isNotVitestModule) {
         await load(name);
       }
     },

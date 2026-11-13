@@ -1,17 +1,22 @@
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+
 import { createApp } from "@server/app.ts";
 import type { LogEntry } from "@server/logging.ts";
 import { createMemoryProgressStore } from "@server/memory-progress-store.ts";
 import type { RateLimitOptions } from "@server/rate-limit.ts";
+
 import { PAGE_STYLE_PATHS } from "#scripts/lib/layout.ts";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+
+const FIXTURE_LESSON_MINUTES = 10;
 
 export const KNOWN_LESSON = "support/01-help-desk-triage-and-sla";
 export const OTHER_LESSON = "sql/01-select-basics";
 export const SECRET_TEXT = "top secret outside every root";
 export const SPA_HTML = "<!doctype html><html><head><title>Shell</title></head><body>spa</body></html>";
-export const LESSON_HTML = "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"></head><body>lesson</body></html>";
+export const LESSON_HTML =
+  '<!doctype html><html lang="en"><head><meta charset="utf-8"></head><body>lesson</body></html>';
 export const PAGE_STYLE_TEXT = ":root { --bg: black; }";
 export const WEBVIEW_HOST_FILE = "assets/index-abc123.html";
 export const RUNNER_ENGINE_FILE = "engines/esbuild/esbuild.wasm";
@@ -24,10 +29,7 @@ const TOKEN_UIDS: Record<string, string> = {
   [OTHER_TOKEN]: "uid-2"
 };
 
-function writeDeep({ path, content }: {
-  path: string;
-  content: string;
-}) {
+function writeDeep({ path, content }: { path: string; content: string }) {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, content);
 }
@@ -37,7 +39,7 @@ function lessonEntry(id: string) {
     id,
     track: id.split("/")[0],
     title: `Title of ${id}`,
-    minutes: 10,
+    minutes: FIXTURE_LESSON_MINUTES,
     lang: "none",
     roles: [],
     files: [],
@@ -92,7 +94,7 @@ function writeFixtureTree() {
   });
   writeDeep({
     path: join(clientRoot, WEBVIEW_HOST_FILE),
-    content: "<!doctype html><meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'\">"
+    content: '<!doctype html><meta http-equiv="Content-Security-Policy" content="default-src \'none\'">'
   });
   for (const path of PAGE_STYLE_PATHS) {
     writeDeep({

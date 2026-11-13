@@ -8,8 +8,9 @@ import {
   SPA_HTML,
   WEBVIEW_HOST_FILE
 } from "@server/test-fixture.ts";
-import { HEALTH_PATH } from "#scripts/lib/gcp.ts";
 import { describe, expect, it } from "vitest";
+
+import { HEALTH_PATH } from "#scripts/lib/gcp.ts";
 
 const LESSON_PATH = `/course/dist/lessons/${KNOWN_LESSON}.html`;
 

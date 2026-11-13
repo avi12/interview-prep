@@ -1,5 +1,6 @@
-import { lessonIdFromUrl, urlForLesson } from "@/lib/lesson-address.ts";
 import { describe, expect, it } from "vitest";
+
+import { lessonIdFromUrl, urlForLesson } from "@/lib/lesson-address.ts";
 
 const LESSON_ID = "foundations/01-two-sum";
 

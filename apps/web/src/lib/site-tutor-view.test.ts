@@ -1,11 +1,14 @@
-import { buildSiteTutorView, siteViewSourcesSchema } from "@/lib/site-tutor-view.ts";
-import { TutorBlockKind, tutorViewSchema } from "#scripts/lib/tutor-view.ts";
 import { describe, expect, it } from "vitest";
 
-const NOTES = [{
-  kind: TutorBlockKind.HEADING,
-  text: "Card"
-}];
+import { TutorBlockKind, tutorViewSchema } from "#scripts/lib/tutor-view.ts";
+import { buildSiteTutorView, siteViewSourcesSchema } from "@/lib/site-tutor-view.ts";
+
+const NOTES = [
+  {
+    kind: TutorBlockKind.HEADING,
+    text: "Card"
+  }
+];
 
 describe("buildSiteTutorView", () => {
   it("builds a view that satisfies the shared schema", () => {
@@ -62,10 +65,12 @@ describe("buildSiteTutorView", () => {
   it("rejects malformed sources", () => {
     const malformed = siteViewSourcesSchema.safeParse({
       lessonTitle: "x",
-      notes: [{
-        kind: "bogus",
-        text: "y"
-      }],
+      notes: [
+        {
+          kind: "bogus",
+          text: "y"
+        }
+      ],
       file: null,
       lastTest: null
     });

@@ -1,1 +1,1 @@
-export { z } from "#scripts/lib/zod.ts";
+export { zod } from "#scripts/lib/zod.ts";

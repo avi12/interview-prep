@@ -1,13 +1,7 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import { apiKeySchema, clearGeminiKey, loadGeminiKey, saveGeminiKey } from "@/lib/gemini-key.ts";
 import { MemoryStorage } from "@/test/memory-storage.ts";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi
-} from "vitest";
 
 const VALID_KEY = "AIzaSyExampleKeyWithEnoughLength123";
 

@@ -1,12 +1,12 @@
-import { loadRunnerKit, loadRunnerLesson } from "@/runner/lesson-data.ts";
-import { PyReply, type PyRunResponse } from "@/runner/py/protocol.ts";
-import { type RunResponse, WorkerReply } from "@/runner/ts/protocol.ts";
-import { ChannelEnd, type ChannelOutcome } from "@/runner/worker-channel.ts";
 import { parseQueryResults } from "#scripts/lib/query-result.ts";
 import { RecordKind } from "#scripts/lib/record-env.ts";
 import { type BrowserRunResult, MS_PER_SECOND, type TestResult, timedOutOutput } from "#scripts/lib/run-result.ts";
 import { type LessonFiles, RunnableLang, type RunnerLesson } from "#scripts/lib/runner-bundle.ts";
 import { parseTestCases } from "#scripts/lib/test-cases.ts";
+import { loadRunnerKit, loadRunnerLesson } from "@/runner/lesson-data.ts";
+import { PyReply, type PyRunResponse } from "@/runner/py/protocol.ts";
+import { type RunResponse, WorkerReply } from "@/runner/ts/protocol.ts";
+import { ChannelEnd, type ChannelOutcome } from "@/runner/worker-channel.ts";
 
 const PASS_MARK = "✓";
 const FAIL_MARK = "✗";
@@ -48,7 +48,9 @@ function testLine(test: TestResult) {
     return `${PASS_MARK} ${name}`;
   }
 
-  return [`${FAIL_MARK} ${name}`, ...test.message.split(LINE_BREAK).map(line => `${MESSAGE_INDENT}${line}`)].join(LINE_BREAK);
+  return [`${FAIL_MARK} ${name}`, ...test.message.split(LINE_BREAK).map(line => `${MESSAGE_INDENT}${line}`)].join(
+    LINE_BREAK
+  );
 }
 
 function summaryLine(tests: TestResult[]) {
@@ -56,23 +58,24 @@ function summaryLine(tests: TestResult[]) {
   return `Tests: ${tests.length - passed} failed, ${passed} passed (${tests.length})`;
 }
 
-function tsOutput({ tests, errors }: {
-  tests: TestResult[];
-  errors: string[];
-}) {
+function tsOutput({ tests, errors }: { tests: TestResult[]; errors: string[] }) {
   return [...tests.map(testLine), ...errors, summaryLine(tests)].join(LINE_BREAK);
 }
 
-function settled<Response>({ outcome, lesson, signal }: {
+function settled<Response>({
+  outcome,
+  lesson,
+  signal
+}: {
   outcome: ChannelOutcome<Response>;
   lesson: RunnerLesson;
   signal: AbortSignal;
 }) {
-  if (outcome.end === ChannelEnd.done) {
+  if (outcome.end === ChannelEnd.DONE) {
     return outcome.response;
   }
 
-  if (outcome.end === ChannelEnd.crashed) {
+  if (outcome.end === ChannelEnd.CRASHED) {
     return failedRun(outcome.message);
   }
 
@@ -84,7 +87,7 @@ function settled<Response>({ outcome, lesson, signal }: {
 }
 
 function fromTsResponse(response: RunResponse) {
-  if (response.kind === WorkerReply.crash) {
+  if (response.kind === WorkerReply.CRASH) {
     return failedRun(response.message);
   }
 
@@ -96,14 +99,14 @@ function fromTsResponse(response: RunResponse) {
       tests,
       errors
     }),
-    queryResults: parseQueryResults(asJsonLines(records[RecordKind.queryResults])),
-    testCases: parseTestCases(asJsonLines(records[RecordKind.testCases])),
+    queryResults: parseQueryResults(asJsonLines(records[RecordKind.QUERY_RESULTS])),
+    testCases: parseTestCases(asJsonLines(records[RecordKind.TEST_CASES])),
     tests
   } satisfies BrowserRunResult;
 }
 
 function fromPyResponse(response: PyRunResponse) {
-  if (response.kind === PyReply.crash) {
+  if (response.kind === PyReply.CRASH) {
     return failedRun(response.message);
   }
 
@@ -117,11 +120,7 @@ function fromPyResponse(response: PyRunResponse) {
   } satisfies BrowserRunResult;
 }
 
-async function runPython({ lesson, files, signal }: {
-  lesson: RunnerLesson;
-  files: LessonFiles;
-  signal: AbortSignal;
-}) {
+async function runPython({ lesson, files, signal }: { lesson: RunnerLesson; files: LessonFiles; signal: AbortSignal }) {
   const kitLoading = loadRunnerKit();
   const { runPyLesson } = await import("@/runner/py/client.ts");
   const kit = await kitLoading;
@@ -142,7 +141,11 @@ async function runPython({ lesson, files, signal }: {
   return "kind" in response ? fromPyResponse(response) : response;
 }
 
-async function runTypeScript({ lesson, files, signal }: {
+async function runTypeScript({
+  lesson,
+  files,
+  signal
+}: {
   lesson: RunnerLesson;
   files: LessonFiles;
   signal: AbortSignal;
@@ -165,7 +168,11 @@ async function runTypeScript({ lesson, files, signal }: {
   return "kind" in response ? fromTsResponse(response) : response;
 }
 
-export async function runLesson({ lesson, files, signal = new AbortController().signal }: {
+export async function runLesson({
+  lesson,
+  files,
+  signal = new AbortController().signal
+}: {
   lesson: { id: string };
   files: LessonFiles;
   signal?: AbortSignal;

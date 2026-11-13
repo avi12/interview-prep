@@ -14,33 +14,54 @@ function standardEncoding(encoding: unknown) {
   return encoding === BASE64URL ? BASE64 : encoding;
 }
 
-function invoke({ method, target, args }: {
-  method: (...args: never[]) => unknown;
-  target: unknown;
-  args: unknown[];
-}) {
+function invoke({ method, target, args }: { method: (...args: never[]) => unknown; target: unknown; args: unknown[] }) {
   return Function.prototype.apply.call(method, target, args);
 }
 
+function methodOf({ owner, name }: { owner: object; name: string }) {
+  return Object.getOwnPropertyDescriptor(owner, name)?.value;
+}
+
 export function withBase64Url() {
-  const { from, byteLength, isEncoding } = Buffer;
-  const { toString, write } = Buffer.prototype;
+  const from = methodOf({
+    owner: Buffer,
+    name: "from"
+  });
+  const byteLength = methodOf({
+    owner: Buffer,
+    name: "byteLength"
+  });
+  const isEncoding = methodOf({
+    owner: Buffer,
+    name: "isEncoding"
+  });
+  const toString = methodOf({
+    owner: Buffer.prototype,
+    name: "toString"
+  });
+  const write = methodOf({
+    owner: Buffer.prototype,
+    name: "write"
+  });
   Object.assign(Buffer, {
-    from: (value: unknown, encoding?: unknown, length?: number) => invoke({
-      method: from,
-      target: Buffer,
-      args: [value, standardEncoding(encoding), length]
-    }),
-    byteLength: (value: string, encoding?: unknown) => invoke({
-      method: byteLength,
-      target: Buffer,
-      args: [value, standardEncoding(encoding)]
-    }),
+    from: (value: unknown, encoding?: unknown, length?: number) =>
+      invoke({
+        method: from,
+        target: Buffer,
+        args: [value, standardEncoding(encoding), length]
+      }),
+    byteLength: (value: string, encoding?: unknown) =>
+      invoke({
+        method: byteLength,
+        target: Buffer,
+        args: [value, standardEncoding(encoding)]
+      }),
     isEncoding: (encoding: string) => encoding === BASE64URL || isEncoding(encoding)
   });
   Object.assign(Buffer.prototype, {
     toString(this: Buffer, encoding?: string, start?: number, end?: number) {
-      if (encoding === BASE64URL) {
+      const isBase64Url = encoding === BASE64URL;
+      if (isBase64Url) {
         return toBase64Url(toString.call(this, BASE64, start, end));
       }
 

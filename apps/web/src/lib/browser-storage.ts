@@ -1,4 +1,4 @@
-import type { z } from "@/lib/zod.ts";
+import type { zod } from "@/lib/zod.ts";
 
 export function browserStorage() {
   try {
@@ -16,10 +16,7 @@ export function browserSessionStorage() {
   }
 }
 
-function storedJson({ storage, key }: {
-  storage: Storage | null;
-  key: string;
-}) {
+function storedJson({ storage, key }: { storage: Storage | null; key: string }) {
   try {
     const text = storage?.getItem(key);
     return text ? JSON.parse(text) : undefined;
@@ -28,12 +25,17 @@ function storedJson({ storage, key }: {
   }
 }
 
-export function readStored<Schema extends z.ZodType>({ storage, key, schema, fallback }: {
+export function readStored<Schema extends zod.ZodType>({
+  storage,
+  key,
+  schema,
+  fallback
+}: {
   storage: Storage | null;
   key: string;
   schema: Schema;
-  fallback: z.infer<Schema>;
-}): z.infer<Schema> {
+  fallback: zod.infer<Schema>;
+}) {
   const parsed = schema.safeParse(
     storedJson({
       storage,
@@ -43,11 +45,7 @@ export function readStored<Schema extends z.ZodType>({ storage, key, schema, fal
   return parsed.success ? parsed.data : fallback;
 }
 
-export function writeStored({ storage, key, value }: {
-  storage: Storage | null;
-  key: string;
-  value: unknown;
-}) {
+export function writeStored({ storage, key, value }: { storage: Storage | null; key: string; value: unknown }) {
   try {
     storage?.setItem(key, JSON.stringify(value));
     return true;

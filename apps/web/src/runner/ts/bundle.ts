@@ -1,16 +1,17 @@
+import type * as Esbuild from "esbuild-wasm";
+import { dirname, extname, join, normalize } from "pathe";
+
+import { EnginePath, mapImport } from "#scripts/lib/runner-bundle.ts";
 import { engineUrl } from "@/runner/engine-url.ts";
 import { type Host, HOST_GLOBAL, hostNameOf } from "@/runner/ts/host-modules.ts";
 import { existsSync, readFileSync } from "@/runner/ts/node/fs.ts";
 import { FILE_URL_PREFIX } from "@/runner/ts/protocol.ts";
-import { EnginePath, mapImport } from "#scripts/lib/runner-bundle.ts";
-import type * as Esbuild from "esbuild-wasm";
-import { dirname, extname, join, normalize } from "pathe";
 
 const ENTRY = "entry";
 const Namespace = {
-  entry: "entry",
-  host: "host",
-  file: "file"
+  ENTRY: "entry",
+  HOST: "host",
+  FILE: "file"
 } as const;
 const LOADERS: Record<string, Esbuild.Loader> = {
   ".ts": "ts",
@@ -31,16 +32,16 @@ const ABSOLUTE_PREFIX = "/";
 const RELATIVE_PREFIX = ".";
 const JAVASCRIPT_TYPE = "text/javascript";
 
-export type BundleEntry = {
+export interface BundleEntry {
   setupLoaders: Record<string, () => Promise<unknown>>;
   testLoader: () => Promise<unknown>;
   moduleLoaders: Record<string, () => Promise<Record<string, unknown>>>;
-};
+}
 
 export async function startEsbuild() {
   const [esbuild, wasmModule]: [typeof Esbuild, WebAssembly.Module] = await Promise.all([
-    import(/* @vite-ignore */ engineUrl(EnginePath.esbuildModule).href),
-    WebAssembly.compileStreaming(fetch(engineUrl(EnginePath.esbuildWasm)))
+    import(/* @vite-ignore */ engineUrl(EnginePath.ESBUILD_MODULE).href),
+    WebAssembly.compileStreaming(fetch(engineUrl(EnginePath.ESBUILD_WASM)))
   ]);
   await esbuild.initialize({
     wasmModule,
@@ -57,7 +58,11 @@ function loaderOf(path: string) {
   return LOADERS[extname(path)] ?? TEXT_LOADER;
 }
 
-function candidatePath({ specifier, importer, importMap }: {
+function candidatePath({
+  specifier,
+  importer,
+  importMap
+}: {
   specifier: string;
   importer: string;
   importMap: Record<string, string>;
@@ -82,18 +87,18 @@ function candidatePath({ specifier, importer, importMap }: {
 }
 
 function existingPath(path: string) {
-  return RESOLVE_SUFFIXES.map(suffix => `${path}${suffix}`).find(candidate => existsSync(candidate) && extname(candidate) !== "");
+  return RESOLVE_SUFFIXES.map(suffix => `${path}${suffix}`).find(
+    candidate => existsSync(candidate) && extname(candidate) !== ""
+  );
 }
 
-function hostStub({ name, bundleId, exportNames }: {
-  name: string;
-  bundleId: string;
-  exportNames: string[];
-}) {
-  const locals = exportNames.filter(key => IDENTIFIER_NAME.test(key)).map((key, index) => ({
-    key,
-    local: `e${index}`
-  }));
+function hostStub({ name, bundleId, exportNames }: { name: string; bundleId: string; exportNames: string[] }) {
+  const locals = exportNames
+    .filter(key => IDENTIFIER_NAME.test(key))
+    .map((key, index) => ({
+      key,
+      local: `e${index}`
+    }));
   return [
     `const scope = ${scopeExpression(bundleId)};`,
     `const current = scope.module(${JSON.stringify(name)});`,
@@ -112,7 +117,11 @@ function preparedSource(path: string) {
   return source.replace(IMPORT_META_URL, JSON.stringify(`${FILE_URL_PREFIX}${path}`));
 }
 
-function entrySource({ testFile, setupFiles, modulePaths }: {
+function entrySource({
+  testFile,
+  setupFiles,
+  modulePaths
+}: {
   testFile: string;
   setupFiles: string[];
   modulePaths: string[];
@@ -128,12 +137,17 @@ function entrySource({ testFile, setupFiles, modulePaths }: {
   ].join("\n");
 }
 
-function virtualFiles({ host, bundleId, importMap, entry }: {
+function virtualFiles({
+  host,
+  bundleId,
+  importMap,
+  entry
+}: {
   host: Host;
   bundleId: string;
   importMap: Record<string, string>;
   entry: string;
-}): Esbuild.Plugin {
+}) {
   return {
     name: "virtual-files",
     setup(build) {
@@ -141,14 +155,14 @@ function virtualFiles({ host, bundleId, importMap, entry }: {
         if (kind === "entry-point") {
           return {
             path: ENTRY,
-            namespace: Namespace.entry
+            namespace: Namespace.ENTRY
           };
         }
 
         if (host.isHostModule(path)) {
           return {
             path: hostNameOf(path),
-            namespace: Namespace.host
+            namespace: Namespace.HOST
           };
         }
 
@@ -164,39 +178,48 @@ function virtualFiles({ host, bundleId, importMap, entry }: {
 
         return {
           path: resolved,
-          namespace: Namespace.file
+          namespace: Namespace.FILE
         };
       });
-      build.onLoad({
-        filter: ANY_PATH,
-        namespace: Namespace.entry
-      }, () => ({
-        contents: entry,
-        loader: "js"
-      }));
-      build.onLoad({
-        filter: ANY_PATH,
-        namespace: Namespace.host
-      }, async ({ path }) => {
-        await host.load(path);
-        return {
-          contents: hostStub({
-            name: path,
-            bundleId,
-            exportNames: host.scope(bundleId).exportNames(path)
-          }),
+      build.onLoad(
+        {
+          filter: ANY_PATH,
+          namespace: Namespace.ENTRY
+        },
+        () => ({
+          contents: entry,
           loader: "js"
-        };
-      });
-      build.onLoad({
-        filter: ANY_PATH,
-        namespace: Namespace.file
-      }, ({ path }) => ({
-        contents: preparedSource(path),
-        loader: loaderOf(path)
-      }));
+        })
+      );
+      build.onLoad(
+        {
+          filter: ANY_PATH,
+          namespace: Namespace.HOST
+        },
+        async ({ path }) => {
+          await host.load(path);
+          return {
+            contents: hostStub({
+              name: path,
+              bundleId,
+              exportNames: host.scope(bundleId).exportNames(path)
+            }),
+            loader: "js"
+          };
+        }
+      );
+      build.onLoad(
+        {
+          filter: ANY_PATH,
+          namespace: Namespace.FILE
+        },
+        ({ path }) => ({
+          contents: preparedSource(path),
+          loader: loaderOf(path)
+        })
+      );
     }
-  };
+  } satisfies Esbuild.Plugin;
 }
 
 function isBuildFailure(error: unknown): error is Esbuild.BuildFailure {
@@ -208,10 +231,20 @@ function buildErrorText(error: unknown) {
     return String(error);
   }
 
-  return error.errors.map(({ text, location }) => (location ? `${location.file}:${location.line}:${location.column}: ${text}` : text)).join("\n");
+  return error.errors
+    .map(({ text, location }) => (location ? `${location.file}:${location.line}:${location.column}: ${text}` : text))
+    .join("\n");
 }
 
-export async function buildBundle({ esbuild, host, bundleId, testFile, setupFiles, moduleFiles, importMap }: {
+export async function buildBundle({
+  esbuild,
+  host,
+  bundleId,
+  testFile,
+  setupFiles,
+  moduleFiles,
+  importMap
+}: {
   esbuild: typeof Esbuild;
   host: Host;
   bundleId: string;
@@ -240,12 +273,14 @@ export async function buildBundle({ esbuild, host, bundleId, testFile, setupFile
           verbatimModuleSyntax: true
         }
       },
-      plugins: [virtualFiles({
-        host,
-        bundleId,
-        importMap,
-        entry
-      })]
+      plugins: [
+        virtualFiles({
+          host,
+          bundleId,
+          importMap,
+          entry
+        })
+      ]
     });
     return {
       isOk: true,

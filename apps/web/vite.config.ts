@@ -1,3 +1,8 @@
+import { fileURLToPath } from "node:url";
+
+import { extensionSourceAliases } from "interview-prep/src/aliases.mts";
+import { defineConfig, type Plugin, type UserConfig } from "vite";
+
 import {
   API_PATH,
   COURSE_PATH,
@@ -6,9 +11,6 @@ import {
   VERSION_FILE_NAME,
   WORKERS_DIR_NAME
 } from "./src/lib/web-paths.ts";
-import { extensionSourceAliases } from "interview-prep/src/aliases.mts";
-import { fileURLToPath } from "node:url";
-import { defineConfig, type Plugin, type UserConfig } from "vite";
 
 export const ALIASES = {
   "#scripts": fileURLToPath(new URL("../../scripts", import.meta.url)),
@@ -43,7 +45,7 @@ const NO_INLINED_ASSETS = 0;
 const DEDUPED_PACKAGES = ["vscode", "monaco-editor"];
 const APP_VERSION = new Date().toISOString();
 
-function appVersion(): Plugin {
+function appVersion() {
   return {
     name: "interview-prep-app-version",
     config: () => ({
@@ -58,7 +60,7 @@ function appVersion(): Plugin {
         source: JSON.stringify({ version: APP_VERSION })
       });
     }
-  };
+  } satisfies Plugin;
 }
 
 function posixPath(path: string) {
@@ -74,26 +76,28 @@ function isAppImporter(importer: string | undefined) {
   return path.startsWith(posixPath(APP_DIR)) && !path.includes(DEPENDENCIES_DIR);
 }
 
-export function appSourceAlias(): Plugin {
+export function appSourceAlias() {
   return {
     name: "interview-prep-app-alias",
     enforce: "pre",
     resolveId(source, importer, options) {
-      if (!source.startsWith(APP_ALIAS_PREFIX) || !isAppImporter(importer)) {
+      const isNotAppImport = !source.startsWith(APP_ALIAS_PREFIX) || !isAppImporter(importer);
+      if (isNotAppImport) {
         return null;
       }
 
       return this.resolve(`${APP_SOURCE_DIR}/${source.slice(APP_ALIAS_PREFIX.length)}`, importer, options);
     }
-  };
+  } satisfies Plugin;
 }
 
-function geminiLiveSourceAlias(): Plugin {
+function geminiLiveSourceAlias() {
   return {
     name: "interview-prep-gemini-live-alias",
     enforce: "pre",
     resolveId(source, importer, options) {
-      if (importer === undefined || !posixPath(importer).startsWith(GEMINI_LIVE_SOURCE_DIR)) {
+      const isForeignImporter = importer === undefined || !posixPath(importer).startsWith(GEMINI_LIVE_SOURCE_DIR);
+      if (isForeignImporter) {
         return null;
       }
 
@@ -107,16 +111,17 @@ function geminiLiveSourceAlias(): Plugin {
 
       return this.resolve(`${GEMINI_LIVE_SOURCE_DIR}/${source.slice(APP_ALIAS_PREFIX.length)}`, importer, options);
     }
-  };
+  } satisfies Plugin;
 }
 
-function inlineVscodeCss(): Plugin {
+function inlineVscodeCss() {
   return {
     name: "interview-prep-inline-vscode-css",
     enforce: "pre",
     async resolveId(source, importer, options) {
       const resolved = await this.resolve(source, importer, options);
-      if (!resolved || !VSCODE_CSS.test(resolved.id)) {
+      const isNotVscodeCss = !resolved || !VSCODE_CSS.test(resolved.id);
+      if (isNotVscodeCss) {
         return null;
       }
 
@@ -125,7 +130,7 @@ function inlineVscodeCss(): Plugin {
         id: `${resolved.id}${INLINE_QUERY}`
       };
     }
-  };
+  } satisfies Plugin;
 }
 
 export default defineConfig({

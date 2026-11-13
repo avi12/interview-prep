@@ -1,3 +1,6 @@
+import { describe, expect, it, vi } from "vitest";
+
+import { type Progress, PROGRESS_API_PATH } from "#scripts/lib/progress-sync.ts";
 import {
   createLocalProgressStore,
   createRemoteProgressStore,
@@ -8,8 +11,6 @@ import {
   syncLocalIntoAccount
 } from "@/lib/progress-store.ts";
 import { BrokenStorage, MemoryStorage } from "@/test/memory-storage.ts";
-import { type Progress, PROGRESS_API_PATH } from "#scripts/lib/progress-sync.ts";
-import { describe, expect, it, vi } from "vitest";
 
 const PASSED_AT = "2026-11-01T10:00:00.000Z";
 const LATER_AT = "2026-11-02T10:00:00.000Z";
@@ -26,10 +27,7 @@ const ACCOUNT_PROGRESS: Progress = {
   }
 };
 
-function jsonResponse({ status, body }: {
-  status: number;
-  body: unknown;
-}) {
+function jsonResponse({ status, body }: { status: number; body: unknown }) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -40,24 +38,25 @@ function jsonResponse({ status, body }: {
 
 function fakeFetch(responses: Response[]) {
   const queue = [...responses];
-  return vi.fn<typeof fetch>(async () => queue.shift() ?? jsonResponse({
-    status: SERVER_ERROR_STATUS,
-    body: {}
-  }));
+  return vi.fn<typeof fetch>(
+    async () =>
+      queue.shift() ??
+      jsonResponse({
+        status: SERVER_ERROR_STATUS,
+        body: {}
+      })
+  );
 }
 
 function fakeToken() {
-  return vi.fn(async (isForcedRefresh: boolean) => isForcedRefresh ? FRESH_TOKEN : TOKEN);
+  return vi.fn(async (isForcedRefresh: boolean) => (isForcedRefresh ? FRESH_TOKEN : TOKEN));
 }
 
-function headerOf({ init, name }: {
-  init: RequestInit | undefined;
-  name: string;
-}) {
+function headerOf({ init, name }: { init: RequestInit | undefined; name: string }) {
   return new Headers(init?.headers).get(name);
 }
 
-function memoryStore(initial: Progress): ProgressStore & { saved: Progress[] } {
+function memoryStore(initial: Progress) {
   let current = initial;
   const saved: Progress[] = [];
   return {
@@ -68,7 +67,7 @@ function memoryStore(initial: Progress): ProgressStore & { saved: Progress[] } {
       current = progress;
       return progress;
     }
-  };
+  } satisfies ProgressStore & { saved: Progress[] };
 }
 
 describe("local progress store", () => {
@@ -83,7 +82,8 @@ describe("local progress store", () => {
     storage.setItem(LOCAL_PROGRESS_KEY, "{not json");
     expect(await createLocalProgressStore(storage).load()).toEqual({});
     storage.setItem(
-      LOCAL_PROGRESS_KEY, JSON.stringify({
+      LOCAL_PROGRESS_KEY,
+      JSON.stringify({
         "../escape": {
           attempts: 1,
           passedAt: null
@@ -104,12 +104,14 @@ describe("local progress store", () => {
 
 describe("remote progress store", () => {
   it("loads with a bearer token and parses the response", async () => {
-    const fetchJson = fakeFetch([jsonResponse({
-      status: OK_STATUS,
-      body: {
-        progress: ACCOUNT_PROGRESS
-      }
-    })]);
+    const fetchJson = fakeFetch([
+      jsonResponse({
+        status: OK_STATUS,
+        body: {
+          progress: ACCOUNT_PROGRESS
+        }
+      })
+    ]);
     const store = createRemoteProgressStore({
       fetchJson,
       idToken: fakeToken()
@@ -127,12 +129,14 @@ describe("remote progress store", () => {
   });
 
   it("puts the progress as an update body", async () => {
-    const fetchJson = fakeFetch([jsonResponse({
-      status: OK_STATUS,
-      body: {
-        progress: ACCOUNT_PROGRESS
-      }
-    })]);
+    const fetchJson = fakeFetch([
+      jsonResponse({
+        status: OK_STATUS,
+        body: {
+          progress: ACCOUNT_PROGRESS
+        }
+      })
+    ]);
     const store = createRemoteProgressStore({
       fetchJson,
       idToken: fakeToken()
@@ -140,7 +144,8 @@ describe("remote progress store", () => {
     await store.save(ACCOUNT_PROGRESS);
     const init = fetchJson.mock.calls[0]?.[1];
     expect(init?.method).toBe("PUT");
-    expect(JSON.parse(String(init?.body))).toEqual({ progress: ACCOUNT_PROGRESS });
+    const body = typeof init?.body === "string" ? init.body : "";
+    expect(JSON.parse(body)).toEqual({ progress: ACCOUNT_PROGRESS });
   });
 
   it("refreshes the token once after a 401", async () => {
@@ -186,29 +191,33 @@ describe("remote progress store", () => {
       fetchJson,
       idToken: fakeToken()
     });
-    await expect(store.load()).rejects.toEqual(new ProgressSyncError(SyncFailure.unauthorized));
+    await expect(store.load()).rejects.toEqual(new ProgressSyncError(SyncFailure.UNAUTHORIZED));
     expect(fetchJson).toHaveBeenCalledTimes(2);
   });
 
   it("rejects server errors and malformed bodies", async () => {
     const failing = createRemoteProgressStore({
-      fetchJson: fakeFetch([jsonResponse({
-        status: SERVER_ERROR_STATUS,
-        body: {}
-      })]),
+      fetchJson: fakeFetch([
+        jsonResponse({
+          status: SERVER_ERROR_STATUS,
+          body: {}
+        })
+      ]),
       idToken: fakeToken()
     });
-    await expect(failing.load()).rejects.toMatchObject({ failure: SyncFailure.rejected });
+    await expect(failing.load()).rejects.toMatchObject({ failure: SyncFailure.REJECTED });
     const malformed = createRemoteProgressStore({
-      fetchJson: fakeFetch([jsonResponse({
-        status: OK_STATUS,
-        body: {
-          progress: "nope"
-        }
-      })]),
+      fetchJson: fakeFetch([
+        jsonResponse({
+          status: OK_STATUS,
+          body: {
+            progress: "nope"
+          }
+        })
+      ]),
       idToken: fakeToken()
     });
-    await expect(malformed.load()).rejects.toMatchObject({ failure: SyncFailure.malformed });
+    await expect(malformed.load()).rejects.toMatchObject({ failure: SyncFailure.MALFORMED });
   });
 
   it("never sends progress that breaks the update schema", async () => {
@@ -224,7 +233,7 @@ describe("remote progress store", () => {
           passedAt: null
         }
       })
-    ).rejects.toMatchObject({ failure: SyncFailure.invalid });
+    ).rejects.toMatchObject({ failure: SyncFailure.INVALID });
     expect(fetchJson).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,7 @@
-import { FIREBASE_AUTH_ORIGIN } from "#scripts/lib/gcp.ts";
 import type { Context, Next } from "hono";
 import { secureHeaders } from "hono/secure-headers";
+
+import { FIREBASE_AUTH_ORIGIN } from "#scripts/lib/gcp.ts";
 
 const CSP_HEADER = "content-security-policy";
 const CORP_HEADER = "cross-origin-resource-policy";
@@ -11,23 +12,25 @@ const GOOGLE_FONTS_STYLES = "https://fonts.googleapis.com";
 const GOOGLE_FONTS_FILES = "https://fonts.gstatic.com";
 
 const CspSource = {
-  self: "'self'",
-  none: "'none'",
-  unsafeInline: "'unsafe-inline'",
-  wasmUnsafeEval: "'wasm-unsafe-eval'",
-  blob: "blob:",
-  data: "data:"
+  SELF: "'self'",
+  NONE: "'none'",
+  UNSAFE_INLINE: "'unsafe-inline'",
+  WASM_UNSAFE_EVAL: "'wasm-unsafe-eval'",
+  BLOB: "blob:",
+  DATA: "data:"
 } as const;
 
 type Directives = Record<string, readonly string[]>;
 
 function policy(directives: Directives) {
-  return Object.entries(directives).map(([name, sources]) => [name, ...sources].join(" ")).join("; ");
+  return Object.entries(directives)
+    .map(([name, sources]) => [name, ...sources].join(" "))
+    .join("; ");
 }
 
 const LOCKED_DOWN = {
-  "object-src": [CspSource.none],
-  "base-uri": [CspSource.none]
+  "object-src": [CspSource.NONE],
+  "base-uri": [CspSource.NONE]
 } satisfies Directives;
 
 const GOOGLE_SIGN_IN = {
@@ -42,32 +45,32 @@ const GOOGLE_SIGN_IN = {
 } satisfies Directives;
 
 const WORKBENCH = {
-  "script-src": [CspSource.wasmUnsafeEval],
-  "worker-src": [CspSource.self, CspSource.blob],
-  "frame-src": [CspSource.self],
-  "img-src": [CspSource.self, CspSource.data],
-  "font-src": [CspSource.self]
+  "script-src": [CspSource.WASM_UNSAFE_EVAL],
+  "worker-src": [CspSource.SELF, CspSource.BLOB],
+  "frame-src": [CspSource.SELF],
+  "img-src": [CspSource.SELF, CspSource.DATA],
+  "font-src": [CspSource.SELF]
 } satisfies Directives;
 
 const TEST_RUNNER_WORKER = {
-  "default-src": [CspSource.none],
-  "script-src": [CspSource.self, CspSource.blob, CspSource.wasmUnsafeEval],
-  "worker-src": [CspSource.self],
-  "connect-src": [CspSource.self]
+  "default-src": [CspSource.NONE],
+  "script-src": [CspSource.SELF, CspSource.BLOB, CspSource.WASM_UNSAFE_EVAL],
+  "worker-src": [CspSource.SELF],
+  "connect-src": [CspSource.SELF]
 } satisfies Directives;
 
 const APP_CSP = policy({
-  "default-src": [CspSource.self],
-  "script-src": [CspSource.self, ...WORKBENCH["script-src"], ...GOOGLE_SIGN_IN["script-src"]],
+  "default-src": [CspSource.SELF],
+  "script-src": [CspSource.SELF, ...WORKBENCH["script-src"], ...GOOGLE_SIGN_IN["script-src"]],
   "worker-src": WORKBENCH["worker-src"],
-  "connect-src": [CspSource.self, ...GOOGLE_SIGN_IN["connect-src"]],
+  "connect-src": [CspSource.SELF, ...GOOGLE_SIGN_IN["connect-src"]],
   "frame-src": [...WORKBENCH["frame-src"], ...GOOGLE_SIGN_IN["frame-src"]],
   "img-src": [...WORKBENCH["img-src"], ...GOOGLE_SIGN_IN["img-src"]],
-  "style-src": [CspSource.self, CspSource.unsafeInline, GOOGLE_FONTS_STYLES],
+  "style-src": [CspSource.SELF, CspSource.UNSAFE_INLINE, GOOGLE_FONTS_STYLES],
   "font-src": [...WORKBENCH["font-src"], GOOGLE_FONTS_FILES],
   ...LOCKED_DOWN,
-  "form-action": [CspSource.self],
-  "frame-ancestors": [CspSource.none]
+  "form-action": [CspSource.SELF],
+  "frame-ancestors": [CspSource.NONE]
 });
 
 export const RUNNER_WORKER_CSP = policy({
@@ -76,7 +79,7 @@ export const RUNNER_WORKER_CSP = policy({
 });
 
 export const WEBVIEW_HOST_CSP = policy({
-  "frame-ancestors": [CspSource.self]
+  "frame-ancestors": [CspSource.SELF]
 });
 
 const baseHeaders = secureHeaders({

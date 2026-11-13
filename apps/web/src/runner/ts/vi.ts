@@ -1,15 +1,16 @@
-import { createFakeTimers } from "@/runner/ts/fake-timers.ts";
 import { fn, isMockFunction, mocks, spyOn } from "@vitest/spy";
+
+import { createFakeTimers } from "@/runner/ts/fake-timers.ts";
 
 type ModuleRecord = Record<string, unknown>;
 type MockFactory = (importOriginal: () => Promise<ModuleRecord>) => ModuleRecord | Promise<ModuleRecord>;
 
-export function createVi({ mockModule }: {
-  mockModule: (input: {
-    specifier: string;
-    factory: MockFactory;
-  }) => void;
-}) {
+interface MockModuleInput {
+  specifier: string;
+  factory: MockFactory;
+}
+
+export function createVi({ mockModule }: { mockModule: (input: MockModuleInput) => void }) {
   const timers = createFakeTimers();
   const stubbedGlobals = new Map<string, PropertyDescriptor | undefined>();
   const api = {
@@ -18,14 +19,16 @@ export function createVi({ mockModule }: {
     spyOn,
     isMockFunction,
     mocked: <T>(item: T) => item,
-    mock: (specifier: string, factory: MockFactory) => mockModule({
-      specifier,
-      factory
-    }),
-    doMock: (specifier: string, factory: MockFactory) => mockModule({
-      specifier,
-      factory
-    }),
+    mock: (specifier: string, factory: MockFactory) =>
+      mockModule({
+        specifier,
+        factory
+      }),
+    doMock: (specifier: string, factory: MockFactory) =>
+      mockModule({
+        specifier,
+        factory
+      }),
     clearAllMocks() {
       for (const spy of [...mocks].reverse()) {
         spy.mockClear();

@@ -1,11 +1,5 @@
 import { readFile } from "node:fs/promises";
-import {
-  extname,
-  isAbsolute,
-  relative,
-  resolve,
-  sep
-} from "node:path";
+import { extname, isAbsolute, relative, resolve, sep } from "node:path";
 
 const PARENT_SEGMENT = "..";
 
@@ -40,18 +34,17 @@ function decodePath(path: string) {
   }
 }
 
-export function resolveInside({ root, path }: {
-  root: string;
-  path: string;
-}) {
+export function resolveInside({ root, path }: { root: string; path: string }) {
   const decoded = decodePath(path);
-  if (decoded === null || decoded.includes("\0") || decoded.includes("\\")) {
+  const isUnsafeDecodedPath = decoded === null || decoded.includes("\0") || decoded.includes("\\");
+  if (isUnsafeDecodedPath) {
     return null;
   }
 
   const absolute = resolve(root, `.${decoded.startsWith("/") ? decoded : `/${decoded}`}`);
   const fromRoot = relative(root, absolute);
-  if (fromRoot === "" || isAbsolute(fromRoot) || fromRoot.split(sep).includes(PARENT_SEGMENT)) {
+  const isOutsideRoot = fromRoot === "" || isAbsolute(fromRoot) || fromRoot.split(sep).includes(PARENT_SEGMENT);
+  if (isOutsideRoot) {
     return null;
   }
 

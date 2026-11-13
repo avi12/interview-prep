@@ -1,9 +1,11 @@
 import type { MiddlewareHandler } from "hono";
 
+const LATENCY_FRACTION_DIGITS = 3;
+
 export const Severity = {
-  info: "INFO",
-  warning: "WARNING",
-  error: "ERROR"
+  INFO: "INFO",
+  WARNING: "WARNING",
+  ERROR: "ERROR"
 } as const;
 
 type SeverityLevel = (typeof Severity)[keyof typeof Severity];
@@ -25,19 +27,21 @@ export function writeLogLine(entry: LogEntry) {
 }
 
 function severityOf(status: number) {
-  if (status >= FIRST_SERVER_ERROR) {
-    return Severity.error;
+  const isStatusAtLeastFirstServerError = status >= FIRST_SERVER_ERROR;
+  if (isStatusAtLeastFirstServerError) {
+    return Severity.ERROR;
   }
 
-  if (status >= FIRST_CLIENT_ERROR) {
-    return Severity.warning;
+  const isStatusAtLeastFirstClientError = status >= FIRST_CLIENT_ERROR;
+  if (isStatusAtLeastFirstClientError) {
+    return Severity.WARNING;
   }
 
-  return Severity.info;
+  return Severity.INFO;
 }
 
-export function requestLogger(log: Log): MiddlewareHandler {
-  return async (context, next) => {
+export function requestLogger(log: Log) {
+  return (async (context, next) => {
     const startedAt = performance.now();
     await next();
     const latencySeconds = (performance.now() - startedAt) / MILLISECONDS_PER_SECOND;
@@ -50,8 +54,8 @@ export function requestLogger(log: Log): MiddlewareHandler {
         requestUrl: context.req.path,
         status,
         userAgent: context.req.header("user-agent") ?? "",
-        latency: `${latencySeconds.toFixed(3)}s`
+        latency: `${latencySeconds.toFixed(LATENCY_FRACTION_DIGITS)}s`
       }
     });
-  };
+  }) satisfies MiddlewareHandler;
 }

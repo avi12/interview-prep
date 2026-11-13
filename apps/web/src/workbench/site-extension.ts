@@ -1,3 +1,9 @@
+import { ExtensionHostKind, registerExtension } from "@codingame/monaco-vscode-api/extensions";
+import { LiveState } from "@interview-prep/gemini-live/src/lib/live-state.ts";
+import type * as vscode from "vscode";
+
+import { AUTH_PROVIDERS } from "#scripts/lib/auth-providers.ts";
+import { REPOSITORY_URL } from "#scripts/lib/repository.ts";
 import { type Account, type AuthControls, connectAuth, signInErrorText } from "@/lib/auth.ts";
 import { loadFirebaseConfig } from "@/lib/firebase-config.ts";
 import { type ProgressSession, SyncState } from "@/lib/progress-session.ts";
@@ -14,11 +20,6 @@ import {
   SiteCommand
 } from "@/workbench/site-manifest.ts";
 import { createVoiceTutor, isExtensionInstalled, type VoiceTutorStatus } from "@/workbench/voice-tutor.ts";
-import { ExtensionHostKind, registerExtension } from "@codingame/monaco-vscode-api/extensions";
-import { LiveState } from "@interview-prep/gemini-live/src/lib/live-state.ts";
-import { AUTH_PROVIDERS } from "#scripts/lib/auth-providers.ts";
-import { REPOSITORY_URL } from "#scripts/lib/repository.ts";
-import type * as vscode from "vscode";
 
 type Api = typeof vscode;
 
@@ -33,36 +34,39 @@ const STATUS_PRIORITY = 100;
 const SET_CONTEXT_COMMAND = "setContext";
 
 const SYNC_STATUS = {
-  [SyncState.local]: {
+  [SyncState.LOCAL]: {
     text: "$(device-desktop) Progress on this device",
     tooltip: "Sign in to keep your progress on every device",
     isSignInOffered: true,
     isSignOutOffered: false
   },
-  [SyncState.syncing]: {
+  [SyncState.SYNCING]: {
     text: "$(sync~spin) Syncing progress",
     tooltip: "Merging this device's progress into your account",
     isSignInOffered: false,
     isSignOutOffered: false
   },
-  [SyncState.synced]: {
+  [SyncState.SYNCED]: {
     text: "$(cloud) Progress synced",
     tooltip: "Your progress is saved to your account and kept on this device",
     isSignInOffered: false,
     isSignOutOffered: true
   },
-  [SyncState.failed]: {
+  [SyncState.FAILED]: {
     text: "$(warning) Progress not synced",
     tooltip: "Your progress is kept on this device until the sync works again",
     isSignInOffered: false,
     isSignOutOffered: true
   }
-} as const satisfies Record<SyncState, {
-  text: string;
-  tooltip: string;
-  isSignInOffered: boolean;
-  isSignOutOffered: boolean;
-}>;
+} as const satisfies Record<
+  SyncState,
+  {
+    text: string;
+    tooltip: string;
+    isSignInOffered: boolean;
+    isSignOutOffered: boolean;
+  }
+>;
 
 export function registerSiteExtension() {
   const extension = registerExtension(SITE_EXTENSION_MANIFEST, ExtensionHostKind.LocalProcess);
@@ -70,7 +74,7 @@ export function registerSiteExtension() {
   return extension;
 }
 
-async function sessionOf(account: Account): Promise<vscode.AuthenticationSession> {
+async function sessionOf(account: Account) {
   return {
     id: account.uid,
     accessToken: await account.idToken(false),
@@ -82,14 +86,13 @@ async function sessionOf(account: Account): Promise<vscode.AuthenticationSession
   };
 }
 
-function registerAuthProviders({ api, session }: {
-  api: Api;
-  session: ProgressSession;
-}) {
-  const emitters = new Map(AUTH_PROVIDERS.map(provider => [
-    provider.id,
-    new api.EventEmitter<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent>()
-  ]));
+function registerAuthProviders({ api, session }: { api: Api; session: ProgressSession }) {
+  const emitters = new Map(
+    AUTH_PROVIDERS.map(provider => [
+      provider.id,
+      new api.EventEmitter<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent>()
+    ])
+  );
   let account: Account | null = null;
   let controls: AuthControls | null = null;
   let unavailableReason = LOADING_REASON;
@@ -98,17 +101,16 @@ function registerAuthProviders({ api, session }: {
     return account?.providerId === firebaseProviderId ? account : null;
   }
 
-  async function fireChange({ added, removed }: {
-    added: Account | null;
-    removed: Account | null;
-  }) {
+  async function fireChange({ added, removed }: { added: Account | null; removed: Account | null }) {
     for (const provider of AUTH_PROVIDERS) {
       const emitter = emitters.get(provider.id);
       const isAdded = added?.providerId === provider.firebaseProviderId;
       const isRemoved = removed?.providerId === provider.firebaseProviderId;
+      const hasRemovedItems = isRemoved && removed;
+      const hasAddedItems = isAdded && added;
       emitter?.fire({
-        added: isAdded && added ? [await sessionOf(added)] : NO_SESSIONS,
-        removed: isRemoved && removed ? [await sessionOf(removed)] : NO_SESSIONS,
+        added: hasAddedItems ? [await sessionOf(added)] : NO_SESSIONS,
+        removed: hasRemovedItems ? [await sessionOf(removed)] : NO_SESSIONS,
         changed: NO_SESSIONS
       });
     }
@@ -119,7 +121,7 @@ function registerAuthProviders({ api, session }: {
     api.StatusBarAlignment.Right,
     STATUS_PRIORITY + 1
   );
-  accountItem.command = SiteCommand.account;
+  accountItem.command = SiteCommand.ACCOUNT;
   accountItem.tooltip = "Account options";
 
   async function showAccount(signedIn: Account | null) {
@@ -166,14 +168,17 @@ function registerAuthProviders({ api, session }: {
 
     controls = await connectAuth({
       config: result.config,
-      onAccount: signedIn => void showAccount(signedIn)
+      onAccount(signedIn) {
+        void showAccount(signedIn);
+      }
     });
   }
-
-  const registrations = AUTH_PROVIDERS.map(provider => api.authentication.registerAuthenticationProvider(
-    provider.id,
-    provider.label,
-    {
+  function registerAuthProvider(provider: {
+    readonly id: "google";
+    readonly label: "Google";
+    readonly firebaseProviderId: "google.com";
+  }) {
+    return api.authentication.registerAuthenticationProvider(provider.id, provider.label, {
       onDidChangeSessions: emitters.get(provider.id)?.event ?? new api.EventEmitter<never>().event,
       async getSessions() {
         const matching = accountOfProvider(provider);
@@ -192,8 +197,10 @@ function registerAuthProviders({ api, session }: {
       async removeSession() {
         await controls?.signOut();
       }
-    }
-  ));
+    });
+  }
+
+  const registrations = AUTH_PROVIDERS.map(registerAuthProvider);
   void connect();
 
   async function signIn() {
@@ -204,7 +211,9 @@ function registerAuthProviders({ api, session }: {
 
     await controls.signIn().then(
       () => undefined,
-      (error: unknown) => void api.window.showErrorMessage(signInErrorText(error))
+      (error: unknown) => {
+        void api.window.showErrorMessage(signInErrorText(error));
+      }
     );
   }
 
@@ -222,7 +231,8 @@ function registerAuthProviders({ api, session }: {
       `Signed in as ${account.name}. If you sign out, your progress stays on this device.`,
       signOutLabel
     );
-    if (picked === signOutLabel) {
+    const isSignOutPicked = picked === signOutLabel;
+    if (isSignOutPicked) {
       await signOut();
     }
   }
@@ -234,10 +244,7 @@ function registerAuthProviders({ api, session }: {
   };
 }
 
-function showSyncStatus({ api, session }: {
-  api: Api;
-  session: ProgressSession;
-}) {
+function showSyncStatus({ api, session }: { api: Api; session: ProgressSession }) {
   const item = api.window.createStatusBarItem(SYNC_ITEM_ID, api.StatusBarAlignment.Right, STATUS_PRIORITY);
   function render() {
     const { text, tooltip, isSignInOffered, isSignOutOffered } = SYNC_STATUS[session.syncState];
@@ -246,7 +253,7 @@ function showSyncStatus({ api, session }: {
     item.command = undefined;
 
     if (isSignInOffered) {
-      item.command = SiteCommand.signIn;
+      item.command = SiteCommand.SIGN_IN;
     }
 
     void api.commands.executeCommand(SET_CONTEXT_COMMAND, SIGNED_OUT_CONTEXT_KEY, isSignInOffered);
@@ -263,7 +270,7 @@ function showRepositoryLink(api: Api) {
   const item = api.window.createStatusBarItem(REPOSITORY_ITEM_ID, api.StatusBarAlignment.Right, STATUS_PRIORITY);
   item.text = "$(github) Source";
   item.tooltip = "Open the source code on GitHub";
-  item.command = SiteCommand.openRepository;
+  item.command = SiteCommand.OPEN_REPOSITORY;
   item.show();
   return item;
 }
@@ -287,10 +294,7 @@ const KEY_LABEL = "API key";
 const START_TOOLTIP = "Talk through the lesson with Gemini Live. It sees your screen and reads your lesson";
 const RUNNING_TOOLTIP = "The voice tutor is running. Click for options";
 
-function tooltipOf({ status, isMuted }: {
-  status: VoiceTutorStatus | null;
-  isMuted: boolean;
-}) {
+function tooltipOf({ status, isMuted }: { status: VoiceTutorStatus | null; isMuted: boolean }) {
   if (isMuted) {
     return MUTED_TOOLTIP;
   }
@@ -301,7 +305,7 @@ function tooltipOf({ status, isMuted }: {
 function showVoiceTutor(api: Api) {
   const item = api.window.createStatusBarItem(VOICE_TUTOR_ITEM_ID, api.StatusBarAlignment.Right, STATUS_PRIORITY);
   function render(status: VoiceTutorStatus | null) {
-    item.command = status ? SiteCommand.voiceTutorMenu : SiteCommand.startVoiceTutor;
+    item.command = status ? SiteCommand.VOICE_TUTOR_MENU : SiteCommand.START_VOICE_TUTOR;
     const isMuted = status?.isMicOpen === false;
     item.backgroundColor = isMuted ? new api.ThemeColor(MUTED_BACKGROUND_COLOR) : undefined;
     item.tooltip = tooltipOf({
@@ -321,7 +325,11 @@ function showVoiceTutor(api: Api) {
   };
 }
 
-async function showVoiceTutorMenu({ api, tutor, status }: {
+async function showVoiceTutorMenu({
+  api,
+  tutor,
+  status
+}: {
   api: Api;
   tutor: ReturnType<typeof createVoiceTutor>;
   status: VoiceTutorStatus | null;
@@ -332,15 +340,18 @@ async function showVoiceTutorMenu({ api, tutor, status }: {
     ...(isExtensionInstalled() ? [] : [KEY_LABEL])
   ];
   const picked = await api.window.showQuickPick(options);
-  if (picked === STOP_LABEL) {
+  const isStopPicked = picked === STOP_LABEL;
+  if (isStopPicked) {
     await tutor.stop();
   }
 
-  if (picked === MUTE_LABEL || picked === UNMUTE_LABEL) {
+  const isMuteTogglePicked = picked === MUTE_LABEL || picked === UNMUTE_LABEL;
+  if (isMuteTogglePicked) {
     await tutor.toggleMic();
   }
 
-  if (picked === KEY_LABEL) {
+  const isKeyPicked = picked === KEY_LABEL;
+  if (isKeyPicked) {
     await tutor.manageKey();
   }
 }
@@ -356,7 +367,10 @@ function reloadOnDeploy(api: Api) {
   return new api.Disposable(stopWatching);
 }
 
-export async function activateSiteExtension({ extension, session }: {
+export async function activateSiteExtension({
+  extension,
+  session
+}: {
   extension: ReturnType<typeof registerSiteExtension>;
   session: ProgressSession;
 }) {
@@ -374,6 +388,16 @@ export async function activateSiteExtension({ extension, session }: {
     api,
     session
   });
+  function handleOpenRepository() {
+    return api.env.openExternal(api.Uri.parse(REPOSITORY_URL));
+  }
+  function handleVoiceTutorMenu() {
+    return showVoiceTutorMenu({
+      api,
+      tutor,
+      status: voiceStatus
+    });
+  }
   const disposables = [
     ...auth.disposables,
     ...showSyncStatus({
@@ -382,17 +406,13 @@ export async function activateSiteExtension({ extension, session }: {
     }),
     showRepositoryLink(api),
     voice.item,
-    api.commands.registerCommand(SiteCommand.startVoiceTutor, tutor.start),
-    api.commands.registerCommand(SiteCommand.voiceTutorMenu, () => showVoiceTutorMenu({
-      api,
-      tutor,
-      status: voiceStatus
-    })),
+    api.commands.registerCommand(SiteCommand.START_VOICE_TUTOR, tutor.start),
+    api.commands.registerCommand(SiteCommand.VOICE_TUTOR_MENU, handleVoiceTutorMenu),
     reloadOnDeploy(api),
-    api.commands.registerCommand(SiteCommand.openRepository, () => api.env.openExternal(api.Uri.parse(REPOSITORY_URL))),
-    api.commands.registerCommand(SiteCommand.signIn, auth.signIn),
-    api.commands.registerCommand(SiteCommand.account, auth.showAccountMenu),
-    api.commands.registerCommand(SiteCommand.showGeminiLive, async () => {
+    api.commands.registerCommand(SiteCommand.OPEN_REPOSITORY, handleOpenRepository),
+    api.commands.registerCommand(SiteCommand.SIGN_IN, auth.signIn),
+    api.commands.registerCommand(SiteCommand.ACCOUNT, auth.showAccountMenu),
+    api.commands.registerCommand(SiteCommand.SHOW_GEMINI_LIVE, async () => {
       const { showMarkdownGuide } = await import("interview-prep/src/markdownGuide.ts");
       await showMarkdownGuide(geminiLiveGuide());
     })

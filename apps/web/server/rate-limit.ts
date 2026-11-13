@@ -24,10 +24,7 @@ export const DEFAULT_RATE_LIMIT = {
 function createTokenBucket({ capacity, refillPerSecond, now = Date.now }: RateLimitOptions) {
   const buckets = new Map<string, Bucket>();
 
-  function refilled({ bucket, takenAt }: {
-    bucket: Bucket;
-    takenAt: number;
-  }) {
+  function refilled({ bucket, takenAt }: { bucket: Bucket; takenAt: number }) {
     const elapsedSeconds = (takenAt - bucket.updatedAt) / MILLISECONDS_PER_SECOND;
     return Math.min(capacity, bucket.tokens + elapsedSeconds * refillPerSecond);
   }
@@ -42,10 +39,13 @@ function createTokenBucket({ capacity, refillPerSecond, now = Date.now }: RateLi
   return function take(key: string) {
     const takenAt = now();
     const previous = buckets.get(key);
-    const tokens = previous === undefined ? capacity : refilled({
-      bucket: previous,
-      takenAt
-    });
+    const tokens =
+      previous === undefined
+        ? capacity
+        : refilled({
+            bucket: previous,
+            takenAt
+          });
     buckets.delete(key);
 
     if (buckets.size >= MAX_TRACKED_CALLERS) {
@@ -61,18 +61,18 @@ function createTokenBucket({ capacity, refillPerSecond, now = Date.now }: RateLi
   };
 }
 
-export function rateLimitPerUser(options: RateLimitOptions): MiddlewareHandler<{ Variables: AuthVariables }> {
+export function rateLimitPerUser(options: RateLimitOptions) {
   const take = createTokenBucket(options);
-  return async (context, next) => {
+  return (async (context, next) => {
     if (!take(context.get("uid"))) {
       context.header("retry-after", String(Math.ceil(1 / options.refillPerSecond)));
       return sendError({
         context,
         status: HttpStatus.TOO_MANY_REQUESTS,
-        error: ErrorCode.rateLimited
+        error: ErrorCode.RATE_LIMITED
       });
     }
 
     await next();
-  };
+  }) satisfies MiddlewareHandler<{ Variables: AuthVariables }>;
 }

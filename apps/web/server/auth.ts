@@ -10,22 +10,22 @@ export interface AuthVariables {
 const BEARER_PATTERN = /^Bearer ([\w.-]{1,4096})$/;
 
 function bearerTokenOf(header: string | undefined) {
-  return header === undefined ? null : BEARER_PATTERN.exec(header)?.[1] ?? null;
+  return header === undefined ? null : (BEARER_PATTERN.exec(header)?.[1] ?? null);
 }
 
-export function requireUser(verifyIdToken: VerifyIdToken): MiddlewareHandler<{ Variables: AuthVariables }> {
-  return async (context, next) => {
+export function requireUser(verifyIdToken: VerifyIdToken) {
+  return (async (context, next) => {
     const token = bearerTokenOf(context.req.header("authorization"));
     const uid = token === null ? null : await verifyIdToken(token);
     if (uid === null) {
       return sendError({
         context,
         status: HttpStatus.UNAUTHORIZED,
-        error: ErrorCode.unauthorized
+        error: ErrorCode.UNAUTHORIZED
       });
     }
 
     context.set("uid", uid);
     await next();
-  };
+  }) satisfies MiddlewareHandler<{ Variables: AuthVariables }>;
 }

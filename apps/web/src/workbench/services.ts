@@ -1,6 +1,3 @@
-import { getHostColorSchemeOverride } from "@/workbench/host-color-scheme.ts";
-import { SITE_EXTENSION_ID } from "@/workbench/site-manifest.ts";
-import { WORKSPACE_ROOT } from "@/workbench/workspace-files.ts";
 import getAccessibilityServiceOverride from "@codingame/monaco-vscode-accessibility-service-override";
 import { initialize, LogLevel } from "@codingame/monaco-vscode-api";
 import getAuthenticationServiceOverride from "@codingame/monaco-vscode-authentication-service-override";
@@ -38,9 +35,13 @@ import "@codingame/monaco-vscode-typescript-basics-default-extension";
 import getWorkbenchServiceOverride from "@codingame/monaco-vscode-workbench-service-override";
 import getWorkingCopyServiceOverride from "@codingame/monaco-vscode-working-copy-service-override";
 import getWorkspaceTrustServiceOverride from "@codingame/monaco-vscode-workspace-trust-service-override";
+import "vscode/localExtensionHost";
+
 import { AUTH_PROVIDERS } from "#scripts/lib/auth-providers.ts";
 import { REPOSITORY_URL } from "#scripts/lib/repository.ts";
-import "vscode/localExtensionHost";
+import { getHostColorSchemeOverride } from "@/workbench/host-color-scheme.ts";
+import { SITE_EXTENSION_ID } from "@/workbench/site-manifest.ts";
+import { WORKSPACE_ROOT } from "@/workbench/workspace-files.ts";
 
 const PRODUCT_NAME = "Interview Prep";
 const IS_WORKER_EXTENSION_HOST_ENABLED = false;
@@ -57,9 +58,7 @@ const USER_SETTINGS = {
   "files.autoSave": "afterDelay"
 };
 
-const TRUSTED_AUTH_ACCESS = Object.fromEntries(
-  AUTH_PROVIDERS.map(provider => [provider.id, [SITE_EXTENSION_ID]])
-);
+const TRUSTED_AUTH_ACCESS = Object.fromEntries(AUTH_PROVIDERS.map(provider => [provider.id, [SITE_EXTENSION_ID]]));
 
 export async function startServices(container: HTMLElement) {
   await initUserConfiguration(JSON.stringify(USER_SETTINGS));

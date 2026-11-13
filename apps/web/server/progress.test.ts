@@ -7,16 +7,14 @@ import {
   OTHER_TOKEN,
   VALID_TOKEN
 } from "@server/test-fixture.ts";
-import { PROGRESS_API_PATH } from "#scripts/lib/progress-sync.ts";
 import { describe, expect, it } from "vitest";
+
+import { PROGRESS_API_PATH } from "#scripts/lib/progress-sync.ts";
 
 const EARLY = "2026-01-01T00:00:00.000Z";
 const LATE = "2026-03-01T00:00:00.000Z";
 
-function put({ token = VALID_TOKEN, body }: {
-  token?: string;
-  body: string;
-}) {
+function put({ token = VALID_TOKEN, body }: { token?: string; body: string }) {
   return {
     method: "PUT",
     headers: {
@@ -69,7 +67,8 @@ describe("progress", () => {
   it("merges with stored progress: most attempts, earliest pass", async () => {
     const { app } = createTestApp();
     await app.request(
-      PROGRESS_API_PATH, put({
+      PROGRESS_API_PATH,
+      put({
         body: JSON.stringify({
           progress: {
             [KNOWN_LESSON]: {
@@ -81,7 +80,8 @@ describe("progress", () => {
       })
     );
     const response = await app.request(
-      PROGRESS_API_PATH, put({
+      PROGRESS_API_PATH,
+      put({
         body: JSON.stringify({
           progress: {
             [KNOWN_LESSON]: {
@@ -121,7 +121,8 @@ describe("progress", () => {
   it("rejects a lesson id that is not in the index", async () => {
     const { app } = createTestApp();
     const response = await app.request(
-      PROGRESS_API_PATH, put({
+      PROGRESS_API_PATH,
+      put({
         body: JSON.stringify({
           progress: {
             "support/99-not-a-lesson": {
@@ -149,7 +150,8 @@ describe("progress", () => {
   it("rejects a wrong shape with issue paths only", async () => {
     const { app } = createTestApp();
     const response = await app.request(
-      PROGRESS_API_PATH, put({
+      PROGRESS_API_PATH,
+      put({
         body: JSON.stringify({
           progress: {
             [KNOWN_LESSON]: {
@@ -164,10 +166,7 @@ describe("progress", () => {
     const body = await response.json();
     expect(body).toEqual({
       error: "invalid_body",
-      issues: [
-        { path: ["progress", KNOWN_LESSON, "attempts"] },
-        { path: ["progress", KNOWN_LESSON, "passedAt"] }
-      ]
+      issues: [{ path: ["progress", KNOWN_LESSON, "attempts"] }, { path: ["progress", KNOWN_LESSON, "passedAt"] }]
     });
   });
 

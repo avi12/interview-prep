@@ -1,7 +1,8 @@
 import type { ProgressStore } from "@server/progress-store.ts";
+
 import type { Progress } from "#scripts/lib/progress-sync.ts";
 
-export function createMemoryProgressStore(): ProgressStore {
+export function createMemoryProgressStore() {
   const progressByUid = new Map<string, Progress>();
   return {
     read: async uid => progressByUid.get(uid) ?? {},
@@ -10,5 +11,5 @@ export function createMemoryProgressStore(): ProgressStore {
       progressByUid.set(uid, progress);
       return progress;
     }
-  };
+  } satisfies ProgressStore;
 }

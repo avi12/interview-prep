@@ -1,25 +1,29 @@
-import { z } from "@/lib/zod.ts";
+import { Buffer } from "buffer";
+
 import { hmac } from "@noble/hashes/hmac.js";
 import { md5, sha1 } from "@noble/hashes/legacy.js";
 import { scryptAsync, scrypt as scryptSyncRaw } from "@noble/hashes/scrypt.js";
 import { sha256, sha384, sha512 } from "@noble/hashes/sha2.js";
-import { Buffer } from "buffer";
+
+import { zod } from "@/lib/zod.ts";
 
 type Input = string | Uint8Array;
 type Encoding = Parameters<Buffer["toString"]>[0];
 type ScryptCallback = (error: Error | null, key?: Buffer) => void;
 
-const scryptOptionsSchema = z.object({
-  N: z.number(),
-  r: z.number(),
-  p: z.number(),
-  cost: z.number(),
-  blockSize: z.number(),
-  parallelization: z.number(),
-  maxmem: z.number()
-}).partial();
+const scryptOptionsSchema = zod
+  .object({
+    N: zod.number(),
+    r: zod.number(),
+    p: zod.number(),
+    cost: zod.number(),
+    blockSize: zod.number(),
+    parallelization: zod.number(),
+    maxmem: zod.number()
+  })
+  .partial();
 
-type ScryptOptions = z.infer<typeof scryptOptionsSchema>;
+type ScryptOptions = zod.infer<typeof scryptOptionsSchema>;
 
 const HASHES = {
   sha1,
@@ -56,10 +60,7 @@ function hashOf(algorithm: string) {
   return HASHES[name];
 }
 
-function bytesOf({ data, encoding }: {
-  data: Input;
-  encoding?: string;
-}) {
+function bytesOf({ data, encoding }: { data: Input; encoding?: string }) {
   if (typeof data !== "string") {
     return data;
   }
@@ -67,18 +68,17 @@ function bytesOf({ data, encoding }: {
   return isEncoding(encoding) ? Buffer.from(data, encoding) : Buffer.from(data);
 }
 
-function encoded({ bytes, encoding }: {
-  bytes: Uint8Array;
-  encoding?: string;
-}) {
+function encoded({ bytes, encoding }: { bytes: Uint8Array; encoding?: string }) {
   const buffer = Buffer.from(bytes);
   return encoding ? buffer.toString(isEncoding(encoding) ? encoding : undefined) : buffer;
 }
 
-function digester(start: () => {
-  update: (bytes: Uint8Array) => unknown;
-  digest: () => Uint8Array;
-}) {
+function digester(
+  start: () => {
+    update: (bytes: Uint8Array) => unknown;
+    digest: () => Uint8Array;
+  }
+) {
   const state = start();
   const api = {
     update(data: Input, encoding?: string) {
@@ -90,10 +90,11 @@ function digester(start: () => {
       );
       return api;
     },
-    digest: (encoding?: string) => encoded({
-      bytes: state.digest(),
-      encoding
-    }),
+    digest: (encoding?: string) =>
+      encoded({
+        bytes: state.digest(),
+        encoding
+      }),
     copy: () => api
   };
   return api;
@@ -120,7 +121,9 @@ function randomInt(min: number, max?: number) {
 
 function timingSafeEqual(first: Uint8Array, second: Uint8Array) {
   if (first.byteLength !== second.byteLength) {
-    throw Object.assign(new RangeError("Input buffers must have the same byte length"), { code: "ERR_CRYPTO_TIMING_SAFE_EQUAL_LENGTH" });
+    throw Object.assign(new RangeError("Input buffers must have the same byte length"), {
+      code: "ERR_CRYPTO_TIMING_SAFE_EQUAL_LENGTH"
+    });
   }
 
   let difference = 0;
@@ -130,10 +133,7 @@ function timingSafeEqual(first: Uint8Array, second: Uint8Array) {
   return difference === 0;
 }
 
-function scryptParams({ keyLength, options = {} }: {
-  keyLength: number;
-  options?: ScryptOptions;
-}) {
+function scryptParams({ keyLength, options = {} }: { keyLength: number; options?: ScryptOptions }) {
   const params = {
     N: options.N ?? options.cost ?? SCRYPT_DEFAULTS.N,
     r: options.r ?? options.blockSize ?? SCRYPT_DEFAULTS.r,
@@ -142,7 +142,9 @@ function scryptParams({ keyLength, options = {} }: {
     dkLen: keyLength
   };
   if (SCRYPT_BYTES_PER_BLOCK * params.N * params.r > params.maxmem) {
-    throw Object.assign(new RangeError("Invalid scrypt params: memory limit exceeded"), { code: "ERR_CRYPTO_INVALID_SCRYPT_PARAMS" });
+    throw Object.assign(new RangeError("Invalid scrypt params: memory limit exceeded"), {
+      code: "ERR_CRYPTO_INVALID_SCRYPT_PARAMS"
+    });
   }
 
   return params;
@@ -151,7 +153,9 @@ function scryptParams({ keyLength, options = {} }: {
 function scryptSync(password: Input, salt: Input, keyLength: number, options?: ScryptOptions) {
   return Buffer.from(
     scryptSyncRaw(
-      bytesOf({ data: password }), bytesOf({ data: salt }), scryptParams({
+      bytesOf({ data: password }),
+      bytesOf({ data: salt }),
+      scryptParams({
         keyLength,
         options
       })
@@ -171,7 +175,9 @@ function scrypt(
   async function derive() {
     return Buffer.from(
       await scryptAsync(
-        bytesOf({ data: password }), bytesOf({ data: salt }), scryptParams({
+        bytesOf({ data: password }),
+        bytesOf({ data: salt }),
+        scryptParams({
           keyLength,
           options
         })
@@ -179,7 +185,10 @@ function scrypt(
     );
   }
 
-  derive().then(key => callback?.(null, key), (error: Error) => callback?.(error));
+  derive().then(
+    key => callback?.(null, key),
+    (error: Error) => callback?.(error)
+  );
 }
 
 const api = {

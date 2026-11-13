@@ -1,3 +1,5 @@
+import { describe, expect, it, vi } from "vitest";
+
 import {
   AUTO_RELOAD_COOLDOWN_MS,
   AUTO_RELOAD_MAX_COUNT,
@@ -6,7 +8,6 @@ import {
   reloadForUpdate
 } from "@/lib/reload.ts";
 import { BrokenStorage, MemoryStorage } from "@/test/memory-storage.ts";
-import { describe, expect, it, vi } from "vitest";
 
 const NOW = 1_000_000_000;
 

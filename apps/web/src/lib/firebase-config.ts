@@ -1,27 +1,27 @@
-import { FIREBASE_INIT_PATH } from "@/lib/web-paths.ts";
-import { z } from "@/lib/zod.ts";
 import { GCP } from "#scripts/lib/gcp.ts";
+import { FIREBASE_INIT_PATH } from "@/lib/web-paths.ts";
+import { zod } from "@/lib/zod.ts";
 
-const firebaseConfigSchema = z.object({
-  apiKey: z.string().min(1),
-  authDomain: z.string().min(1),
-  projectId: z.string().min(1),
-  appId: z.string().min(1)
+const firebaseConfigSchema = zod.object({
+  apiKey: zod.string().min(1),
+  authDomain: zod.string().min(1),
+  projectId: zod.string().min(1),
+  appId: zod.string().min(1)
 });
 
-export type FirebaseConfig = z.infer<typeof firebaseConfigSchema>;
+export type FirebaseConfig = zod.infer<typeof firebaseConfigSchema>;
 
 export const NO_CONFIG_REASON = "Sign-in is not set up on this server";
 
 export type ConfigResult =
   | {
-    isReady: true;
-    config: FirebaseConfig;
-  }
+      isReady: true;
+      config: FirebaseConfig;
+    }
   | {
-    isReady: false;
-    reason: string;
-  };
+      isReady: false;
+      reason: string;
+    };
 
 type DevEnv = Record<string, unknown>;
 
@@ -48,21 +48,18 @@ async function hostingConfig(fetchJson: typeof fetch) {
   }
 }
 
-export async function loadFirebaseConfig({ fetchJson, env }: {
-  fetchJson: typeof fetch;
-  env: DevEnv;
-}): Promise<ConfigResult> {
+export async function loadFirebaseConfig({ fetchJson, env }: { fetchJson: typeof fetch; env: DevEnv }) {
   const hosting = await hostingConfig(fetchJson);
   const parsed = hosting.success ? hosting : devConfig(env);
   if (!parsed.success) {
     return {
       isReady: false,
       reason: NO_CONFIG_REASON
-    };
+    } satisfies ConfigResult;
   }
 
   return {
     isReady: true,
     config: parsed.data
-  };
+  } satisfies ConfigResult;
 }

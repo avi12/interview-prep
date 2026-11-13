@@ -1,46 +1,57 @@
+import { type File, startTests, type Suite, type Task, type VitestRunner } from "@vitest/runner";
+
+import { IMPL_DIR_ENV } from "#scripts/lib/record-env.ts";
+import type { TestResult } from "#scripts/lib/run-result.ts";
 import { buildBundle, type BundleEntry, importBundle, startEsbuild } from "@/runner/ts/bundle.ts";
 import { createHost, type Host, HOST_GLOBAL } from "@/runner/ts/host-modules.ts";
 import { createRecords, installKitBridge } from "@/runner/ts/kit-bridge.ts";
 import { filesUnder, loadFiles } from "@/runner/ts/node/fs.ts";
 import { type RunRequest, type RunResponse, WorkerReply } from "@/runner/ts/protocol.ts";
-import {
-  type File,
-  startTests,
-  type Suite,
-  type Task,
-  type VitestRunner
-} from "@vitest/runner";
-import { IMPL_DIR_ENV } from "#scripts/lib/record-env.ts";
-import type { TestResult } from "#scripts/lib/run-result.ts";
 
 const TaskState = {
-  pass: "pass",
-  fail: "fail"
+  PASS: "pass",
+  FAIL: "fail"
 } as const;
 const SKIPPED_MODES = new Set(["skip", "todo"]);
-const ImportSource = { setup: "setup" } as const;
+const ImportSource = { SETUP: "setup" } as const;
 const MAX_CONCURRENCY = 5;
 const LINE_BREAK = "\n";
 const SUITE_SEPARATOR = " > ";
 const DID_NOT_RUN = "did not run";
 const QUIET_ERROR_NAMES = new Set(["Error", "AssertionError"]);
 
-type Built = {
-  bundleId: string;
-  entry: BundleEntry;
-} | {
-  bundleId: string;
-  error: string;
-};
+type Built =
+  | {
+      bundleId: string;
+      entry: BundleEntry;
+    }
+  | {
+      bundleId: string;
+      error: string;
+    };
 
-function errorMessages(errors: {
-  message?: string;
-  name?: string;
-}[] | undefined) {
-  return (errors ?? []).map(error => (error.name && !QUIET_ERROR_NAMES.has(error.name) ? `${error.name}: ${error.message}` : (error.message ?? ""))).join(LINE_BREAK);
+function errorMessages(
+  errors:
+    | {
+        message?: string;
+        name?: string;
+      }[]
+    | undefined
+) {
+  return (errors ?? [])
+    .map(error => {
+      const isLoudError = error.name && !QUIET_ERROR_NAMES.has(error.name);
+      return isLoudError ? `${error.name}: ${error.message}` : (error.message ?? "");
+    })
+    .join(LINE_BREAK);
 }
 
-function collectResults({ tasks, suite, tests, errors }: {
+function collectResults({
+  tasks,
+  suite,
+  tests,
+  errors
+}: {
   tasks: Task[];
   suite: string[];
   tests: TestResult[];
@@ -48,8 +59,11 @@ function collectResults({ tasks, suite, tests, errors }: {
 }) {
   for (const task of tasks) {
     if (task.type === "suite") {
-      if (task.result?.state === TaskState.fail && task.result.errors?.length) {
-        errors.push(`${[...suite, task.name].join(SUITE_SEPARATOR)}: ${errorMessages(task.result.errors)}`);
+      const result = task.result;
+      const isFailed = result?.state === TaskState.FAIL;
+      const failures = isFailed ? result.errors : undefined;
+      if (failures?.length) {
+        errors.push(`${[...suite, task.name].join(SUITE_SEPARATOR)}: ${errorMessages(failures)}`);
       }
 
       collectResults({
@@ -65,7 +79,7 @@ function collectResults({ tasks, suite, tests, errors }: {
       continue;
     }
 
-    const isPass = task.result?.state === TaskState.pass;
+    const isPass = task.result?.state === TaskState.PASS;
     tests.push({
       name: task.name,
       suite,
@@ -75,10 +89,7 @@ function collectResults({ tasks, suite, tests, errors }: {
   }
 }
 
-async function buildAll({ host, request }: {
-  host: Host;
-  request: RunRequest;
-}) {
+async function buildAll({ host, request }: { host: Host; request: RunRequest }) {
   const esbuild = await startEsbuild();
   const moduleFiles = Object.keys(filesUnder(request.implDir));
   const built = new Map<string, Built>();
@@ -112,11 +123,7 @@ async function buildAll({ host, request }: {
   return built;
 }
 
-function createRunner({ request, built, host }: {
-  request: RunRequest;
-  built: Map<string, Built>;
-  host: Host;
-}) {
+function createRunner({ request, built, host }: { request: RunRequest; built: Map<string, Built>; host: Host }) {
   let currentFile = "";
   function activate(filepath: string) {
     const target = built.get(filepath);
@@ -148,7 +155,7 @@ function createRunner({ request, built, host }: {
     },
     onBeforeRunSuite: (suite: Suite) => activate(suite.file.filepath),
     async importFile(filepath: string, source: string) {
-      const isSetup = source === ImportSource.setup;
+      const isSetup = source === ImportSource.SETUP;
       const target = built.get(isSetup ? currentFile : filepath);
       if (!target) {
         throw new Error(`No bundle for ${filepath}`);
@@ -168,13 +175,13 @@ function captureUnhandledErrors() {
   function record(reason: unknown) {
     captured.push(`Unhandled error: ${reason instanceof Error ? reason.message : String(reason)}`);
   }
-  self.addEventListener("unhandledrejection", e => {
-    e.preventDefault();
-    record(e.reason);
+  self.addEventListener("unhandledrejection", event => {
+    event.preventDefault();
+    record(event.reason);
   });
-  self.addEventListener("error", e => {
-    e.preventDefault();
-    record(e.error ?? e.message);
+  self.addEventListener("error", event => {
+    event.preventDefault();
+    record(event.error ?? event.message);
   });
   return captured;
 }
@@ -200,7 +207,8 @@ export async function runSuite(request: RunRequest) {
     request
   });
   const files = await startTests(
-    request.testFiles, createRunner({
+    request.testFiles,
+    createRunner({
       request,
       built,
       host
@@ -209,8 +217,11 @@ export async function runSuite(request: RunRequest) {
   const tests: TestResult[] = [];
   const errors: string[] = [];
   for (const file of files) {
-    if (file.result?.state === TaskState.fail && file.result.errors?.length) {
-      errors.push(errorMessages(file.result.errors));
+    const result = file.result;
+    const isFailed = result?.state === TaskState.FAIL;
+    const failures = isFailed ? result.errors : undefined;
+    if (failures?.length) {
+      errors.push(errorMessages(failures));
     }
 
     collectResults({
@@ -221,7 +232,7 @@ export async function runSuite(request: RunRequest) {
     });
   }
   return {
-    kind: WorkerReply.result,
+    kind: WorkerReply.RESULT,
     tests,
     errors: [...errors, ...unhandledErrors],
     records

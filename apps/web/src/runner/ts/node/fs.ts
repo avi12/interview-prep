@@ -1,19 +1,20 @@
 import { Buffer } from "buffer";
+
 import { dirname, join, normalize } from "pathe";
 
 type PathLike = string | URL;
 type ReadOptions = string | { encoding?: string | null } | null | undefined;
-type CopyOptions = {
+interface CopyOptions {
   recursive?: boolean;
   filter?: (source: string, destination: string) => boolean;
-};
+}
 
 const FILE_URL_PROTOCOL = "file:";
 const TEMP_SUFFIX_LENGTH = 6;
 const TEMP_SUFFIX_RADIX = 36;
 const ERROR_CODE = {
-  missing: "ENOENT",
-  isDirectory: "EISDIR"
+  MISSING: "ENOENT",
+  IS_DIRECTORY: "EISDIR"
 } as const;
 
 const files = new Map<string, string>();
@@ -22,7 +23,8 @@ const modifiedAt = new Map<string, number>();
 let tempCounter = 0;
 
 function toPath(path: PathLike) {
-  if (path instanceof URL) {
+  const isUrlPath = path instanceof URL;
+  if (isUrlPath) {
     return decodeURIComponent(path.pathname);
   }
 
@@ -33,11 +35,7 @@ function toPath(path: PathLike) {
   return normalize(path);
 }
 
-function fsError({ code, syscall, path }: {
-  code: string;
-  syscall: string;
-  path: string;
-}) {
+function fsError({ code, syscall, path }: { code: string; syscall: string; path: string }) {
   return Object.assign(new Error(`${code}: no such file or directory, ${syscall} '${path}'`), {
     code,
     syscall,
@@ -61,7 +59,8 @@ function childrenOf(path: string) {
   const prefix = path.endsWith("/") ? path : `${path}/`;
   const names = new Set<string>();
   for (const entry of [...files.keys(), ...directories]) {
-    if (entry.startsWith(prefix) && entry !== prefix) {
+    const isChildEntry = entry.startsWith(prefix) && entry !== prefix;
+    if (isChildEntry) {
       names.add(entry.slice(prefix.length).split("/")[0]);
     }
   }
@@ -92,7 +91,7 @@ export function readFileSync(path: PathLike, options?: ReadOptions) {
   const text = files.get(resolved);
   if (text === undefined) {
     throw fsError({
-      code: isDirectory(resolved) ? ERROR_CODE.isDirectory : ERROR_CODE.missing,
+      code: isDirectory(resolved) ? ERROR_CODE.IS_DIRECTORY : ERROR_CODE.MISSING,
       syscall: "open",
       path: resolved
     });
@@ -142,7 +141,7 @@ function readdirSync(path: PathLike) {
   const resolved = toPath(path);
   if (!isDirectory(resolved)) {
     throw fsError({
-      code: ERROR_CODE.missing,
+      code: ERROR_CODE.MISSING,
       syscall: "scandir",
       path: resolved
     });
@@ -155,7 +154,7 @@ export function statSync(path: PathLike) {
   const resolved = toPath(path);
   if (!existsSync(resolved)) {
     throw fsError({
-      code: ERROR_CODE.missing,
+      code: ERROR_CODE.MISSING,
       syscall: "stat",
       path: resolved
     });
@@ -173,7 +172,8 @@ export function statSync(path: PathLike) {
 function cpSync(source: PathLike, destination: PathLike, options: CopyOptions = {}) {
   const from = toPath(source);
   const to = toPath(destination);
-  if (options.filter && !options.filter(from, to)) {
+  const isFilteredOut = options.filter && !options.filter(from, to);
+  if (isFilteredOut) {
     return;
   }
 
@@ -190,7 +190,11 @@ function cpSync(source: PathLike, destination: PathLike, options: CopyOptions = 
 
 function mkdtempSync(prefix: string) {
   tempCounter++;
-  const suffix = `${tempCounter.toString(TEMP_SUFFIX_RADIX)}${Math.random().toString(TEMP_SUFFIX_RADIX).slice(2)}`.slice(0, TEMP_SUFFIX_LENGTH);
+  const suffix =
+    `${tempCounter.toString(TEMP_SUFFIX_RADIX)}${Math.random().toString(TEMP_SUFFIX_RADIX).slice(2)}`.slice(
+      0,
+      TEMP_SUFFIX_LENGTH
+    );
   return mkdirSync(`${prefix}${suffix}`);
 }
 

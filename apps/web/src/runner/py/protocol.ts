@@ -1,34 +1,34 @@
-import { z } from "@/lib/zod.ts";
 import { testResultSchema } from "#scripts/lib/run-result.ts";
 import { runnerLessonSchema } from "#scripts/lib/runner-bundle.ts";
+import { zod } from "@/lib/zod.ts";
 
-const filesSchema = z.record(z.string(), z.string());
+const filesSchema = zod.record(zod.string(), zod.string());
 
-export const pyRunRequestSchema = z.object({
+export const pyRunRequestSchema = zod.object({
   lesson: runnerLessonSchema,
   kitFiles: filesSchema,
   files: filesSchema
 });
 
 export const PyReply = {
-  result: "result",
-  crash: "crash"
+  RESULT: "result",
+  CRASH: "crash"
 } as const;
 
-export const pytestOutcomeSchema = z.object({
-  exitCode: z.number().int(),
-  output: z.string(),
-  tests: z.array(testResultSchema),
-  testCases: z.array(z.unknown())
+export const pytestOutcomeSchema = zod.object({
+  exitCode: zod.number().int(),
+  output: zod.string(),
+  tests: zod.array(testResultSchema),
+  testCases: zod.array(zod.unknown())
 });
 
-export const pyRunResponseSchema = z.discriminatedUnion("kind", [
-  pytestOutcomeSchema.extend({ kind: z.literal(PyReply.result) }),
-  z.object({
-    kind: z.literal(PyReply.crash),
-    message: z.string()
+export const pyRunResponseSchema = zod.discriminatedUnion("kind", [
+  pytestOutcomeSchema.extend({ kind: zod.literal(PyReply.RESULT) }),
+  zod.object({
+    kind: zod.literal(PyReply.CRASH),
+    message: zod.string()
   })
 ]);
 
-export type PyRunRequest = z.infer<typeof pyRunRequestSchema>;
-export type PyRunResponse = z.infer<typeof pyRunResponseSchema>;
+export type PyRunRequest = zod.infer<typeof pyRunRequestSchema>;
+export type PyRunResponse = zod.infer<typeof pyRunResponseSchema>;

@@ -1,10 +1,10 @@
 {
   "name": "@interview-prep/web",
-  "private": true,
-  "type": "module",
   "version": "0.1.0",
+  "private": true,
   "description": "The hosted trainer: VS Code in the browser with the course extension, test runners and optional Google sign-in",
   "license": "Apache-2.0",
+  "type": "module",
   "scripts": {
     "dev": "pnpm -C ../vscode-ext build && vite",
     "build": "pnpm -C ../vscode-ext build && vite build && node build-server.ts",

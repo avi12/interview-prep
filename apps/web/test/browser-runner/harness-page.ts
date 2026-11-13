@@ -1,3 +1,7 @@
+import type { BrowserRunResult } from "#scripts/lib/run-result.ts";
+import { RunnableLang } from "#scripts/lib/runner-bundle.ts";
+import { runLesson } from "@/runner/run-lesson.ts";
+
 import {
   HARNESS_DATA_FILE,
   HARNESS_STATE_KEY,
@@ -10,9 +14,6 @@ import {
   ONLY_PARAM,
   Variant
 } from "./harness-protocol.ts";
-import { runLesson } from "@/runner/run-lesson.ts";
-import type { BrowserRunResult } from "#scripts/lib/run-result.ts";
-import { RunnableLang } from "#scripts/lib/runner-bundle.ts";
 
 const DEFAULT_LANES = 3;
 const MAX_PROBLEM_LENGTH = 400;
@@ -46,14 +47,20 @@ function record(row: HarnessRow) {
   }
 }
 
-async function runVariant({ lesson, variant }: {
+async function runVariant({
+  lesson,
+  variant
+}: {
   lesson: HarnessLesson;
-  variant: typeof Variant.solution | typeof Variant.starter;
+  variant: typeof Variant.SOLUTION | typeof Variant.STARTER;
 }) {
-  const files = variant === Variant.starter ? lesson.starter : {
-    ...lesson.starter,
-    ...lesson.solution
-  };
+  const files =
+    variant === Variant.STARTER
+      ? lesson.starter
+      : {
+          ...lesson.starter,
+          ...lesson.solution
+        };
   const startedAt = performance.now();
   const result = await runLesson({
     lesson,
@@ -64,7 +71,7 @@ async function runVariant({ lesson, variant }: {
     lang: lesson.lang,
     variant,
     isPass: result.isPass,
-    isExpected: result.isPass === (variant === Variant.solution),
+    isExpected: result.isPass === (variant === Variant.SOLUTION),
     isTimedOut: result.isTimedOut,
     passed: result.tests.filter(test => test.isPass).length,
     total: result.tests.length,
@@ -75,10 +82,7 @@ async function runVariant({ lesson, variant }: {
   });
 }
 
-async function probeAbort({ data, lang }: {
-  data: HarnessData;
-  lang: keyof HarnessData["hangingFiles"];
-}) {
+async function probeAbort({ data, lang }: { data: HarnessData; lang: keyof HarnessData["hangingFiles"] }) {
   const hanging = data.hangingFiles[lang];
   if (!hanging) {
     return;
@@ -91,12 +95,15 @@ async function probeAbort({ data, lang }: {
     },
     files: hanging.files,
     signal: AbortSignal.timeout(ABORT_PROBE_MS)
-  }).then(() => false, () => true);
+  }).then(
+    () => false,
+    () => true
+  );
   const elapsedMs = Math.round(performance.now() - startedAt);
   record({
     id: hanging.lessonId,
     lang,
-    variant: Variant.abortProbe,
+    variant: Variant.ABORT_PROBE,
     isPass: false,
     isExpected: isRejected && elapsedMs < ABORT_PROBE_MS + ABORT_PROBE_SLACK_MS,
     isTimedOut: false,
@@ -123,11 +130,11 @@ async function main() {
       const lesson = lessons[next++];
       await runVariant({
         lesson,
-        variant: Variant.solution
+        variant: Variant.SOLUTION
       });
       await runVariant({
         lesson,
-        variant: Variant.starter
+        variant: Variant.STARTER
       });
     }
   }
@@ -146,8 +153,10 @@ async function main() {
   }
 }
 
-main().catch((error: unknown) => {
-  state.fatal = error instanceof Error ? `${error.message}\n${error.stack ?? ""}` : String(error);
-}).finally(() => {
-  state.isDone = true;
-});
+main()
+  .catch((error: unknown) => {
+    state.fatal = error instanceof Error ? `${error.message}\n${error.stack ?? ""}` : String(error);
+  })
+  .finally(() => {
+    state.isDone = true;
+  });

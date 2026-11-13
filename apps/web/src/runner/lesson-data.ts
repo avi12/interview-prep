@@ -1,5 +1,3 @@
-import { runnerUrl } from "@/lib/web-paths.ts";
-import type { z } from "@/lib/zod.ts";
 import { RUNNER_KIT_FILE_NAME } from "#scripts/lib/layout.ts";
 import {
   RunnerDir,
@@ -9,16 +7,15 @@ import {
   runnerLessonPath,
   runnerLessonSchema
 } from "#scripts/lib/runner-bundle.ts";
+import { runnerUrl } from "@/lib/web-paths.ts";
+import type { zod } from "@/lib/zod.ts";
 
 const STARTER_PREFIX = `${RunnerDir.starter}/`;
 
 let kitLoading: Promise<RunnerKit> | undefined;
 const lessonsLoading = new Map<string, Promise<RunnerLesson>>();
 
-async function fetchParsed<Schema extends z.ZodType>({ path, schema }: {
-  path: string;
-  schema: Schema;
-}) {
+async function fetchParsed<Schema extends zod.ZodType>({ path, schema }: { path: string; schema: Schema }) {
   const response = await fetch(runnerUrl(path), {
     headers: {
       Accept: "application/json"

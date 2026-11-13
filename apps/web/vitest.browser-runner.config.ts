@@ -1,5 +1,6 @@
-import baseConfig from "./vitest.config.ts";
 import { defineConfig } from "vitest/config";
+
+import baseConfig from "./vitest.config.ts";
 
 const HARNESS_TIMEOUT_MS = 60 * 60 * 1000;
 

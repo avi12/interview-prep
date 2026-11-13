@@ -30,7 +30,11 @@ export function createExpect() {
     setState({ assertionCalls: assertionCalls + 1 }, expect);
     const assertion = chai.expect(value, message);
     const test = getCurrentTest();
-    if (test && "withTest" in assertion && typeof assertion.withTest === "function") {
+    if (!test) {
+      return assertion;
+    }
+
+    if ("withTest" in assertion && typeof assertion.withTest === "function") {
       return assertion.withTest(test);
     }
 
@@ -54,13 +58,16 @@ export function createExpect() {
   }
 
   const expect = candidate;
-  setState({
-    assertionCalls: 0,
-    isExpectingAssertions: false,
-    isExpectingAssertionsError: null,
-    expectedAssertionsNumber: null,
-    expectedAssertionsNumberErrorGen: null
-  }, expect);
+  setState(
+    {
+      assertionCalls: 0,
+      isExpectingAssertions: false,
+      isExpectingAssertionsError: null,
+      expectedAssertionsNumber: null,
+      expectedAssertionsNumberErrorGen: null
+    },
+    expect
+  );
   Object.assign(globalThis, { [GLOBAL_EXPECT]: expect });
   return expect;
 }

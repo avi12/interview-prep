@@ -1,10 +1,12 @@
-import { lessonIdFromUrl } from "@/lib/lesson-address.ts";
-import { COURSE_PATH, HASHED_ASSETS_PATH, RUNNER_PATH, WORKERS_PATH } from "@/lib/web-paths.ts";
+import { extname, resolve } from "node:path";
+
 import { contentTypeOf, readFileOrNull, resolveInside } from "@server/files.ts";
 import { CacheControl, ErrorCode, HttpStatus, sendError } from "@server/http.ts";
 import { RUNNER_WORKER_CSP, WEBVIEW_HOST_CSP } from "@server/security.ts";
 import { type Context, Hono } from "hono";
-import { extname, resolve } from "node:path";
+
+import { lessonIdFromUrl } from "@/lib/lesson-address.ts";
+import { COURSE_PATH, HASHED_ASSETS_PATH, RUNNER_PATH, WORKERS_PATH } from "@/lib/web-paths.ts";
 
 const SPA_ENTRY_FILE = "index.html";
 const TITLE_PATTERN = /<title>(.*?)<\/title>/;
@@ -15,7 +17,12 @@ const COURSE_PREFIX = `${COURSE_PATH}/`;
 const RUNNER_PREFIX = `${RUNNER_PATH}/`;
 const WORKERS_PREFIX = `${WORKERS_PATH}/`;
 
-function send({ context, body, path, cacheControl }: {
+function send({
+  context,
+  body,
+  path,
+  cacheControl
+}: {
   context: Context;
   body: Uint8Array<ArrayBuffer>;
   path: string;
@@ -30,7 +37,7 @@ function notFound(context: Context) {
   return sendError({
     context,
     status: HttpStatus.NOT_FOUND,
-    error: ErrorCode.notFound
+    error: ErrorCode.NOT_FOUND
   });
 }
 
@@ -50,31 +57,29 @@ function escapeHtml(text: string) {
   return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
-function withLessonTitle({ entry, lessonTitle }: {
-  entry: Uint8Array<ArrayBuffer>;
-  lessonTitle: string | undefined;
-}) {
+function withLessonTitle({ entry, lessonTitle }: { entry: Uint8Array<ArrayBuffer>; lessonTitle: string | undefined }) {
   if (lessonTitle === undefined) {
     return entry;
   }
 
-  const html = new TextDecoder().decode(entry).replace(
-    TITLE_PATTERN,
-    (_match, appTitle: string) => `<title>${escapeHtml(lessonTitle)}${TITLE_SEPARATOR}${appTitle}</title>`
-  );
+  const html = new TextDecoder()
+    .decode(entry)
+    .replace(
+      TITLE_PATTERN,
+      (_match, appTitle: string) => `<title>${escapeHtml(lessonTitle)}${TITLE_SEPARATOR}${appTitle}</title>`
+    );
   return new TextEncoder().encode(html);
 }
 
-export function courseRoutes({ contentRoot, courseFiles }: {
-  contentRoot: string;
-  courseFiles: ReadonlySet<string>;
-}) {
+export function courseRoutes({ contentRoot, courseFiles }: { contentRoot: string; courseFiles: ReadonlySet<string> }) {
   return new Hono().get(`${COURSE_PREFIX}*`, async context => {
     const relativePath = context.req.path.slice(COURSE_PREFIX.length);
-    const file = courseFiles.has(relativePath) ? resolveInside({
-      root: contentRoot,
-      path: relativePath
-    }) : null;
+    const file = courseFiles.has(relativePath)
+      ? resolveInside({
+          root: contentRoot,
+          path: relativePath
+        })
+      : null;
     const body = file === null ? null : await readFileOrNull(file);
     if (file === null || body === null) {
       return notFound(context);
@@ -84,7 +89,7 @@ export function courseRoutes({ contentRoot, courseFiles }: {
       context,
       body,
       path: file,
-      cacheControl: CacheControl.revalidate
+      cacheControl: CacheControl.REVALIDATE
     });
   });
 }
@@ -104,12 +109,15 @@ export function runnerRoutes(runnerRoot: string) {
       context,
       body,
       path: file,
-      cacheControl: CacheControl.revalidate
+      cacheControl: CacheControl.REVALIDATE
     });
   });
 }
 
-export function clientRoutes({ clientRoot, lessonTitles }: {
+export function clientRoutes({
+  clientRoot,
+  lessonTitles
+}: {
   clientRoot: string;
   lessonTitles: ReadonlyMap<string, string>;
 }) {
@@ -129,7 +137,7 @@ export function clientRoutes({ clientRoot, lessonTitles }: {
         lessonTitle: lessonId === undefined ? undefined : lessonTitles.get(lessonId)
       }),
       path: entryFile,
-      cacheControl: CacheControl.revalidate
+      cacheControl: CacheControl.REVALIDATE
     });
   }
 
@@ -164,7 +172,7 @@ export function clientRoutes({ clientRoot, lessonTitles }: {
       context,
       body,
       path: file,
-      cacheControl: isHashedPath(path) ? CacheControl.immutable : CacheControl.revalidate
+      cacheControl: isHashedPath(path) ? CacheControl.IMMUTABLE : CacheControl.REVALIDATE
     });
   });
 }

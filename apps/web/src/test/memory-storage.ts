@@ -27,8 +27,10 @@ export class MemoryStorage implements Storage {
 }
 
 export class BrokenStorage extends MemoryStorage {
-  override getItem(): string | null {
-    throw new Error("storage is blocked");
+  override getItem() {
+    return (() => {
+      throw new Error("storage is blocked");
+    })();
   }
 
   override setItem() {

@@ -18,7 +18,10 @@ export async function mountWorkspaceFiles() {
   const database = await IndexedDB.create(DATABASE_NAME, undefined, [STORE_NAME]);
   const provider = new IndexedDBFileSystemProvider(WORKSPACE_ROOT.scheme, database, STORE_NAME, IS_WATCH_CROSS_WINDOW);
   registerFileSystemOverlay(OVERLAY_PRIORITY, provider);
-  const hasRoot = await provider.stat(WORKSPACE_ROOT).then(() => true, () => false);
+  const hasRoot = await provider.stat(WORKSPACE_ROOT).then(
+    () => true,
+    () => false
+  );
   if (!hasRoot) {
     await provider.mkdir(WORKSPACE_ROOT);
   }

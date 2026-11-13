@@ -1,6 +1,7 @@
 import { createTestApp, WORKER_FILE } from "@server/test-fixture.ts";
-import { FIREBASE_AUTH_ORIGIN } from "#scripts/lib/gcp.ts";
 import { describe, expect, it } from "vitest";
+
+import { FIREBASE_AUTH_ORIGIN } from "#scripts/lib/gcp.ts";
 
 describe("security headers", () => {
   it("sends the app shell CSP and the hardening headers", async () => {
@@ -12,7 +13,9 @@ describe("security headers", () => {
     expect(csp).toContain("worker-src 'self' blob:");
     expect(csp).toContain("font-src 'self' https://fonts.gstatic.com");
     expect(csp).toContain(`frame-src 'self' ${FIREBASE_AUTH_ORIGIN} https://accounts.google.com`);
-    expect(csp).toContain("connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com");
+    expect(csp).toContain(
+      "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com"
+    );
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("base-uri 'none'");
     expect(csp).toContain("frame-ancestors 'none'");

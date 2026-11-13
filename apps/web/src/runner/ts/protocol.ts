@@ -1,39 +1,39 @@
-import { z } from "@/lib/zod.ts";
 import { RecordKind } from "#scripts/lib/record-env.ts";
 import { testResultSchema } from "#scripts/lib/run-result.ts";
+import { zod } from "@/lib/zod.ts";
 
 export const FILE_URL_PREFIX = "file://";
 
-const filesSchema = z.record(z.string(), z.string());
+const filesSchema = zod.record(zod.string(), zod.string());
 
-export const runRequestSchema = z.object({
+export const runRequestSchema = zod.object({
   files: filesSchema,
-  testFiles: z.array(z.string()),
-  setupFiles: z.array(z.string()),
-  implDir: z.string(),
-  importMap: z.record(z.string(), z.string()),
-  testTimeoutMs: z.number(),
-  hookTimeoutMs: z.number(),
-  isRecording: z.boolean()
+  testFiles: zod.array(zod.string()),
+  setupFiles: zod.array(zod.string()),
+  implDir: zod.string(),
+  importMap: zod.record(zod.string(), zod.string()),
+  testTimeoutMs: zod.number(),
+  hookTimeoutMs: zod.number(),
+  isRecording: zod.boolean()
 });
 
 export const WorkerReply = {
-  result: "result",
-  crash: "crash"
+  RESULT: "result",
+  CRASH: "crash"
 } as const;
 
-export const runResponseSchema = z.discriminatedUnion("kind", [
-  z.object({
-    kind: z.literal(WorkerReply.result),
-    tests: z.array(testResultSchema),
-    errors: z.array(z.string()),
-    records: z.record(z.enum(RecordKind), z.array(z.unknown()))
+export const runResponseSchema = zod.discriminatedUnion("kind", [
+  zod.object({
+    kind: zod.literal(WorkerReply.RESULT),
+    tests: zod.array(testResultSchema),
+    errors: zod.array(zod.string()),
+    records: zod.record(zod.enum(RecordKind), zod.array(zod.unknown()))
   }),
-  z.object({
-    kind: z.literal(WorkerReply.crash),
-    message: z.string()
+  zod.object({
+    kind: zod.literal(WorkerReply.CRASH),
+    message: zod.string()
   })
 ]);
 
-export type RunRequest = z.infer<typeof runRequestSchema>;
-export type RunResponse = z.infer<typeof runResponseSchema>;
+export type RunRequest = zod.infer<typeof runRequestSchema>;
+export type RunResponse = zod.infer<typeof runResponseSchema>;

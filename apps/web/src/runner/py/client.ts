@@ -14,7 +14,11 @@ function discardWorker() {
   warmWorker = undefined;
 }
 
-async function runNow({ message, signal, timeoutMs }: {
+async function runNow({
+  message,
+  signal,
+  timeoutMs
+}: {
   message: PyRunRequest;
   signal: AbortSignal;
   timeoutMs: number;
@@ -25,7 +29,7 @@ async function runNow({ message, signal, timeoutMs }: {
     schema: pyRunResponseSchema,
     signal: AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)])
   });
-  const isWorkerSpent = outcome.end !== ChannelEnd.done || outcome.response.kind === PyReply.crash;
+  const isWorkerSpent = outcome.end !== ChannelEnd.DONE || outcome.response.kind === PyReply.CRASH;
   if (isWorkerSpent) {
     discardWorker();
   }
@@ -33,11 +37,7 @@ async function runNow({ message, signal, timeoutMs }: {
   return outcome;
 }
 
-export function runPyLesson(input: {
-  message: PyRunRequest;
-  signal: AbortSignal;
-  timeoutMs: number;
-}) {
+export function runPyLesson(input: { message: PyRunRequest; signal: AbortSignal; timeoutMs: number }) {
   const outcome = queue.then(() => runNow(input));
   queue = outcome.catch(() => undefined);
   return outcome;

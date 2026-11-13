@@ -1,11 +1,11 @@
-import { passTimestamp, type ProgressStore, syncLocalIntoAccount } from "@/lib/progress-store.ts";
 import { markPassed, type Progress } from "#scripts/lib/progress-sync.ts";
+import { passTimestamp, type ProgressStore, syncLocalIntoAccount } from "@/lib/progress-store.ts";
 
 export const SyncState = {
-  local: "local",
-  syncing: "syncing",
-  synced: "synced",
-  failed: "failed"
+  LOCAL: "local",
+  SYNCING: "syncing",
+  SYNCED: "synced",
+  FAILED: "failed"
 } as const;
 
 export type SyncState = (typeof SyncState)[keyof typeof SyncState];
@@ -14,7 +14,7 @@ type Listener = () => void;
 
 export class ProgressSession {
   #progress: Progress = {};
-  #syncState: SyncState = SyncState.local;
+  #syncState: SyncState = SyncState.LOCAL;
   readonly #listeners = new Set<Listener>();
   readonly #local: ProgressStore;
   #account: ProgressStore | null = null;
@@ -49,7 +49,7 @@ export class ProgressSession {
 
     this.#show({
       progress,
-      syncState: SyncState.local
+      syncState: SyncState.LOCAL
     });
   }
 
@@ -58,7 +58,7 @@ export class ProgressSession {
     this.#account = account;
     this.#show({
       progress: this.#progress,
-      syncState: SyncState.syncing
+      syncState: SyncState.SYNCING
     });
     try {
       const progress = await syncLocalIntoAccount({
@@ -73,7 +73,7 @@ export class ProgressSession {
 
       this.#show({
         progress,
-        syncState: SyncState.synced
+        syncState: SyncState.SYNCED
       });
     } catch {
       if (generation !== this.#generation) {
@@ -82,7 +82,7 @@ export class ProgressSession {
 
       this.#show({
         progress: await this.#local.load(),
-        syncState: SyncState.failed
+        syncState: SyncState.FAILED
       });
     }
   }
@@ -113,7 +113,7 @@ export class ProgressSession {
       if (generation === this.#generation) {
         this.#show({
           progress: saved,
-          syncState: SyncState.synced
+          syncState: SyncState.SYNCED
         });
       }
     } catch {
@@ -125,16 +125,13 @@ export class ProgressSession {
       if (generation === this.#generation) {
         this.#show({
           progress: passed,
-          syncState: SyncState.failed
+          syncState: SyncState.FAILED
         });
       }
     }
   }
 
-  #show({ progress, syncState }: {
-    progress: Progress;
-    syncState: SyncState;
-  }) {
+  #show({ progress, syncState }: { progress: Progress; syncState: SyncState }) {
     this.#progress = progress;
     this.#syncState = syncState;
     for (const listener of this.#listeners) {
@@ -142,10 +139,7 @@ export class ProgressSession {
     }
   }
 
-  async #keepOnDevice({ id, passedAt }: {
-    id: string;
-    passedAt: string;
-  }) {
+  async #keepOnDevice({ id, passedAt }: { id: string; passedAt: string }) {
     const local = await this.#local.load();
     await this.#local.save(
       markPassed({

@@ -1,17 +1,17 @@
 import { formatWithLimits } from "#kit/format.ts";
 
 type Callback = (error: unknown, value?: unknown) => void;
-type InspectOptions = {
+interface InspectOptions {
   depth?: number;
   maxArrayLength?: number;
   maxStringLength?: number;
-};
+}
 
 const DEFAULT_LIMITS = {
   depth: 2,
   maxArrayLength: 100,
   maxStringLength: 10_000
-} as const;
+};
 
 function inspect(value: unknown, options: InspectOptions = {}) {
   return formatWithLimits({
@@ -24,13 +24,14 @@ function inspect(value: unknown, options: InspectOptions = {}) {
 }
 
 export function promisify(run: (...args: unknown[]) => void) {
-  return (...args: unknown[]) => new Promise((resolve, reject) => {
-    function callback(...[error, value]: Parameters<Callback>) {
-      return error ? reject(error) : resolve(value);
-    }
+  return (...args: unknown[]) =>
+    new Promise((resolve, reject) => {
+      function callback(...[error, value]: Parameters<Callback>) {
+        return error ? reject(error) : resolve(value);
+      }
 
-    run(...args, callback);
-  });
+      run(...args, callback);
+    });
 }
 
 function format(...values: unknown[]) {

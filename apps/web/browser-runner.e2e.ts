@@ -1,3 +1,24 @@
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import type { AddressInfo } from "node:net";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { serve } from "@hono/node-server";
+import { createApp } from "@server/app.ts";
+import { createMemoryProgressStore } from "@server/memory-progress-store.ts";
+import { chromium } from "playwright-core";
+import { build } from "vite";
+import { expect, it } from "vitest";
+
+import { readTextTree } from "#scripts/lib/files.ts";
+import { RUNNER_KIT_FILE_NAME } from "#scripts/lib/layout.ts";
+import { readLessons } from "#scripts/lib/lessons.ts";
+import { ROOT, RUNNER_DIST_DIR } from "#scripts/lib/paths.ts";
+import { EnginePath, isRunnableLang, RunnableLang, RunnerDir } from "#scripts/lib/runner-bundle.ts";
+import { formatTable } from "#scripts/lib/text-table.ts";
+import { WORKERS_DIR_NAME } from "@/lib/web-paths.ts";
+
 import {
   HARNESS_DATA_FILE,
   HARNESS_STATE_KEY,
@@ -9,30 +30,6 @@ import {
   Variant
 } from "./test/browser-runner/harness-protocol.ts";
 import { ALIASES, appSourceAlias, WORKER_CONFIG } from "./vite.config.ts";
-import { WORKERS_DIR_NAME } from "@/lib/web-paths.ts";
-import { serve } from "@hono/node-server";
-import { createApp } from "@server/app.ts";
-import { createMemoryProgressStore } from "@server/memory-progress-store.ts";
-import { readTextTree } from "#scripts/lib/files.ts";
-import { RUNNER_KIT_FILE_NAME } from "#scripts/lib/layout.ts";
-import { readLessons } from "#scripts/lib/lessons.ts";
-import { ROOT, RUNNER_DIST_DIR } from "#scripts/lib/paths.ts";
-import { EnginePath, isRunnableLang, RunnableLang, RunnerDir } from "#scripts/lib/runner-bundle.ts";
-import { formatTable } from "#scripts/lib/text-table.ts";
-import {
-  existsSync,
-  mkdtempSync,
-  readdirSync,
-  rmSync,
-  writeFileSync
-} from "node:fs";
-import type { AddressInfo } from "node:net";
-import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { chromium } from "playwright-core";
-import { build } from "vite";
-import { expect, it } from "vitest";
 
 const HARNESS_DIR = fileURLToPath(new URL("test/browser-runner", import.meta.url));
 const HEADLESS_SHELL_PREFIX = "chromium_headless_shell-";
@@ -64,7 +61,8 @@ function harnessData() {
   const lessons: HarnessLesson[] = [];
   for (const lesson of readLessons()) {
     const { lang } = lesson.meta;
-    if (!lesson.hasExercise || !isRunnableLang(lang)) {
+    const isNotRunnableExercise = !lesson.hasExercise || !isRunnableLang(lang);
+    if (isNotRunnableExercise) {
       continue;
     }
 
@@ -100,11 +98,13 @@ function newestHeadlessShell() {
       return resolve(shellDir, executable);
     }
   }
-  throw new Error(`No Chrome found. Set ${CHROME_ENV} or run: pnpm -C apps/web exec playwright-core install chromium-headless-shell`);
+  throw new Error(
+    `No Chrome found. Set ${CHROME_ENV} or run: pnpm -C apps/web exec playwright-core install chromium-headless-shell`
+  );
 }
 
 function assertBuilt() {
-  for (const path of [RUNNER_KIT_FILE_NAME, EnginePath.esbuildWasm, EnginePath.pyodideDir, EnginePath.pgliteDir]) {
+  for (const path of [RUNNER_KIT_FILE_NAME, EnginePath.ESBUILD_WASM, EnginePath.PYODIDE_DIR, EnginePath.PGLITE_DIR]) {
     if (!existsSync(resolve(RUNNER_DIST_DIR, path))) {
       throw new Error(`Missing ${path} in ${RUNNER_DIST_DIR}. Run: pnpm build && pnpm build:engines`);
     }
@@ -139,11 +139,14 @@ function startServer(clientRoot: string) {
   });
   let server: ReturnType<typeof serve> | undefined;
   const address = new Promise<AddressInfo>(listening => {
-    server = serve({
-      fetch: app.fetch,
-      port: 0,
-      hostname: LOOPBACK
-    }, listening);
+    server = serve(
+      {
+        fetch: app.fetch,
+        port: 0,
+        hostname: LOOPBACK
+      },
+      listening
+    );
   });
   return {
     address,
@@ -172,22 +175,29 @@ function outcomeText(row: HarnessRow) {
   return row.isPass ? "pass" : "fail";
 }
 
+function rowKey(row: HarnessRow) {
+  return `${row.id} ${row.variant}`;
+}
+
 function resultTable(rows: HarnessRow[]) {
-  const sorted = [...rows].sort((first, second) => `${first.id} ${first.variant}`.localeCompare(`${second.id} ${second.variant}`));
+  const sorted = [...rows].sort((first, second) => rowKey(first).localeCompare(rowKey(second)));
   return formatTable({
     columns: ["Lesson", "Lang", "Variant", "Result", "Expected", "Tests", "Cases", "Queries", "ms", "Problem"],
-    rows: sorted.map(row => [
-      row.id,
-      row.lang,
-      row.variant,
-      outcomeText(row),
-      row.isExpected ? "ok" : "UNEXPECTED",
-      `${row.passed}/${row.total}`,
-      String(row.testCases),
-      String(row.queryResults),
-      String(row.ms),
-      row.isExpected && row.variant !== Variant.starter ? "" : shown(row.problem)
-    ])
+    rows: sorted.map(row => {
+      const isExpectedFailure = row.isExpected && row.variant !== Variant.STARTER;
+      return [
+        row.id,
+        row.lang,
+        row.variant,
+        outcomeText(row),
+        row.isExpected ? "ok" : "UNEXPECTED",
+        `${row.passed}/${row.total}`,
+        String(row.testCases),
+        String(row.queryResults),
+        String(row.ms),
+        isExpectedFailure ? "" : shown(row.problem)
+      ];
+    })
   }).join("\n");
 }
 
@@ -195,7 +205,10 @@ it("grades every TypeScript, SQL and Python lesson in a real browser", async () 
   assertBuilt();
   const outDir = mkdtempSync(join(tmpdir(), "browser-runner-"));
   await buildHarness(outDir);
-  expect(readdirSync(resolve(outDir, WORKERS_DIR_NAME)).length, "test workers are emitted where the worker CSP applies").toBeGreaterThan(0);
+  expect(
+    readdirSync(resolve(outDir, WORKERS_DIR_NAME)).length,
+    "test workers are emitted where the worker CSP applies"
+  ).toBeGreaterThan(0);
   const server = startServer(outDir);
   const { port } = await server.address;
   const browser = await chromium.launch({

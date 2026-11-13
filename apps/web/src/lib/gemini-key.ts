@@ -1,12 +1,12 @@
 import { browserStorage, readStored, writeStored } from "@/lib/browser-storage.ts";
-import { z } from "@/lib/zod.ts";
+import { zod } from "@/lib/zod.ts";
 
 const GEMINI_KEY_STORAGE_KEY = "interview-prep.gemini-api-key";
 const MIN_API_KEY_LENGTH = 20;
 
-export const apiKeySchema = z.string().trim().min(MIN_API_KEY_LENGTH).regex(/^\S+$/);
+export const apiKeySchema = zod.string().trim().min(MIN_API_KEY_LENGTH).regex(/^\S+$/);
 
-const storedKeySchema = z.object({ apiKey: apiKeySchema.nullable() });
+const storedKeySchema = zod.object({ apiKey: apiKeySchema.nullable() });
 
 export function loadGeminiKey() {
   return readStored({

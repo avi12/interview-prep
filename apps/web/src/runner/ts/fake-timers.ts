@@ -1,7 +1,7 @@
 import { type FakeMethod, withGlobal } from "@sinonjs/fake-timers";
 
 const NOT_FAKED = new Set<string>(["nextTick", "queueMicrotask"]);
-const NOT_MOCKED_MESSAGE = "Timers are not mocked. Try calling \"vi.useFakeTimers()\" first.";
+const NOT_MOCKED_MESSAGE = 'Timers are not mocked. Try calling "vi.useFakeTimers()" first.';
 
 type Clock = ReturnType<ReturnType<typeof withGlobal>["install"]>;
 
@@ -22,15 +22,19 @@ export function createFakeTimers() {
   }
 
   return {
-    useFakeTimers(config: {
-      toFake?: FakeMethod[];
-      now?: number | Date;
-    } = {}) {
+    useFakeTimers(
+      config: {
+        toFake?: FakeMethod[];
+        now?: number | Date;
+      } = {}
+    ) {
       if (clock) {
         return;
       }
 
-      const toFake = Object.keys(fakeTimers.timers).filter(isFakeMethod).filter(timer => !NOT_FAKED.has(timer));
+      const toFake = Object.keys(fakeTimers.timers)
+        .filter(isFakeMethod)
+        .filter(timer => !NOT_FAKED.has(timer));
       clock = fakeTimers.install({
         now: Date.now(),
         ...config,

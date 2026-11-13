@@ -1,10 +1,11 @@
-import { z } from "@/lib/zod.ts";
 import type { VerifyIdToken } from "@server/auth.ts";
 import { applicationDefault, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 
-const CHECK_REVOKED = true;
+import { zod } from "@/lib/zod.ts";
+
+const SHOULD_CHECK_REVOKED = true;
 
 const INVALID_TOKEN_CODES = new Set([
   "auth/argument-error",
@@ -16,7 +17,7 @@ const INVALID_TOKEN_CODES = new Set([
   "auth/user-not-found"
 ]);
 
-const codedErrorSchema = z.object({ code: z.string() });
+const codedErrorSchema = zod.object({ code: zod.string() });
 
 function isInvalidTokenError(error: unknown) {
   const parsed = codedErrorSchema.safeParse(error);
@@ -30,7 +31,7 @@ export function connectFirebase(projectId: string) {
   });
   const auth = getAuth(app);
   async function verifyIdToken(token: string) {
-    const decoded = await auth.verifyIdToken(token, CHECK_REVOKED).catch((error: unknown) => {
+    const decoded = await auth.verifyIdToken(token, SHOULD_CHECK_REVOKED).catch((error: unknown) => {
       if (isInvalidTokenError(error)) {
         return null;
       }

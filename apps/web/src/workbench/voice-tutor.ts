@@ -1,8 +1,3 @@
-import { apiKeySchema, clearGeminiKey, loadGeminiKey, saveGeminiKey } from "@/lib/gemini-key.ts";
-import { lessonIdFromUrl } from "@/lib/lesson-address.ts";
-import { buildSiteTutorView } from "@/lib/site-tutor-view.ts";
-import { COURSE_PATH } from "@/lib/web-paths.ts";
-import { SiteCommand } from "@/workbench/site-manifest.ts";
 import { fetchParsed } from "@interview-prep/gemini-live/src/lib/fetch-parsed.ts";
 import { DEFAULT_LANGUAGE } from "@interview-prep/gemini-live/src/lib/language.ts";
 import { startScreenShare } from "@interview-prep/gemini-live/src/lib/live-api/screen-share.ts";
@@ -15,6 +10,8 @@ import {
   voiceStatusOrNoneSchema
 } from "@interview-prep/gemini-live/src/lib/site-bridge.ts";
 import { startTutorSession, type TutorSession } from "@interview-prep/gemini-live/src/voice/tutor-session.ts";
+import type * as vscode from "vscode";
+
 import {
   GEMINI_LIVE_VERSION_ATTRIBUTE,
   GeminiLiveAsset,
@@ -22,22 +19,25 @@ import {
 } from "#scripts/lib/gemini-live-extension.ts";
 import { INDEX_RELATIVE_PATH } from "#scripts/lib/layout.ts";
 import { lessonIndexSchema, tutorNotesSchema } from "#scripts/lib/schema.ts";
-import type { TutorView } from "#scripts/lib/tutor-view.ts";
-import type * as vscode from "vscode";
+import { apiKeySchema, clearGeminiKey, loadGeminiKey, saveGeminiKey } from "@/lib/gemini-key.ts";
+import { lessonIdFromUrl } from "@/lib/lesson-address.ts";
+import { buildSiteTutorView } from "@/lib/site-tutor-view.ts";
+import { COURSE_PATH } from "@/lib/web-paths.ts";
+import { SiteCommand } from "@/workbench/site-manifest.ts";
 
 type Api = typeof vscode;
 
 const VoiceEngineKind = {
-  subscription: "subscription",
-  apiKey: "apiKey"
+  SUBSCRIPTION: "subscription",
+  API_KEY: "apiKey"
 } as const;
 type VoiceEngineKind = (typeof VoiceEngineKind)[keyof typeof VoiceEngineKind];
 
-export type VoiceTutorStatus = {
+export interface VoiceTutorStatus {
   engine: VoiceEngineKind;
   state: LiveState;
   isMicOpen: boolean;
-};
+}
 
 const KEY_PROMPT = "Paste your Gemini API key. It stays in this browser and goes only to Google";
 const KEY_PLACEHOLDER = "AIza...";
@@ -88,10 +88,7 @@ async function lessonNotes() {
   };
 }
 
-export function createVoiceTutor({ api, onChange }: {
-  api: Api;
-  onChange: (status: VoiceTutorStatus | null) => void;
-}) {
+export function createVoiceTutor({ api, onChange }: { api: Api; onChange: (status: VoiceTutorStatus | null) => void }) {
   let session: TutorSession | null = null;
   let status: VoiceTutorStatus | null = null;
   let stopShare: (() => void) | null = null;
@@ -102,12 +99,15 @@ export function createVoiceTutor({ api, onChange }: {
   }
 
   function showExtensionStatus(raw: VoiceStatus | null) {
+    const isTutorRunning = raw && isRunning(raw.state);
     show(
-      raw && isRunning(raw.state) ? {
-        engine: VoiceEngineKind.subscription,
-        state: raw.state,
-        isMicOpen: raw.isMicOpen
-      } : null
+      isTutorRunning
+        ? {
+            engine: VoiceEngineKind.SUBSCRIPTION,
+            state: raw.state,
+            isMicOpen: raw.isMicOpen
+          }
+        : null
     );
   }
 
@@ -118,16 +118,18 @@ export function createVoiceTutor({ api, onChange }: {
     }
   });
 
-  async function readView(): Promise<TutorView> {
+  async function readView() {
     const { title, notes } = await lessonNotes();
     const editor = api.window.activeTextEditor;
     return buildSiteTutorView({
       lessonTitle: title,
       notes,
-      file: editor ? {
-        name: editor.document.fileName,
-        code: editor.document.getText()
-      } : null,
+      file: editor
+        ? {
+            name: editor.document.fileName,
+            code: editor.document.getText()
+          }
+        : null,
       lastTest: null
     });
   }
@@ -154,22 +156,25 @@ export function createVoiceTutor({ api, onChange }: {
     };
     input.buttons = [linkButton, downloadButton, extensionButton];
     input.onDidTriggerButton(button => {
-      if (button === downloadButton) {
+      const isDownloadButton = button === downloadButton;
+      if (isDownloadButton) {
         void api.env.openExternal(api.Uri.parse(geminiLiveDownloadUrl(GeminiLiveAsset.ZIP)));
         return;
       }
 
-      if (button === extensionButton) {
+      const isExtensionButton = button === extensionButton;
+      if (isExtensionButton) {
         resolve(undefined);
         input.dispose();
-        void api.commands.executeCommand(SiteCommand.showGeminiLive);
+        void api.commands.executeCommand(SiteCommand.SHOW_GEMINI_LIVE);
         return;
       }
 
       void api.env.openExternal(api.Uri.parse(KEY_URL));
     });
     input.onDidChangeValue(value => {
-      input.validationMessage = !value || apiKeySchema.safeParse(value).success ? undefined : KEY_INVALID;
+      const isEmptyOrValidKey = !value || apiKeySchema.safeParse(value).success;
+      input.validationMessage = isEmptyOrValidKey ? undefined : KEY_INVALID;
     });
     input.onDidAccept(() => {
       if (!apiKeySchema.safeParse(input.value).success) {
@@ -187,7 +192,8 @@ export function createVoiceTutor({ api, onChange }: {
 
   async function askForKey() {
     const entered = await askForEnteredKey();
-    if (entered === undefined || !saveGeminiKey(entered)) {
+    const isKeyNotSaved = entered === undefined || !saveGeminiKey(entered);
+    if (isKeyNotSaved) {
       return null;
     }
 
@@ -195,7 +201,9 @@ export function createVoiceTutor({ api, onChange }: {
   }
 
   async function startWithKey(apiKey: string) {
-    const share = await startScreenShare(() => void stop()).catch(() => null);
+    const share = await startScreenShare(() => {
+      void stop();
+    }).catch(() => null);
     if (!share) {
       void api.window.showErrorMessage("The voice tutor needs to see your screen. Share this tab to start");
       return;
@@ -203,7 +211,7 @@ export function createVoiceTutor({ api, onChange }: {
 
     stopShare = () => share.stop();
     show({
-      engine: VoiceEngineKind.apiKey,
+      engine: VoiceEngineKind.API_KEY,
       state: LiveState.OPENING,
       isMicOpen: true
     });
@@ -215,7 +223,7 @@ export function createVoiceTutor({ api, onChange }: {
       events: {
         onState(state) {
           show({
-            engine: VoiceEngineKind.apiKey,
+            engine: VoiceEngineKind.API_KEY,
             state,
             isMicOpen: status?.isMicOpen ?? true
           });
@@ -238,7 +246,8 @@ export function createVoiceTutor({ api, onChange }: {
   async function startViaExtension() {
     const answer = await siteMessenger.sendMessage(SiteBridgeMessage.START).catch(() => null);
     const result = startResultSchema.safeParse(answer);
-    if (result.success && !result.data.isStarted) {
+    const isTutorStartable = result.success && !result.data.isStarted;
+    if (isTutorStartable) {
       void api.window.showWarningMessage(result.data.detail);
     }
   }
@@ -249,14 +258,14 @@ export function createVoiceTutor({ api, onChange }: {
       return;
     }
 
-    const apiKey = loadGeminiKey() ?? await askForKey();
+    const apiKey = loadGeminiKey() ?? (await askForKey());
     if (apiKey) {
       await startWithKey(apiKey);
     }
   }
 
   async function stop() {
-    if (status?.engine === VoiceEngineKind.subscription) {
+    if (status?.engine === VoiceEngineKind.SUBSCRIPTION) {
       await siteMessenger.sendMessage(SiteBridgeMessage.STOP).catch(() => undefined);
       return;
     }
@@ -269,12 +278,16 @@ export function createVoiceTutor({ api, onChange }: {
   }
 
   async function toggleMic() {
-    if (status?.engine === VoiceEngineKind.subscription) {
+    if (status?.engine === VoiceEngineKind.SUBSCRIPTION) {
       await siteMessenger.sendMessage(SiteBridgeMessage.TOGGLE_MIC).catch(() => undefined);
       return;
     }
 
-    if (!session || !status) {
+    if (!session) {
+      return;
+    }
+
+    if (!status) {
       return;
     }
 
@@ -288,25 +301,31 @@ export function createVoiceTutor({ api, onChange }: {
 
   async function manageKey() {
     const picked = await api.window.showQuickPick([CHANGE_KEY_LABEL, FORGET_KEY_LABEL, KEY_LINK_LABEL]);
-    if (picked === CHANGE_KEY_LABEL) {
+    const isChangeKeyPicked = picked === CHANGE_KEY_LABEL;
+    if (isChangeKeyPicked) {
       await askForKey();
     }
 
-    if (picked === FORGET_KEY_LABEL) {
+    const isForgetKeyPicked = picked === FORGET_KEY_LABEL;
+    if (isForgetKeyPicked) {
       clearGeminiKey();
     }
 
-    if (picked === KEY_LINK_LABEL) {
+    const isKeyLinkPicked = picked === KEY_LINK_LABEL;
+    if (isKeyLinkPicked) {
       await api.env.openExternal(api.Uri.parse(KEY_URL));
     }
   }
 
-  void siteMessenger.sendMessage(SiteBridgeMessage.GET_STATUS).then(raw => {
-    const parsed = voiceStatusOrNoneSchema.safeParse(raw);
-    if (parsed.success) {
-      showExtensionStatus(parsed.data);
-    }
-  }, () => undefined);
+  void siteMessenger.sendMessage(SiteBridgeMessage.GET_STATUS).then(
+    raw => {
+      const parsed = voiceStatusOrNoneSchema.safeParse(raw);
+      if (parsed.success) {
+        showExtensionStatus(parsed.data);
+      }
+    },
+    () => undefined
+  );
 
   return {
     start,
