@@ -29,11 +29,10 @@
     "release:gemini-live": "node scripts/release-gemini-live.ts",
     "typecheck": "tsrs -p tsconfig.json && tsrs -p tsconfig.solutions.json",
     "fallow": "fallow audit --base HEAD",
-    "dev:lint": "pnpm fallow && pnpm lint",
     "prepare": "simple-git-hooks",
-    "lint": "oxlint --type-aware --ignore-path .oxlintignore --fix -c .oxlintrc.fix.json && eslint --fix && oxlint --type-aware --ignore-path .oxlintignore",
-    "stylelint": "stylelint \"**/*.{css,html,svelte}\" --fix",
-    "test:scripts": "vitest run -c scripts/vitest.config.ts"
+    "lint": "avi12-lint",
+    "test:scripts": "vitest run -c scripts/vitest.config.ts",
+    "lint:fix": "avi12-lint --fix"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.10",
@@ -43,46 +42,31 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@stylistic/eslint-plugin": "^5.10.0",
     "@types/node": "^24.0.0",
+    "avi12-lint": "github:avi12/lint-config#v0.4.4&path:/packages/avi12-lint",
     "eslint": "^10.13.0",
-    "eslint-plugin-import-newlines": "^2.0.0",
-    "eslint-plugin-perfectionist": "^5.13.0",
+    "eslint-config-avi12": "github:avi12/lint-config#v0.4.4&path:/packages/eslint-config",
     "eslint-plugin-svelte": "^3.23.1",
-    "eslint-plugin-unused-imports": "^4.4.1",
     "fallow": "2.103.0",
-    "globals": "^17.13.0",
-    "lint-staged": "^17.6.0",
-    "oxlint": "1.72.0",
-    "oxlint-tsgolint": "0.24.0",
+    "fallow-config-avi12": "github:avi12/lint-config#v0.4.4&path:/packages/fallow-config",
+    "oxfmt": "^0.78.0",
+    "oxfmt-config-avi12": "github:avi12/lint-config#v0.4.4&path:/packages/oxfmt-config",
+    "oxlint": "1.90.0",
+    "oxlint-config-avi12": "github:avi12/lint-config#v0.4.4&path:/packages/oxlint-config",
+    "oxlint-plugin-naming": "github:avi12/lint-config#v0.4.4&path:/packages/oxlint-plugin-naming",
     "postcss": "^8.5.30",
     "postcss-html": "^1.8.1",
     "simple-git-hooks": "^2.14.0",
     "stylelint": "^17.16.0",
-    "stylelint-config-ccb": "^3.32.0",
+    "stylelint-config-avi12": "github:avi12/lint-config#v0.4.4&path:/packages/stylelint-config",
+    "stylelint-config-standard": "^40.0.0",
     "svelte": "^5.57.2",
     "svelte-eslint-parser": "^1.9.0",
     "tsrs": "0.24.0-ts7.1.0-beta",
     "typescript": "^5.9.0",
-    "typescript-eslint": "^8.72.0",
     "vitest": "^3.2.0"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm lint-staged"
-  },
-  "lint-staged": {
-    "{scripts,apps,eslint-rules,curriculum/_kit}/**/*.{ts,js,mjs,svelte}": [
-      "oxlint --ignore-path .oxlintignore --fix -c .oxlintrc.fix.json",
-      "eslint --fix --no-warn-ignored",
-      "oxlint --ignore-path .oxlintignore"
-    ],
-    "eslint.config.js": [
-      "oxlint --ignore-path .oxlintignore --fix -c .oxlintrc.fix.json",
-      "eslint --fix --no-warn-ignored",
-      "oxlint --ignore-path .oxlintignore"
-    ],
-    "{assets,apps}/**/*.{css,svelte}": [
-      "stylelint --fix --allow-empty-input"
-    ]
+    "pre-commit": "pnpm avi12-lint --staged"
   }
 }

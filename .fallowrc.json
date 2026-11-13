@@ -1,5 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/getfallow/fallow/main/schema/fallowrc.json",
+  "extends": [
+    "./node_modules/fallow-config-avi12/fallow.json"
+  ],
   "entry": [
     "apps/gemini-live/src/entrypoints/**",
     "apps/gemini-live/test/*.ts",
@@ -37,7 +40,14 @@
   "ignoreDependencies": [
     "@electric-sql/pglite",
     "postcss-html",
-    "monaco-editor"
+    "monaco-editor",
+    "avi12-lint",
+    "eslint-config-avi12",
+    "fallow-config-avi12",
+    "oxlint-config-avi12",
+    "oxlint-plugin-naming",
+    "stylelint-config-avi12",
+    "oxfmt-config-avi12"
   ],
   "ignoreExports": [
     {

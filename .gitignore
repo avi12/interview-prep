@@ -11,3 +11,6 @@ __pycache__/
 .svelte-check/
 apps/web/dist-client/
 apps/web/dist-server/
+
+# Lint cache
+.verify/
