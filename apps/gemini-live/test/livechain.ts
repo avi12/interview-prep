@@ -1,17 +1,3 @@
-import {
-  type Cdp,
-  type CdpTarget,
-  connect,
-  debugEndpoint,
-  listTargets
-} from "../scripts/cdp.ts";
-import { buildBrief } from "../src/lib/brief.ts";
-import { Language } from "../src/lib/language.ts";
-import { parseSession } from "../src/lib/session-schema.ts";
-import { oneLine } from "../src/lib/text.ts";
-import { TutorAction, tutorActionSelector } from "../src/lib/tutor-action.ts";
-import { parseVscodeTitle } from "../src/lib/vscode-title.ts";
-import { z } from "../src/lib/zod.ts";
 /*
  * Gemini Live, the extension's half, in a real browser with the built extension loaded.
  *
@@ -39,8 +25,34 @@ import { z } from "../src/lib/zod.ts";
 import { readFileSync } from "node:fs";
 import { setTimeout as wait } from "node:timers/promises";
 
+import { type Cdp, type CdpTarget, connect, debugEndpoint, listTargets } from "../scripts/cdp.ts";
+import { buildBrief } from "../src/lib/brief.ts";
+import { Language } from "../src/lib/language.ts";
+import { parseSession } from "../src/lib/session-schema.ts";
+import { oneLine } from "../src/lib/text.ts";
+import { TutorAction, tutorActionSelector } from "../src/lib/tutor-action.ts";
+import { parseVscodeTitle } from "../src/lib/vscode-title.ts";
+import { zod } from "../src/lib/zod.ts";
+
+const NAME_COLUMN_WIDTH = 66;
+const DEFAULT_WAIT_TIMEOUT_MS = 30_000;
+const DEFAULT_POLL_INTERVAL_MS = 300;
+const HTTP_OK = 200;
+const WAIT_15_SECONDS_MS = 15_000;
+const WAIT_20_SECONDS_MS = 20_000;
+const MILLISECONDS_PER_SECOND = 1000;
+const SHOT_MIME_TYPE_INDEX = 3;
+const BYTES_PER_KILOBYTE = 1024;
+const WAIT_60_SECONDS_MS = 60_000;
+const WAIT_4_SECONDS_MS = 4000;
+const SETTLE_DELAY_MS = 3500;
+const WAIT_12_SECONDS_MS = 12_000;
+const WAIT_10_SECONDS_MS = 10_000;
+const WAIT_5_SECONDS_MS = 5000;
+
 const [, , debugPort = "", vscodeOrigin] = process.argv;
-if (!debugPort || !vscodeOrigin) {
+const IS_INVOCATION_INCOMPLETE = !debugPort || !vscodeOrigin;
+if (IS_INVOCATION_INCOMPLETE) {
   console.log("usage: node test/livechain.ts <debug-port> <fake-vscode-origin>");
   process.exit(2);
 }
@@ -63,21 +75,21 @@ const LIVE_TIMEOUT_FLAG_COUNT = 4;
 const BRIEF_TIMEOUT_MS = 120_000;
 const BOOT_REPORT_MS = 17_000;
 
-const createdTargetSchema = z.object({ targetId: z.string() });
-const sharedTabSchema = z.object({
-  title: z.string(),
-  url: z.string()
+const createdTargetSchema = zod.object({ targetId: zod.string() });
+const sharedTabSchema = zod.object({
+  title: zod.string(),
+  url: zod.string()
 });
-const vscodeTabSchema = z.object({
-  id: z.number(),
-  windowId: z.number()
+const vscodeTabSchema = zod.object({
+  id: zod.number(),
+  windowId: zod.number()
 });
-const consoleCallSchema = z.object({
-  type: z.string(),
-  args: z.array(
-    z.object({
-      value: z.unknown().optional(),
-      description: z.string().optional()
+const consoleCallSchema = zod.object({
+  type: zod.string(),
+  args: zod.array(
+    zod.object({
+      value: zod.unknown().optional(),
+      description: zod.string().optional()
     })
   )
 });
@@ -88,10 +100,7 @@ async function targetByUrl(prefix: string) {
 async function isGeminiOpen() {
   return !!(await targetByUrl(GEMINI));
 }
-function isNear({ color, expected }: {
-  color: number[];
-  expected: number[];
-}) {
+function isNear({ color, expected }: { color: number[]; expected: number[] }) {
   return expected.every((channel, i) => Math.abs(channel - (color[i] ?? Number.NEGATIVE_INFINITY)) < COLOR_TOLERANCE);
 }
 function expectedBrief(language: Language) {
@@ -104,19 +113,19 @@ function expectedBrief(language: Language) {
 }
 
 let failures = 0;
-function check({ name, ok, detail = "" }: {
-  name: string;
-  ok: boolean;
-  detail?: string;
-}) {
-  if (!ok) {
+function check({ name, isOk, detail = "" }: { name: string; isOk: boolean; detail?: string }) {
+  if (!isOk) {
     failures++;
   }
 
-  console.log(`${ok ? "ok  " : "FAIL"}  ${name.padEnd(66)} ${detail}`.trimEnd());
+  console.log(`${isOk ? "ok  " : "FAIL"}  ${name.padEnd(NAME_COLUMN_WIDTH)} ${detail}`.trimEnd());
 }
 
-async function until<T>({ get, timeoutMs = 30_000, every = 300 }: {
+async function until<T>({
+  get,
+  timeoutMs = DEFAULT_WAIT_TIMEOUT_MS,
+  every = DEFAULT_POLL_INTERVAL_MS
+}: {
   get: () => Promise<T> | T;
   timeoutMs?: number;
   every?: number;
@@ -124,7 +133,8 @@ async function until<T>({ get, timeoutMs = 30_000, every = 300 }: {
   const end = Date.now() + timeoutMs;
   for (;;) {
     const value = await get();
-    if (value || Date.now() > end) {
+    const isDone = value || Date.now() > end;
+    if (isDone) {
       return value;
     }
 
@@ -132,14 +142,20 @@ async function until<T>({ get, timeoutMs = 30_000, every = 300 }: {
   }
 }
 
-async function read<T>({ cdp, expression, schema, fallback }: {
+async function read<T>({
+  cdp,
+  expression,
+  schema,
+  fallback
+}: {
   cdp: Cdp;
   expression: string;
-  schema: z.ZodType<T>;
+  schema: zod.ZodType<T>;
   fallback: T;
 }) {
   const raw = await cdp.evaluate(`JSON.stringify(${expression})`).catch(() => null);
-  if (typeof raw !== "string" || raw.startsWith("EXC")) {
+  const isExceptionOrNonString = typeof raw !== "string" || raw.startsWith("EXC");
+  if (isExceptionOrNonString) {
     return fallback;
   }
 
@@ -161,11 +177,13 @@ browserCdp.on(({ method, params }) => {
   served++;
   void browserCdp.send("Fetch.fulfillRequest", {
     requestId: params.requestId,
-    responseCode: 200,
-    responseHeaders: [{
-      name: "content-type",
-      value: "text/html; charset=utf-8"
-    }],
+    responseCode: HTTP_OK,
+    responseHeaders: [
+      {
+        name: "content-type",
+        value: "text/html; charset=utf-8"
+      }
+    ],
     body: Buffer.from(geminiPage, "utf8").toString("base64")
   });
 });
@@ -182,7 +200,8 @@ await vscode.send("Page.enable");
 await vscode.send("Runtime.enable");
 
 async function isOurWorker(target: CdpTarget) {
-  if (target.type !== "service_worker" || !target.url.startsWith("chrome-extension://")) {
+  const isNotServiceWorker = target.type !== "service_worker" || !target.url.startsWith("chrome-extension://");
+  if (isNotServiceWorker) {
     return false;
   }
 
@@ -204,7 +223,7 @@ async function findOurWorker() {
 const extensionTarget = await until({ get: findOurWorker });
 check({
   name: "the extension is loaded",
-  ok: !!extensionTarget,
+  isOk: !!extensionTarget,
   detail: extensionTarget?.url ?? "none"
 });
 
@@ -220,8 +239,13 @@ worker.on(({ method, params }) => {
   }
 
   const consoleCall = consoleCallSchema.safeParse(params);
-  if (method === "Runtime.consoleAPICalled" && consoleCall.success && consoleCall.data.type === "error") {
-    console.log("  worker error:", consoleCall.data.args.map(arg => arg.value ?? arg.description).join(" "));
+  const isConsoleCall =
+    method === "Runtime.consoleAPICalled" && consoleCall.success && consoleCall.data.type === "error";
+  if (isConsoleCall) {
+    console.log(
+      "  worker error:",
+      consoleCall.data.args.map(arg => argumentText(arg.value ?? arg.description)).join(" ")
+    );
   }
 });
 await worker.send("Runtime.enable");
@@ -252,30 +276,43 @@ await popup.evaluate(
   return 1; })()`
 );
 
+function argumentText(value: unknown) {
+  return typeof value === "string" ? value : JSON.stringify(value);
+}
+
+function textOf(value: unknown) {
+  return typeof value === "string" ? value : "";
+}
+
 async function status() {
-  return String((await popup.evaluate(`document.querySelector('#status').textContent`)) ?? "");
+  return textOf(await popup.evaluate(`document.querySelector('#status').textContent`));
 }
 async function chip() {
-  return String((await popup.evaluate(`document.querySelector('#chip').textContent`)) ?? "");
+  return textOf(await popup.evaluate(`document.querySelector('#chip').textContent`));
 }
 async function isStartOffered() {
-  return !!(await vscode.evaluate(`!!document.querySelector(${JSON.stringify(tutorActionSelector(TutorAction.START))})`).catch(() => false));
+  return !!(await vscode
+    .evaluate(`!!document.querySelector(${JSON.stringify(tutorActionSelector(TutorAction.START))})`)
+    .catch(() => false));
 }
 function statusIncludes(text: string) {
   return until({
     get: async () => ((await status()).includes(text) ? status() : null),
-    timeoutMs: 15_000
+    timeoutMs: WAIT_15_SECONDS_MS
   });
 }
 function everStatedIncluding(text: string) {
   return until({
-    get: async () => (await read({
-      schema: z.array(z.string()),
-      cdp: popup,
-      expression: "window.__states",
-      fallback: []
-    })).some(state => state.includes(text)),
-    timeoutMs: 15_000
+    get: async () =>
+      (
+        await read({
+          schema: zod.array(zod.string()),
+          cdp: popup,
+          expression: "window.__states",
+          fallback: []
+        })
+      ).some(state => state.includes(text)),
+    timeoutMs: WAIT_15_SECONDS_MS
   });
 }
 function pressTutorAction(action: TutorAction) {
@@ -297,7 +334,11 @@ function isSessionCleared(timeoutMs: number) {
   });
 }
 async function vscodeTabInfo() {
-  return vscodeTabSchema.parse(await popup.evaluate(`chrome.tabs.query({ url: ${JSON.stringify(`${vscodeOrigin}/*`)} }).then(tabs => ({ id: tabs[0].id, windowId: tabs[0].windowId }))`));
+  return vscodeTabSchema.parse(
+    await popup.evaluate(
+      `chrome.tabs.query({ url: ${JSON.stringify(`${vscodeOrigin}/*`)} }).then(tabs => ({ id: tabs[0].id, windowId: tabs[0].windowId }))`
+    )
+  );
 }
 
 async function attachGemini() {
@@ -315,7 +356,7 @@ async function attachGemini() {
 }
 function logOf(cdp: Cdp) {
   return read({
-    schema: z.array(z.string()),
+    schema: zod.array(zod.string()),
     cdp,
     expression: "window.__log",
     fallback: []
@@ -323,7 +364,7 @@ function logOf(cdp: Cdp) {
 }
 function promptsOf(cdp: Cdp) {
   return read({
-    schema: z.array(z.string()),
+    schema: zod.array(zod.string()),
     cdp,
     expression: "window.__prompts",
     fallback: []
@@ -331,7 +372,7 @@ function promptsOf(cdp: Cdp) {
 }
 function framesOf(cdp: Cdp) {
   return read({
-    schema: z.array(z.array(z.union([z.number(), z.string()])).nullable()),
+    schema: zod.array(zod.array(zod.union([zod.number(), zod.string()])).nullable()),
     cdp,
     expression: "window.__frames",
     fallback: []
@@ -352,32 +393,29 @@ function firstPrompts(cdp: Cdp) {
     timeoutMs: BRIEF_TIMEOUT_MS
   });
 }
-function hasNewPicture({ cdp, since }: {
-  cdp: Cdp;
-  since: number;
-}) {
+function hasNewPicture({ cdp, since }: { cdp: Cdp; since: number }) {
   return until({
     get: async () => (await framesOf(cdp)).slice(since).some(Boolean),
-    timeoutMs: 20_000
+    timeoutMs: WAIT_20_SECONDS_MS
   });
 }
 
 await until({ get: async () => (await status()) !== "" });
 check({
   name: "popup: no VS Code tab, so it says to open VS Code",
-  ok: (await status()).includes("Open VS Code"),
+  isOk: (await status()).includes("Open VS Code"),
   detail: await status()
 });
 check({
   name: "popup: has no start button of its own",
-  ok: !(await popup.evaluate(`!!document.querySelector("button#start")`))
+  isOk: !(await popup.evaluate(`!!document.querySelector("button#start")`))
 });
 await vscode.send("Page.navigate", { url: VSCODE_URL });
 check({
   name: "a VS Code tab appears: its title bar offers to start the tutor",
-  ok: !!(await until({
+  isOk: !!(await until({
     get: isStartOffered,
-    timeoutMs: 15_000
+    timeoutMs: WAIT_15_SECONDS_MS
   })),
   detail: await status()
 });
@@ -389,7 +427,7 @@ await pressStart();
 const first = await attachGemini();
 check({
   name: "the worker opened a Gemini window",
-  ok: !!first,
+  isOk: !!first,
   detail: first?.target.url ?? "none"
 });
 
@@ -405,41 +443,45 @@ const { cdp: glic } = first;
 
 check({
   name: "the client adopted our host",
-  ok: !!(await until({ get: async () => (await logOf(glic)).includes("init") }))
+  isOk: !!(await until({ get: async () => (await logOf(glic)).includes("init") }))
 });
 const prompts = await firstPrompts(glic);
 const brief = prompts?.[0] ?? "";
 check({
   name: "the brief was typed with trusted keys and sent",
-  ok: !!brief,
-  detail: prompts ? `${brief.length} chars, ${((Date.now() - pressedAt) / 1000).toFixed(1)}s from the button` : "nothing submitted"
+  isOk: !!brief,
+  detail: prompts
+    ? `${brief.length} chars, ${((Date.now() - pressedAt) / MILLISECONDS_PER_SECOND).toFixed(1)}s from the button`
+    : "nothing submitted"
 });
 check({
   name: "...and is exactly the brief built for this tab and language",
-  ok: brief === expectedBrief(Language.ENGLISH)
+  isOk: brief === expectedBrief(Language.ENGLISH)
 });
 check({
   name: "...naming the open file",
-  ok: brief.includes("the file \"two_sum.py\"")
+  isOk: brief.includes('the file "two_sum.py"')
 });
 check({
   name: "...with the coaching rules (Socratic, why, early returns)",
-  ok: ["Socratic", "WHY", "early returns", "magic numbers"].every(word => brief.includes(word))
+  isOk: ["Socratic", "WHY", "early returns", "magic numbers"].every(word => brief.includes(word))
 });
 check({
   name: "...on one line, so Enter could not send it early",
-  ok: !!brief && !brief.includes("\n")
+  isOk: !!brief && !brief.includes("\n")
 });
 
 check({
   name: "then Live",
-  ok: !!(await hasLived(glic))
+  isOk: !!(await hasLived(glic))
 });
-const flagCount = await glic.evaluate(`Object.values(window.default_BardChatUi).filter((flag) => flag.defaultValue === 86400 || flag.defaultValue === 86400000).length`);
+const flagCount = await glic.evaluate(
+  `Object.values(window.default_BardChatUi).filter((flag) => flag.defaultValue === 86400 || flag.defaultValue === 86400000).length`
+);
 check({
   name: "Live's four timeouts were rewritten first",
-  ok: flagCount === LIVE_TIMEOUT_FLAG_COUNT,
-  detail: `${flagCount} of ${LIVE_TIMEOUT_FLAG_COUNT}`
+  isOk: flagCount === LIVE_TIMEOUT_FLAG_COUNT,
+  detail: `${String(flagCount)} of ${LIVE_TIMEOUT_FLAG_COUNT}`
 });
 
 const pictures = await until({
@@ -450,29 +492,40 @@ const shot = pictures?.find(Boolean);
 const expectedWidth = Math.min(MAX_FRAME_WIDTH, viewportWidth);
 check({
   name: "Gemini is handed a picture a second, downscaled to the cap",
-  ok: !!shot && shot[0] === expectedWidth && shot[3] === "image/jpeg" && Number(shot[2]) > MIN_FRAME_BYTES,
-  detail: shot ? `${shot[0]}x${shot[1]} ${shot[3]}, ${Math.round(Number(shot[2]) / 1024)} KB (viewport ${viewportWidth}px)` : "none"
+  isOk:
+    !!shot &&
+    shot[0] === expectedWidth &&
+    shot[SHOT_MIME_TYPE_INDEX] === "image/jpeg" &&
+    Number(shot[2]) > MIN_FRAME_BYTES,
+  detail: shot
+    ? `${shot[0]}x${shot[1]} ${shot[SHOT_MIME_TYPE_INDEX]}, ${Math.round(Number(shot[2]) / BYTES_PER_KILOBYTE)} KB (viewport ${viewportWidth}px)`
+    : "none"
 });
-const probe = (await read({
-  schema: z.array(
-    z.object({
-      topLeft: z.array(z.number()),
-      bottomRight: z.array(z.number())
-    })
-  ),
-  cdp: glic,
-  expression: "window.__probes",
-  fallback: []
-}))[0];
+const probe = (
+  await read({
+    schema: zod.array(
+      zod.object({
+        topLeft: zod.array(zod.number()),
+        bottomRight: zod.array(zod.number())
+      })
+    ),
+    cdp: glic,
+    expression: "window.__probes",
+    fallback: []
+  })
+)[0];
 check({
   name: "...and it shows the VS Code tab (magenta bar, green corner)",
-  ok: !!probe && isNear({
-    color: probe.topLeft,
-    expected: MAGENTA
-  }) && isNear({
-    color: probe.bottomRight,
-    expected: GREEN
-  }),
+  isOk:
+    !!probe &&
+    isNear({
+      color: probe.topLeft,
+      expected: MAGENTA
+    }) &&
+    isNear({
+      color: probe.bottomRight,
+      expected: GREEN
+    }),
   detail: JSON.stringify(probe)
 });
 const tabData = await read({
@@ -483,25 +536,25 @@ const tabData = await read({
 });
 check({
   name: "the shared tab carries the VS Code title and address",
-  ok: tabData?.title === FILE_TITLE && tabData.url === vscodeOrigin,
+  isOk: tabData?.title === FILE_TITLE && tabData.url === vscodeOrigin,
   detail: tabData?.title ?? ""
 });
 
 check({
   name: "popup: says Gemini is watching with the mic muted",
-  ok: !!(await statusIncludes("mic muted")),
+  isOk: !!(await statusIncludes("mic muted")),
   detail: `${await chip()} / ${await status()}`
 });
 const stateLog = String(await popup.evaluate(`JSON.stringify(window.__states)`));
 const order = ["Opening", "Briefing", "mic muted"].map(word => stateLog.indexOf(word));
 check({
   name: "popup: went through opening, briefing, live in order",
-  ok: order.every(position => position >= 0) && (order[0] ?? 0) < (order[1] ?? 0) && (order[1] ?? 0) < (order[2] ?? 0)
+  isOk: order.every(position => position >= 0) && (order[0] ?? 0) < (order[1] ?? 0) && (order[1] ?? 0) < (order[2] ?? 0)
 });
 const stored = await storedSession();
 check({
   name: "worker state lives in storage.local",
-  ok: stored?.state === "live" && stored.sight === "seeing",
+  isOk: stored?.state === "live" && stored.sight === "seeing",
   detail: stored ? `${stored.state}/${stored.sight}` : "no row"
 });
 
@@ -511,22 +564,22 @@ function pressMicButton() {
 }
 await until({
   get: () => vscode.evaluate(`!!document.querySelector(".ip-tutor-mic")`),
-  timeoutMs: 60_000
+  timeoutMs: WAIT_60_SECONDS_MS
 });
 await pressMicButton();
 check({
   name: "the mic button unmutes: popup says listening and watching",
-  ok: !!(await statusIncludes("listening and watching")),
+  isOk: !!(await statusIncludes("listening and watching")),
   detail: await status()
 });
 check({
   name: "...and the session keeps it",
-  ok: (await storedSession())?.isMicOpen === true
+  isOk: (await storedSession())?.isMicOpen === true
 });
 await pressMicButton();
 check({
   name: "pressed again: muted",
-  ok: !!(await statusIncludes("mic muted")) && (await storedSession())?.isMicOpen === false
+  isOk: !!(await statusIncludes("mic muted")) && (await storedSession())?.isMicOpen === false
 });
 await pressMicButton();
 
@@ -538,116 +591,122 @@ async function wasPaused() {
 // ---- the lesson changes: the tab is renamed, Live is left alone ----
 await vscode.evaluate(`document.title = ${JSON.stringify(LESSON_TITLE)}`);
 const renamed = await until({
-  get: async () => ((await read({
-    schema: sharedTabSchema.nullable(),
-    cdp: glic,
-    expression: "window.__tab",
-    fallback: null
-  }))?.title === LESSON_TITLE),
+  get: async () =>
+    (
+      await read({
+        schema: sharedTabSchema.nullable(),
+        cdp: glic,
+        expression: "window.__tab",
+        fallback: null
+      })
+    )?.title === LESSON_TITLE,
   timeoutMs: 15_000
 });
 check({
   name: "a new tab title renames the shared tab",
-  ok: !!renamed
+  isOk: !!renamed
 });
-await wait(4000);
+await wait(WAIT_4_SECONDS_MS);
 check({
   name: "...without typing another brief",
-  ok: (await promptsOf(glic)).length === 1
+  isOk: (await promptsOf(glic)).length === 1
 });
 check({
   name: "...so Live was never paused for it",
-  ok: !(await wasPaused())
+  isOk: !(await wasPaused())
 });
 
 // ---- VS Code behind another tab: no picture ----
 const vscodeTab = await vscodeTabInfo();
 let seen = (await framesOf(glic)).length;
-await popup.evaluate(`chrome.tabs.create({ windowId: ${vscodeTab.windowId}, url: 'about:blank', active: true }).then(tab => tab.id)`);
-await wait(3500);
+await popup.evaluate(
+  `chrome.tabs.create({ windowId: ${vscodeTab.windowId}, url: 'about:blank', active: true }).then(tab => tab.id)`
+);
+await wait(SETTLE_DELAY_MS);
 let late = (await framesOf(glic)).slice(seen + 1);
 check({
   name: "another tab in front: Gemini gets no picture of it",
-  ok: late.length >= 1 && late.every(frame => frame === null),
+  isOk: late.length >= 1 && late.every(frame => frame === null),
   detail: `${late.length} calls, all empty`
 });
 check({
   name: "popup: says Gemini cannot see VS Code",
-  ok: !!(await statusIncludes("cannot see VS Code")),
+  isOk: !!(await statusIncludes("cannot see VS Code")),
   detail: await status()
 });
 await popup.evaluate(`chrome.tabs.update(${vscodeTab.id}, { active: true })`);
 seen = (await framesOf(glic)).length;
 check({
   name: "VS Code back in front: pictures resume",
-  ok: !!(await hasNewPicture({
+  isOk: !!(await hasNewPicture({
     cdp: glic,
     since: seen
   }))
 });
 check({
   name: "popup: back to listening and watching",
-  ok: !!(await statusIncludes("listening and watching"))
+  isOk: !!(await statusIncludes("listening and watching"))
 });
 
 // ---- the tab goes somewhere else: never a picture of it ----
 seen = (await framesOf(glic)).length;
 await vscode.send("Page.navigate", { url: "about:blank" });
-await wait(3500);
+await wait(SETTLE_DELAY_MS);
 late = (await framesOf(glic)).slice(seen + 1);
 check({
   name: "tab navigated away from VS Code: no picture of the new page",
-  ok: late.length >= 1 && late.every(frame => frame === null),
+  isOk: late.length >= 1 && late.every(frame => frame === null),
   detail: `${late.length} calls, all empty`
 });
 await vscode.send("Page.navigate", { url: VSCODE_URL });
 seen = (await framesOf(glic)).length;
 check({
   name: "navigated back: pictures resume",
-  ok: !!(await hasNewPicture({
+  isOk: !!(await hasNewPicture({
     cdp: glic,
     since: seen
   }))
 });
 check({
   name: "...and the session was not ended by any of it",
-  ok: (await storedSession())?.state === "live"
+  isOk: (await storedSession())?.state === "live"
 });
 
 // ---- Live breaks mid-session: "Something went wrong", and Try again does not help ----
 await glic.evaluate(`window.__break(), 1`);
 check({
   name: "Live broken: its own Try again is tried first",
-  ok: !!(await until({
+  isOk: !!(await until({
     get: async () => (await logOf(glic)).includes("try-again"),
-    timeoutMs: 12_000
+    timeoutMs: WAIT_12_SECONDS_MS
   }))
 });
 check({
   name: "...and when that does not bring it back, the popup says reconnecting",
-  ok: !!(await everStatedIncluding("reconnecting"))
+  isOk: !!(await everStatedIncluding("reconnecting"))
 });
 const rebriefed = await until({
   async get() {
     const entries = await logOf(glic);
     const sent = await promptsOf(glic);
-    return entries.includes("mode:live") && !entries.includes("try-again") && sent.length === 1 ? sent : null;
+    const isLiveModeOnly = entries.includes("mode:live") && !entries.includes("try-again") && sent.length === 1;
+    return isLiveModeOnly ? sent : null;
   },
   timeoutMs: 90_000,
   every: 1000
 });
 check({
   name: "the window is reloaded, briefed again as a new conversation, back in Live",
-  ok: rebriefed?.[0] === expectedBrief(Language.ENGLISH)
+  isOk: rebriefed?.[0] === expectedBrief(Language.ENGLISH)
 });
 check({
   name: "popup: listening and watching again",
-  ok: !!(await statusIncludes("listening and watching"))
+  isOk: !!(await statusIncludes("listening and watching"))
 });
 seen = 0;
 check({
   name: "and Gemini sees VS Code again",
-  ok: !!(await hasNewPicture({
+  isOk: !!(await hasNewPicture({
     cdp: glic,
     since: seen
   }))
@@ -657,44 +716,47 @@ check({
 await pressStop();
 check({
   name: "stop closes the Gemini window",
-  ok: !!(await until({
+  isOk: !!(await until({
     get: async () => !(await isGeminiOpen()),
-    timeoutMs: 10_000
+    timeoutMs: WAIT_10_SECONDS_MS
   }))
 });
 check({
   name: "...and clears the stored session",
-  ok: !!(await isSessionCleared(5000))
+  isOk: !!(await isSessionCleared(WAIT_5_SECONDS_MS))
 });
 check({
   name: "the title bar is back to a start button",
-  ok: !!(await until({
+  isOk: !!(await until({
     get: isStartOffered,
-    timeoutMs: 5000
+    timeoutMs: WAIT_5_SECONDS_MS
   }))
 });
 glic.close();
 
 // ---- language: Hebrew, chosen in the popup ----
-await popup.evaluate(`(() => { const select = document.querySelector('#language'); select.value = 'he'; select.dispatchEvent(new Event('change', { bubbles: true })); return select.value; })()`);
+await popup.evaluate(
+  `(() => { const select = document.querySelector('#language'); select.value = 'he'; select.dispatchEvent(new Event('change', { bubbles: true })); return select.value; })()`
+);
 const isHebrewStored = await until({
-  get: async () => (await popup.evaluate(`chrome.storage.local.get('language').then(row => row.language ?? null)`)) === "he",
+  get: async () =>
+    (await popup.evaluate(`chrome.storage.local.get('language').then(row => row.language ?? null)`)) === "he",
   timeoutMs: 5000
 });
 check({
   name: "language: Hebrew is stored because it was chosen",
-  ok: !!isHebrewStored
+  isOk: !!isHebrewStored
 });
 await pressStart();
 const hebrew = await attachGemini();
 const hebrewPrompts = hebrew ? await firstPrompts(hebrew.cdp) : null;
 check({
   name: "language: the next brief asks for spoken Hebrew",
-  ok: hebrewPrompts?.[0] === expectedBrief(Language.HEBREW) && !!hebrewPrompts[0]?.includes("natural spoken Hebrew")
+  isOk: hebrewPrompts?.[0] === expectedBrief(Language.HEBREW) && !!hebrewPrompts[0]?.includes("natural spoken Hebrew")
 });
 check({
   name: "...and went Live",
-  ok: !!hebrew && !!(await hasLived(hebrew.cdp))
+  isOk: !!hebrew && !!(await hasLived(hebrew.cdp))
 });
 
 // ---- the person closes the Gemini window by hand ----
@@ -706,13 +768,13 @@ if (hebrew) {
 
 check({
   name: "closing the Gemini window ends the session",
-  ok: !!(await isSessionCleared(10_000))
+  isOk: !!(await isSessionCleared(WAIT_10_SECONDS_MS))
 });
 check({
   name: "the title bar is back to a start button",
-  ok: !!(await until({
+  isOk: !!(await until({
     get: isStartOffered,
-    timeoutMs: 5000
+    timeoutMs: WAIT_5_SECONDS_MS
   }))
 });
 
@@ -722,25 +784,25 @@ await pressStart();
 const signIn = await statusIncludes("Sign in to Google");
 check({
   name: "a signed-out Gemini: the popup says to sign in",
-  ok: !!signIn,
+  isOk: !!signIn,
   detail: signIn ?? (await status())
 });
 check({
   name: "...the session is marked failed, and start is offered again",
-  ok: (await chip()) === "failed" && (await isStartOffered())
+  isOk: (await chip()) === "failed" && (await isStartOffered())
 });
 await wait(BOOT_REPORT_MS);
 check({
   name: "...and the sign-in message is not overwritten later",
-  ok: (await status()).includes("Sign in to Google"),
+  isOk: (await status()).includes("Sign in to Google"),
   detail: await status()
 });
 await pressStop();
 check({
   name: "stop clears the failed session and closes its window",
-  ok: !!(await until({
+  isOk: !!(await until({
     get: async () => !(await isGeminiOpen()) && (await storedSession()) === null,
-    timeoutMs: 10_000
+    timeoutMs: WAIT_10_SECONDS_MS
   }))
 });
 geminiPage = STAND_IN;
@@ -750,26 +812,26 @@ await pressStart();
 const last = await attachGemini();
 check({
   name: "a fresh session goes Live",
-  ok: !!last && !!(await hasLived(last.cdp))
+  isOk: !!last && !!(await hasLived(last.cdp))
 });
 last?.cdp.close();
 await popup.evaluate(`chrome.tabs.remove(${vscodeTab.id})`);
 check({
   name: "closing the VS Code tab closes the Gemini window",
-  ok: !!(await until({
+  isOk: !!(await until({
     get: async () => !(await isGeminiOpen()),
-    timeoutMs: 10_000
+    timeoutMs: WAIT_10_SECONDS_MS
   }))
 });
 check({
   name: "...and ends the session",
-  ok: !!(await isSessionCleared(5000))
+  isOk: !!(await isSessionCleared(WAIT_5_SECONDS_MS))
 });
 check({
   name: "popup: asks for VS Code again",
-  ok: !!(await until({
+  isOk: !!(await until({
     get: async () => (await status()).includes("Open VS Code"),
-    timeoutMs: 5000
+    timeoutMs: WAIT_5_SECONDS_MS
   }))
 });
 

@@ -1,6 +1,7 @@
+import { storage } from "#imports";
+
 import type { Engine } from "./engine.ts";
 import { isEngineTab, parseSession, type Session } from "./session-schema.ts";
-import { storage } from "#imports";
 
 export const sessionItem = storage.defineItem<unknown>("local:session", { fallback: null });
 
@@ -8,16 +9,15 @@ export async function loadSession() {
   return parseSession(await sessionItem.getValue());
 }
 
-export async function loadEngineSession({ engine, tab }: {
-  engine: Engine;
-  tab: { id?: number } | undefined;
-}) {
+export async function loadEngineSession({ engine, tab }: { engine: Engine; tab: { id?: number } | undefined }) {
   const session = await loadSession();
   return isEngineTab({
     session,
     engine,
     tabId: tab?.id
-  }) ? session : null;
+  })
+    ? session
+    : null;
 }
 
 let writes: Promise<unknown> = Promise.resolve();

@@ -1,20 +1,23 @@
-import { z } from "../src/lib/zod.ts";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
+import { zod } from "../src/lib/zod.ts";
+
 const MANIFEST_FILE = "manifest.json";
 const HASH_ALGORITHM = "sha1";
 
-const manifestSchema = z.object({
-  background: z.object({ service_worker: z.string() }).optional(),
-  content_scripts: z.array(
-    z.object({
-      matches: z.array(z.string()),
-      js: z.array(z.string()).default([]),
-      css: z.array(z.string()).default([])
-    })
-  ).default([])
+const manifestSchema = zod.object({
+  background: zod.object({ service_worker: zod.string() }).optional(),
+  content_scripts: zod
+    .array(
+      zod.object({
+        matches: zod.array(zod.string()),
+        js: zod.array(zod.string()).default([]),
+        css: zod.array(zod.string()).default([])
+      })
+    )
+    .default([])
 });
 
 type OutputFingerprint = Map<string, string>;
@@ -38,15 +41,15 @@ export function fingerprintOutput(outDir: string) {
     }
 
     const path = join(entry.parentPath, entry.name);
-    fingerprint.set(toPosix(relative(outDir, path)), createHash(HASH_ALGORITHM).update(readFileSync(path)).digest("hex"));
+    fingerprint.set(
+      toPosix(relative(outDir, path)),
+      createHash(HASH_ALGORITHM).update(readFileSync(path)).digest("hex")
+    );
   }
   return fingerprint;
 }
 
-function changedFiles({ before, after }: {
-  before: OutputFingerprint;
-  after: OutputFingerprint;
-}) {
+function changedFiles({ before, after }: { before: OutputFingerprint; after: OutputFingerprint }) {
   const changed = new Set<string>();
   for (const [file, hash] of after) {
     if (before.get(file) !== hash) {
@@ -62,7 +65,11 @@ function changedFiles({ before, after }: {
   return changed;
 }
 
-export function planReload({ outDir, before, after }: {
+export function planReload({
+  outDir,
+  before,
+  after
+}: {
   outDir: string;
   before: OutputFingerprint;
   after: OutputFingerprint;

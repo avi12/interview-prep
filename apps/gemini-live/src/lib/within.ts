@@ -1,4 +1,8 @@
-export function within<T, TFallback>({ timeoutMs, promise, fallback }: {
+export function within<T, TFallback>({
+  timeoutMs,
+  promise,
+  fallback
+}: {
   timeoutMs: number;
   promise: Promise<T>;
   fallback: TFallback;

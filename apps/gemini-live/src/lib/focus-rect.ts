@@ -1,5 +1,3 @@
-import type { FocusRect } from "./extension-channel.ts";
-
 const ACTIVE_EDITOR_GROUP = ".editor-group-container.active";
 const CODE_EDITOR = ".monaco-editor";
 const CODE_LINE = ".view-line";
@@ -15,7 +13,7 @@ interface Box {
   bottom: number;
 }
 
-function toFocusRect({ left, top, right, bottom }: Box): FocusRect {
+function toFocusRect({ left, top, right, bottom }: Box) {
   return {
     left,
     top,
@@ -32,7 +30,7 @@ function measureLine(line: Element) {
   };
 }
 
-function codeBox(editor: Element): Box | null {
+function codeBox(editor: Element) {
   const lines = [...editor.querySelectorAll(CODE_LINE)].map(measureLine);
   const [first] = lines;
   if (!first) {
@@ -42,8 +40,9 @@ function codeBox(editor: Element): Box | null {
   const editorBox = editor.getBoundingClientRect();
   const anchor = editor.querySelector(CURSOR)?.getBoundingClientRect().top ?? editorBox.top;
   const reach = first.box.height * LINES_AROUND_CURSOR;
-  const near = lines.filter(({ box }) =>
-    Math.abs(box.top - anchor) <= reach && box.bottom > editorBox.top && box.top < editorBox.bottom);
+  const near = lines.filter(
+    ({ box }) => Math.abs(box.top - anchor) <= reach && box.bottom > editorBox.top && box.top < editorBox.bottom
+  );
   if (near.length === 0) {
     return null;
   }
@@ -59,7 +58,7 @@ function codeBox(editor: Element): Box | null {
   };
 }
 
-export function focusRect(): FocusRect | null {
+export function focusRect() {
   const group = document.querySelector(ACTIVE_EDITOR_GROUP);
   if (!group) {
     return null;

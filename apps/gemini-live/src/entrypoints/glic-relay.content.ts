@@ -1,11 +1,14 @@
-import { BridgeMessage, bridgeMessenger } from "@/lib/bridge-channel.ts";
+import type { ExtensionMessage as ExtensionRuntimeMessage, Message } from "@webext-core/messaging";
+import type { CustomEventMessage } from "@webext-core/messaging/page";
+import { browser } from "wxt/browser";
+
+import { defineContentScript } from "#imports";
+import { BridgeMessage, bridgeMessenger, type BridgeProtocolMap } from "@/lib/bridge-channel.ts";
 import { type Activation, GLIC_URL, GlicCommand, GlicReport } from "@/lib/bridge-vocab.ts";
-import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
+import { ExtensionMessage, extensionMessenger, type ExtensionProtocolMap } from "@/lib/extension-channel.ts";
 import { promptClipPath } from "@/lib/prompt-clip.ts";
 import { loadLanguage } from "@/lib/settings.ts";
 import { sleep } from "@/lib/sleep.ts";
-import { defineContentScript } from "#imports";
-import { browser } from "wxt/browser";
 
 /*
  * Beside the bridge, in the extension's world: only this world reaches the worker, and
@@ -42,17 +45,23 @@ export default defineContentScript({
     }
 
     bridgeMessenger.onMessage(BridgeMessage.PRESENT, () => activation);
-    bridgeMessenger.onMessage(BridgeMessage.CAPTURE, () =>
-      extensionMessenger.sendMessage(ExtensionMessage.GLIC_CAPTURE).catch(() => null));
-    bridgeMessenger.onMessage(BridgeMessage.PROMPT_CLIP, async ({ data }) =>
-      browser.runtime.getURL(
+    function handleCapture() {
+      return extensionMessenger.sendMessage(ExtensionMessage.GLIC_CAPTURE).catch(() => null);
+    }
+    bridgeMessenger.onMessage(BridgeMessage.CAPTURE, handleCapture);
+    async function handlePromptClip({ data }: Message<BridgeProtocolMap, "promptClip"> & CustomEventMessage) {
+      return browser.runtime.getURL(
         promptClipPath({
           event: data.event,
           language: await loadLanguage()
         })
-      ));
-    bridgeMessenger.onMessage(BridgeMessage.TUTOR_VIEW, () =>
-      extensionMessenger.sendMessage(ExtensionMessage.GLIC_TUTOR_VIEW).catch(() => null));
+      );
+    }
+    bridgeMessenger.onMessage(BridgeMessage.PROMPT_CLIP, handlePromptClip);
+    function handleTutorView() {
+      return extensionMessenger.sendMessage(ExtensionMessage.GLIC_TUTOR_VIEW).catch(() => null);
+    }
+    bridgeMessenger.onMessage(BridgeMessage.TUTOR_VIEW, handleTutorView);
 
     function toWorker(sending: Promise<void>) {
       void sending.catch(() => {});
@@ -60,10 +69,14 @@ export default defineContentScript({
 
     bridgeMessenger.onMessage(GlicReport.BOOTED, () => toWorker(extensionMessenger.sendMessage(GlicReport.BOOTED)));
     bridgeMessenger.onMessage(GlicReport.READY, () => toWorker(extensionMessenger.sendMessage(GlicReport.READY)));
-    bridgeMessenger.onMessage(GlicReport.STATE, ({ data }) =>
-      toWorker(extensionMessenger.sendMessage(GlicReport.STATE, data)));
-    bridgeMessenger.onMessage(GlicReport.FAILED, ({ data }) =>
-      toWorker(extensionMessenger.sendMessage(GlicReport.FAILED, data)));
+    function handleState({ data }: Message<BridgeProtocolMap, "glicState"> & CustomEventMessage) {
+      return toWorker(extensionMessenger.sendMessage(GlicReport.STATE, data));
+    }
+    bridgeMessenger.onMessage(GlicReport.STATE, handleState);
+    function handleFailed({ data }: Message<BridgeProtocolMap, "glicFailed"> & CustomEventMessage) {
+      return toWorker(extensionMessenger.sendMessage(GlicReport.FAILED, data));
+    }
+    bridgeMessenger.onMessage(GlicReport.FAILED, handleFailed);
     extensionMessenger.onMessage(ExtensionMessage.GLIC_RETITLE, ({ data }) => {
       if (activation) {
         activate(data);
@@ -73,8 +86,10 @@ export default defineContentScript({
     extensionMessenger.onMessage(GlicCommand.STOP_LIVE, () => bridgeMessenger.sendMessage(GlicCommand.STOP_LIVE));
     extensionMessenger.onMessage(GlicCommand.BEGIN_TEXT, () => bridgeMessenger.sendMessage(GlicCommand.BEGIN_TEXT));
     extensionMessenger.onMessage(GlicCommand.SUBMIT, () => bridgeMessenger.sendMessage(GlicCommand.SUBMIT));
-    extensionMessenger.onMessage(GlicCommand.SET_MIC, ({ data }) =>
-      bridgeMessenger.sendMessage(GlicCommand.SET_MIC, data));
+    function handleSetMic({ data }: Message<ExtensionProtocolMap, "glicSetMic"> & ExtensionRuntimeMessage) {
+      return bridgeMessenger.sendMessage(GlicCommand.SET_MIC, data);
+    }
+    extensionMessenger.onMessage(GlicCommand.SET_MIC, handleSetMic);
 
     const owned = await askWorkerWhoOwnsTab();
     if (owned) {

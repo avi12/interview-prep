@@ -1,5 +1,6 @@
-import { EditorKind, parseVscodeTitle } from "./vscode-title.ts";
 import { describe, expect, it } from "vitest";
+
+import { EditorKind, parseVscodeTitle } from "./vscode-title.ts";
 
 describe("parseVscodeTitle", () => {
   it("reads the open file", () => {

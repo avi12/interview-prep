@@ -12,7 +12,8 @@ export const VSCODE_CHIP_MATCHES = [`${VSCODE_ORIGIN}/*`];
 export const VSCODE_SITES_TEXT = `${VSCODE_ORIGIN} or ${WEB_ORIGIN}`;
 
 export function isVscodeUrl(url: string | undefined) {
-  if (!url || !URL.canParse(url)) {
+  const isInvalidUrl = !url || !URL.canParse(url);
+  if (isInvalidUrl) {
     return false;
   }
 

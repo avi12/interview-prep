@@ -49,44 +49,44 @@ function varint(value: number) {
   return bytes;
 }
 
-function tag({ field, wireType }: {
-  field: number;
-  wireType: number;
-}) {
+function tag({ field, wireType }: { field: number; wireType: number }) {
   return varint((field << TAG_WIRE_TYPE_BITS) | wireType);
 }
 
-function varintField({ field, value }: {
-  field: number;
-  value: number;
-}) {
-  return [...tag({
-    field,
-    wireType: WireType.VARINT
-  }), ...varint(value)];
+function varintField({ field, value }: { field: number; value: number }) {
+  return [
+    ...tag({
+      field,
+      wireType: WireType.VARINT
+    }),
+    ...varint(value)
+  ];
 }
 
-function bytesField({ field, bytes }: {
-  field: number;
-  bytes: ArrayLike<number>;
-}) {
-  return [...tag({
-    field,
-    wireType: WireType.BYTES
-  }), ...varint(bytes.length), ...Array.from(bytes)];
+function bytesField({ field, bytes }: { field: number; bytes: ArrayLike<number> }) {
+  return [
+    ...tag({
+      field,
+      wireType: WireType.BYTES
+    }),
+    ...varint(bytes.length),
+    ...Array.from(bytes)
+  ];
 }
 
-function stringField({ field, text }: {
-  field: number;
-  text: string;
-}) {
+function stringField({ field, text }: { field: number; text: string }) {
   return bytesField({
     field,
     bytes: encoder.encode(text)
   });
 }
 
-function contentNode({ type, id, text, children = [] }: {
+function contentNode({
+  type,
+  id,
+  text,
+  children = []
+}: {
   type: number;
   id: number;
   text?: string;
@@ -101,21 +101,29 @@ function contentNode({ type, id, text, children = [] }: {
       field: ContentAttributesField.TYPE,
       value: type
     }),
-    ...(text === undefined ? [] : bytesField({
-      field: ContentAttributesField.TEXT_DATA,
-      bytes: stringField({
-        field: TextInfoField.TEXT_CONTENT,
-        text
-      })
-    }))
+    ...(text === undefined
+      ? []
+      : bytesField({
+          field: ContentAttributesField.TEXT_DATA,
+          bytes: stringField({
+            field: TextInfoField.TEXT_CONTENT,
+            text
+          })
+        }))
   ];
-  return [...children.flatMap(child => bytesField({
-    field: ContentNodeField.CHILDREN,
-    bytes: child
-  })), ...bytesField({
-    field: ContentNodeField.ATTRIBUTES,
-    bytes: attributes
-  })];
+  function childField(child: number[]) {
+    return bytesField({
+      field: ContentNodeField.CHILDREN,
+      bytes: child
+    });
+  }
+  return [
+    ...children.flatMap(childField),
+    ...bytesField({
+      field: ContentNodeField.ATTRIBUTES,
+      bytes: attributes
+    })
+  ];
 }
 
 const BLOCK_TYPE: Record<TutorBlockKind, number> = {
@@ -123,11 +131,7 @@ const BLOCK_TYPE: Record<TutorBlockKind, number> = {
   [TutorBlockKind.PARAGRAPH]: ContentAttributeType.PARAGRAPH
 };
 
-export function annotatedPageContent({ title, url, blocks }: {
-  title: string;
-  url: string;
-  blocks: TutorBlock[];
-}) {
+export function annotatedPageContent({ title, url, blocks }: { title: string; url: string; blocks: TutorBlock[] }) {
   let nextId = 1;
   const children = blocks.map(({ kind, text }) => {
     const blockId = ++nextId;
@@ -147,13 +151,16 @@ export function annotatedPageContent({ title, url, blocks }: {
     id: 1,
     children
   });
-  const frame = [...stringField({
-    field: FrameDataField.URL,
-    text: url
-  }), ...stringField({
-    field: FrameDataField.TITLE,
-    text: title
-  })];
+  const frame = [
+    ...stringField({
+      field: FrameDataField.URL,
+      text: url
+    }),
+    ...stringField({
+      field: FrameDataField.TITLE,
+      text: title
+    })
+  ];
   return new Uint8Array([
     ...varintField({
       field: AnnotatedPageContentField.VERSION,

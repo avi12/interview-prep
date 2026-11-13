@@ -57,7 +57,14 @@
   padding-block-start: 28px;
   border: 2px solid var(--w-frame);
   background: var(--surface);
-  clip-path: polygon(0 0, calc(100% - var(--w-cut)) 0, 100% var(--w-cut), 100% 100%, var(--w-cut) 100%, 0 calc(100% - var(--w-cut)));
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--w-cut)) 0,
+    100% var(--w-cut),
+    100% 100%,
+    var(--w-cut) 100%,
+    0 calc(100% - var(--w-cut))
+  );
 
   &::after {
     content: "";
@@ -177,7 +184,14 @@
   border: 2px solid var(--c-off);
   background: transparent;
   color: var(--c-on);
-  clip-path: polygon(var(--c-cut) 0, 100% 0, 100% calc(100% - var(--c-cut)), calc(100% - var(--c-cut)) 100%, 0 100%, 0 var(--c-cut));
+  clip-path: polygon(
+    var(--c-cut) 0,
+    100% 0,
+    100% calc(100% - var(--c-cut)),
+    calc(100% - var(--c-cut)) 100%,
+    0 100%,
+    0 var(--c-cut)
+  );
   font: 600 12px/1 var(--font-sans);
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -210,7 +224,14 @@
     border: 1.5px solid var(--c-off);
     background: var(--c-panel);
     color: var(--fg);
-    clip-path: polygon(var(--c-cut) 0, 100% 0, 100% calc(100% - var(--c-cut)), calc(100% - var(--c-cut)) 100%, 0 100%, 0 var(--c-cut));
+    clip-path: polygon(
+      var(--c-cut) 0,
+      100% 0,
+      100% calc(100% - var(--c-cut)),
+      calc(100% - var(--c-cut)) 100%,
+      0 100%,
+      0 var(--c-cut)
+    );
     font: 14px/1.4 var(--font-mono);
 
     &:focus-visible {

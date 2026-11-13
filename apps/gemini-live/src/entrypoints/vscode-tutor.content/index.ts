@@ -1,11 +1,13 @@
-import TutorChip from "./TutorChip.svelte";
+import { VOICE_STATUS_ITEM_ID } from "@scripts/lib/voice.ts";
+import { mount } from "svelte";
+
+import { defineContentScript } from "#imports";
 import { ExtensionMessage, extensionMessenger } from "@/lib/extension-channel.ts";
 import { focusRect } from "@/lib/focus-rect.ts";
 import { listenToMicCombo } from "@/lib/mic-combo-listener.ts";
 import { VSCODE_CHIP_MATCHES } from "@/lib/vscode.ts";
-import { VOICE_STATUS_ITEM_ID } from "@scripts/lib/voice.ts";
-import { defineContentScript } from "#imports";
-import { mount } from "svelte";
+
+import TutorChip from "./TutorChip.svelte";
 
 const TITLE_BAR_RIGHT = ".titlebar-right";
 const TITLE_BAR_WAIT_MS = 10_000;

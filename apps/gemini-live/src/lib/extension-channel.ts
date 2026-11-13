@@ -1,11 +1,12 @@
+import type { TutorView } from "@scripts/lib/tutor-view.ts";
+import { defineExtensionMessaging } from "@webext-core/messaging";
+
 import type { Activation, GlicCommandMap, GlicReportMap } from "./bridge-vocab.ts";
 import type { Frame } from "./frame.ts";
 import type { TeachResult } from "./mic-key.ts";
 import type { StartResult } from "./site-bridge.ts";
 import type { TeachRole } from "./taught-key.ts";
 import type { VoiceHello, VoiceReport } from "./voice-protocol.ts";
-import type { TutorView } from "@scripts/lib/tutor-view.ts";
-import { defineExtensionMessaging } from "@webext-core/messaging";
 
 export const ExtensionMessage = {
   LIVE_START: "liveStart",
@@ -39,7 +40,7 @@ export interface FocusRect {
   viewportWidth: number;
 }
 
-interface ExtensionProtocolMap extends GlicCommandMap, GlicReportMap {
+export interface ExtensionProtocolMap extends GlicCommandMap, GlicReportMap {
   [ExtensionMessage.LIVE_START](): StartResult;
   [ExtensionMessage.LIVE_STOP](): void;
   [ExtensionMessage.MIC_TOGGLE](): void;

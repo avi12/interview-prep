@@ -1,6 +1,7 @@
+import { describe, expect, it, vi } from "vitest";
+
 import { DEFAULT_ENGINE, Engine } from "./engine.ts";
 import { parseEngine } from "./settings.ts";
-import { describe, expect, it, vi } from "vitest";
 
 vi.mock("#imports", () => ({
   storage: {

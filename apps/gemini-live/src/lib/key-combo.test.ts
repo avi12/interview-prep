@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 import {
   DEFAULT_KEY_COMBO,
   isComboEvent,
@@ -6,9 +8,14 @@ import {
   keyComboProblem,
   keyComboText
 } from "./key-combo.ts";
-import { describe, expect, it } from "vitest";
 
-function keyEvent({ code, ctrlKey = false, altKey = false, shiftKey = false, metaKey = false }: {
+function keyEvent({
+  code,
+  ctrlKey = false,
+  altKey = false,
+  shiftKey = false,
+  metaKey = false
+}: {
   code: string;
   ctrlKey?: boolean;
   altKey?: boolean;

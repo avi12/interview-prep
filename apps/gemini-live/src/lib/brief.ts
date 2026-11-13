@@ -29,7 +29,8 @@ const GENERIC_CONTEXT = "The learner has VS Code open. Read the screen to see wh
 
 const LANGUAGE_RULE: Record<Language, string> = {
   [Language.ENGLISH]: "Speak English.",
-  [Language.HEBREW]: "Speak natural spoken Hebrew. Keep code, identifiers and technical terms in English. If the learner switches to English, follow them."
+  [Language.HEBREW]:
+    "Speak natural spoken Hebrew. Keep code, identifiers and technical terms in English. If the learner switches to English, follow them."
 };
 
 const ACKNOWLEDGE = "Reply to this message with only the word Ready.";
@@ -40,7 +41,8 @@ function cleanName(name: string) {
 
 function contextLine(context: VscodeContext) {
   const name = context ? cleanName(context.name) : "";
-  if (!context || !name) {
+  const isBriefIncomplete = !context || !name;
+  if (isBriefIncomplete) {
     return GENERIC_CONTEXT;
   }
 

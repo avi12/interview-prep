@@ -18,13 +18,18 @@ function captionLines() {
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     const text = node.nodeValue ?? "";
     const parent = node.parentElement;
-    if (!CAPTION_LABEL.test(text) || !parent?.closest("captions-scroller")) {
+    if (!CAPTION_LABEL.test(text)) {
+      continue;
+    }
+
+    if (!parent?.closest("captions-scroller")) {
       continue;
     }
 
     const isLabelAlone = !text.replace(CAPTION_LABEL, "").trim();
     const line = isLabelAlone ? parent.parentElement : parent;
-    if (line && line.tagName !== CAPTIONS_TAG) {
+    const isForeignLine = line && line.tagName !== CAPTIONS_TAG;
+    if (isForeignLine) {
       lines.add(line);
     }
   }
@@ -35,7 +40,8 @@ function directCaptions() {
   for (const line of captionLines()) {
     const rest = (line.textContent ?? "").replace(CAPTION_LABEL, "");
     const letter = FIRST_LETTER.exec(rest)?.[0];
-    const direction = letter && HEBREW_LETTER.test(letter) ? "rtl" : "ltr";
+    const isHebrewLetter = letter && HEBREW_LETTER.test(letter);
+    const direction = isHebrewLetter ? "rtl" : "ltr";
     if (line.dir !== direction) {
       line.dir = direction;
     }

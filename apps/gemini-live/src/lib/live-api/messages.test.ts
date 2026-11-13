@@ -1,3 +1,7 @@
+import { describe, expect, it } from "vitest";
+
+import { bytesToBase64 } from "@/lib/base64.ts";
+
 import {
   audioMessage,
   buildSetupMessage,
@@ -6,8 +10,6 @@ import {
   serializeClientMessage,
   ServerEventKind
 } from "./messages.ts";
-import { bytesToBase64 } from "@/lib/base64.ts";
-import { describe, expect, it } from "vitest";
 
 const setupOptions = {
   model: "gemini-test",
@@ -48,10 +50,12 @@ describe("outgoing messages", () => {
 
   it("sends page content as a turn that does not ask for an answer", () => {
     expect(contextMessage("hello").clientContent).toEqual({
-      turns: [{
-        role: "user",
-        parts: [{ text: "hello" }]
-      }],
+      turns: [
+        {
+          role: "user",
+          parts: [{ text: "hello" }]
+        }
+      ],
       turnComplete: false
     });
   });
@@ -75,12 +79,14 @@ describe("parseServerMessage", () => {
         serverContent: {
           interrupted: true,
           modelTurn: {
-            parts: [{
-              inlineData: {
-                mimeType: "audio/pcm;rate=24000",
-                data: bytesToBase64(audio)
+            parts: [
+              {
+                inlineData: {
+                  mimeType: "audio/pcm;rate=24000",
+                  data: bytesToBase64(audio)
+                }
               }
-            }]
+            ]
           },
           inputTranscription: {
             text: "hi"

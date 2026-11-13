@@ -1,11 +1,7 @@
+import { browser } from "wxt/browser";
+
 import { bridgeFailureSchema, glicStateSchema } from "./bridge-report.ts";
-import {
-  BridgeFailure,
-  GLIC_URL,
-  GlicCommand,
-  GlicReport,
-  GlicState
-} from "./bridge-vocab.ts";
+import { BridgeFailure, GLIC_URL, GlicCommand, GlicReport, GlicState } from "./bridge-vocab.ts";
 import { buildBrief } from "./brief.ts";
 import { Engine } from "./engine.ts";
 import { ExtensionMessage, extensionMessenger } from "./extension-channel.ts";
@@ -21,7 +17,6 @@ import { typeText } from "./typing.ts";
 import { parseVscodeTitle } from "./vscode-title.ts";
 import { VSCODE_ORIGIN } from "./vscode.ts";
 import { within } from "./within.ts";
-import { browser } from "wxt/browser";
 
 const MAX_RESTARTS = 3;
 const RESTART_WINDOW_MS = 10 * 60_000;
@@ -47,20 +42,14 @@ const FAILURE_TEXT: Record<BridgeFailure, string> = {
 
 const SIGN_IN_FAILURES: ReadonlySet<BridgeFailure> = new Set([BridgeFailure.SIGNED_OUT, BridgeFailure.UNAVAILABLE]);
 
-function tell({ state, detail = "" }: {
-  state: LiveState;
-  detail?: string;
-}) {
+function tell({ state, detail = "" }: { state: LiveState; detail?: string }) {
   return updateSession({
     state,
     detail
   });
 }
 
-function command({ session, name }: {
-  session: Session;
-  name: GlicCommand;
-}) {
+function command({ session, name }: { session: Session; name: GlicCommand }) {
   return within({
     timeoutMs: CALL_TIMEOUT_MS,
     promise: extensionMessenger.sendMessage(name, undefined, session.liveTab),
@@ -97,7 +86,8 @@ async function returnFocus(session: Session) {
 
 async function briefTutor() {
   const session = await loadSession();
-  if (!session?.brief || !session.isBooted) {
+  const isSessionNotReady = !session?.brief || !session.isBooted;
+  if (isSessionNotReady) {
     return;
   }
 
@@ -160,10 +150,7 @@ async function restart(session: Session) {
   await browser.tabs.reload(session.liveTab).catch(() => {});
 }
 
-async function fail({ session, failure }: {
-  session: Session;
-  failure: BridgeFailure;
-}) {
+async function fail({ session, failure }: { session: Session; failure: BridgeFailure }) {
   if (failure === BridgeFailure.LIVE_BROKE) {
     return restart(session);
   }
@@ -180,10 +167,13 @@ async function fail({ session, failure }: {
 
 async function onBooted(session: Session) {
   await updateSession({ isBooted: true });
-  void (session.brief ? briefTutor() : borrowFocus(session).then(() => command({
-    session,
-    name: GlicCommand.START_LIVE
-  })));
+  function startLiveCommand() {
+    return command({
+      session,
+      name: GlicCommand.START_LIVE
+    });
+  }
+  void (session.brief ? briefTutor() : borrowFocus(session).then(startLiveCommand));
 }
 
 async function onReady(session: Session) {
@@ -192,10 +182,7 @@ async function onReady(session: Session) {
   await returnFocus(session);
 }
 
-async function onState({ session, state }: {
-  session: Session;
-  state: GlicState;
-}) {
+async function onState({ session, state }: { session: Session; state: GlicState }) {
   if (session.state === LiveState.BRIEFING) {
     return;
   }
@@ -244,10 +231,16 @@ export const glicEngine: LiveEngine = {
     }
   },
   retitle(session) {
-    return extensionMessenger.sendMessage(ExtensionMessage.GLIC_RETITLE, {
-      title: session.title,
-      url: VSCODE_ORIGIN
-    }, session.liveTab).catch(() => {});
+    return extensionMessenger
+      .sendMessage(
+        ExtensionMessage.GLIC_RETITLE,
+        {
+          title: session.title,
+          url: VSCODE_ORIGIN
+        },
+        session.liveTab
+      )
+      .catch(() => {});
   }
 };
 
@@ -300,7 +293,8 @@ export function installGlic() {
   extensionMessenger.onMessage(GlicReport.STATE, async ({ data, sender }) => {
     const state = glicStateSchema.safeParse(data);
     const session = state.success ? await glicSession(sender.tab) : null;
-    if (session && state.success) {
+    const isStateStarted = session && state.success;
+    if (isStateStarted) {
       await onState({
         session,
         state: state.data
@@ -311,7 +305,8 @@ export function installGlic() {
   extensionMessenger.onMessage(GlicReport.FAILED, async ({ data, sender }) => {
     const failure = bridgeFailureSchema.safeParse(data);
     const session = failure.success ? await glicSession(sender.tab) : null;
-    if (session && failure.success) {
+    const isFailureHandled = session && failure.success;
+    if (isFailureHandled) {
       await fail({
         session,
         failure: failure.data

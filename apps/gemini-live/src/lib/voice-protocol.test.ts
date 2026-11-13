@@ -1,6 +1,7 @@
+import { describe, expect, it } from "vitest";
+
 import { LiveState } from "./live-state.ts";
 import { voiceReportSchema } from "./voice-protocol.ts";
-import { describe, expect, it } from "vitest";
 
 describe("voiceReportSchema", () => {
   it("accepts a report from the voice page", () => {

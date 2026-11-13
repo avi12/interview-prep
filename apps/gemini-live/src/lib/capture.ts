@@ -1,9 +1,10 @@
+import { browser } from "wxt/browser";
+
 import { bytesToBase64 } from "./base64.ts";
 import { ExtensionMessage, extensionMessenger, type FocusRect } from "./extension-channel.ts";
 import type { Frame } from "./frame.ts";
 import { Sight } from "./live-state.ts";
 import { isVscodeUrl } from "./vscode.ts";
-import { browser } from "wxt/browser";
 
 const JPEG_MIME = "image/jpeg";
 const CAPTURE_JPEG_QUALITY = 85;
@@ -22,17 +23,15 @@ const HIDDEN: Capture = {
   frame: null
 };
 
-function cropOf({ bitmap, rect }: {
-  bitmap: ImageBitmap;
-  rect: FocusRect | null;
-}) {
+function cropOf({ bitmap, rect }: { bitmap: ImageBitmap; rect: FocusRect | null }) {
   const whole = {
     x: 0,
     y: 0,
     width: bitmap.width,
     height: bitmap.height
   };
-  if (!rect || rect.width <= 0 || rect.height <= 0) {
+  const isRectEmpty = !rect || rect.width <= 0 || rect.height <= 0;
+  if (isRectEmpty) {
     return whole;
   }
 
@@ -41,18 +40,18 @@ function cropOf({ bitmap, rect }: {
   const y = Math.max(0, Math.round(rect.top * pixelsPerCssPixel));
   const width = Math.min(bitmap.width - x, Math.round(rect.width * pixelsPerCssPixel));
   const height = Math.min(bitmap.height - y, Math.round(rect.height * pixelsPerCssPixel));
-  return width > 0 && height > 0 ? {
-    x,
-    y,
-    width,
-    height
-  } : whole;
+  const hasArea = width > 0 && height > 0;
+  return hasArea
+    ? {
+        x,
+        y,
+        width,
+        height
+      }
+    : whole;
 }
 
-async function fitFrame({ dataUrl, rect }: {
-  dataUrl: string;
-  rect: FocusRect | null;
-}): Promise<Frame> {
+async function fitFrame({ dataUrl, rect }: { dataUrl: string; rect: FocusRect | null }) {
   const bitmap = await createImageBitmap(await (await fetch(dataUrl)).blob());
   const crop = cropOf({
     bitmap,
@@ -87,22 +86,26 @@ let last: {
   capture: Capture;
 } | null = null;
 
-async function grab(tabId: number): Promise<Capture> {
+async function grab(tabId: number) {
   const tab = await browser.tabs.get(tabId).catch(() => null);
   const isShowingVscode = tab?.active && isVscodeUrl(tab.url);
-  if (!tab || !isShowingVscode) {
+  const isTabNotVscode = !tab || !isShowingVscode;
+  if (isTabNotVscode) {
     return HIDDEN;
   }
 
   const vscodeWindow = await browser.windows.get(tab.windowId).catch(() => null);
-  if (!vscodeWindow || vscodeWindow.state === MINIMIZED) {
+  const isVscodeWindowHidden = !vscodeWindow || vscodeWindow.state === MINIMIZED;
+  if (isVscodeWindowHidden) {
     return HIDDEN;
   }
 
-  const dataUrl = await browser.tabs.captureVisibleTab(tab.windowId, {
-    format: "jpeg",
-    quality: CAPTURE_JPEG_QUALITY
-  }).catch(() => null);
+  const dataUrl = await browser.tabs
+    .captureVisibleTab(tab.windowId, {
+      format: "jpeg",
+      quality: CAPTURE_JPEG_QUALITY
+    })
+    .catch(() => null);
   if (!dataUrl) {
     return last?.tabId === tabId ? last.capture : HIDDEN;
   }
@@ -120,8 +123,12 @@ async function grab(tabId: number): Promise<Capture> {
 }
 
 export async function captureVscode(tabId: number) {
-  if (last?.tabId === tabId && Date.now() - last.takenAt < MIN_CAPTURE_GAP_MS) {
-    return last.capture;
+  const cached = last;
+  if (cached) {
+    const isRecentCapture = cached.tabId === tabId && Date.now() - cached.takenAt < MIN_CAPTURE_GAP_MS;
+    if (isRecentCapture) {
+      return cached.capture;
+    }
   }
 
   const capture = await grab(tabId).catch(() => HIDDEN);

@@ -1,5 +1,6 @@
-import { SCRIPTS_ALIAS, SOURCE_ALIAS } from "./aliases.ts";
 import { defineConfig } from "vitest/config";
+
+import { SCRIPTS_ALIAS, SOURCE_ALIAS } from "./aliases.ts";
 
 export default defineConfig({
   resolve: {

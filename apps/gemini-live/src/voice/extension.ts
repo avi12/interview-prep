@@ -2,15 +2,19 @@ import { frameSchema } from "@/lib/frame.ts";
 import { VoiceMessage, voiceMessenger } from "@/lib/voice-channel.ts";
 import { voiceHelloSchema, type VoiceReport } from "@/lib/voice-protocol.ts";
 import { within } from "@/lib/within.ts";
-import type { z } from "@/lib/zod.ts";
+import type { zod } from "@/lib/zod.ts";
 
 const HELLO_TIMEOUT_MS = 1500;
 const CAPTURE_TIMEOUT_MS = 2000;
 
-async function askExtension<T>({ timeoutMs, promise, schema }: {
+async function askExtension<T>({
+  timeoutMs,
+  promise,
+  schema
+}: {
   timeoutMs: number;
   promise: Promise<unknown>;
-  schema: z.ZodType<T>;
+  schema: zod.ZodType<T>;
 }) {
   const answer = await within({
     timeoutMs,

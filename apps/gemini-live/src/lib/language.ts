@@ -1,4 +1,4 @@
-import { z } from "./zod.ts";
+import { zod } from "./zod.ts";
 
 export const Language = {
   ENGLISH: "en",
@@ -8,7 +8,7 @@ export type Language = (typeof Language)[keyof typeof Language];
 
 export const DEFAULT_LANGUAGE = Language.ENGLISH;
 
-export const languageSchema = z.enum(Language);
+export const languageSchema = zod.enum(Language);
 
 export const LANGUAGE_LABEL: Record<Language, string> = {
   [Language.ENGLISH]: "English",

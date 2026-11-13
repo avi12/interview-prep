@@ -1,8 +1,9 @@
+import type { TutorView } from "@scripts/lib/tutor-view.ts";
+import { defineCustomEventMessaging } from "@webext-core/messaging/page";
+
 import type { Activation, GlicCommandMap, GlicReportMap } from "./bridge-vocab.ts";
 import type { Frame } from "./frame.ts";
 import type { PromptEvent } from "./prompt-clip.ts";
-import type { TutorView } from "@scripts/lib/tutor-view.ts";
-import { defineCustomEventMessaging } from "@webext-core/messaging/page";
 
 export const BridgeMessage = {
   PRESENT: "present",
@@ -12,7 +13,7 @@ export const BridgeMessage = {
   PROMPT_CLIP: "promptClip"
 } as const;
 
-interface BridgeProtocolMap extends GlicCommandMap, GlicReportMap {
+export interface BridgeProtocolMap extends GlicCommandMap, GlicReportMap {
   [BridgeMessage.PRESENT](): Activation | null;
   [BridgeMessage.CAPTURE](): Frame | null;
   [BridgeMessage.ACTIVATE](data: Activation): void;

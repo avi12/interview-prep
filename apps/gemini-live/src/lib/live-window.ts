@@ -1,8 +1,9 @@
+import { browser } from "wxt/browser";
+
 import type { Engine } from "./engine.ts";
 import { freshSession } from "./session-schema.ts";
 import { saveSession } from "./session.ts";
 import type { StartResult } from "./site-bridge.ts";
-import { browser } from "wxt/browser";
 
 const LIVE_WINDOW_SIZE = {
   width: 420,
@@ -23,7 +24,7 @@ export interface VscodeTab {
   title: string;
 }
 
-export function refused(detail: string): StartResult {
+export function refused(detail: string) {
   return {
     isStarted: false,
     detail
@@ -51,24 +52,28 @@ async function besideWindow(windowId: number) {
   };
 }
 
-async function createLiveWindow({ url, vscodeWindowId }: {
-  url: string;
-  vscodeWindowId: number;
-}) {
+async function createLiveWindow({ url, vscodeWindowId }: { url: string; vscodeWindowId: number }) {
   const options = {
     url,
     type: "popup",
     ...LIVE_WINDOW_SIZE,
     focused: true
   } as const;
-  const positioned = await browser.windows.create({
-    ...options,
-    ...(await besideWindow(vscodeWindowId))
-  }).catch(() => null);
+  const positioned = await browser.windows
+    .create({
+      ...options,
+      ...(await besideWindow(vscodeWindowId))
+    })
+    .catch(() => null);
   return positioned ?? browser.windows.create(options).catch(() => null);
 }
 
-export async function openLiveSession({ engine, url, vscodeTab, brief }: {
+export async function openLiveSession({
+  engine,
+  url,
+  vscodeTab,
+  brief
+}: {
   engine: Engine;
   url: string;
   vscodeTab: VscodeTab;

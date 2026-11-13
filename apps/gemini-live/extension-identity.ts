@@ -12,8 +12,8 @@ const HEX_RADIX = 16;
 
 export function extensionId() {
   const digest = createHash("sha256").update(Buffer.from(EXTENSION_KEY, "base64")).digest("hex");
-  return Array.from(
-    digest.slice(0, ID_LENGTH),
-    digit => String.fromCharCode(ID_ALPHABET_START + Number.parseInt(digit, HEX_RADIX))
-  ).join("");
+  function toIdCharacter(digit: string) {
+    return String.fromCharCode(ID_ALPHABET_START + Number.parseInt(digit, HEX_RADIX));
+  }
+  return Array.from(digest.slice(0, ID_LENGTH), toIdCharacter).join("");
 }

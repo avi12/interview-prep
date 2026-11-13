@@ -1,27 +1,29 @@
-import { z } from "../src/lib/zod.ts";
+import { zod } from "../src/lib/zod.ts";
 
-const messageSchema = z.object({
-  id: z.number().optional(),
-  method: z.string().optional(),
-  params: z.record(z.string(), z.unknown()).optional(),
-  result: z.unknown().optional(),
-  error: z.unknown().optional()
+const messageSchema = zod.object({
+  id: zod.number().optional(),
+  method: zod.string().optional(),
+  params: zod.record(zod.string(), zod.unknown()).optional(),
+  result: zod.unknown().optional(),
+  error: zod.unknown().optional()
 });
 
-const targetSchema = z.object({
-  id: z.string(),
-  type: z.string(),
-  url: z.string(),
-  webSocketDebuggerUrl: z.string()
+const targetSchema = zod.object({
+  id: zod.string(),
+  type: zod.string(),
+  url: zod.string(),
+  webSocketDebuggerUrl: zod.string()
 });
-export type CdpTarget = z.infer<typeof targetSchema>;
+export type CdpTarget = zod.infer<typeof targetSchema>;
 
-const evaluateSchema = z.object({
-  result: z.object({ value: z.unknown().optional() }).optional(),
-  exceptionDetails: z.object({
-    text: z.string().optional(),
-    exception: z.object({ description: z.string().optional() }).optional()
-  }).optional()
+const evaluateSchema = zod.object({
+  result: zod.object({ value: zod.unknown().optional() }).optional(),
+  exceptionDetails: zod
+    .object({
+      text: zod.string().optional(),
+      exception: zod.object({ description: zod.string().optional() }).optional()
+    })
+    .optional()
 });
 
 export interface CdpEvent {
@@ -45,14 +47,17 @@ export function debugEndpoint(debugPort: number | string) {
 
 export async function listTargets(debugPort: number | string) {
   const response = await fetch(`${debugEndpoint(debugPort)}/json/list`).catch(() => null);
-  const listed = z.array(z.unknown()).catch([]).parse(await response?.json().catch(() => null));
+  const listed = zod
+    .array(zod.unknown())
+    .catch([])
+    .parse(await response?.json().catch(() => null));
   return listed.flatMap(item => {
     const parsed = targetSchema.safeParse(item);
     return parsed.success ? [parsed.data] : [];
   });
 }
 
-export async function connect(wsUrl: string): Promise<Cdp> {
+export async function connect(wsUrl: string) {
   const socket = new WebSocket(wsUrl);
   let lastId = 0;
   const pending = new Map<number, (result: unknown) => void>();
@@ -65,7 +70,8 @@ export async function connect(wsUrl: string): Promise<Cdp> {
 
     const { id, method, params = {}, result, error } = parsed.data;
     const resolve = id === undefined ? undefined : pending.get(id);
-    if (id !== undefined && resolve) {
+    const isPendingReply = id !== undefined && resolve;
+    if (isPendingReply) {
       resolve(error ? { error } : result);
       pending.delete(id);
       return;
@@ -128,5 +134,5 @@ export async function connect(wsUrl: string): Promise<Cdp> {
     evaluate,
     on: handler => handlers.push(handler),
     close: () => socket.close()
-  };
+  } satisfies Cdp;
 }

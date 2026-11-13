@@ -177,7 +177,7 @@
     border: 0;
 
     &:disabled {
-      opacity: 45%;
+      opacity: 0.45;
     }
   }
 

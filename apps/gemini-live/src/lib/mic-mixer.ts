@@ -31,7 +31,7 @@ function comfortNoise(context: AudioContext) {
   return noise;
 }
 
-export function mixMicrophone(microphone: MediaStream): MicMixer {
+export function mixMicrophone(microphone: MediaStream) {
   const context = new AudioContext();
   const destination = context.createMediaStreamDestination();
   const source = context.createMediaStreamSource(microphone);
@@ -56,8 +56,8 @@ export function mixMicrophone(microphone: MediaStream): MicMixer {
   }
 
   let isOpen = true;
-  function setOpen(next: boolean) {
-    isOpen = next;
+  function setOpen(isNextOpen: boolean) {
+    isOpen = isNextOpen;
     gate.gain.setTargetAtTime(isOpen ? 1 : 0, context.currentTime, GATE_RAMP_SECONDS);
   }
 

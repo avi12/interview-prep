@@ -1,11 +1,13 @@
+import { relative, resolve } from "node:path";
+import { setTimeout as wait } from "node:timers/promises";
+
+import { watch } from "chokidar";
+import { build } from "wxt";
+
 import { readToken, trainerUrl } from "../../../scripts/lib/trainer-url.ts";
 import { resolveVscodeOrigin } from "../vscode-origin.ts";
 import { launchChrome, reloadPages } from "./dev-browser.ts";
 import { fingerprintOutput, planReload, type ReloadPlan } from "./dev-output.ts";
-import { watch } from "chokidar";
-import { relative, resolve } from "node:path";
-import { setTimeout as wait } from "node:timers/promises";
-import { build } from "wxt";
 
 const PACKAGE_DIR = resolve(import.meta.dirname, "..");
 const WATCHED_PATHS = [
@@ -66,10 +68,12 @@ async function buildExtension() {
 function startUrl() {
   const origin = resolveVscodeOrigin();
   const token = readToken();
-  return token ? trainerUrl({
-    origin,
-    token
-  }) : origin;
+  return token
+    ? trainerUrl({
+        origin,
+        token
+      })
+    : origin;
 }
 
 process.chdir(PACKAGE_DIR);
@@ -142,7 +146,9 @@ async function drainRebuilds() {
 function scheduleRebuild(changedPath: string) {
   pendingPath = changedPath;
   clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => void drainRebuilds(), REBUILD_DEBOUNCE_MS);
+  debounceTimer = setTimeout(() => {
+    void drainRebuilds();
+  }, REBUILD_DEBOUNCE_MS);
 }
 
 const watcher = watch(WATCHED_PATHS, {
@@ -173,6 +179,10 @@ async function exit() {
 }
 
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
-  process.on(signal, () => void exit());
+  process.on(signal, () => {
+    void exit();
+  });
 }
-runner.registerCleanup(() => void exit());
+runner.registerCleanup(() => {
+  void exit();
+});

@@ -64,7 +64,11 @@
   }
 
   function onRecordedKey(event: KeyboardEvent) {
-    if (!isRecording || isModifierOnly(event)) {
+    if (!isRecording) {
+      return;
+    }
+
+    if (isModifierOnly(event)) {
       return;
     }
 

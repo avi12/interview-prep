@@ -19,7 +19,7 @@ export function isAppName(segment: string) {
   return APP_SEGMENT.test(segment.trim());
 }
 
-export function parseVscodeTitle(title: string): VscodeContext {
+export function parseVscodeTitle(title: string) {
   const segments = title.split(TITLE_SEPARATOR).map(segment => segment.trim());
   while (segments.length > 0 && isAppName(segments.at(-1) ?? "")) {
     segments.pop();

@@ -1,13 +1,11 @@
-import { oneLine } from "./text.ts";
 import { browser } from "wxt/browser";
+
+import { oneLine } from "./text.ts";
 
 const DEBUGGER_PROTOCOL_VERSION = "1.3";
 const KEY_EVENT = "Input.dispatchKeyEvent";
 
-export async function typeText({ tabId, text }: {
-  tabId: number;
-  text: string;
-}) {
+export async function typeText({ tabId, text }: { tabId: number; text: string }) {
   const target = { tabId };
   await browser.debugger.attach(target, DEBUGGER_PROTOCOL_VERSION);
   try {

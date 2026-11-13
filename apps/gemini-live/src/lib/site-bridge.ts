@@ -1,24 +1,25 @@
+import { defineWindowMessaging } from "@webext-core/messaging/page";
+
 import { engineSchema } from "./engine.ts";
 import { LiveState } from "./live-state.ts";
 import type { Session } from "./session-schema.ts";
-import { z } from "./zod.ts";
-import { defineWindowMessaging } from "@webext-core/messaging/page";
+import { zod } from "./zod.ts";
 
 const SITE_BRIDGE_NAMESPACE = "interview-prep-site-bridge";
 
-export const startResultSchema = z.object({
-  isStarted: z.boolean(),
-  detail: z.string()
+export const startResultSchema = zod.object({
+  isStarted: zod.boolean(),
+  detail: zod.string()
 });
-export type StartResult = z.infer<typeof startResultSchema>;
+export type StartResult = zod.infer<typeof startResultSchema>;
 
-const voiceStatusSchema = z.object({
+const voiceStatusSchema = zod.object({
   engine: engineSchema,
-  state: z.enum(LiveState),
-  detail: z.string(),
-  isMicOpen: z.boolean()
+  state: zod.enum(LiveState),
+  detail: zod.string(),
+  isMicOpen: zod.boolean()
 });
-export type VoiceStatus = z.infer<typeof voiceStatusSchema>;
+export type VoiceStatus = zod.infer<typeof voiceStatusSchema>;
 
 export const voiceStatusOrNoneSchema = voiceStatusSchema.nullable();
 
@@ -40,7 +41,7 @@ interface SiteBridgeProtocolMap {
 
 export const siteMessenger = defineWindowMessaging<SiteBridgeProtocolMap>({ namespace: SITE_BRIDGE_NAMESPACE });
 
-export function voiceStatusOfSession(session: Session | null): VoiceStatus | null {
+export function voiceStatusOfSession(session: Session | null) {
   if (!session) {
     return null;
   }

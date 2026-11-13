@@ -1,3 +1,6 @@
+import { bytesToBase64 } from "@/lib/base64.ts";
+import type { Frame } from "@/lib/frame.ts";
+
 import { LIVE_ENDPOINT, LIVE_MODEL, LIVE_VOICE } from "./defaults.ts";
 import {
   audioEndMessage,
@@ -12,8 +15,6 @@ import {
   videoMessage
 } from "./messages.ts";
 import { pcm16Bytes } from "./pcm.ts";
-import { bytesToBase64 } from "@/lib/base64.ts";
-import type { Frame } from "@/lib/frame.ts";
 
 const SESSION_ENDED = "The session ended";
 const RECONNECT_FAILED = "Reconnect failed";
@@ -60,10 +61,7 @@ function messageText(data: unknown) {
   return data instanceof ArrayBuffer ? textDecoder.decode(data) : "";
 }
 
-function sendOn({ socket, message }: {
-  socket: WebSocket;
-  message: ClientMessage;
-}) {
+function sendOn({ socket, message }: { socket: WebSocket; message: ClientMessage }) {
   const text = serializeClientMessage(message);
   if (text) {
     socket.send(text);
@@ -102,7 +100,8 @@ export function openLiveSession(options: LiveSessionOptions) {
   }
 
   function promote(socket: WebSocket) {
-    if (socket === resuming) {
+    const isResumingSocket = socket === resuming;
+    if (isResumingSocket) {
       active?.close(CLOSE_NORMAL, CLOSE_REASON_STOPPED);
       active = socket;
       resuming = null;
@@ -121,10 +120,7 @@ export function openLiveSession(options: LiveSessionOptions) {
     resuming = connect();
   }
 
-  function handle({ socket, event }: {
-    socket: WebSocket;
-    event: ServerEvent;
-  }) {
+  function handle({ socket, event }: { socket: WebSocket; event: ServerEvent }) {
     switch (event.kind) {
       case ServerEventKind.SETUP_COMPLETE:
         promote(socket);
@@ -152,33 +148,39 @@ export function openLiveSession(options: LiveSessionOptions) {
     }
   }
 
-  function onSocketClosed({ socket, reason, wasSetUp }: {
+  function onSocketClosed({
+    socket,
+    reason,
+    hasBeenSetUp
+  }: {
     socket: WebSocket;
     reason: string;
-    wasSetUp: boolean;
+    hasBeenSetUp: boolean;
   }) {
-    if (socket === resuming) {
+    const isResumingSocket = socket === resuming;
+    if (isResumingSocket) {
       finish({
         reason: `${RECONNECT_FAILED}: ${reason || SESSION_ENDED}`,
-        isSetupRejected: !wasSetUp
+        isSetupRejected: !hasBeenSetUp
       });
       return;
     }
 
-    if (socket !== active || resuming) {
+    const isSocketStale = socket !== active || resuming;
+    if (isSocketStale) {
       return;
     }
 
     finish({
       reason: reason || SESSION_ENDED,
-      isSetupRejected: !wasSetUp
+      isSetupRejected: !hasBeenSetUp
     });
   }
 
   function connect() {
     const socket = new WebSocket(socketUrl(apiKey));
     socket.binaryType = "arraybuffer";
-    let wasSetUp = false;
+    let hasBeenSetUp = false;
     socket.addEventListener("open", () => {
       sendOn({
         socket,
@@ -190,27 +192,36 @@ export function openLiveSession(options: LiveSessionOptions) {
         })
       });
     });
-    socket.addEventListener("message", e => {
-      for (const event of parseServerMessage(messageText(e.data))) {
-        wasSetUp ||= event.kind === ServerEventKind.SETUP_COMPLETE;
+    socket.addEventListener("message", messageEvent => {
+      for (const event of parseServerMessage(messageText(messageEvent.data))) {
+        hasBeenSetUp ||= event.kind === ServerEventKind.SETUP_COMPLETE;
         handle({
           socket,
           event
         });
       }
     });
-    socket.addEventListener("close", e => {
+    socket.addEventListener("close", event => {
       onSocketClosed({
         socket,
-        reason: e.reason,
-        wasSetUp
+        reason: event.reason,
+        hasBeenSetUp
       });
     });
     return socket;
   }
 
   function send(message: ClientMessage) {
-    if (!isReady || active?.readyState !== WebSocket.OPEN) {
+    if (!isReady) {
+      return;
+    }
+
+    if (!active) {
+      return;
+    }
+
+    const isActiveOpen = active.readyState === WebSocket.OPEN;
+    if (!isActiveOpen) {
       return;
     }
 

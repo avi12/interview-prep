@@ -1,13 +1,11 @@
-import { annotatedPageContent } from "./page-content.ts";
 import { TutorBlockKind } from "@scripts/lib/tutor-view.ts";
 import { describe, expect, it } from "vitest";
 
+import { annotatedPageContent } from "./page-content.ts";
+
 type Fields = Map<number, (number | Uint8Array)[]>;
 
-function readVarint({ bytes, offset }: {
-  bytes: Uint8Array;
-  offset: number;
-}) {
+function readVarint({ bytes, offset }: { bytes: Uint8Array; offset: number }) {
   let value = 0;
   let scale = 1;
   let position = offset;
@@ -25,7 +23,7 @@ function readVarint({ bytes, offset }: {
   }
 }
 
-function decode(bytes: Uint8Array): Fields {
+function decode(bytes: Uint8Array) {
   const fields: Fields = new Map();
   let offset = 0;
   while (offset < bytes.length) {
@@ -46,15 +44,21 @@ function decode(bytes: Uint8Array): Fields {
   return fields;
 }
 
-function bytesOf({ fields, field }: {
-  fields: Fields;
-  field: number;
-}) {
+function bytesOf({ fields, field }: { fields: Fields; field: number }) {
   return (fields.get(field) ?? []).filter(value => value instanceof Uint8Array);
 }
 
 function text(bytes: Uint8Array) {
   return new TextDecoder().decode(bytes);
+}
+
+function firstBytesOf(options: Parameters<typeof bytesOf>[0]) {
+  const [first] = bytesOf(options);
+  if (!first) {
+    throw new Error(`field ${options.field} has no bytes`);
+  }
+
+  return first;
 }
 
 describe("annotatedPageContent", () => {
@@ -77,77 +81,80 @@ describe("annotatedPageContent", () => {
 
   it("is version 1 with the title and address in the main frame", () => {
     expect(page.get(1)).toEqual([1]);
-    const [frame] = bytesOf({
+    const frame = firstBytesOf({
       fields: page,
       field: 3
-    }).map(decode);
+    });
+    const mainFrame = decode(frame);
     expect(
       text(
-        bytesOf({
-          fields: frame!,
+        firstBytesOf({
+          fields: mainFrame,
           field: 5
-        })[0]!
+        })
       )
     ).toBe("GROUP BY");
     expect(
       text(
-        bytesOf({
-          fields: frame!,
+        firstBytesOf({
+          fields: mainFrame,
           field: 4
-        })[0]!
+        })
       )
     ).toBe("http://127.0.0.1:8765");
   });
 
   it("nests each block under the root as a heading or paragraph holding one text node", () => {
-    const [root] = bytesOf({
-      fields: page,
-      field: 2
-    }).map(decode);
-    const rootAttributes = decode(
-      bytesOf({
-        fields: root!,
+    const root = decode(
+      firstBytesOf({
+        fields: page,
         field: 2
-      })[0]!
+      })
+    );
+    const rootAttributes = decode(
+      firstBytesOf({
+        fields: root,
+        field: 2
+      })
     );
     expect(rootAttributes.get(3)).toEqual([1]);
     const blocks = bytesOf({
-      fields: root!,
+      fields: root,
       field: 1
     }).map(decode);
     const shapes = blocks.map(block => {
       const type = decode(
-        bytesOf({
+        firstBytesOf({
           fields: block,
           field: 2
-        })[0]!
+        })
       ).get(3)?.[0];
       const leaf = decode(
-        bytesOf({
+        firstBytesOf({
           fields: block,
           field: 1
-        })[0]!
+        })
       );
       const leafAttributes = decode(
-        bytesOf({
+        firstBytesOf({
           fields: leaf,
           field: 2
-        })[0]!
+        })
       );
       const textInfo = decode(
-        bytesOf({
+        firstBytesOf({
           fields: leafAttributes,
           field: 10
-        })[0]!
+        })
       );
       return {
         type,
         leafType: leafAttributes.get(3)?.[0],
         text: text(
-          bytesOf({
+          firstBytesOf({
             fields: textInfo,
             field: 1
-          })[0]!
+          })
         )
       };
     });

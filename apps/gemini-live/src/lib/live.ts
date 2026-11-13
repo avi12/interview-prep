@@ -1,3 +1,5 @@
+import { browser } from "wxt/browser";
+
 import { Engine } from "./engine.ts";
 import { ExtensionMessage, extensionMessenger } from "./extension-channel.ts";
 import { glicEngine, installGlic } from "./glic-live.ts";
@@ -11,7 +13,6 @@ import { loadEngine } from "./settings.ts";
 import { type StartResult } from "./site-bridge.ts";
 import { installVoice, voiceEngine } from "./voice-live.ts";
 import { findVscodeTab, isVscodeUrl, VSCODE_SITES_TEXT } from "./vscode.ts";
-import { browser } from "wxt/browser";
 
 const LIVE_ENGINE: Record<Engine, LiveEngine> = {
   [Engine.SUBSCRIPTION]: glicEngine,
@@ -27,7 +28,8 @@ let starting: Promise<StartResult> | null = null;
 
 async function toggleMic() {
   const session = await loadSession();
-  if (!session || !isRunning(session.state)) {
+  const isSessionIdle = !session || !isRunning(session.state);
+  if (isSessionIdle) {
     return;
   }
 
@@ -45,7 +47,8 @@ async function isVscodeInFront(session: Session) {
 
 async function toggleMicFromKey() {
   const session = await loadSession();
-  if (session && await isVscodeInFront(session)) {
+  const isVscodeFocusedDuringSession = session && (await isVscodeInFront(session));
+  if (isVscodeFocusedDuringSession) {
     await toggleMic();
   }
 }
@@ -108,10 +111,7 @@ async function resetSession() {
   await closeWindow(session.liveWindow);
 }
 
-async function retitle({ tabId, title }: {
-  tabId: number;
-  title: string;
-}) {
+async function retitle({ tabId, title }: { tabId: number; title: string }) {
   const session = await loadSession();
   if (session?.vscodeTab !== tabId) {
     return;
@@ -127,7 +127,9 @@ export function installLive() {
   extensionMessenger.onMessage(ExtensionMessage.LIVE_START, startSession);
   extensionMessenger.onMessage(ExtensionMessage.LIVE_STOP, stopSession);
   extensionMessenger.onMessage(ExtensionMessage.MIC_TOGGLE, toggleMic);
-  const micKey = listenToMicKey(() => void toggleMicFromKey());
+  const micKey = listenToMicKey(() => {
+    void toggleMicFromKey();
+  });
   extensionMessenger.onMessage(ExtensionMessage.MIC_KEY_TEACH, ({ data }) => micKey.teach(data));
   extensionMessenger.onMessage(ExtensionMessage.MIC_KEY_CANCEL_TEACH, micKey.cancelTeach);
   installGlic();
@@ -149,7 +151,8 @@ export function installLive() {
 
   browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     const { title } = changeInfo;
-    if (title !== undefined && isVscodeUrl(tab.url)) {
+    const hasVscodeTitle = title !== undefined && isVscodeUrl(tab.url);
+    if (hasVscodeTitle) {
       void retitle({
         tabId,
         title

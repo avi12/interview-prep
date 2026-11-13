@@ -1,5 +1,6 @@
-import { downsample, floatToPcm16, pcm16Bytes, pcm16ToFloat } from "./pcm.ts";
 import { describe, expect, it } from "vitest";
+
+import { downsample, floatToPcm16, pcm16Bytes, pcm16ToFloat } from "./pcm.ts";
 
 describe("floatToPcm16", () => {
   it("maps the full float range onto 16-bit samples and clamps the rest", () => {
@@ -21,11 +22,13 @@ describe("pcm16ToFloat", () => {
 describe("downsample", () => {
   it("averages each window down to the target rate", () => {
     const samples = new Float32Array([0, 1, 0.5, -1, -0.5, 0]);
-    expect([...downsample({
-      samples,
-      fromRate: 48_000,
-      toRate: 16_000
-    })]).toEqual([0.5, -0.5]);
+    expect([
+      ...downsample({
+        samples,
+        fromRate: 48_000,
+        toRate: 16_000
+      })
+    ]).toEqual([0.5, -0.5]);
   });
 
   it("leaves audio that is already at the target rate untouched", () => {

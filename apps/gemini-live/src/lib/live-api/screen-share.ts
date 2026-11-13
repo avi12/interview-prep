@@ -1,6 +1,6 @@
-import { FRAME_MIME_TYPE } from "./defaults.ts";
 import { bytesToBase64 } from "@/lib/base64.ts";
-import type { Frame } from "@/lib/frame.ts";
+
+import { FRAME_MIME_TYPE } from "./defaults.ts";
 
 const MAX_FRAME_WIDTH = 1600;
 const JPEG_QUALITY = 0.8;
@@ -28,7 +28,7 @@ export async function startScreenShare(onEnded: () => void) {
   }
 
   return {
-    async grab(): Promise<Frame | null> {
+    async grab() {
       if (elVideo.videoWidth === 0) {
         return null;
       }

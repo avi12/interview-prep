@@ -1,4 +1,5 @@
-export const LIVE_ENDPOINT = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent";
+export const LIVE_ENDPOINT =
+  "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent";
 export const LIVE_MODEL = "gemini-3.8-live";
 export const LIVE_VOICE = "Kore";
 export const MIC_SAMPLE_RATE = 16_000;

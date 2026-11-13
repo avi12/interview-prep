@@ -1,3 +1,5 @@
+import { type Browser, browser } from "wxt/browser";
+
 import { DEFAULT_MIC_KEY, type MicKey, taughtOf, withTaughtKey } from "./mic-key-choice.ts";
 import { MIC_KEY_HOST } from "./mic-key-host.ts";
 import { loadMicKey, micKeyItem, parseMicKey, saveMicKey } from "./settings.ts";
@@ -13,13 +15,13 @@ import {
   TeachRole,
   watchedReports
 } from "./taught-key.ts";
-import { z } from "./zod.ts";
-import { type Browser, browser } from "wxt/browser";
+import { zod } from "./zod.ts";
 
 const RECONNECT_MS = 10_000;
 const TEACH_PRESS_TIMEOUT_MS = 15_000;
 const TEACH_RELEASE_TIMEOUT_MS = 3000;
-const HOST_MISSING_TEXT = "The key helper is not running. Install it with: pnpm --filter @interview-prep/gemini-live mic-key:install";
+const HOST_MISSING_TEXT =
+  "The key helper is not running. Install it with: pnpm --filter @interview-prep/gemini-live mic-key:install";
 const BUSY_TEXT = "Already waiting for a key";
 const NO_PRESS_TEXT = "No key press arrived. Try again and press the key on its own";
 const SAME_KEY_TEXT = "That is the mic key itself. Press the key you hold with it";
@@ -33,16 +35,16 @@ const HostCommand = {
 
 type HostMessage =
   | {
-    type: typeof HostCommand.WATCH;
-    reports: HidReport[];
-  }
+      type: typeof HostCommand.WATCH;
+      reports: HidReport[];
+    }
   | { type: typeof HostCommand.LEARN }
   | { type: typeof HostCommand.STOP_LEARNING };
 
-const hostEventSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("ready") }),
-  z.object({
-    type: z.literal("report"),
+const hostEventSchema = zod.discriminatedUnion("type", [
+  zod.object({ type: zod.literal("ready") }),
+  zod.object({
+    type: zod.literal("report"),
     report: hidReportSchema
   })
 ]);
@@ -52,7 +54,7 @@ export interface TeachResult {
   detail: string;
 }
 
-function failure(detail: string): TeachResult {
+function failure(detail: string) {
   return {
     isTaught: false,
     detail
@@ -89,7 +91,8 @@ export function listenToMicKey(toggle: () => void) {
       taught,
       report
     });
-    if (!taught || !event) {
+    const isKeyEventUnset = !taught || !event;
+    if (isKeyEventUnset) {
       return;
     }
 
@@ -98,10 +101,13 @@ export function listenToMicKey(toggle: () => void) {
       return;
     }
 
-    if (event.isDown && isTaughtKeyFired({
-      taught,
-      isHeldKeyDown
-    })) {
+    const isTaughtKeyDown =
+      event.isDown &&
+      isTaughtKeyFired({
+        taught,
+        isHeldKeyDown
+      });
+    if (isTaughtKeyDown) {
       toggle();
     }
   }
@@ -169,7 +175,7 @@ export function listenToMicKey(toggle: () => void) {
     });
   }
 
-  async function teach(role: TeachRole): Promise<TeachResult> {
+  async function teach(role: TeachRole) {
     if (!isHostReady) {
       return failure(HOST_MISSING_TEXT);
     }
@@ -195,7 +201,14 @@ export function listenToMicKey(toggle: () => void) {
     }
 
     const taught = taughtOf(micKey);
-    if (role === TeachRole.HELD_KEY && taught && isSameKey(key, taught.key)) {
+    const isTaughtKeyHeld =
+      role === TeachRole.HELD_KEY &&
+      taught &&
+      isSameKey({
+        left: key,
+        right: taught.key
+      });
+    if (isTaughtKeyHeld) {
       return failure(SAME_KEY_TEXT);
     }
 

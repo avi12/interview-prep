@@ -48,7 +48,7 @@
         return element;
       };
 
-      const reply = (text) => {
+      const reply = text => {
         const box = document.createElement("div");
         box.className = "presented-response-container";
         box.append(document.createTextNode(text));
@@ -56,7 +56,7 @@
         document.body.append(box);
       };
 
-      const probe = async (shot) => {
+      const probe = async shot => {
         const bitmap = await createImageBitmap(new Blob([shot.data], { type: shot.mimeType }));
         const context = new OffscreenCanvas(bitmap.width, bitmap.height).getContext("2d");
         context.drawImage(bitmap, 0, 0);
@@ -86,7 +86,10 @@
         }
 
         if (mode === "live") {
-          ui.append(button("Pause live mode", () => {}), button("Switch to text mode", () => go("text")));
+          ui.append(
+            button("Pause live mode", () => {}),
+            button("Switch to text mode", () => go("text"))
+          );
           frameTimer = setInterval(pullFrame, 1000);
           return;
         }
@@ -106,13 +109,17 @@
           },
           true
         );
-        editor.addEventListener("keydown", (event) => {
+        editor.addEventListener("keydown", event => {
           if (event.isTrusted) submit.disabled = false;
         });
-        ui.append(editor, submit, button("Go Live", () => go("live")));
+        ui.append(
+          editor,
+          submit,
+          button("Go Live", () => go("live"))
+        );
       };
 
-      const go = (next) => {
+      const go = next => {
         mode = next;
         window.__log.push("mode:" + next);
         render();
@@ -131,7 +138,7 @@
         }
       };
 
-      window.addEventListener("message", (event) => {
+      window.addEventListener("message", event => {
         if (event.origin !== "chrome://glic" || event.source === null || event.data?.type !== "glic-bootstrap") return;
         window.internalAutoGlicBoot(event.source).registerWebClient(client);
       });

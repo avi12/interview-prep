@@ -1,6 +1,7 @@
+import { defineCustomEventMessaging } from "@webext-core/messaging/page";
+
 import type { Frame } from "./frame.ts";
 import type { VoiceHello, VoiceReport } from "./voice-protocol.ts";
-import { defineCustomEventMessaging } from "@webext-core/messaging/page";
 
 const VOICE_CHANNEL_NAMESPACE = "interview-prep-voice";
 export const EXTENSION_PRESENT_ATTRIBUTE = "data-tutor-extension";

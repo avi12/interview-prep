@@ -1,5 +1,6 @@
-import { EditorKind, isAppName, type VscodeContext } from "./vscode-title.ts";
 import { type TutorBlock, TutorBlockKind, type TutorView } from "@scripts/lib/tutor-view.ts";
+
+import { EditorKind, isAppName } from "./vscode-title.ts";
 
 const HEADING_MARK = "## ";
 const BLOCK_SEPARATOR = "\n\n";
@@ -13,9 +14,10 @@ export function tutorViewText(view: TutorView) {
   return [VIEW_INTRO, `# ${view.title}`, ...view.blocks.map(blockText)].join(BLOCK_SEPARATOR);
 }
 
-export function tutorViewContext(view: TutorView | null): VscodeContext {
+export function tutorViewContext(view: TutorView | null) {
   const title = view?.title.trim() ?? "";
-  if (!title || isAppName(title)) {
+  const isGenericTitle = !title || isAppName(title);
+  if (isGenericTitle) {
     return null;
   }
 

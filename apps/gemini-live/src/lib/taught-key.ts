@@ -1,4 +1,4 @@
-import { z } from "./zod.ts";
+import { zod } from "./zod.ts";
 
 const REPORT_BYTE_SEPARATOR = "-";
 const RELEASE_BYTE_DISTANCE = 1;
@@ -11,21 +11,21 @@ export const TeachRole = {
 export type TeachRole = (typeof TeachRole)[keyof typeof TeachRole];
 
 const hidCollectionShape = {
-  device: z.string(),
-  usagePage: z.number(),
-  usage: z.number()
+  device: zod.string(),
+  usagePage: zod.number(),
+  usage: zod.number()
 };
 
-export const hidReportSchema = z.object({
+export const hidReportSchema = zod.object({
   ...hidCollectionShape,
-  report: z.string()
+  report: zod.string()
 });
 
-const taughtKeySchema = z.object({
+const taughtKeySchema = zod.object({
   ...hidCollectionShape,
-  label: z.string(),
-  press: z.string(),
-  release: z.string().nullable()
+  label: zod.string(),
+  press: zod.string(),
+  release: zod.string().nullable()
 });
 
 export const taughtMicKeyShape = {
@@ -33,11 +33,11 @@ export const taughtMicKeyShape = {
   [TeachRole.HELD_KEY]: taughtKeySchema.nullable()
 };
 
-const taughtMicKeySchema = z.object(taughtMicKeyShape);
+const taughtMicKeySchema = zod.object(taughtMicKeyShape);
 
-export type HidReport = z.infer<typeof hidReportSchema>;
-export type TaughtKey = z.infer<typeof taughtKeySchema>;
-export type TaughtMicKey = z.infer<typeof taughtMicKeySchema>;
+export type HidReport = zod.infer<typeof hidReportSchema>;
+export type TaughtKey = zod.infer<typeof taughtKeySchema>;
+export type TaughtMicKey = zod.infer<typeof taughtMicKeySchema>;
 
 export const DEFAULT_KEY_LABEL: Record<TeachRole, string> = {
   [TeachRole.KEY]: "Mic key",
@@ -46,14 +46,11 @@ export const DEFAULT_KEY_LABEL: Record<TeachRole, string> = {
 
 type HidCollection = Omit<HidReport, "report">;
 
-function isSameCollection(left: HidCollection, right: HidCollection) {
+function isSameCollection({ left, right }: { left: HidCollection; right: HidCollection }) {
   return left.device === right.device && left.usagePage === right.usagePage && left.usage === right.usage;
 }
 
-function byteDistance({ left, right }: {
-  left: string;
-  right: string;
-}) {
+function byteDistance({ left, right }: { left: string; right: string }) {
   const leftBytes = left.split(REPORT_BYTE_SEPARATOR);
   const rightBytes = right.split(REPORT_BYTE_SEPARATOR);
   if (leftBytes.length !== rightBytes.length) {
@@ -69,20 +66,24 @@ export function pressAndRelease(reports: HidReport[]) {
     return null;
   }
 
-  const release = rest.find(report => isSameCollection(report, press) && byteDistance({
-    left: report.report,
-    right: press.report
-  }) === RELEASE_BYTE_DISTANCE);
+  const release = rest.find(
+    report =>
+      isSameCollection({
+        left: report,
+        right: press
+      }) &&
+      byteDistance({
+        left: report.report,
+        right: press.report
+      }) === RELEASE_BYTE_DISTANCE
+  );
   return {
     press,
     release: release ?? null
   };
 }
 
-export function taughtKeyOf({ reports, label }: {
-  reports: HidReport[];
-  label: string;
-}): TaughtKey | null {
+export function taughtKeyOf({ reports, label }: { reports: HidReport[]; label: string }) {
   const found = pressAndRelease(reports);
   if (!found) {
     return null;
@@ -99,8 +100,13 @@ export function taughtKeyOf({ reports, label }: {
   };
 }
 
-export function isSameKey(left: TaughtKey, right: TaughtKey) {
-  return isSameCollection(left, right) && left.press === right.press;
+export function isSameKey({ left, right }: { left: TaughtKey; right: TaughtKey }) {
+  return (
+    isSameCollection({
+      left,
+      right
+    }) && left.press === right.press
+  );
 }
 
 function keysOf(taught: TaughtMicKey | null) {
@@ -108,27 +114,40 @@ function keysOf(taught: TaughtMicKey | null) {
 }
 
 export function watchedReports(taught: TaughtMicKey | null) {
-  return keysOf(taught).flatMap(key => [key.press, key.release]
-    .filter(report => report !== null)
-    .map(report => ({
-      device: key.device,
-      usagePage: key.usagePage,
-      usage: key.usage,
-      report
-    })));
+  function keyEntries(key: {
+    label: string;
+    press: string;
+    release: string | null;
+    device: string;
+    usagePage: number;
+    usage: number;
+  }) {
+    return [key.press, key.release]
+      .filter(report => report !== null)
+      .map(report => ({
+        device: key.device,
+        usagePage: key.usagePage,
+        usage: key.usage,
+        report
+      }));
+  }
+  return keysOf(taught).flatMap(keyEntries);
 }
 
-export function keyEventOf({ taught, report }: {
-  taught: TaughtMicKey | null;
-  report: HidReport;
-}) {
+export function keyEventOf({ taught, report }: { taught: TaughtMicKey | null; report: HidReport }) {
   if (!taught) {
     return undefined;
   }
 
   for (const role of Object.values(TeachRole)) {
     const key = taught[role];
-    if (!key || !isSameCollection(key, report)) {
+    const isDifferentKey =
+      !key ||
+      !isSameCollection({
+        left: key,
+        right: report
+      });
+    if (isDifferentKey) {
       continue;
     }
 
@@ -149,13 +168,12 @@ export function keyEventOf({ taught, report }: {
   return undefined;
 }
 
-export function isTaughtKeyFired({ taught, isHeldKeyDown }: {
-  taught: TaughtMicKey;
-  isHeldKeyDown: boolean;
-}) {
+export function isTaughtKeyFired({ taught, isHeldKeyDown }: { taught: TaughtMicKey; isHeldKeyDown: boolean }) {
   return taught.heldKey === null || isHeldKeyDown;
 }
 
 export function taughtKeyText(taught: TaughtMicKey) {
-  return keysOf(taught).map(key => key.label).join(COMBO_SEPARATOR);
+  return keysOf(taught)
+    .map(key => key.label)
+    .join(COMBO_SEPARATOR);
 }

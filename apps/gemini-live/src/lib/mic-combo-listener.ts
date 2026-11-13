@@ -1,13 +1,13 @@
 import { ExtensionMessage, extensionMessenger } from "./extension-channel.ts";
 import { isComboEvent } from "./key-combo.ts";
 import { isRunning } from "./live-state.ts";
-import { DEFAULT_MIC_KEY, MicKeyKind } from "./mic-key-choice.ts";
+import { DEFAULT_MIC_KEY, type MicKey, MicKeyKind } from "./mic-key-choice.ts";
 import { parseSession } from "./session-schema.ts";
 import { sessionItem } from "./session.ts";
 import { micKeyItem, parseMicKey } from "./settings.ts";
 
 export function listenToMicCombo() {
-  let micKey = DEFAULT_MIC_KEY;
+  let micKey: MicKey = DEFAULT_MIC_KEY;
   let isLive = false;
 
   function showMicKey(raw: unknown) {
@@ -20,10 +20,15 @@ export function listenToMicCombo() {
   }
 
   function onKeyDown(event: KeyboardEvent) {
-    if (!isLive || event.repeat || micKey.kind !== MicKeyKind.COMBO || !isComboEvent({
-      combo: micKey.combo,
-      event
-    })) {
+    const isIgnoredKeyEvent =
+      !isLive ||
+      event.repeat ||
+      micKey.kind !== MicKeyKind.COMBO ||
+      !isComboEvent({
+        combo: micKey.combo,
+        event
+      });
+    if (isIgnoredKeyEvent) {
       return;
     }
 

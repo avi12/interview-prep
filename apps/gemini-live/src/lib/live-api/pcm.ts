@@ -30,12 +30,9 @@ export function pcm16Bytes(pcm: Int16Array) {
   return bytes;
 }
 
-export function downsample({ samples, fromRate, toRate }: {
-  samples: Float32Array;
-  fromRate: number;
-  toRate: number;
-}) {
-  if (fromRate <= toRate) {
+export function downsample({ samples, fromRate, toRate }: { samples: Float32Array; fromRate: number; toRate: number }) {
+  const isFromRateAtMostToRate = fromRate <= toRate;
+  if (isFromRateAtMostToRate) {
     return samples;
   }
 

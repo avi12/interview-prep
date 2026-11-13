@@ -13,7 +13,10 @@ import { within } from "./within.ts";
 const CALL_TIMEOUT_MS = 5000;
 const NO_BRIEF = "";
 
-function tellPage({ session, name }: {
+function tellPage({
+  session,
+  name
+}: {
   session: Session;
   name: typeof ExtensionMessage.VOICE_STOP | typeof ExtensionMessage.VOICE_MIC_TOGGLE;
 }) {
@@ -73,7 +76,8 @@ export function installVoice({ untilStarted }: { untilStarted: () => Promise<unk
   extensionMessenger.onMessage(ExtensionMessage.VOICE_REPORT, async ({ data, sender }) => {
     const report = voiceReportSchema.safeParse(data);
     const session = report.success ? await voiceSession(sender.tab) : null;
-    if (session && report.success) {
+    const isReportStarted = session && report.success;
+    if (isReportStarted) {
       await updateSession(report.data);
     }
   });

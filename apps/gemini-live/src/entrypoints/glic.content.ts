@@ -1,23 +1,17 @@
+import type { TutorTestRun, TutorView } from "@scripts/lib/tutor-view.ts";
+
+import { defineContentScript } from "#imports";
 import { base64ToBytes } from "@/lib/base64.ts";
 import { installBidi } from "@/lib/bidi.ts";
 import { BridgeMessage, bridgeMessenger } from "@/lib/bridge-channel.ts";
-import {
-  type Activation,
-  BridgeFailure,
-  GLIC_URL,
-  GlicCommand,
-  GlicReport,
-  GlicState
-} from "@/lib/bridge-vocab.ts";
+import { type Activation, BridgeFailure, GLIC_URL, GlicCommand, GlicReport, GlicState } from "@/lib/bridge-vocab.ts";
 import { frameSchema } from "@/lib/frame.ts";
 import { type MicMixer, mixMicrophone } from "@/lib/mic-mixer.ts";
 import { annotatedPageContent, byteStream } from "@/lib/page-content.ts";
 import { PromptEvent } from "@/lib/prompt-clip.ts";
 import { sleep } from "@/lib/sleep.ts";
 import { within } from "@/lib/within.ts";
-import { z } from "@/lib/zod.ts";
-import type { TutorTestRun, TutorView } from "@scripts/lib/tutor-view.ts";
-import { defineContentScript } from "#imports";
+import { zod } from "@/lib/zod.ts";
 
 /*
  * Runs in the page's own world on gemini.google.com/glic and plays the browser host that
@@ -132,7 +126,7 @@ declare global {
   }
 }
 
-const liveFlagSchema = z.looseObject({ key: z.string() });
+const liveFlagSchema = zod.looseObject({ key: zod.string() });
 
 interface LiveFlag {
   key: string;
@@ -264,7 +258,8 @@ function reportStartFailure(fallback: BridgeFailure) {
 
 function decodeFrame(raw: unknown) {
   const parsed = frameSchema.safeParse(raw);
-  if (!parsed.success || !parsed.data.base64) {
+  const isImageUnusable = !parsed.success || !parsed.data.base64;
+  if (isImageUnusable) {
     return null;
   }
 
@@ -290,10 +285,7 @@ async function captureFrame() {
   return decodeFrame(frame);
 }
 
-function notify<T>({ subscriber, value }: {
-  subscriber: (value: T) => void;
-  value: T;
-}) {
+function notify<T>({ subscriber, value }: { subscriber: (value: T) => void; value: T }) {
   try {
     subscriber(value);
   } catch {
@@ -357,11 +349,12 @@ interface ContextOptions {
   annotatedPageContent?: boolean;
 }
 
-function tabContext(options?: ContextOptions): Json {
+function tabContext(options?: ContextOptions) {
   const tabData = currentTabData();
   const view = bridge.latestView;
-  if (!options?.annotatedPageContent || !view) {
-    return { tabData };
+  const isPageContentUnavailable = !options?.annotatedPageContent || !view;
+  if (isPageContentUnavailable) {
+    return { tabData } satisfies Json;
   }
 
   const bytes = annotatedPageContent({
@@ -374,7 +367,7 @@ function tabContext(options?: ContextOptions): Json {
     annotatedPageData: {
       annotatedPageContent: byteStream(bytes)
     }
-  };
+  } satisfies Json;
 }
 
 function resolved(value: unknown) {
@@ -401,7 +394,7 @@ const host: Json = {
   getContextFromFocusedTab: (options?: ContextOptions) => Promise.resolve(tabContext(options)),
   captureScreenshot: () => captureFrame(),
   async getContextFromTab(_tabId: unknown, options?: ContextOptions) {
-    const context = tabContext(options);
+    const context: Json = tabContext(options);
     if (!options?.viewportScreenshot) {
       return context;
     }
@@ -454,10 +447,14 @@ const registry = {
       .then(() => {
         bridge.isBooted = true;
         report(bridgeMessenger.sendMessage(GlicReport.BOOTED));
-        setTimeout(() => notify({
-          subscriber: state => client.notifyPanelWillOpen?.(state),
-          value: PANEL_STATE
-        }), 0);
+        setTimeout(
+          () =>
+            notify({
+              subscriber: state => client.notifyPanelWillOpen?.(state),
+              value: PANEL_STATE
+            }),
+          0
+        );
       })
 };
 
@@ -473,7 +470,8 @@ function bootstrapEvent() {
 }
 
 function tryBootstrap() {
-  if (bridge.isBooted || !bridge.isActivated) {
+  const isBridgeAlreadyHandled = bridge.isBooted || !bridge.isActivated;
+  if (isBridgeAlreadyHandled) {
     return;
   }
 
@@ -487,19 +485,21 @@ function tryBootstrap() {
 
 type AddEventListener = typeof EventTarget.prototype.addEventListener;
 
-function remembered(add: AddEventListener): AddEventListener {
+function remembered(add: AddEventListener) {
   return function (this: EventTarget, type, listener, options) {
     const isWindowMessage = this === window && type === "message" && typeof listener === "function";
-    if (isWindowMessage && !bootstrapHandlers.includes(listener)) {
+    const isForwardableListener = isWindowMessage && !bootstrapHandlers.includes(listener);
+    if (isForwardableListener) {
       bootstrapHandlers.push(listener);
     }
 
     return add.call(this, type, listener, options);
-  };
+  } satisfies AddEventListener;
 }
 
 function captureBootstrapListeners() {
-  EventTarget.prototype.addEventListener = remembered(EventTarget.prototype.addEventListener);
+  const original = Object.getOwnPropertyDescriptor(EventTarget.prototype, "addEventListener")?.value;
+  EventTarget.prototype.addEventListener = remembered(original);
   Object.defineProperty(window, "addEventListener", {
     configurable: true,
     writable: true,
@@ -533,7 +533,8 @@ function patchMic() {
       }
 
       const { video, ...rest } = constraints;
-      if (video && !rest.audio) {
+      const isSilentVideo = video && !rest.audio;
+      if (isSilentVideo) {
         throw new DOMException("the camera is not shared", "NotAllowedError");
       }
 
@@ -613,8 +614,10 @@ function resume() {
 }
 
 function tryAgainButton() {
-  return [...document.querySelectorAll("button")].find(button =>
-    `${button.getAttribute("aria-label") ?? ""} ${button.textContent ?? ""}`.includes(Button.TRY_AGAIN));
+  function isButtonLabelledForTarget(button: HTMLButtonElement) {
+    return `${button.getAttribute("aria-label") ?? ""} ${button.textContent ?? ""}`.includes(Button.TRY_AGAIN);
+  }
+  return [...document.querySelectorAll("button")].find(isButtonLabelledForTarget);
 }
 
 function shareScreen(now: number) {
@@ -629,7 +632,8 @@ function testRunEvent(run: TutorTestRun) {
 
 async function speakTestRun(run: TutorTestRun) {
   const { mixer } = bridge;
-  if (!mixer || bridge.isPrompting) {
+  const isMixerUnavailable = !mixer || bridge.isPrompting;
+  if (isMixerUnavailable) {
     return;
   }
 
@@ -682,7 +686,8 @@ function shareWhenSettled(now: number) {
   }
 
   const isNew = view.version !== bridge.sharedVersion;
-  if (!isNew || now - bridge.latestViewAt < VIEW_QUIET_MS) {
+  const isViewTooSoon = !isNew || now - bridge.latestViewAt < VIEW_QUIET_MS;
+  if (isViewTooSoon) {
     return;
   }
 
@@ -730,44 +735,51 @@ function monitorTick() {
   const now = Date.now();
   shareWhenSettled(now);
   const isWrong = pageSays(Phrase.WENT_WRONG);
-  if (findButton(Button.PAUSE_LIVE) && !isWrong) {
+  const isLiveRunning = findButton(Button.PAUSE_LIVE) && !isWrong;
+  if (isLiveRunning) {
     bridge.lastLive = now;
     bridge.resumeTries = 0;
     bridge.isBrokenReported = false;
     return setState(GlicState.LISTENING);
   }
 
-  if (!isWrong && findButton(...RESUME_BUTTONS)) {
+  const isResumable = !isWrong && findButton(...RESUME_BUTTONS);
+  if (isResumable) {
     setState(GlicState.RESUMING);
     return resume();
   }
 
   setState(GlicState.RESUMING);
   const retry = tryAgainButton();
-  if (retry && now - bridge.lastTryAgain > TRY_AGAIN_GAP_MS) {
+  const isRetryDue = retry && now - bridge.lastTryAgain > TRY_AGAIN_GAP_MS;
+  if (isRetryDue) {
     bridge.lastTryAgain = now;
     retry.click();
   }
 
-  if (isWrong && now - bridge.lastLive > BROKEN_AFTER_MS) {
+  const isLiveBroken = isWrong && now - bridge.lastLive > BROKEN_AFTER_MS;
+  if (isLiveBroken) {
     markBroken();
   }
 }
 
 function advanceToLive() {
   const ok = findButton(Button.CONFIRM_OK);
-  if (ok && findButton(Button.NO_THANKS) && pageSays(Phrase.MIC_CONSENT)) {
+  const isMicConsentPrompt = ok && findButton(Button.NO_THANKS) && pageSays(Phrase.MIC_CONSENT);
+  if (isMicConsentPrompt) {
     ok.click();
     bridge.isConsentAccepted = true;
     return;
   }
 
   const skip = findButton(Button.SKIP);
-  if (skip && findButton(Button.GO_BACK) && findButton(Button.TURN_ON_CAPTIONS)) {
+  const isCaptionsPrompt = skip && findButton(Button.GO_BACK) && findButton(Button.TURN_ON_CAPTIONS);
+  if (isCaptionsPrompt) {
     return skip.click();
   }
 
-  if (clickButton(Button.START_LIVE) || bridge.isConsentAccepted) {
+  const isLiveStartedOrConsented = clickButton(Button.START_LIVE) || bridge.isConsentAccepted;
+  if (isLiveStartedOrConsented) {
     return;
   }
 
@@ -782,13 +794,14 @@ function startLive() {
   clearInterval(bridge.startTimer);
   let tries = 0;
   bridge.startTimer = setInterval(() => {
-    if (!bridge.isActive || bridge.isUnavailableReported) {
+    const isBridgeSilent = !bridge.isActive || bridge.isUnavailableReported;
+    if (isBridgeSilent) {
       return clearInterval(bridge.startTimer);
     }
 
     tryBootstrap();
-
-    if (!patchLiveTimeouts() && tries < MAX_START_TRIES / 2) {
+    const shouldRetryPatch = !patchLiveTimeouts() && tries < MAX_START_TRIES / 2;
+    if (shouldRetryPatch) {
       tries++;
       return;
     }
@@ -828,10 +841,7 @@ function setMic(isOpen: boolean) {
   bridge.mixer?.setOpen(isOpen);
 }
 
-async function waitFor<T>({ predicate, timeoutMs }: {
-  predicate: () => T | null | undefined;
-  timeoutMs: number;
-}) {
+async function waitFor<T>({ predicate, timeoutMs }: { predicate: () => T | null | undefined; timeoutMs: number }) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const value = predicate();
@@ -845,7 +855,7 @@ async function waitFor<T>({ predicate, timeoutMs }: {
 }
 
 function textBox() {
-  return document.querySelector<HTMLElement>("[contenteditable=\"true\"]");
+  return document.querySelector<HTMLElement>('[contenteditable="true"]');
 }
 
 function lastReply() {
@@ -887,7 +897,8 @@ async function submitAndRead() {
   const deadline = Date.now() + REPLY_MS;
   while (Date.now() < deadline) {
     const reply = lastReply();
-    const text = reply && reply !== before ? reply.innerText : "";
+    const isNewReply = reply && reply !== before;
+    const text = isNewReply ? reply.innerText : "";
     const isSettled = !!text && text === seen && !!findButton(...REPLY_DONE_BUTTONS);
     if (!isSettled) {
       stableSince = 0;
@@ -914,8 +925,8 @@ function watchBoot() {
   let tries = 0;
   const bootTimer = setInterval(() => {
     tryBootstrap();
-
-    if (!bridge.isBooted && ++tries <= MAX_BOOT_TRIES) {
+    const shouldWaitForBoot = !bridge.isBooted && ++tries <= MAX_BOOT_TRIES;
+    if (shouldWaitForBoot) {
       return;
     }
 

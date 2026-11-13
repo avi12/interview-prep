@@ -1,6 +1,3 @@
-import { TUTOR_VIEW_PATH } from "../../../scripts/lib/tutor-view.ts";
-import { debugEndpoint } from "../scripts/cdp.ts";
-import { CHROME_FOR_TESTING_MISSING, chromeExecutable } from "../scripts/chrome-for-testing.ts";
 /*
  * Builds the extension for a throwaway VS Code origin, serves a fake VS Code there, starts
  * Chrome for Testing with that build and a fresh profile, and runs livechain.ts against it.
@@ -15,6 +12,14 @@ import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { setTimeout as wait } from "node:timers/promises";
+
+import { TUTOR_VIEW_PATH } from "../../../scripts/lib/tutor-view.ts";
+import { debugEndpoint } from "../scripts/cdp.ts";
+import { CHROME_FOR_TESTING_MISSING, chromeExecutable } from "../scripts/chrome-for-testing.ts";
+
+const BROWSER_EXIT_WAIT_MS = 1000;
+const PROFILE_REMOVE_RETRIES = 5;
+const PROFILE_REMOVE_RETRY_DELAY_MS = 500;
 
 const PACKAGE_DIR = resolve(import.meta.dirname, "..");
 const VSCODE_PORT = Number(process.env.CHAIN_VSCODE_PORT ?? 18765);
@@ -101,17 +106,21 @@ try {
     throw new Error("Chrome for Testing did not open its debugging port");
   }
 
-  const chain = spawn(process.execPath, [resolve(PACKAGE_DIR, "test", "livechain.ts"), String(DEBUG_PORT), VSCODE_ORIGIN], { stdio: "inherit" });
+  const chain = spawn(
+    process.execPath,
+    [resolve(PACKAGE_DIR, "test", "livechain.ts"), String(DEBUG_PORT), VSCODE_ORIGIN],
+    { stdio: "inherit" }
+  );
   exitCode = await new Promise<number>(resolveExit => chain.on("exit", code => resolveExit(code ?? 1)));
 } finally {
   stopBrowser();
   server.close();
-  await wait(1000);
+  await wait(BROWSER_EXIT_WAIT_MS);
   rmSync(profile, {
     recursive: true,
     force: true,
-    maxRetries: 5,
-    retryDelay: 500
+    maxRetries: PROFILE_REMOVE_RETRIES,
+    retryDelay: PROFILE_REMOVE_RETRY_DELAY_MS
   });
 }
 process.exit(exitCode);

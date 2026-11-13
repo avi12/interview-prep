@@ -1,11 +1,8 @@
-import { appendCaption, type Caption, closeCaptions, Speaker } from "./captions.ts";
 import { describe, expect, it } from "vitest";
 
-function say({ captions, speaker, parts }: {
-  captions: Caption[];
-  speaker: Speaker;
-  parts: string[];
-}) {
+import { appendCaption, type Caption, closeCaptions, Speaker } from "./captions.ts";
+
+function say({ captions, speaker, parts }: { captions: Caption[]; speaker: Speaker; parts: string[] }) {
   let result = captions;
   for (const text of parts) {
     result = appendCaption({
@@ -24,11 +21,13 @@ describe("appendCaption", () => {
       speaker: Speaker.TUTOR,
       parts: [" Hello", " there"]
     });
-    expect(captions).toEqual([{
-      speaker: Speaker.TUTOR,
-      text: "Hello there",
-      isOpen: true
-    }]);
+    expect(captions).toEqual([
+      {
+        speaker: Speaker.TUTOR,
+        text: "Hello there",
+        isOpen: true
+      }
+    ]);
   });
 
   it("starts a new line when the other one speaks", () => {

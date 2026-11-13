@@ -1,11 +1,12 @@
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+import { defineConfig } from "wxt";
+
 import { WEB_ORIGIN } from "../../scripts/lib/gcp.ts";
 import { serverOrigin, TUTOR_VIEW_PORT, tutorViewUrl, voiceUrl } from "../../scripts/lib/server.ts";
 import { SCRIPTS_ALIAS } from "./aliases.ts";
 import { EXTENSION_KEY } from "./extension-identity.ts";
 import { PROMPT_CLIP_GLOB } from "./src/lib/prompt-clip.ts";
 import { resolveVscodeOrigin } from "./vscode-origin.ts";
-import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
-import { defineConfig } from "wxt";
 
 const vscodeOrigin = resolveVscodeOrigin();
 process.env.WXT_VSCODE_ORIGIN = vscodeOrigin;
@@ -29,10 +30,18 @@ export default defineConfig({
     description: "A voice tutor from Gemini Live that sees your VS Code tab and coaches you through the lesson",
     key: EXTENSION_KEY,
     permissions: ["storage", "debugger", "nativeMessaging"],
-    host_permissions: [`${vscodeOrigin}/*`, `${WEB_ORIGIN}/*`, `${serverOrigin(TUTOR_VIEW_PORT)}/*`, "https://gemini.google.com/*", HOST_PERMISSION_CAPTURE_VISIBLE_TAB_REQUIRES],
-    web_accessible_resources: [{
-      resources: [PROMPT_CLIP_GLOB],
-      matches: ["https://gemini.google.com/*"]
-    }]
+    host_permissions: [
+      `${vscodeOrigin}/*`,
+      `${WEB_ORIGIN}/*`,
+      `${serverOrigin(TUTOR_VIEW_PORT)}/*`,
+      "https://gemini.google.com/*",
+      HOST_PERMISSION_CAPTURE_VISIBLE_TAB_REQUIRES
+    ],
+    web_accessible_resources: [
+      {
+        resources: [PROMPT_CLIP_GLOB],
+        matches: ["https://gemini.google.com/*"]
+      }
+    ]
   }
 });

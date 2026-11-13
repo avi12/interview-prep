@@ -1,10 +1,10 @@
 {
   "name": "@interview-prep/gemini-live",
-  "private": true,
-  "type": "module",
   "version": "0.1.0",
+  "private": true,
   "description": "Chrome extension: a Gemini Live voice tutor that watches the learner's VS Code tab",
   "license": "Apache-2.0",
+  "type": "module",
   "imports": {
     "#imports": "./.wxt/types/imports-module.d.ts"
   },

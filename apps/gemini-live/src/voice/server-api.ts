@@ -1,5 +1,3 @@
-import { fetchParsed } from "@/lib/fetch-parsed.ts";
-import { z } from "@/lib/zod.ts";
 import {
   API_KEY_PATH,
   apiKeyResponseSchema,
@@ -9,6 +7,9 @@ import {
   voiceSetupSchema
 } from "@scripts/lib/voice.ts";
 
+import { fetchParsed } from "@/lib/fetch-parsed.ts";
+import type { zod } from "@/lib/zod.ts";
+
 const JSON_HEADERS = { "content-type": "application/json" };
 const HttpMethod = {
   GET: "GET",
@@ -17,17 +18,25 @@ const HttpMethod = {
 } as const;
 type HttpMethod = (typeof HttpMethod)[keyof typeof HttpMethod];
 
-async function requestJson<T>({ path, schema, method = HttpMethod.GET, body }: {
+async function requestJson<T>({
+  path,
+  schema,
+  method = HttpMethod.GET,
+  body
+}: {
   path: string;
-  schema: z.ZodType<T>;
+  schema: zod.ZodType<T>;
   method?: HttpMethod;
   body?: unknown;
 }) {
-  const init: RequestInit = body === undefined ? { method } : {
-    method,
-    headers: JSON_HEADERS,
-    body: JSON.stringify(body)
-  };
+  const init: RequestInit =
+    body === undefined
+      ? { method }
+      : {
+          method,
+          headers: JSON_HEADERS,
+          body: JSON.stringify(body)
+        };
   return fetchParsed({
     input: path,
     init,

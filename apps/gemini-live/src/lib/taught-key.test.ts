@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 import {
   isTaughtKeyFired,
   keyEventOf,
@@ -7,7 +9,6 @@ import {
   TeachRole,
   watchedReports
 } from "./taught-key.ts";
-import { describe, expect, it } from "vitest";
 
 const KEYBOARD = {
   device: "vid_1e7d&pid_303e",
@@ -36,7 +37,14 @@ const m1Key = taught({
   label: "M1"
 });
 const easyShift = taught({
-  reports: reportsOf(["03-00-19-8D-00", "03-00-FD-01-00", "03-0E-FA-01-00", "03-08-FA-01-00", "03-00-19-8D-01", "03-00-FD-00-00"]),
+  reports: reportsOf([
+    "03-00-19-8D-00",
+    "03-00-FD-01-00",
+    "03-0E-FA-01-00",
+    "03-08-FA-01-00",
+    "03-00-19-8D-01",
+    "03-00-FD-00-00"
+  ]),
   label: "Easy-Shift"
 });
 const m1Alone: TaughtMicKey = {

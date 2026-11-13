@@ -1,8 +1,9 @@
-import { extensionId } from "../extension-identity.ts";
-import { MIC_KEY_HOST } from "../src/lib/mic-key-host.ts";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
+import { extensionId } from "../extension-identity.ts";
+import { MIC_KEY_HOST } from "../src/lib/mic-key-host.ts";
 
 const CSC = join(process.env.WINDIR ?? "C:\\Windows", "Microsoft.NET", "Framework64", "v4.0.30319", "csc.exe");
 const NATIVE_DIR = join(import.meta.dirname, "..", "native");

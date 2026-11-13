@@ -22,11 +22,11 @@
   const TALK_ACTION = "talk";
 
   const uid = $props.id();
-  const statusTipId = `${uid}-status-tip`;
-  const micTipId = `${uid}-mic-tip`;
-  const stopTipId = `${uid}-stop-tip`;
-  const engineTipId = `${uid}-engine-tip`;
-  const keyTipId = `${uid}-key-tip`;
+  const STATUS_TIP_ID = `${uid}-status-tip`;
+  const MIC_TIP_ID = `${uid}-mic-tip`;
+  const STOP_TIP_ID = `${uid}-stop-tip`;
+  const ENGINE_TIP_ID = `${uid}-engine-tip`;
+  const KEY_TIP_ID = `${uid}-key-tip`;
 
   let session = $state<Session | null>(null);
   let failure = $state("");
@@ -36,8 +36,8 @@
   const API_KEY_LABEL = "API key";
   const API_KEY_TITLE = "Set or change your Gemini API key";
 
-  function chooseEngine(e: Event & { currentTarget: HTMLSelectElement }) {
-    const parsed = engineSchema.safeParse(e.currentTarget.value);
+  function chooseEngine(event: Event & { currentTarget: HTMLSelectElement }) {
+    const parsed = engineSchema.safeParse(event.currentTarget.value);
     if (parsed.success) {
       engine = parsed.data;
       void saveEngine(parsed.data);
@@ -100,17 +100,17 @@
   });
 </script>
 
-<div class="ip-tutor-panel" aria-describedby={title ? statusTipId : undefined} data-tone={tone}>
+<div class="ip-tutor-panel" aria-describedby={title ? STATUS_TIP_ID : undefined} data-tone={tone}>
   {#if label}
     <span class="ip-tutor-status">{label}</span>
   {/if}
   {#if title}
-    <span id={statusTipId} class="ip-tutor-tip ip-tutor-status-tip" role="tooltip">{title}</span>
+    <span id={STATUS_TIP_ID} class="ip-tutor-tip ip-tutor-status-tip" role="tooltip">{title}</span>
   {/if}
   {#if isLive}
     <button
       class="ip-tutor ip-tutor-mic"
-      aria-describedby={micTipId}
+      aria-describedby={MIC_TIP_ID}
       aria-pressed={isMicOpen}
       data-open={isMicOpen}
       onclick={toggleMic}
@@ -128,11 +128,11 @@
         <kbd>{micKeyHint}</kbd>
       {/if}
     </button>
-    <span id={micTipId} class="ip-tutor-tip ip-tutor-mic-tip" role="tooltip">{micTitle}</span>
+    <span id={MIC_TIP_ID} class="ip-tutor-tip ip-tutor-mic-tip" role="tooltip">{micTitle}</span>
   {:else}
     <select
       class="ip-tutor ip-tutor-secondary ip-tutor-engine"
-      aria-describedby={engineTipId}
+      aria-describedby={ENGINE_TIP_ID}
       aria-label={ENGINE_TITLE}
       disabled={!!session}
       onchange={chooseEngine}
@@ -142,32 +142,32 @@
         <option value={option}>{ENGINE_LABEL[option]}</option>
       {/each}
     </select>
-    <span id={engineTipId} class="ip-tutor-tip ip-tutor-engine-tip" role="tooltip">{ENGINE_TITLE}</span>
+    <span id={ENGINE_TIP_ID} class="ip-tutor-tip ip-tutor-engine-tip" role="tooltip">{ENGINE_TITLE}</span>
     {#if engine === Engine.API_KEY}
       <a
         class="ip-tutor ip-tutor-secondary ip-tutor-link"
-        aria-describedby={keyTipId}
+        aria-describedby={KEY_TIP_ID}
         href={VOICE_URL}
         rel="noreferrer"
         target="_blank"
       >
         {API_KEY_LABEL}
       </a>
-      <span id={keyTipId} class="ip-tutor-tip ip-tutor-key-tip" role="tooltip">{API_KEY_TITLE}</span>
+      <span id={KEY_TIP_ID} class="ip-tutor-tip ip-tutor-key-tip" role="tooltip">{API_KEY_TITLE}</span>
     {/if}
     <button class="ip-tutor" data-tutor-action={TutorAction.START} onclick={start} type="button">{START_LABEL}</button>
   {/if}
   {#if session}
     <button
       class="ip-tutor ip-tutor-secondary ip-tutor-stop"
-      aria-describedby={stopTipId}
+      aria-describedby={STOP_TIP_ID}
       data-tutor-action={TutorAction.STOP}
       onclick={stop}
       type="button"
     >
       {STOP_LABEL}
     </button>
-    <span id={stopTipId} class="ip-tutor-tip ip-tutor-stop-tip" role="tooltip">{STOP_TITLE}</span>
+    <span id={STOP_TIP_ID} class="ip-tutor-tip ip-tutor-stop-tip" role="tooltip">{STOP_TITLE}</span>
   {/if}
 </div>
 
@@ -320,7 +320,7 @@
       border: 1px solid currentColor;
       border-radius: 3px;
       font: 10px var(--vscode-editor-font-family, monospace);
-      opacity: 75%;
+      opacity: 0.75;
     }
   }
 
@@ -341,7 +341,7 @@
     color: var(--vscode-editorHoverWidget-foreground, var(--vscode-foreground, canvastext));
     font: 12px var(--vscode-font-family, system-ui);
     white-space: normal;
-    opacity: 0%;
+    opacity: 0;
     visibility: hidden;
     box-shadow: 0 2px 8px var(--vscode-widget-shadow, transparent);
     pointer-events: none;
@@ -376,7 +376,7 @@
 
   .ip-tutor-panel:hover:not(:has(.ip-tutor:hover)) > .ip-tutor-status-tip,
   .ip-tutor:is(:hover, :focus-visible:not(.ip-tutor-engine)) + .ip-tutor-tip {
-    opacity: 100%;
+    opacity: 1;
     visibility: visible;
     transition-delay: 300ms;
     translate: 0;

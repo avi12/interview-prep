@@ -1,7 +1,8 @@
+import { storage } from "#imports";
+
 import { DEFAULT_ENGINE, type Engine, engineSchema } from "./engine.ts";
 import { DEFAULT_LANGUAGE, type Language, languageSchema } from "./language.ts";
 import { DEFAULT_MIC_KEY, type MicKey, micKeySchema } from "./mic-key-choice.ts";
-import { storage } from "#imports";
 
 const languageItem = storage.defineItem<unknown>("local:language", { fallback: DEFAULT_LANGUAGE });
 const engineItem = storage.defineItem<unknown>("local:engine", { fallback: DEFAULT_ENGINE });

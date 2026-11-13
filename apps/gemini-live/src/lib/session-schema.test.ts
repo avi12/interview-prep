@@ -1,7 +1,8 @@
+import { describe, expect, it } from "vitest";
+
 import { Engine } from "./engine.ts";
 import { LiveState, Sight } from "./live-state.ts";
 import { freshSession, isEngineTab, parseSession } from "./session-schema.ts";
-import { describe, expect, it } from "vitest";
 
 const VSCODE_TAB = 1;
 const LIVE_TAB = 2;
@@ -23,7 +24,7 @@ describe("parseSession", () => {
   });
 
   it("reads a session saved before engines as a subscription session", () => {
-    const { engine: _engine, liveTab: _liveTab, liveWindow: _liveWindow, ...shared } = voiceSession;
+    const { engine, liveTab, liveWindow, ...shared } = voiceSession;
     expect(
       parseSession({
         ...shared,

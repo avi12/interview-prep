@@ -1,4 +1,5 @@
-import { Speaker } from "./captions.ts";
+import type { TutorView } from "@scripts/lib/tutor-view.ts";
+
 import { buildInstructions } from "@/lib/brief.ts";
 import type { Frame } from "@/lib/frame.ts";
 import type { Language } from "@/lib/language.ts";
@@ -7,7 +8,8 @@ import { createPlayback } from "@/lib/live-api/playback.ts";
 import { type LiveClosure, LiveConnection, type LiveSession, openLiveSession } from "@/lib/live-api/session.ts";
 import { LiveState } from "@/lib/live-state.ts";
 import { tutorViewContext, tutorViewText } from "@/lib/tutor-view-text.ts";
-import type { TutorView } from "@scripts/lib/tutor-view.ts";
+
+import { Speaker } from "./captions.ts";
 
 const VIEW_POLL_MS = 1000;
 const FRAME_INTERVAL_MS = 1000;
@@ -18,12 +20,14 @@ const CONNECTION_STATE: Record<LiveConnection, LiveState> = {
   [LiveConnection.RECONNECTING]: LiveState.RECONNECTING
 };
 
+interface TutorCaption {
+  speaker: Speaker;
+  text: string;
+}
+
 export interface TutorSessionEvents {
   onState(state: LiveState): void;
-  onCaption(caption: {
-    speaker: Speaker;
-    text: string;
-  }): void;
+  onCaption(caption: TutorCaption): void;
   onTurnComplete(): void;
   onClosed(closure: LiveClosure): void;
   onSpeakerBlocked(isBlocked: boolean): void;
@@ -37,10 +41,7 @@ export interface TutorSessionOptions {
   events: TutorSessionEvents;
 }
 
-function everyInterval({ intervalMs, task }: {
-  intervalMs: number;
-  task: () => Promise<void>;
-}) {
+function everyInterval({ intervalMs, task }: { intervalMs: number; task: () => Promise<void> }) {
   let isBusy = false;
   const timer = setInterval(() => {
     if (isBusy) {
@@ -98,14 +99,16 @@ export async function startTutorSession({ apiKey, language, captureFrame, readVi
       },
       onAudio: bytes => playback.play(bytes),
       onInterrupted: () => playback.flush(),
-      onUserText: text => events.onCaption({
-        speaker: Speaker.LEARNER,
-        text
-      }),
-      onModelText: text => events.onCaption({
-        speaker: Speaker.TUTOR,
-        text
-      }),
+      onUserText: text =>
+        events.onCaption({
+          speaker: Speaker.LEARNER,
+          text
+        }),
+      onModelText: text =>
+        events.onCaption({
+          speaker: Speaker.TUTOR,
+          text
+        }),
       onTurnComplete: () => events.onTurnComplete(),
       onClosed(closure) {
         stop();
@@ -121,7 +124,8 @@ export async function startTutorSession({ apiKey, language, captureFrame, readVi
       intervalMs: VIEW_POLL_MS,
       async task() {
         const latest = await readView();
-        if (!latest || latest.version === sentVersion) {
+        const isUpToDate = !latest || latest.version === sentVersion;
+        if (isUpToDate) {
           return;
         }
 

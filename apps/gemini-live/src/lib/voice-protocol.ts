@@ -1,16 +1,16 @@
 import { languageSchema } from "./language.ts";
 import { LiveState } from "./live-state.ts";
-import { z } from "./zod.ts";
+import { zod } from "./zod.ts";
 
-export const voiceHelloSchema = z.object({
+export const voiceHelloSchema = zod.object({
   language: languageSchema,
-  isAutostart: z.boolean()
+  isAutostart: zod.boolean()
 });
-export type VoiceHello = z.infer<typeof voiceHelloSchema>;
+export type VoiceHello = zod.infer<typeof voiceHelloSchema>;
 
-export const voiceReportSchema = z.object({
-  state: z.enum(LiveState),
-  detail: z.string(),
-  isMicOpen: z.boolean()
+export const voiceReportSchema = zod.object({
+  state: zod.enum(LiveState),
+  detail: zod.string(),
+  isMicOpen: zod.boolean()
 });
-export type VoiceReport = z.infer<typeof voiceReportSchema>;
+export type VoiceReport = zod.infer<typeof voiceReportSchema>;

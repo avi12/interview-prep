@@ -1,65 +1,66 @@
-import { MIC_MIME_TYPE } from "./defaults.ts";
 import { base64ToBytes } from "@/lib/base64.ts";
-import { z } from "@/lib/zod.ts";
+import { zod } from "@/lib/zod.ts";
+
+import { MIC_MIME_TYPE } from "./defaults.ts";
 
 const RESPONSE_MODALITY_AUDIO = "AUDIO";
 const MEDIA_RESOLUTION = "MEDIA_RESOLUTION_MEDIUM";
 const USER_ROLE = "user";
 const MODEL_PREFIX = "models/";
 
-const textPartSchema = z.object({ text: z.string() });
-const blobSchema = z.object({
-  mimeType: z.string(),
-  data: z.string()
+const textPartSchema = zod.object({ text: zod.string() });
+const blobSchema = zod.object({
+  mimeType: zod.string(),
+  data: zod.string()
 });
-const emptySchema = z.object({});
+const emptySchema = zod.object({});
 
-const setupMessageSchema = z.object({
-  setup: z.object({
-    model: z.string().startsWith(MODEL_PREFIX),
-    generationConfig: z.object({
-      responseModalities: z.array(z.literal(RESPONSE_MODALITY_AUDIO)),
-      mediaResolution: z.literal(MEDIA_RESOLUTION),
-      speechConfig: z.object({
-        voiceConfig: z.object({
-          prebuiltVoiceConfig: z.object({ voiceName: z.string().min(1) })
+const setupMessageSchema = zod.object({
+  setup: zod.object({
+    model: zod.string().startsWith(MODEL_PREFIX),
+    generationConfig: zod.object({
+      responseModalities: zod.array(zod.literal(RESPONSE_MODALITY_AUDIO)),
+      mediaResolution: zod.literal(MEDIA_RESOLUTION),
+      speechConfig: zod.object({
+        voiceConfig: zod.object({
+          prebuiltVoiceConfig: zod.object({ voiceName: zod.string().min(1) })
         })
       })
     }),
-    systemInstruction: z.object({ parts: z.array(textPartSchema) }),
+    systemInstruction: zod.object({ parts: zod.array(textPartSchema) }),
     inputAudioTranscription: emptySchema,
     outputAudioTranscription: emptySchema,
-    contextWindowCompression: z.object({ slidingWindow: emptySchema }),
-    sessionResumption: z.object({ handle: z.string().optional() })
+    contextWindowCompression: zod.object({ slidingWindow: emptySchema }),
+    sessionResumption: zod.object({ handle: zod.string().optional() })
   })
 });
-type SetupMessage = z.infer<typeof setupMessageSchema>;
+type SetupMessage = zod.infer<typeof setupMessageSchema>;
 
-const audioMessageSchema = z.object({ realtimeInput: z.object({ audio: blobSchema }) });
-const videoMessageSchema = z.object({ realtimeInput: z.object({ video: blobSchema }) });
-const audioEndMessageSchema = z.object({ realtimeInput: z.object({ audioStreamEnd: z.literal(true) }) });
+const audioMessageSchema = zod.object({ realtimeInput: zod.object({ audio: blobSchema }) });
+const videoMessageSchema = zod.object({ realtimeInput: zod.object({ video: blobSchema }) });
+const audioEndMessageSchema = zod.object({ realtimeInput: zod.object({ audioStreamEnd: zod.literal(true) }) });
 
-const clientContentMessageSchema = z.object({
-  clientContent: z.object({
-    turns: z.array(
-      z.object({
-        role: z.literal(USER_ROLE),
-        parts: z.array(textPartSchema)
+const clientContentMessageSchema = zod.object({
+  clientContent: zod.object({
+    turns: zod.array(
+      zod.object({
+        role: zod.literal(USER_ROLE),
+        parts: zod.array(textPartSchema)
       })
     ),
-    turnComplete: z.boolean()
+    turnComplete: zod.boolean()
   })
 });
-type ClientContentMessage = z.infer<typeof clientContentMessageSchema>;
+type ClientContentMessage = zod.infer<typeof clientContentMessageSchema>;
 
-const clientMessageSchema = z.union([
+const clientMessageSchema = zod.union([
   setupMessageSchema,
   audioMessageSchema,
   videoMessageSchema,
   audioEndMessageSchema,
   clientContentMessageSchema
 ]);
-export type ClientMessage = z.infer<typeof clientMessageSchema>;
+export type ClientMessage = zod.infer<typeof clientMessageSchema>;
 
 export function serializeClientMessage(message: ClientMessage) {
   const parsed = clientMessageSchema.safeParse(message);
@@ -73,7 +74,7 @@ export interface SetupOptions {
   resumeHandle: string | null;
 }
 
-export function buildSetupMessage({ model, voice, systemInstruction, resumeHandle }: SetupOptions): SetupMessage {
+export function buildSetupMessage({ model, voice, systemInstruction, resumeHandle }: SetupOptions) {
   return {
     setup: {
       model: `${MODEL_PREFIX}${model}`,
@@ -98,10 +99,10 @@ export function buildSetupMessage({ model, voice, systemInstruction, resumeHandl
       },
       sessionResumption: resumeHandle ? { handle: resumeHandle } : {}
     }
-  };
+  } satisfies SetupMessage;
 }
 
-export function audioMessage(base64: string): z.infer<typeof audioMessageSchema> {
+export function audioMessage(base64: string) {
   return {
     realtimeInput: {
       audio: {
@@ -109,21 +110,18 @@ export function audioMessage(base64: string): z.infer<typeof audioMessageSchema>
         data: base64
       }
     }
-  };
+  } satisfies zod.infer<typeof audioMessageSchema>;
 }
 
-export function audioEndMessage(): z.infer<typeof audioEndMessageSchema> {
+export function audioEndMessage() {
   return {
     realtimeInput: {
       audioStreamEnd: true
     }
-  };
+  } satisfies zod.infer<typeof audioEndMessageSchema>;
 }
 
-export function videoMessage({ base64, mimeType }: {
-  base64: string;
-  mimeType: string;
-}): z.infer<typeof videoMessageSchema> {
+export function videoMessage({ base64, mimeType }: { base64: string; mimeType: string }) {
   return {
     realtimeInput: {
       video: {
@@ -131,48 +129,60 @@ export function videoMessage({ base64, mimeType }: {
         data: base64
       }
     }
-  };
+  } satisfies zod.infer<typeof videoMessageSchema>;
 }
 
-export function contextMessage(text: string): ClientContentMessage {
+export function contextMessage(text: string) {
   return {
     clientContent: {
-      turns: [{
-        role: USER_ROLE,
-        parts: [{ text }]
-      }],
+      turns: [
+        {
+          role: USER_ROLE,
+          parts: [{ text }]
+        }
+      ],
       turnComplete: false
     }
-  };
+  } satisfies ClientContentMessage;
 }
 
-const transcriptionSchema = z.object({ text: z.string().optional() }).optional();
+const transcriptionSchema = zod.object({ text: zod.string().optional() }).optional();
 
-const serverMessageSchema = z.object({
-  setupComplete: z.object({}).optional(),
-  serverContent: z.object({
-    modelTurn: z.object({
-      parts: z.array(
-        z.object({
-          inlineData: z.object({
-            mimeType: z.string().optional(),
-            data: z.string()
-          }).optional()
+const serverMessageSchema = zod.object({
+  setupComplete: zod.object({}).optional(),
+  serverContent: zod
+    .object({
+      modelTurn: zod
+        .object({
+          parts: zod
+            .array(
+              zod.object({
+                inlineData: zod
+                  .object({
+                    mimeType: zod.string().optional(),
+                    data: zod.string()
+                  })
+                  .optional()
+              })
+            )
+            .optional()
         })
-      ).optional()
-    }).optional(),
-    interrupted: z.boolean().optional(),
-    turnComplete: z.boolean().optional(),
-    inputTranscription: transcriptionSchema,
-    outputTranscription: transcriptionSchema
-  }).optional(),
-  sessionResumptionUpdate: z.object({
-    newHandle: z.string().optional(),
-    resumable: z.boolean().optional()
-  }).optional(),
-  goAway: z.object({}).optional()
+        .optional(),
+      interrupted: zod.boolean().optional(),
+      turnComplete: zod.boolean().optional(),
+      inputTranscription: transcriptionSchema,
+      outputTranscription: transcriptionSchema
+    })
+    .optional(),
+  sessionResumptionUpdate: zod
+    .object({
+      newHandle: zod.string().optional(),
+      resumable: zod.boolean().optional()
+    })
+    .optional(),
+  goAway: zod.object({}).optional()
 });
-type ServerMessage = z.infer<typeof serverMessageSchema>;
+type ServerMessage = zod.infer<typeof serverMessageSchema>;
 
 export const ServerEventKind = {
   SETUP_COMPLETE: "setupComplete",
@@ -191,17 +201,17 @@ export type ServerEvent =
   | { kind: typeof ServerEventKind.TURN_COMPLETE }
   | { kind: typeof ServerEventKind.GO_AWAY }
   | {
-    kind: typeof ServerEventKind.AUDIO;
-    bytes: Uint8Array;
-  }
+      kind: typeof ServerEventKind.AUDIO;
+      bytes: Uint8Array;
+    }
   | {
-    kind: typeof ServerEventKind.USER_TEXT | typeof ServerEventKind.MODEL_TEXT;
-    text: string;
-  }
+      kind: typeof ServerEventKind.USER_TEXT | typeof ServerEventKind.MODEL_TEXT;
+      text: string;
+    }
   | {
-    kind: typeof ServerEventKind.RESUME_HANDLE;
-    handle: string;
-  };
+      kind: typeof ServerEventKind.RESUME_HANDLE;
+      handle: string;
+    };
 
 function contentEvents(content: NonNullable<ServerMessage["serverContent"]>) {
   const events: ServerEvent[] = [];
@@ -241,7 +251,7 @@ function contentEvents(content: NonNullable<ServerMessage["serverContent"]>) {
   return events;
 }
 
-function parseJson(text: string): unknown {
+function parseJson(text: string) {
   try {
     return JSON.parse(text);
   } catch {
@@ -266,10 +276,11 @@ export function parseServerMessage(text: string) {
   }
 
   const resumption = message.sessionResumptionUpdate;
-  if (resumption?.resumable && resumption.newHandle) {
+  const handle = resumption?.resumable ? resumption.newHandle : undefined;
+  if (handle) {
     events.push({
       kind: ServerEventKind.RESUME_HANDLE,
-      handle: resumption.newHandle
+      handle
     });
   }
 

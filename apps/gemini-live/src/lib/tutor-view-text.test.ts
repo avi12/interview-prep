@@ -1,9 +1,10 @@
-import { tutorViewContext, tutorViewText } from "./tutor-view-text.ts";
-import { EditorKind } from "./vscode-title.ts";
-import { tutorHeading, tutorParagraph, type TutorView } from "@scripts/lib/tutor-view.ts";
+import { tutorHeading, tutorParagraph } from "@scripts/lib/tutor-view.ts";
 import { describe, expect, it } from "vitest";
 
-function view(title: string): TutorView {
+import { tutorViewContext, tutorViewText } from "./tutor-view-text.ts";
+import { EditorKind } from "./vscode-title.ts";
+
+function view(title: string) {
   return {
     version: "1",
     title,

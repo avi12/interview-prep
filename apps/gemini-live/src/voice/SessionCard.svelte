@@ -73,8 +73,12 @@
   });
 
   function failureText(error: unknown) {
-    if (error instanceof DOMException && error.name === MIC_DENIED_ERROR) {
-      return MIC_DENIED_TEXT;
+    const isDomException = error instanceof DOMException;
+    if (isDomException) {
+      const isMicDenied = error.name === MIC_DENIED_ERROR;
+      if (isMicDenied) {
+        return MIC_DENIED_TEXT;
+      }
     }
 
     return error instanceof Error ? error.message : String(error);
@@ -153,7 +157,11 @@
   }
 
   $effect(() => {
-    if (!isExtension || !liveState) {
+    if (!isExtension) {
+      return;
+    }
+
+    if (!liveState) {
       return;
     }
 
@@ -165,7 +173,15 @@
   });
 
   $effect(() => {
-    if (!hello?.isAutostart || !apiKey || hasAutostarted) {
+    if (!hello?.isAutostart) {
+      return;
+    }
+
+    if (!apiKey) {
+      return;
+    }
+
+    if (hasAutostarted) {
       return;
     }
 

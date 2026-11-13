@@ -1,32 +1,26 @@
 import { DEFAULT_KEY_COMBO, type KeyCombo, keyComboSchema, keyComboText } from "./key-combo.ts";
-import {
-  type TaughtKey,
-  taughtKeyText,
-  type TaughtMicKey,
-  taughtMicKeyShape,
-  TeachRole
-} from "./taught-key.ts";
-import { z } from "./zod.ts";
+import { type TaughtKey, taughtKeyText, type TaughtMicKey, taughtMicKeyShape, TeachRole } from "./taught-key.ts";
+import { zod } from "./zod.ts";
 
 export const MicKeyKind = {
   COMBO: "combo",
   TAUGHT: "taught"
 } as const;
 
-export const micKeySchema = z.discriminatedUnion("kind", [
-  z.object({
-    kind: z.literal(MicKeyKind.COMBO),
+export const micKeySchema = zod.discriminatedUnion("kind", [
+  zod.object({
+    kind: zod.literal(MicKeyKind.COMBO),
     combo: keyComboSchema
   }),
-  z.object({
-    kind: z.literal(MicKeyKind.TAUGHT),
+  zod.object({
+    kind: zod.literal(MicKeyKind.TAUGHT),
     ...taughtMicKeyShape
   })
 ]);
 
-export type MicKey = z.infer<typeof micKeySchema>;
+export type MicKey = zod.infer<typeof micKeySchema>;
 
-export function comboMicKey(combo: KeyCombo): MicKey {
+export function comboMicKey(combo: KeyCombo) {
   return {
     kind: MicKeyKind.COMBO,
     combo
@@ -43,18 +37,14 @@ export function micKeyText(micKey: MicKey) {
   return micKey.kind === MicKeyKind.COMBO ? keyComboText(micKey.combo) : taughtKeyText(micKey);
 }
 
-function taughtMicKey(taught: TaughtMicKey): MicKey {
+function taughtMicKey(taught: TaughtMicKey) {
   return {
     kind: MicKeyKind.TAUGHT,
     ...taught
   };
 }
 
-export function withTaughtKey({ micKey, role, key }: {
-  micKey: MicKey;
-  role: TeachRole;
-  key: TaughtKey;
-}) {
+export function withTaughtKey({ micKey, role, key }: { micKey: MicKey; role: TeachRole; key: TaughtKey }) {
   if (role === TeachRole.KEY) {
     return taughtMicKey({
       key,
@@ -63,20 +53,19 @@ export function withTaughtKey({ micKey, role, key }: {
   }
 
   const taught = taughtOf(micKey);
-  return taught ? taughtMicKey({
-    ...taught,
-    heldKey: key
-  }) : micKey;
+  return taught
+    ? taughtMicKey({
+        ...taught,
+        heldKey: key
+      })
+    : micKey;
 }
 
-export function withLabel({ micKey, role, label }: {
-  micKey: MicKey;
-  role: TeachRole;
-  label: string;
-}) {
+export function withLabel({ micKey, role, label }: { micKey: MicKey; role: TeachRole; label: string }) {
   const taught = taughtOf(micKey);
   const key = taught?.[role];
-  if (!taught || !key) {
+  const isKeyUnset = !taught || !key;
+  if (isKeyUnset) {
     return micKey;
   }
 
@@ -91,8 +80,10 @@ export function withLabel({ micKey, role, label }: {
 
 export function withoutHeldKey(micKey: MicKey) {
   const taught = taughtOf(micKey);
-  return taught ? taughtMicKey({
-    ...taught,
-    heldKey: null
-  }) : micKey;
+  return taught
+    ? taughtMicKey({
+        ...taught,
+        heldKey: null
+      })
+    : micKey;
 }

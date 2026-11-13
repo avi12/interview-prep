@@ -10,9 +10,6 @@ const PROMPT_DIR = "prompts";
 
 export const PROMPT_CLIP_GLOB = `${PROMPT_DIR}/*.mp3`;
 
-export function promptClipPath({ event, language }: {
-  event: PromptEvent;
-  language: Language;
-}) {
+export function promptClipPath({ event, language }: { event: PromptEvent; language: Language }) {
   return `/${PROMPT_DIR}/${event}-${language}.mp3` as const;
 }

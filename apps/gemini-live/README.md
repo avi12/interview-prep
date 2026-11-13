@@ -53,12 +53,12 @@ This builds a development copy into `.output/chrome-mv3-dev` and starts its own 
 
 Every save under `src`, `public`, the config files or `scripts/lib` rebuilds, and the reload follows what the build actually changed:
 
-| The build changed | What reloads |
-| --- | --- |
+| The build changed              | What reloads                                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------ |
 | the background or the manifest | the extension, then every VS Code and Gemini tab, because their content scripts lost the old extension |
-| a content script | only the tabs it runs in: VS Code for the chip, the Gemini window for the bridge and the relay |
-| the popup or another page file | the open popup pages |
-| nothing | nothing |
+| a content script               | only the tabs it runs in: VS Code for the chip, the Gemini window for the bridge and the relay         |
+| the popup or another page file | the open popup pages                                                                                   |
+| nothing                        | nothing                                                                                                |
 
 Content scripts are never injected again into a live page: the bridge runs in the Gemini page's own world from the start, and the chip cannot be unmounted, so their tabs reload instead.
 

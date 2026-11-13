@@ -63,10 +63,7 @@ function unmuteHint(micKeyHint: string) {
   return micKeyHint ? `press ${micKeyHint} to talk` : UNMUTE_TEXT;
 }
 
-export function sessionText({ session, micKeyHint }: {
-  session: Session;
-  micKeyHint: string;
-}) {
+export function sessionText({ session, micKeyHint }: { session: Session; micKeyHint: string }) {
   if (session.state === LiveState.FAILED) {
     return session.detail || STATE_TEXT[LiveState.FAILED];
   }
