@@ -16,6 +16,7 @@
 !/dist/
 /dist/*
 !/dist/index.json
+!/dist/narration-runtime.js
 !/dist/lessons/
 !/dist/runner/
 
