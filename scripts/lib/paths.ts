@@ -1,3 +1,6 @@
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import {
   ASSETS_DIR_NAME,
   CURRICULUM_DIR_NAME,
@@ -12,8 +15,6 @@ import {
   RUNNER_DIST_RELATIVE_DIR,
   WORK_DIR_NAME
 } from "#scripts/lib/layout.ts";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const CURRICULUM_DIR = resolve(ROOT, CURRICULUM_DIR_NAME);

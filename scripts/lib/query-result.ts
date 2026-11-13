@@ -1,20 +1,20 @@
 import { parseRecords } from "#scripts/lib/json.ts";
 import { QUERY_RESULTS_RELATIVE_DIR } from "#scripts/lib/layout.ts";
 import { formatTable } from "#scripts/lib/text-table.ts";
-import { z } from "#scripts/lib/zod.ts";
+import { zod } from "#scripts/lib/zod.ts";
 
 const MAX_SHOWN_ROWS = 20;
 const NULL_CELL = "NULL";
 const NO_COLUMNS_TEXT = "no columns returned";
 const NUMERIC_CELL = /^-?\d+(\.\d+)?$/;
 
-export const queryResultSchema = z.object({
-  file: z.string(),
-  columns: z.array(z.string()),
-  rows: z.array(z.array(z.string().nullable()))
+export const queryResultSchema = zod.object({
+  file: zod.string(),
+  columns: zod.array(zod.string()),
+  rows: zod.array(zod.array(zod.string().nullable()))
 });
 
-export type QueryResult = z.infer<typeof queryResultSchema>;
+export type QueryResult = zod.infer<typeof queryResultSchema>;
 
 export function queryResultsRelativePath(lessonId: string) {
   return `${QUERY_RESULTS_RELATIVE_DIR}/${lessonId}.jsonl`;
@@ -39,10 +39,7 @@ export function parseQueryResults(text: string) {
   );
 }
 
-function isNumericColumn({ rows, index }: {
-  rows: string[][];
-  index: number;
-}) {
+function isNumericColumn({ rows, index }: { rows: string[][]; index: number }) {
   const cells = rows.map(row => row[index]).filter(cell => cell !== NULL_CELL);
   return cells.length > 0 && cells.every(cell => NUMERIC_CELL.test(cell));
 }
@@ -54,14 +51,17 @@ function rowCountText(count: number) {
 
 export function queryResultTable({ file, columns, rows }: QueryResult) {
   const shown = rows.slice(0, MAX_SHOWN_ROWS).map(row => row.map(cell => cell ?? NULL_CELL));
+  function isColumnNumeric(_: string, index: number) {
+    return isNumericColumn({
+      rows: shown,
+      index
+    });
+  }
   return {
     heading: `Your ${file} on the first test's data`,
     columns,
     rows: shown,
-    isRightAligned: columns.map((_, index) => isNumericColumn({
-      rows: shown,
-      index
-    })),
+    isRightAligned: columns.map(isColumnNumeric),
     countText: columns.length === 0 ? NO_COLUMNS_TEXT : rowCountText(rows.length)
   };
 }

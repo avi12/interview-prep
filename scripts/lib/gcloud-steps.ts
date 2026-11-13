@@ -2,12 +2,12 @@ import { GCLOUD_ACCOUNT } from "#scripts/lib/gcloud.ts";
 import { GCP } from "#scripts/lib/gcp.ts";
 
 const OUTCOME = {
-  done: "done",
-  skipped: "skipped",
-  manual: "manual step needed"
+  DONE: "done",
+  SKIPPED: "skipped",
+  MANUAL: "manual step needed"
 } as const;
 
-type OutcomeKind = typeof OUTCOME[keyof typeof OUTCOME];
+type OutcomeKind = (typeof OUTCOME)[keyof typeof OUTCOME];
 
 export interface Outcome {
   kind: OutcomeKind;
@@ -20,23 +20,23 @@ export interface Step {
   run: () => Promise<Outcome>;
 }
 
-export function done(detail: string): Outcome {
+export function done(detail: string) {
   return {
-    kind: OUTCOME.done,
+    kind: OUTCOME.DONE,
     detail
   };
 }
 
-export function skipped(detail: string): Outcome {
+export function skipped(detail: string) {
   return {
-    kind: OUTCOME.skipped,
+    kind: OUTCOME.SKIPPED,
     detail
   };
 }
 
-export function manual(detail: string): Outcome {
+export function manual(detail: string) {
   return {
-    kind: OUTCOME.manual,
+    kind: OUTCOME.MANUAL,
     detail
   };
 }
@@ -54,12 +54,10 @@ function printDryRun(steps: Step[]) {
   }
 }
 
-export async function runSteps({ title, steps, isDryRun }: {
-  title: string;
-  steps: Step[];
-  isDryRun: boolean;
-}) {
-  console.log(`${title} - project ${GCP.projectId}, account ${GCLOUD_ACCOUNT}${isDryRun ? " (dry run, nothing is sent)" : ""}`);
+export async function runSteps({ title, steps, isDryRun }: { title: string; steps: Step[]; isDryRun: boolean }) {
+  console.log(
+    `${title} - project ${GCP.projectId}, account ${GCLOUD_ACCOUNT}${isDryRun ? " (dry run, nothing is sent)" : ""}`
+  );
 
   if (isDryRun) {
     printDryRun(steps);
@@ -74,7 +72,7 @@ export async function runSteps({ title, steps, isDryRun }: {
       const outcome = await step.run();
       console.log(`${prefix}: ${outcome.kind} - ${outcome.detail}`);
 
-      if (outcome.kind === OUTCOME.manual) {
+      if (outcome.kind === OUTCOME.MANUAL) {
         manualSteps.push(outcome);
       }
     } catch (error) {

@@ -3,22 +3,22 @@ import { escapeHtml, scriptJson } from "#scripts/lib/html.ts";
 import { ALL_ROLES, ALL_ROLES_TITLE } from "#scripts/lib/path.ts";
 import type { categoriesSchema, rolesSchema, tracksSchema } from "#scripts/lib/schema.ts";
 import { describeProgress, type TrackProgress } from "#scripts/lib/study.ts";
-import { z } from "#scripts/lib/zod.ts";
+import { zod } from "#scripts/lib/zod.ts";
 
 export const OnboardingAction = {
-  start: "start",
-  skip: "skip",
-  addTopic: "addTopic"
+  START: "start",
+  SKIP: "skip",
+  ADD_TOPIC: "addTopic"
 } as const;
 
-export const onboardingMessageSchema = z.discriminatedUnion("action", [
-  z.object({
-    action: z.literal(OnboardingAction.start),
-    role: z.string(),
-    trackIds: z.array(z.string())
+export const onboardingMessageSchema = zod.discriminatedUnion("action", [
+  zod.object({
+    action: zod.literal(OnboardingAction.START),
+    role: zod.string(),
+    trackIds: zod.array(zod.string())
   }),
-  z.object({ action: z.literal(OnboardingAction.skip) }),
-  z.object({ action: z.literal(OnboardingAction.addTopic) })
+  zod.object({ action: zod.literal(OnboardingAction.SKIP) }),
+  zod.object({ action: zod.literal(OnboardingAction.ADD_TOPIC) })
 ]);
 
 function onboardingScript(roleTrackIds: Record<string, string[]>) {
@@ -52,7 +52,7 @@ elRole.addEventListener("change", () => {
 document.addEventListener("click", e => {
   const elAction = e.target.closest("[data-action]");
   if (!elAction) return;
-  if (elAction.dataset.action !== ${JSON.stringify(OnboardingAction.start)}) {
+  if (elAction.dataset.action !== ${JSON.stringify(OnboardingAction.START)}) {
     host.postMessage({ action: elAction.dataset.action });
     return;
   }
@@ -77,15 +77,13 @@ section { padding: 12px 16px; border: 1px solid var(--vscode-widget-border, var(
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 `;
 
-function ratio({ part, total }: {
-  part: number;
-  total: number;
-}) {
+function ratio({ part, total }: { part: number; total: number }) {
   return total === 0 ? 0 : part / total;
 }
 
 function renderProgress(progress: TrackProgress | undefined) {
-  if (!progress || progress.total === 0) {
+  const isNoProgress = !progress || progress.total === 0;
+  if (isNoProgress) {
     return "";
   }
 
@@ -100,8 +98,12 @@ function renderProgress(progress: TrackProgress | undefined) {
   return `<div class="progress"><span>${escapeHtml(describeProgress(progress))}</span><div class="progress-bar" style="--done:${done};--started:${started}"></div></div>`;
 }
 
-function renderTrack({ track, isPicked, progress }: {
-  track: z.infer<typeof tracksSchema>[number];
+function renderTrack({
+  track,
+  isPicked,
+  progress
+}: {
+  track: zod.infer<typeof tracksSchema>[number];
   isPicked: boolean;
   progress: TrackProgress | undefined;
 }) {
@@ -109,7 +111,7 @@ function renderTrack({ track, isPicked, progress }: {
 <p class="track-blurb">${escapeHtml(track.blurb)}</p>${renderProgress(progress)}</div>`;
 }
 
-function sumProgress(parts: readonly (TrackProgress | undefined)[]): TrackProgress {
+function sumProgress(parts: readonly (TrackProgress | undefined)[]) {
   const sum = {
     total: 0,
     passed: 0,
@@ -135,9 +137,9 @@ export function renderOnboarding({
   isReturning
 }: {
   elementsBundle: string;
-  categories: z.infer<typeof categoriesSchema>;
-  tracks: z.infer<typeof tracksSchema>;
-  roles: z.infer<typeof rolesSchema>;
+  categories: zod.infer<typeof categoriesSchema>;
+  tracks: zod.infer<typeof tracksSchema>;
+  roles: zod.infer<typeof rolesSchema>;
   roleTrackIds: Record<string, string[]>;
   role: string;
   trackIds: readonly string[];
@@ -145,25 +147,38 @@ export function renderOnboarding({
   isReturning: boolean;
 }) {
   const isEverythingPicked = trackIds.length === 0;
+  function renderPickedTrack(track: (typeof tracks)[number]) {
+    return renderTrack({
+      track,
+      isPicked: isEverythingPicked || trackIds.includes(track.id),
+      progress: trackProgress[track.id]
+    });
+  }
   const groups = groupTracksByCategory({
     categories,
     tracks
-  }).map(({ category, tracks: categoryTracks }) => `
+  })
+    .map(
+      ({ category, tracks: categoryTracks }) => `
 <section data-category-group>
   <vscode-checkbox data-category label="${escapeHtml(category.title)}"></vscode-checkbox>
   <p class="category-blurb">${escapeHtml(category.blurb)}</p>
   ${renderProgress(sumProgress(categoryTracks.map(track => trackProgress[track.id])))}
-  ${categoryTracks.map(track => renderTrack({
-    track,
-    isPicked: isEverythingPicked || trackIds.includes(track.id),
-    progress: trackProgress[track.id]
-  })).join("\n")}
-</section>`).join("\n");
-  const roleOptions = [{
-    id: ALL_ROLES,
-    title: ALL_ROLES_TITLE
-  }, ...roles]
-    .map(({ id, title }) => `<vscode-option value="${escapeHtml(id)}"${id === role ? " selected" : ""}>${escapeHtml(title)}</vscode-option>`)
+  ${categoryTracks.map(renderPickedTrack).join("\n")}
+</section>`
+    )
+    .join("\n");
+  const roleOptions = [
+    {
+      id: ALL_ROLES,
+      title: ALL_ROLES_TITLE
+    },
+    ...roles
+  ]
+    .map(
+      ({ id, title }) =>
+        `<vscode-option value="${escapeHtml(id)}"${id === role ? " selected" : ""}>${escapeHtml(title)}</vscode-option>`
+    )
     .join("");
   return `<!doctype html>
 <html lang="en">
@@ -183,9 +198,9 @@ export function renderOnboarding({
 ${groups}
 <div class="role"><span id="role-label">Target role</span> <vscode-single-select aria-labelledby="role-label">${roleOptions}</vscode-single-select></div>
 <footer class="actions">
-  <vscode-button data-action="${OnboardingAction.start}">${isReturning ? "Save topics" : "Start learning"}</vscode-button>
-  <vscode-button secondary data-action="${OnboardingAction.skip}">${isReturning ? "Show everything" : "Skip, show everything"}</vscode-button>
-  <vscode-button secondary data-action="${OnboardingAction.addTopic}">+ Add a topic</vscode-button>
+  <vscode-button data-action="${OnboardingAction.START}">${isReturning ? "Save topics" : "Start learning"}</vscode-button>
+  <vscode-button secondary data-action="${OnboardingAction.SKIP}">${isReturning ? "Show everything" : "Skip, show everything"}</vscode-button>
+  <vscode-button secondary data-action="${OnboardingAction.ADD_TOPIC}">+ Add a topic</vscode-button>
 </footer>
 </div>
 </main>

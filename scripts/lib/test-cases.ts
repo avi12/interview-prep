@@ -1,7 +1,7 @@
 import { parseRecords } from "#scripts/lib/json.ts";
 import { TEST_CASES_RELATIVE_DIR } from "#scripts/lib/layout.ts";
 import { formatTable } from "#scripts/lib/text-table.ts";
-import { z } from "#scripts/lib/zod.ts";
+import { zod } from "#scripts/lib/zod.ts";
 
 const MAX_CELL_LENGTH = 40;
 const CUT_MARK = "…";
@@ -25,15 +25,15 @@ const COLUMNS = [
   }
 ] as const;
 
-export const testCaseSchema = z.object({
-  test: z.string(),
-  isPass: z.boolean(),
-  input: z.string().nullable(),
-  expected: z.string().nullable(),
-  actual: z.string().nullable()
+export const testCaseSchema = zod.object({
+  test: zod.string(),
+  isPass: zod.boolean(),
+  input: zod.string().nullable(),
+  expected: zod.string().nullable(),
+  actual: zod.string().nullable()
 });
 
-export type TestCase = z.infer<typeof testCaseSchema>;
+export type TestCase = zod.infer<typeof testCaseSchema>;
 
 export function testCasesRelativePath(lessonId: string) {
   return `${TEST_CASES_RELATIVE_DIR}/${lessonId}.jsonl`;

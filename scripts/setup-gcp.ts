@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import {
   createSiteRequest,
   getSiteRequest,
@@ -20,13 +22,7 @@ import {
   waitForOperation,
   withRequestLog
 } from "#scripts/lib/firebase-rest.ts";
-import {
-  done,
-  manual,
-  runSteps,
-  skipped,
-  type Step
-} from "#scripts/lib/gcloud-steps.ts";
+import { done, manual, runSteps, skipped, type Step } from "#scripts/lib/gcloud-steps.ts";
 import {
   BUILD_SERVICE_ACCOUNT,
   BUILD_SERVICE_ACCOUNT_NAME,
@@ -42,8 +38,7 @@ import {
   RUNTIME_SERVICE_ACCOUNT
 } from "#scripts/lib/gcloud.ts";
 import { FIREBASE_AUTH_ORIGIN, GCP, WEB_ORIGIN } from "#scripts/lib/gcp.ts";
-import { z } from "#scripts/lib/zod.ts";
-import { readFileSync } from "node:fs";
+import { zod } from "#scripts/lib/zod.ts";
 
 const isDryRun = hasFlag("dry-run");
 const billingAccount = readFlag("billing-account");
@@ -66,14 +61,8 @@ const REQUIRED_APIS = [
   "cloudresourcemanager.googleapis.com"
 ];
 
-const RUNTIME_ROLES = [
-  "roles/datastore.user",
-  "roles/firebaseauth.viewer"
-];
-const BUILD_PROJECT_ROLES = [
-  "roles/logging.logWriter",
-  "roles/storage.objectViewer"
-];
+const RUNTIME_ROLES = ["roles/datastore.user", "roles/firebaseauth.viewer"];
+const BUILD_PROJECT_ROLES = ["roles/logging.logWriter", "roles/storage.objectViewer"];
 const BUILD_REPOSITORY_ROLES = ["roles/artifactregistry.writer"];
 
 const FIRESTORE_RULES_RELEASE = "cloud.firestore";
@@ -87,57 +76,61 @@ const AUTH_CONSOLE_URL = `https://console.firebase.google.com/project/${GCP.proj
 const BILLING_CONSOLE_URL = `https://console.cloud.google.com/billing/linkedaccount?project=${GCP.projectId}`;
 
 const PROJECT_PATH = `projects/${GCP.projectId}`;
-const FIREBASE_PROJECT_URL = `${API.firebase}/${PROJECT_PATH}`;
+const FIREBASE_PROJECT_URL = `${API.FIREBASE}/${PROJECT_PATH}`;
 const WEB_APPS_URL = `${FIREBASE_PROJECT_URL}/webApps`;
-const RULES_PROJECT_URL = `${API.rules}/${PROJECT_PATH}`;
+const RULES_PROJECT_URL = `${API.RULES}/${PROJECT_PATH}`;
 const RULES_RELEASE_NAME = `${PROJECT_PATH}/releases/${FIRESTORE_RULES_RELEASE}`;
-const AUTH_CONFIG_URL = `${API.identityToolkit}/${PROJECT_PATH}/config`;
-const GOOGLE_IDP_URL = `${API.identityToolkit}/${PROJECT_PATH}/defaultSupportedIdpConfigs/${GOOGLE_PROVIDER}`;
+const AUTH_CONFIG_URL = `${API.IDENTITY_TOOLKIT}/${PROJECT_PATH}/config`;
+const GOOGLE_IDP_URL = `${API.IDENTITY_TOOLKIT}/${PROJECT_PATH}/defaultSupportedIdpConfigs/${GOOGLE_PROVIDER}`;
 
-const projectSchema = z.object({
-  projectId: z.string(),
-  lifecycleState: z.string().optional()
+const projectSchema = zod.object({
+  projectId: zod.string(),
+  lifecycleState: zod.string().optional()
 });
-const billingSchema = z.object({ billingEnabled: z.boolean().optional() });
-const enabledServicesSchema = z.array(z.object({ config: z.object({ name: z.string() }) }));
-const describedSchema = z.object({ name: z.string() });
-const firestoreDatabaseSchema = z.object({
-  name: z.string(),
-  locationId: z.string().optional()
+const billingSchema = zod.object({ billingEnabled: zod.boolean().optional() });
+const enabledServicesSchema = zod.array(zod.object({ config: zod.object({ name: zod.string() }) }));
+const describedSchema = zod.object({ name: zod.string() });
+const firestoreDatabaseSchema = zod.object({
+  name: zod.string(),
+  locationId: zod.string().optional()
 });
-const policySchema = z.object({
-  bindings: z.array(
-    z.object({
-      role: z.string(),
-      members: z.array(z.string())
-    })
-  ).optional()
-});
-const webAppSchema = z.object({
-  appId: z.string(),
-  displayName: z.string().optional()
-});
-const webAppListSchema = z.object({ apps: z.array(webAppSchema).optional() });
-const firebaseProjectSchema = z.object({ projectId: z.string() });
-const rulesReleaseSchema = z.object({
-  name: z.string(),
-  rulesetName: z.string()
-});
-const rulesetSchema = z.object({
-  name: z.string(),
-  source: z.object({
-    files: z.array(
-      z.object({
-        name: z.string(),
-        content: z.string()
+const policySchema = zod.object({
+  bindings: zod
+    .array(
+      zod.object({
+        role: zod.string(),
+        members: zod.array(zod.string())
       })
     )
-  }).optional()
+    .optional()
 });
-const authConfigSchema = z.object({ authorizedDomains: z.array(z.string()).optional() });
-const idpConfigSchema = z.object({
-  enabled: z.boolean().optional(),
-  clientId: z.string().optional()
+const webAppSchema = zod.object({
+  appId: zod.string(),
+  displayName: zod.string().optional()
+});
+const webAppListSchema = zod.object({ apps: zod.array(webAppSchema).optional() });
+const firebaseProjectSchema = zod.object({ projectId: zod.string() });
+const rulesReleaseSchema = zod.object({
+  name: zod.string(),
+  rulesetName: zod.string()
+});
+const rulesetSchema = zod.object({
+  name: zod.string(),
+  source: zod
+    .object({
+      files: zod.array(
+        zod.object({
+          name: zod.string(),
+          content: zod.string()
+        })
+      )
+    })
+    .optional()
+});
+const authConfigSchema = zod.object({ authorizedDomains: zod.array(zod.string()).optional() });
+const idpConfigSchema = zod.object({
+  enabled: zod.boolean().optional(),
+  clientId: zod.string().optional()
 });
 
 let restRequest: RestRequest | undefined;
@@ -150,10 +143,7 @@ function rest() {
   return restRequest;
 }
 
-function send<Schema extends z.ZodType>({ spec, schema }: {
-  spec: RequestSpec;
-  schema: Schema;
-}) {
+function send<Schema extends zod.ZodType>({ spec, schema }: { spec: RequestSpec; schema: Schema }) {
   return withRequestLog(rest())({
     ...spec,
     schema
@@ -175,7 +165,9 @@ const projectStep: Step = {
     }
 
     if (project) {
-      throw new Error(`The project is in state ${project.lifecycleState}. Restore it with: gcloud projects undelete ${GCP.projectId}`);
+      throw new Error(
+        `The project is in state ${project.lifecycleState}. Restore it with: gcloud projects undelete ${GCP.projectId}`
+      );
     }
 
     console.log(`  $ ${describeGcloud(CREATE_PROJECT_ARGS)}`);
@@ -185,7 +177,9 @@ const projectStep: Step = {
     }
 
     if (PROJECT_TAKEN_OUTPUT.test(result.stderr)) {
-      throw new Error(`The project id "${GCP.projectId}" belongs to someone else. Pick a new one in GCP.projectId (scripts/lib/gcp.ts) and rerun.\n${result.stderr.trim()}`);
+      throw new Error(
+        `The project id "${GCP.projectId}" belongs to someone else. Pick a new one in GCP.projectId (scripts/lib/gcp.ts) and rerun.\n${result.stderr.trim()}`
+      );
     }
 
     throw new Error(result.stderr.trim());
@@ -200,7 +194,9 @@ const billingStep: Step = {
   label: "billing",
   plan: () => [
     describeGcloud(["billing", "projects", "describe", GCP.projectId]),
-    billingAccount ? describeGcloud(linkBillingArgs(billingAccount)) : "(no --billing-account given: only checks that billing is enabled)"
+    billingAccount
+      ? describeGcloud(linkBillingArgs(billingAccount))
+      : "(no --billing-account given: only checks that billing is enabled)"
   ],
   async run() {
     const billing = readGcloudJson({
@@ -212,7 +208,9 @@ const billingStep: Step = {
     }
 
     if (!billingAccount) {
-      throw new Error(`Billing is off. Cloud Run, Cloud Build and Artifact Registry need it. Find your account id with "gcloud billing accounts list --account=${GCLOUD_ACCOUNT}" and rerun with --billing-account=<id>, or link it at ${BILLING_CONSOLE_URL}`);
+      throw new Error(
+        `Billing is off. Cloud Run, Cloud Build and Artifact Registry need it. Find your account id with "gcloud billing accounts list --account=${GCLOUD_ACCOUNT}" and rerun with --billing-account=<id>, or link it at ${BILLING_CONSOLE_URL}`
+      );
     }
 
     mustRunGcloud({ args: linkBillingArgs(billingAccount) });
@@ -222,12 +220,16 @@ const billingStep: Step = {
 
 const apisStep: Step = {
   label: "enable APIs",
-  plan: () => [describeGcloud(["services", "list", "--enabled"]), describeGcloud(["services", "enable", ...REQUIRED_APIS])],
+  plan: () => [
+    describeGcloud(["services", "list", "--enabled"]),
+    describeGcloud(["services", "enable", ...REQUIRED_APIS])
+  ],
   async run() {
-    const enabled = readGcloudJson({
-      args: ["services", "list", "--enabled"],
-      schema: enabledServicesSchema
-    }) ?? [];
+    const enabled =
+      readGcloudJson({
+        args: ["services", "list", "--enabled"],
+        schema: enabledServicesSchema
+      }) ?? [];
     const enabledNames = new Set(enabled.map(service => service.config.name));
     const missing = REQUIRED_APIS.filter(api => !enabledNames.has(api));
     if (missing.length === 0) {
@@ -240,7 +242,7 @@ const apisStep: Step = {
 };
 
 const addFirebaseRequest: RequestSpec = {
-  method: HTTP_METHOD.post,
+  method: HTTP_METHOD.POST,
   url: `${FIREBASE_PROJECT_URL}:addFirebase`,
   body: {}
 };
@@ -248,16 +250,18 @@ const addFirebaseRequest: RequestSpec = {
 async function isFirebaseProject() {
   try {
     await rest()({
-      method: HTTP_METHOD.get,
+      method: HTTP_METHOD.GET,
       url: FIREBASE_PROJECT_URL,
       schema: firebaseProjectSchema
     });
     return true;
   } catch (error) {
-    if (isHttpStatus({
-      error,
-      statuses: [HTTP_STATUS.forbidden, HTTP_STATUS.notFound]
-    })) {
+    if (
+      isHttpStatus({
+        error,
+        statuses: [HTTP_STATUS.FORBIDDEN, HTTP_STATUS.NOT_FOUND]
+      })
+    ) {
       return false;
     }
 
@@ -267,7 +271,11 @@ async function isFirebaseProject() {
 
 const firebaseStep: Step = {
   label: "add Firebase",
-  plan: () => [`GET ${FIREBASE_PROJECT_URL}`, describeRequest(addFirebaseRequest), "  then poll the operation until done"],
+  plan: () => [
+    `GET ${FIREBASE_PROJECT_URL}`,
+    describeRequest(addFirebaseRequest),
+    "  then poll the operation until done"
+  ],
   async run() {
     if (await isFirebaseProject()) {
       return skipped("already a Firebase project");
@@ -280,14 +288,16 @@ const firebaseStep: Step = {
       });
       await waitForOperation({
         request: rest(),
-        apiRoot: API.firebase,
+        apiRoot: API.FIREBASE,
         operation
       });
     } catch (error) {
-      if (isHttpStatus({
-        error,
-        statuses: [HTTP_STATUS.conflict]
-      })) {
+      if (
+        isHttpStatus({
+          error,
+          statuses: [HTTP_STATUS.CONFLICT]
+        })
+      ) {
         return skipped("already a Firebase project");
       }
 
@@ -326,13 +336,15 @@ const siteStep: Step = {
       }
 
       const reason = error instanceof Error ? error.message : String(error);
-      throw new Error(`The site id "${GCP.hostingSiteId}" is taken by another project. Pick a new one in GCP.hostingSiteId (scripts/lib/gcp.ts) and rerun.\n  ${reason}`);
+      throw new Error(
+        `The site id "${GCP.hostingSiteId}" is taken by another project. Pick a new one in GCP.hostingSiteId (scripts/lib/gcp.ts) and rerun.\n  ${reason}`
+      );
     }
   }
 };
 
 const createWebAppRequest: RequestSpec = {
-  method: HTTP_METHOD.post,
+  method: HTTP_METHOD.POST,
   url: WEB_APPS_URL,
   body: {
     displayName: WEB_APP_DISPLAY_NAME
@@ -341,7 +353,7 @@ const createWebAppRequest: RequestSpec = {
 
 async function listWebApps() {
   const list = await rest()({
-    method: HTTP_METHOD.get,
+    method: HTTP_METHOD.GET,
     url: WEB_APPS_URL,
     schema: webAppListSchema
   });
@@ -363,7 +375,7 @@ const webAppStep: Step = {
     });
     const finished = await waitForOperation({
       request: rest(),
-      apiRoot: API.firebase,
+      apiRoot: API.FIREBASE,
       operation
     });
     const app = webAppSchema.safeParse(finished.response);
@@ -393,7 +405,13 @@ const linkSiteStep: Step = {
   }
 };
 
-const CREATE_FIRESTORE_ARGS = ["firestore", "databases", "create", `--location=${GCP.firestoreLocation}`, "--type=firestore-native"];
+const CREATE_FIRESTORE_ARGS = [
+  "firestore",
+  "databases",
+  "create",
+  `--location=${GCP.firestoreLocation}`,
+  "--type=firestore-native"
+];
 const DESCRIBE_FIRESTORE_ARGS = ["firestore", "databases", "describe", "--database=(default)"];
 
 const firestoreStep: Step = {
@@ -404,8 +422,11 @@ const firestoreStep: Step = {
       args: DESCRIBE_FIRESTORE_ARGS,
       schema: firestoreDatabaseSchema
     });
-    if (database && database.locationId !== GCP.firestoreLocation) {
-      return skipped(`exists in ${database.locationId}, not ${GCP.firestoreLocation}. A database cannot move, so the existing one stays`);
+    const isWrongLocation = database && database.locationId !== GCP.firestoreLocation;
+    if (isWrongLocation) {
+      return skipped(
+        `exists in ${database.locationId}, not ${GCP.firestoreLocation}. A database cannot move, so the existing one stays`
+      );
     }
 
     if (database) {
@@ -418,7 +439,13 @@ const firestoreStep: Step = {
 };
 
 const REPOSITORY_LOCATION_ARG = `--location=${GCP.region}`;
-const DESCRIBE_REPOSITORY_ARGS = ["artifacts", "repositories", "describe", GCP.artifactRepository, REPOSITORY_LOCATION_ARG];
+const DESCRIBE_REPOSITORY_ARGS = [
+  "artifacts",
+  "repositories",
+  "describe",
+  GCP.artifactRepository,
+  REPOSITORY_LOCATION_ARG
+];
 const CREATE_REPOSITORY_ARGS = [
   "artifacts",
   "repositories",
@@ -433,10 +460,12 @@ const repositoryStep: Step = {
   label: `Artifact Registry repo ${GCP.artifactRepository}`,
   plan: () => [describeGcloud(DESCRIBE_REPOSITORY_ARGS), describeGcloud(CREATE_REPOSITORY_ARGS)],
   async run() {
-    if (readGcloudJson({
-      args: DESCRIBE_REPOSITORY_ARGS,
-      schema: describedSchema
-    })) {
+    if (
+      readGcloudJson({
+        args: DESCRIBE_REPOSITORY_ARGS,
+        schema: describedSchema
+      })
+    ) {
       return skipped("exists");
     }
 
@@ -445,21 +474,19 @@ const repositoryStep: Step = {
   }
 };
 
-function serviceAccountStep({ name, email, displayName }: {
-  name: string;
-  email: string;
-  displayName: string;
-}): Step {
+function serviceAccountStep({ name, email, displayName }: { name: string; email: string; displayName: string }) {
   const describeArgs = ["iam", "service-accounts", "describe", email];
   const createArgs = ["iam", "service-accounts", "create", name, `--display-name=${displayName}`];
   return {
     label: `service account ${email}`,
     plan: () => [describeGcloud(describeArgs), describeGcloud(createArgs)],
     async run() {
-      if (readGcloudJson({
-        args: describeArgs,
-        schema: z.object({ email: z.string() })
-      })) {
+      if (
+        readGcloudJson({
+          args: describeArgs,
+          schema: zod.object({ email: zod.string() })
+        })
+      ) {
         return skipped("exists");
       }
 
@@ -469,8 +496,12 @@ function serviceAccountStep({ name, email, displayName }: {
   };
 }
 
-function hasBinding({ policy, role, member }: {
-  policy: z.infer<typeof policySchema>;
+function hasBinding({
+  policy,
+  role,
+  member
+}: {
+  policy: zod.infer<typeof policySchema>;
   role: string;
   member: string;
 }) {
@@ -499,36 +530,57 @@ async function addBindingWithRetry(args: string[]) {
     }
   });
   if (!isBound) {
-    throw new Error(`The binding did not apply after ${IAM_PROPAGATION_ATTEMPTS} tries (a new service account can take a minute to appear): ${lastError}`);
+    throw new Error(
+      `The binding did not apply after ${IAM_PROPAGATION_ATTEMPTS} tries (a new service account can take a minute to appear): ${lastError}`
+    );
   }
 }
 
-function rolesStep({ label, command, resource, bindFlags, member, roles }: {
+function rolesStep({
+  label,
+  command,
+  resource,
+  bindFlags,
+  member,
+  roles
+}: {
   label: string;
   command: string[];
   resource: string[];
   bindFlags: string[];
   member: string;
   roles: string[];
-}): Step {
+}) {
   const policyArgs = [...command, "get-iam-policy", ...resource];
   function bindArgs(role: string) {
-    return [...command, "add-iam-policy-binding", ...resource, `--member=${member}`, `--role=${role}`, ...bindFlags, "--format=none"];
+    return [
+      ...command,
+      "add-iam-policy-binding",
+      ...resource,
+      `--member=${member}`,
+      `--role=${role}`,
+      ...bindFlags,
+      "--format=none"
+    ];
   }
 
   return {
     label,
     plan: () => [describeGcloud(policyArgs), ...roles.map(role => describeGcloud(bindArgs(role)))],
     async run() {
-      const policy = readGcloudJson({
-        args: policyArgs,
-        schema: policySchema
-      }) ?? {};
-      const missing = roles.filter(role => !hasBinding({
-        policy,
-        role,
-        member
-      }));
+      const policy =
+        readGcloudJson({
+          args: policyArgs,
+          schema: policySchema
+        }) ?? {};
+      const missing = roles.filter(
+        role =>
+          !hasBinding({
+            policy,
+            role,
+            member
+          })
+      );
       if (missing.length === 0) {
         return skipped(`already has ${roles.join(", ")}`);
       }
@@ -594,12 +646,9 @@ function readRulesSource() {
   };
 }
 
-function createRulesetRequest(file: {
-  name: string;
-  content: string;
-}): RequestSpec {
+function createRulesetRequest(file: { name: string; content: string }) {
   return {
-    method: HTTP_METHOD.post,
+    method: HTTP_METHOD.POST,
     url: `${RULES_PROJECT_URL}/rulesets`,
     body: {
       source: {
@@ -609,18 +658,15 @@ function createRulesetRequest(file: {
   };
 }
 
-function upsertReleaseRequest({ rulesetName, isExisting }: {
-  rulesetName: string;
-  isExisting: boolean;
-}): RequestSpec {
+function upsertReleaseRequest({ rulesetName, isExisting }: { rulesetName: string; isExisting: boolean }) {
   const release = {
     name: RULES_RELEASE_NAME,
     rulesetName
   };
   if (isExisting) {
     return {
-      method: HTTP_METHOD.patch,
-      url: `${API.rules}/${RULES_RELEASE_NAME}`,
+      method: HTTP_METHOD.PATCH,
+      url: `${API.RULES}/${RULES_RELEASE_NAME}`,
       body: {
         release
       }
@@ -628,7 +674,7 @@ function upsertReleaseRequest({ rulesetName, isExisting }: {
   }
 
   return {
-    method: HTTP_METHOD.post,
+    method: HTTP_METHOD.POST,
     url: `${RULES_PROJECT_URL}/releases`,
     body: release
   };
@@ -637,7 +683,7 @@ function upsertReleaseRequest({ rulesetName, isExisting }: {
 async function readReleasedRules() {
   const release = await findResource({
     request: rest(),
-    url: `${API.rules}/${RULES_RELEASE_NAME}`,
+    url: `${API.RULES}/${RULES_RELEASE_NAME}`,
     schema: rulesReleaseSchema
   });
   if (!release) {
@@ -645,8 +691,8 @@ async function readReleasedRules() {
   }
 
   const ruleset = await rest()({
-    method: HTTP_METHOD.get,
-    url: `${API.rules}/${release.rulesetName}`,
+    method: HTTP_METHOD.GET,
+    url: `${API.RULES}/${release.rulesetName}`,
     schema: rulesetSchema
   });
   return ruleset.source?.files ?? [];
@@ -657,7 +703,7 @@ const rulesStep: Step = {
   plan() {
     const file = readRulesSource();
     return [
-      `GET ${API.rules}/${RULES_RELEASE_NAME}`,
+      `GET ${API.RULES}/${RULES_RELEASE_NAME}`,
       describeRequest(createRulesetRequest(file)),
       describeRequest(
         upsertReleaseRequest({
@@ -693,7 +739,7 @@ const rulesStep: Step = {
 const AUTH_MANUAL_STEP = `Open ${AUTH_CONSOLE_URL}, click "Get started" if shown, then Add new provider > Google > Enable > pick a support email > Save. That click creates the OAuth client Google sign-in needs, which no public API can do for a consumer project. Then rerun pnpm setup:gcp to confirm it`;
 
 const enableGoogleRequest: RequestSpec = {
-  method: HTTP_METHOD.patch,
+  method: HTTP_METHOD.PATCH,
   url: `${GOOGLE_IDP_URL}?updateMask=enabled`,
   body: {
     enabled: true
@@ -710,9 +756,13 @@ function findAuthConfig() {
 
 const googleSignInStep: Step = {
   label: "Google sign-in provider",
-  plan: () => [`GET ${AUTH_CONFIG_URL}`, `GET ${GOOGLE_IDP_URL}`, `${describeRequest(enableGoogleRequest)} (only when it exists but is off)`],
+  plan: () => [
+    `GET ${AUTH_CONFIG_URL}`,
+    `GET ${GOOGLE_IDP_URL}`,
+    `${describeRequest(enableGoogleRequest)} (only when it exists but is off)`
+  ],
   async run() {
-    if (!await findAuthConfig()) {
+    if (!(await findAuthConfig())) {
       return manual(AUTH_MANUAL_STEP);
     }
 
@@ -737,9 +787,9 @@ const googleSignInStep: Step = {
   }
 };
 
-function authorizedDomainsRequest(domains: string[]): RequestSpec {
+function authorizedDomainsRequest(domains: string[]) {
   return {
-    method: HTTP_METHOD.patch,
+    method: HTTP_METHOD.PATCH,
     url: `${AUTH_CONFIG_URL}?updateMask=authorizedDomains`,
     body: {
       authorizedDomains: domains
@@ -753,7 +803,9 @@ const authorizedDomainsStep: Step = {
   async run() {
     const config = await findAuthConfig();
     if (!config) {
-      return manual(`Firebase Auth is not set up yet, so ${AUTH_DOMAINS.join(" and ")} cannot be authorized. Do the Google sign-in step above, then rerun`);
+      return manual(
+        `Firebase Auth is not set up yet, so ${AUTH_DOMAINS.join(" and ")} cannot be authorized. Do the Google sign-in step above, then rerun`
+      );
     }
 
     const current = config.authorizedDomains ?? [];

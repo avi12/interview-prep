@@ -1,27 +1,27 @@
 import type { progressSchema, tracksSchema } from "#scripts/lib/schema.ts";
-import type { z } from "#scripts/lib/zod.ts";
+import type { zod } from "#scripts/lib/zod.ts";
 
-type Progress = z.infer<typeof progressSchema>;
+type Progress = zod.infer<typeof progressSchema>;
 
-export function isPassed({ id, progress }: {
-  id: string;
-  progress: Progress;
-}) {
+export function isPassed({ id, progress }: { id: string; progress: Progress }) {
   return Boolean(progress[id]?.passedAt);
 }
 
-export function nextUnpassedId({ order, progress }: {
-  order: readonly string[];
-  progress: Progress;
-}) {
-  return order.find(id => !isPassed({
-    id,
-    progress
-  }));
+export function nextUnpassedId({ order, progress }: { order: readonly string[]; progress: Progress }) {
+  return order.find(
+    id =>
+      !isPassed({
+        id,
+        progress
+      })
+  );
 }
 
-export function groupByTrack<Lesson extends { track: string }>({ tracks, lessons }: {
-  tracks: z.infer<typeof tracksSchema>;
+export function groupByTrack<Lesson extends { track: string }>({
+  tracks,
+  lessons
+}: {
+  tracks: zod.infer<typeof tracksSchema>;
   lessons: readonly Lesson[];
 }) {
   return tracks
@@ -32,23 +32,22 @@ export function groupByTrack<Lesson extends { track: string }>({ tracks, lessons
     .filter(group => group.lessons.length > 0);
 }
 
-export type TrackProgress = {
+export interface TrackProgress {
   total: number;
   passed: number;
   inProgress: number;
-};
+}
 
-export function progressOfLessons({ lessons, progress }: {
-  lessons: readonly { id: string }[];
-  progress: Progress;
-}): TrackProgress {
+export function progressOfLessons({ lessons, progress }: { lessons: readonly { id: string }[]; progress: Progress }) {
   let passed = 0;
   let inProgress = 0;
   for (const { id } of lessons) {
-    if (isPassed({
-      id,
-      progress
-    })) {
+    if (
+      isPassed({
+        id,
+        progress
+      })
+    ) {
       passed++;
       continue;
     }
@@ -64,8 +63,12 @@ export function progressOfLessons({ lessons, progress }: {
   };
 }
 
-export function progressByTrack({ tracks, lessons, progress }: {
-  tracks: z.infer<typeof tracksSchema>;
+export function progressByTrack({
+  tracks,
+  lessons,
+  progress
+}: {
+  tracks: zod.infer<typeof tracksSchema>;
   lessons: readonly {
     id: string;
     track: string;

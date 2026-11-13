@@ -1,3 +1,7 @@
+import { readFileSync, rmSync } from "node:fs";
+import { posix, relative, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+
 import { readTextTree, writeFileDeep } from "#scripts/lib/files.ts";
 import { RUNNER_KIT_FILE_NAME, RUNNER_LESSONS_DIR_NAME } from "#scripts/lib/layout.ts";
 import type { Lesson } from "#scripts/lib/lessons.ts";
@@ -11,10 +15,7 @@ import {
   type RunnerLesson,
   runnerLessonPath
 } from "#scripts/lib/runner-bundle.ts";
-import { z } from "#scripts/lib/zod.ts";
-import { readFileSync, rmSync } from "node:fs";
-import { posix, relative, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { zod } from "#scripts/lib/zod.ts";
 
 const BROWSER_CONDITION = "browser";
 const DEFAULT_CONDITION = "default";
@@ -30,14 +31,14 @@ const RELATIVE_PREFIX = ".";
 const RM_MAX_RETRIES = 5;
 const RM_RETRY_DELAY_MS = 100;
 
-const importTargetSchema = z.union([z.string(), z.record(z.string(), z.string())]);
-const packageJsonSchema = z.object({ imports: z.record(z.string(), importTargetSchema) });
-const vitestConfigSchema = z.object({
-  default: z.object({
-    test: z.object({
-      setupFiles: z.array(z.string()),
-      testTimeout: z.number(),
-      hookTimeout: z.number()
+const importTargetSchema = zod.union([zod.string(), zod.record(zod.string(), zod.string())]);
+const packageJsonSchema = zod.object({ imports: zod.record(zod.string(), importTargetSchema) });
+const vitestConfigSchema = zod.object({
+  default: zod.object({
+    test: zod.object({
+      setupFiles: zod.array(zod.string()),
+      testTimeout: zod.number(),
+      hookTimeout: zod.number()
     })
   })
 });
@@ -68,7 +69,8 @@ function browserImports() {
     const browserTarget = target[BROWSER_CONDITION] ?? target[DEFAULT_CONDITION];
     importMap[key] = toRepoPath(browserTarget);
     const defaultTarget = target[DEFAULT_CONDITION];
-    if (defaultTarget && defaultTarget !== browserTarget) {
+    const isOtherDefaultTarget = defaultTarget && defaultTarget !== browserTarget;
+    if (isOtherDefaultTarget) {
       nodeOnlyFiles.add(toRepoPath(defaultTarget));
     }
   }
@@ -82,10 +84,7 @@ function specifiersOf(source: string) {
   return [...source.matchAll(STATIC_IMPORT), ...source.matchAll(DYNAMIC_IMPORT)].map(match => match[1]);
 }
 
-function importClosure({ entries, importMap }: {
-  entries: string[];
-  importMap: Record<string, string>;
-}) {
+function importClosure({ entries, importMap }: { entries: string[]; importMap: Record<string, string> }) {
   const files: LessonFiles = {};
   const externals = new Set<string>();
   const pending = [...entries];
@@ -174,25 +173,29 @@ function learnerVisibleFiles(lesson: Lesson) {
   return files;
 }
 
-function isDatabaseNeeded({ lesson, files, importMap }: {
+function isDatabaseNeeded({
+  lesson,
+  files,
+  importMap
+}: {
   lesson: Lesson;
   files: LessonFiles;
   importMap: Record<string, string>;
 }) {
   const lessonRoot = repoPathOf(lesson.dir);
-  const entries = Object.keys(files).filter(path => path.endsWith(TS_EXTENSION)).map(path => `${lessonRoot}/${path}`);
+  const entries = Object.keys(files)
+    .filter(path => path.endsWith(TS_EXTENSION))
+    .map(path => `${lessonRoot}/${path}`);
   return importClosure({
     entries,
     importMap
   }).externals.has(DATABASE_MODULE);
 }
 
-function lessonBundle({ lesson, importMap }: {
-  lesson: Lesson;
-  importMap: Record<string, string>;
-}) {
+function lessonBundle({ lesson, importMap }: { lesson: Lesson; importMap: Record<string, string> }) {
   const { lang } = lesson.meta;
-  if (!lesson.hasExercise || !isRunnableLang(lang)) {
+  const isNotRunnableExercise = !lesson.hasExercise || !isRunnableLang(lang);
+  if (isNotRunnableExercise) {
     return undefined;
   }
 

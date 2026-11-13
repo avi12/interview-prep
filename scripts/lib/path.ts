@@ -1,8 +1,8 @@
-type Orderable = {
+interface Orderable {
   id: string;
   track: string;
   roles: readonly string[];
-};
+}
 
 export const ALL_ROLES = "all";
 export const ALL_ROLES_TITLE = "All roles";
@@ -15,10 +15,7 @@ function queuesByTrack(lessons: Orderable[]) {
   return queues;
 }
 
-function buildOrder({ lessons, cycle }: {
-  lessons: Orderable[];
-  cycle: string[];
-}) {
+function buildOrder({ lessons, cycle }: { lessons: Orderable[]; cycle: string[] }) {
   const queues = queuesByTrack(lessons);
   const order: string[] = [];
   for (let isProgressing = true; isProgressing;) {
@@ -39,7 +36,11 @@ function buildOrder({ lessons, cycle }: {
   return order;
 }
 
-export function buildOrders({ lessons, cycle, roles }: {
+export function buildOrders({
+  lessons,
+  cycle,
+  roles
+}: {
   lessons: Orderable[];
   cycle: string[];
   roles: readonly string[];

@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 import {
   effectiveTrackIds,
   groupTracksByCategory,
@@ -8,7 +10,6 @@ import {
   trackIdsByRole
 } from "#scripts/lib/course-filter.ts";
 import { ALL_ROLES } from "#scripts/lib/path.ts";
-import { describe, expect, it } from "vitest";
 
 const TRACKS = [
   {
@@ -67,10 +68,7 @@ const ORDERS = {
 };
 const PASSED_AT = "2026-11-01T10:00:00.000Z";
 
-function course({ role, trackIds }: {
-  role: string;
-  trackIds: string[];
-}) {
+function course({ role, trackIds }: { role: string; trackIds: string[] }) {
   return selectCourse({
     tracks: TRACKS,
     orders: ORDERS,

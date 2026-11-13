@@ -1,28 +1,22 @@
 import { ALL_ROLES } from "#scripts/lib/path.ts";
 import type { categoriesSchema, progressSchema, tracksSchema } from "#scripts/lib/schema.ts";
 import { isPassed, nextUnpassedId } from "#scripts/lib/study.ts";
-import type { z } from "#scripts/lib/zod.ts";
+import type { zod } from "#scripts/lib/zod.ts";
 
-type Progress = z.infer<typeof progressSchema>;
-type Tracks = z.infer<typeof tracksSchema>;
-type Categories = z.infer<typeof categoriesSchema>;
+type Progress = zod.infer<typeof progressSchema>;
+type Tracks = zod.infer<typeof tracksSchema>;
+type Categories = zod.infer<typeof categoriesSchema>;
 
-type Listable = {
+interface Listable {
   id: string;
   track: string;
-};
+}
 
-function knownTrackIds({ tracks, trackIds }: {
-  tracks: Tracks;
-  trackIds: readonly string[];
-}) {
+function knownTrackIds({ tracks, trackIds }: { tracks: Tracks; trackIds: readonly string[] }) {
   return trackIds.filter(id => tracks.some(track => track.id === id));
 }
 
-export function pickedTrackIds({ tracks, picked }: {
-  tracks: Tracks;
-  picked: readonly string[];
-}) {
+export function pickedTrackIds({ tracks, picked }: { tracks: Tracks; picked: readonly string[] }) {
   const known = knownTrackIds({
     tracks,
     trackIds: picked
@@ -31,10 +25,7 @@ export function pickedTrackIds({ tracks, picked }: {
   return isEveryTrackPicked ? [] : known;
 }
 
-export function effectiveTrackIds({ tracks, trackIds }: {
-  tracks: Tracks;
-  trackIds: readonly string[];
-}) {
+export function effectiveTrackIds({ tracks, trackIds }: { tracks: Tracks; trackIds: readonly string[] }) {
   const known = knownTrackIds({
     tracks,
     trackIds
@@ -42,10 +33,7 @@ export function effectiveTrackIds({ tracks, trackIds }: {
   return known.length > 0 ? known : tracks.map(track => track.id);
 }
 
-export function groupTracksByCategory({ categories, tracks }: {
-  categories: Categories;
-  tracks: Tracks;
-}) {
+export function groupTracksByCategory({ categories, tracks }: { categories: Categories; tracks: Tracks }) {
   return categories
     .map(category => ({
       category,
@@ -54,17 +42,25 @@ export function groupTracksByCategory({ categories, tracks }: {
     .filter(group => group.tracks.length > 0);
 }
 
-export function selectCourse<Lesson extends Listable>({ tracks, orders, lessons, role, trackIds }: {
+export function selectCourse<Lesson extends Listable>({
+  tracks,
+  orders,
+  lessons,
+  role,
+  trackIds
+}: {
   tracks: Tracks;
   orders: Record<string, string[]>;
   lessons: readonly Lesson[];
   role: string;
   trackIds: readonly string[];
 }) {
-  const selectedTracks = new Set(knownTrackIds({
-    tracks,
-    trackIds
-  }));
+  const selectedTracks = new Set(
+    knownTrackIds({
+      tracks,
+      trackIds
+    })
+  );
   const trackOfLesson = new Map(lessons.map(lesson => [lesson.id, lesson.track]));
   const roleOrder = orders[role] ?? orders[ALL_ROLES] ?? [];
   const order = roleOrder.filter(id => selectedTracks.size === 0 || selectedTracks.has(trackOfLesson.get(id) ?? ""));
@@ -79,7 +75,11 @@ export function selectCourse<Lesson extends Listable>({ tracks, orders, lessons,
   };
 }
 
-export function nextLessonId({ order, progress, skippedId }: {
+export function nextLessonId({
+  order,
+  progress,
+  skippedId
+}: {
   order: readonly string[];
   progress: Progress;
   skippedId?: string;
@@ -90,17 +90,21 @@ export function nextLessonId({ order, progress, skippedId }: {
   });
 }
 
-export function passedCount({ lessons, progress }: {
-  lessons: readonly Listable[];
-  progress: Progress;
-}) {
-  return lessons.filter(lesson => isPassed({
-    id: lesson.id,
-    progress
-  })).length;
+export function passedCount({ lessons, progress }: { lessons: readonly Listable[]; progress: Progress }) {
+  function isLessonPassed(lesson: Listable) {
+    return isPassed({
+      id: lesson.id,
+      progress
+    });
+  }
+  return lessons.filter(isLessonPassed).length;
 }
 
-export function trackIdsByRole({ tracks, roles, lessons }: {
+export function trackIdsByRole({
+  tracks,
+  roles,
+  lessons
+}: {
   tracks: Tracks;
   roles: readonly { id: string }[];
   lessons: readonly (Listable & { roles: readonly string[] })[];

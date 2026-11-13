@@ -1,33 +1,33 @@
 import { scriptJson } from "#scripts/lib/html.ts";
-import { z } from "#scripts/lib/zod.ts";
+import { zod } from "#scripts/lib/zod.ts";
 
 export const PanelAction = {
-  runTests: "runTests",
-  openExercise: "openExercise",
-  resetExercise: "resetExercise",
-  markDone: "markDone",
-  nextLesson: "nextLesson",
-  openFile: "openFile",
-  viewing: "viewing"
+  RUN_TESTS: "runTests",
+  OPEN_EXERCISE: "openExercise",
+  RESET_EXERCISE: "resetExercise",
+  MARK_DONE: "markDone",
+  NEXT_LESSON: "nextLesson",
+  OPEN_FILE: "openFile",
+  VIEWING: "viewing"
 } as const;
 
 const PANEL_COMMANDS = [
-  PanelAction.runTests,
-  PanelAction.openExercise,
-  PanelAction.resetExercise,
-  PanelAction.markDone,
-  PanelAction.nextLesson
+  PanelAction.RUN_TESTS,
+  PanelAction.OPEN_EXERCISE,
+  PanelAction.RESET_EXERCISE,
+  PanelAction.MARK_DONE,
+  PanelAction.NEXT_LESSON
 ] as const;
 
-export const panelMessageSchema = z.union([
-  z.object({ action: z.enum(PANEL_COMMANDS) }),
-  z.object({
-    action: z.literal(PanelAction.openFile),
-    file: z.string()
+export const panelMessageSchema = zod.union([
+  zod.object({ action: zod.enum(PANEL_COMMANDS) }),
+  zod.object({
+    action: zod.literal(PanelAction.OPEN_FILE),
+    file: zod.string()
   }),
-  z.object({
-    action: z.literal(PanelAction.viewing),
-    section: z.string()
+  zod.object({
+    action: zod.literal(PanelAction.VIEWING),
+    section: zod.string()
   })
 ]);
 
@@ -40,8 +40,8 @@ export const SCROLL_TO_TOP_SCRIPT = `addEventListener("load", () => setTimeout((
 export const DONE_COMMAND = "done";
 
 const NAMED_NEXT_LABELS = {
-  [PanelAction.nextLesson]: "Next: ",
-  [PanelAction.markDone]: "Done - next: "
+  [PanelAction.NEXT_LESSON]: "Next: ",
+  [PanelAction.MARK_DONE]: "Done - next: "
 };
 
 export function nextLessonScript(nextName: string) {
@@ -64,7 +64,7 @@ if (typeof host !== "undefined" && host) {
     const section = card?.querySelector(".card-head")?.textContent ?? "";
     if (section === viewing) return;
     viewing = section;
-    host.postMessage({ action: ${JSON.stringify(PanelAction.viewing)}, section });
+    host.postMessage({ action: ${JSON.stringify(PanelAction.VIEWING)}, section });
   };
   addEventListener("scroll", () => requestAnimationFrame(reportViewing), { passive: true });
   reportViewing();

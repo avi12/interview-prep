@@ -1,5 +1,6 @@
-import { escapeRegex } from "#scripts/lib/regex.ts";
 import { spawn, spawnSync } from "node:child_process";
+
+import { escapeRegex } from "#scripts/lib/regex.ts";
 
 const RUN_TIMEOUT_MS = 90_000;
 

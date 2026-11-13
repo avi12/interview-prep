@@ -1,4 +1,4 @@
-import { z } from "./zod.ts";
+import { zod } from "./zod.ts";
 
 export const VOICE_PATH = "/voice/";
 export const API_KEY_PATH = "/api-key";
@@ -18,17 +18,17 @@ export const ApiKeySource = {
   NONE: "none"
 } as const;
 
-export const apiKeyResponseSchema = z.object({
-  key: z.string(),
-  source: z.enum(ApiKeySource)
+export const apiKeyResponseSchema = zod.object({
+  key: zod.string(),
+  source: zod.enum(ApiKeySource)
 });
-export type ApiKeyResponse = z.infer<typeof apiKeyResponseSchema>;
+export type ApiKeyResponse = zod.infer<typeof apiKeyResponseSchema>;
 
-export const apiKeyUpdateSchema = z.object({ key: z.string().trim().min(1) });
-export type ApiKeyUpdate = z.infer<typeof apiKeyUpdateSchema>;
+export const apiKeyUpdateSchema = zod.object({ key: zod.string().trim().min(1) });
+export type ApiKeyUpdate = zod.infer<typeof apiKeyUpdateSchema>;
 
-export const voiceSetupSchema = z.object({
-  extensionPath: z.string(),
-  buildCommand: z.string()
+export const voiceSetupSchema = zod.object({
+  extensionPath: zod.string(),
+  buildCommand: zod.string()
 });
-export type VoiceSetup = z.infer<typeof voiceSetupSchema>;
+export type VoiceSetup = zod.infer<typeof voiceSetupSchema>;

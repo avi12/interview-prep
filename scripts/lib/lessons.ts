@@ -1,14 +1,13 @@
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { basename, resolve } from "node:path";
+
+import { marked, type Token, type Tokens } from "marked";
+import { parse as parseYaml } from "yaml";
+
 import { readJsonFile } from "#scripts/lib/files.ts";
 import { KIT_DIR_NAME } from "#scripts/lib/layout.ts";
 import { buildOrders } from "#scripts/lib/path.ts";
-import {
-  CATEGORIES_FILE,
-  CURRICULUM_DIR,
-  PATH_FILE,
-  ROLES_FILE,
-  TRACKS_FILE,
-  WORK_DIR
-} from "#scripts/lib/paths.ts";
+import { CATEGORIES_FILE, CURRICULUM_DIR, PATH_FILE, ROLES_FILE, TRACKS_FILE, WORK_DIR } from "#scripts/lib/paths.ts";
 import {
   categoriesSchema,
   lessonMetaSchema,
@@ -17,11 +16,7 @@ import {
   rolesSchema,
   tracksSchema
 } from "#scripts/lib/schema.ts";
-import { z } from "#scripts/lib/zod.ts";
-import { marked, type Token, type Tokens } from "marked";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { basename, resolve } from "node:path";
-import { parse as parseYaml } from "yaml";
+import { zod } from "#scripts/lib/zod.ts";
 
 const FRONTMATTER_PATTERN = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
 const CARD_HEADING_DEPTH = 2;
@@ -36,7 +31,7 @@ export function readStudyOrders(lessons: ReturnType<typeof readLessons>) {
     })),
     cycle: readJsonFile({
       path: PATH_FILE,
-      schema: z.array(z.string())
+      schema: zod.array(zod.string())
     }),
     roles: readRoles().map(({ id }) => id)
   });
@@ -64,7 +59,9 @@ export function readTracks() {
   const knownCategories = new Set(readCategories().map(({ id }) => id));
   const strayTrack = tracks.find(track => !knownCategories.has(track.category));
   if (strayTrack) {
-    throw new Error(`track "${strayTrack.id}" names category "${strayTrack.category}", which is not in curriculum/categories.json`);
+    throw new Error(
+      `track "${strayTrack.id}" names category "${strayTrack.category}", which is not in curriculum/categories.json`
+    );
   }
 
   return tracks;
@@ -81,10 +78,7 @@ function listDirectories(parent: string) {
     .filter(isDirectory);
 }
 
-function splitFrontmatter({ source, id }: {
-  source: string;
-  id: string;
-}) {
+function splitFrontmatter({ source, id }: { source: string; id: string }) {
   const match = FRONTMATTER_PATTERN.exec(source);
   if (!match) {
     throw new Error(`${id}: lesson.md has no frontmatter`);
@@ -103,27 +97,27 @@ function fenceRest(token: Tokens.Code) {
   return (token.lang ?? "").split(/\s+/).slice(1).join(" ");
 }
 
-export type Figure = {
+export interface Figure {
   caption: string;
   svg: string;
-};
+}
 export type Block =
   | {
-    kind: "tokens";
-    tokens: Token[];
-  }
+      kind: "tokens";
+      tokens: Token[];
+    }
   | {
-    kind: "figure";
-    figure: Figure;
-  }
+      kind: "figure";
+      figure: Figure;
+    }
   | {
-    kind: "quiz";
-    quiz: Quiz;
-  }
+      kind: "quiz";
+      quiz: Quiz;
+    }
   | {
-    kind: "hint";
-    text: string;
-  };
+      kind: "hint";
+      text: string;
+    };
 
 function emptyCard(title: string) {
   const tokens: Token[] = [];
@@ -144,10 +138,7 @@ function emptyCard(title: string) {
 
 export type Card = ReturnType<typeof emptyCard>;
 
-function absorbSpecialFence({ card, token }: {
-  card: Card;
-  token: Tokens.Code;
-}) {
+function absorbSpecialFence({ card, token }: { card: Card; token: Tokens.Code }) {
   const name = fenceName(token);
   if (name === "narrate") {
     card.narrate = token.text.trim();
@@ -183,10 +174,7 @@ function absorbSpecialFence({ card, token }: {
   }
 }
 
-function pushToken({ card, token }: {
-  card: Card;
-  token: Token;
-}) {
+function pushToken({ card, token }: { card: Card; token: Token }) {
   card.tokens.push(token);
   const last = card.blocks.at(-1);
   if (last?.kind === "tokens") {
@@ -237,17 +225,11 @@ function parseCards(body: string) {
   return cards;
 }
 
-function lessonIdOf({ dir, track }: {
-  dir: string;
-  track: string;
-}) {
+function lessonIdOf({ dir, track }: { dir: string; track: string }) {
   return `${track}/${basename(dir)}`;
 }
 
-function readLesson({ dir, track }: {
-  dir: string;
-  track: string;
-}) {
+function readLesson({ dir, track }: { dir: string; track: string }) {
   const slug = basename(dir);
   const id = lessonIdOf({
     dir,
@@ -271,10 +253,7 @@ function readLesson({ dir, track }: {
   };
 }
 
-function readLessonEntry({ dir, track }: {
-  dir: string;
-  track: string;
-}) {
+function readLessonEntry({ dir, track }: { dir: string; track: string }) {
   const id = lessonIdOf({
     dir,
     track
@@ -323,16 +302,19 @@ export function readLessonEntries() {
 export function readLessons({ isStrict = true }: { isStrict?: boolean } = {}) {
   const entries = readLessonEntries();
   const broken = entries.find(entry => entry.error);
-  if (broken && isStrict) {
+  const isStrictFailure = broken && isStrict;
+  if (isStrictFailure) {
     throw new Error(`${broken.id}: ${broken.error}`);
   }
 
   const trackOrder = new Map(readTracks().map(({ id }, i) => [id, i]));
   return entries
     .flatMap(entry => (entry.lesson ? [entry.lesson] : []))
-    .sort((left, right) =>
-      (trackOrder.get(left.track) ?? Infinity) - (trackOrder.get(right.track) ?? Infinity) ||
-      left.slug.localeCompare(right.slug));
+    .sort(
+      (left, right) =>
+        (trackOrder.get(left.track) ?? Infinity) - (trackOrder.get(right.track) ?? Infinity) ||
+        left.slug.localeCompare(right.slug)
+    );
 }
 
 export type Lesson = ReturnType<typeof readLessons>[number];

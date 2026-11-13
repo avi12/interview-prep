@@ -7,7 +7,7 @@ export const GCP = {
   runtimeServiceAccountName: "interview-prep-web",
   artifactRepository: "interview-prep",
   buildServiceAccountName: "interview-prep-web-build"
-} as const;
+};
 
 export const WEB_ORIGIN = `https://${GCP.hostingSiteId}.web.app`;
 export const FIREBASE_AUTH_ORIGIN = `https://${GCP.projectId}.firebaseapp.com`;

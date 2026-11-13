@@ -9,7 +9,9 @@ export const EXTENSIONS_PAGE = "chrome://extensions";
 const WEB_VITE_DEV_ORIGIN = "http://localhost:5173";
 const WEB_SERVER_DEV_ORIGIN = "http://localhost:8090";
 
-export const GEMINI_LIVE_PAGE_MATCHES = [WEB_ORIGIN, WEB_VITE_DEV_ORIGIN, WEB_SERVER_DEV_ORIGIN].map(origin => `${origin}/*`);
+export const GEMINI_LIVE_PAGE_MATCHES = [WEB_ORIGIN, WEB_VITE_DEV_ORIGIN, WEB_SERVER_DEV_ORIGIN].map(
+  origin => `${origin}/*`
+);
 
 export const GeminiLiveAsset = {
   ZIP: "interview-prep-gemini-live.zip",
@@ -37,7 +39,9 @@ export const SIDELOAD_STEPS: GuideStep[] = [
     copy: EXTENSIONS_PAGE
   },
   { text: "Turn on Developer mode at the top right." },
-  { text: "Drag the downloaded file from your Downloads bar or folder and drop it onto that page, then confirm Add extension." },
+  {
+    text: "Drag the downloaded file from your Downloads bar or folder and drop it onto that page, then confirm Add extension."
+  },
   { text: "Pin it: open the puzzle piece menu next to the address bar and click the pin beside Interview Prep." },
   { text: "Reload the Interview Prep page." }
 ];

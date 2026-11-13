@@ -1,13 +1,3 @@
-import { hasFlag, mustRunCommand, runCommand, toCommandLine } from "#scripts/lib/gcloud.ts";
-import {
-  GEMINI_LIVE_NAME,
-  GeminiLiveAsset,
-  geminiLiveDownloadUrl,
-  geminiLiveReleaseNotes,
-  geminiLiveTag
-} from "#scripts/lib/gemini-live-extension.ts";
-import { ROOT } from "#scripts/lib/paths.ts";
-import { z } from "#scripts/lib/zod.ts";
 import { createPublicKey, generateKeyPairSync } from "node:crypto";
 import {
   copyFileSync,
@@ -22,6 +12,17 @@ import {
 } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+
+import { hasFlag, mustRunCommand, runCommand, toCommandLine } from "#scripts/lib/gcloud.ts";
+import {
+  GEMINI_LIVE_NAME,
+  GeminiLiveAsset,
+  geminiLiveDownloadUrl,
+  geminiLiveReleaseNotes,
+  geminiLiveTag
+} from "#scripts/lib/gemini-live-extension.ts";
+import { ROOT } from "#scripts/lib/paths.ts";
+import { zod } from "#scripts/lib/zod.ts";
 
 const isDryRun = hasFlag("dry-run");
 
@@ -46,9 +47,9 @@ const CHROME_CANDIDATES = [
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 ];
 
-const manifestSchema = z.object({
-  version: z.string(),
-  key: z.string().optional()
+const manifestSchema = zod.object({
+  version: zod.string(),
+  key: zod.string().optional()
 });
 
 function readManifest() {
@@ -97,15 +98,18 @@ function ensureSigningKey() {
 }
 
 function publicKeyOf(keyPath: string) {
-  return createPublicKey(readFileSync(keyPath, "utf8")).export({
-    type: "spki",
-    format: "der"
-  }).toString("base64");
+  return createPublicKey(readFileSync(keyPath, "utf8"))
+    .export({
+      type: "spki",
+      format: "der"
+    })
+    .toString("base64");
 }
 
 function findChrome() {
   for (const candidate of CHROME_CANDIDATES) {
-    if (candidate && existsSync(candidate)) {
+    const isExistingCandidate = candidate && existsSync(candidate);
+    if (isExistingCandidate) {
       return candidate;
     }
   }
@@ -129,16 +133,13 @@ function packCrx(keyPath: string) {
     recursive: true,
     force: true
   });
-
-  if (!packed.isSuccess || !existsSync(PACKED_CRX)) {
+  const isPackFailed = !packed.isSuccess || !existsSync(PACKED_CRX);
+  if (isPackFailed) {
     throw new Error(`Chrome wrote no .crx at ${PACKED_CRX}: ${packed.stderr.trim()}`);
   }
 }
 
-function warnOnIdMismatch({ keyPath, manifestKey }: {
-  keyPath: string;
-  manifestKey: string | undefined;
-}) {
+function warnOnIdMismatch({ keyPath, manifestKey }: { keyPath: string; manifestKey: string | undefined }) {
   if (publicKeyOf(keyPath) === manifestKey) {
     console.log("The .crx and the zip share one extension id.");
     return;
@@ -149,10 +150,7 @@ function warnOnIdMismatch({ keyPath, manifestKey }: {
   );
 }
 
-function publish({ version, assets }: {
-  version: string;
-  assets: string[];
-}) {
+function publish({ version, assets }: { version: string; assets: string[] }) {
   const tag = geminiLiveTag(version);
   writeFileSync(NOTES_FILE, geminiLiveReleaseNotes());
   const isExisting = runCommand({
@@ -161,19 +159,31 @@ function publish({ version, assets }: {
   }).isSuccess;
   const commands = isExisting
     ? [
-      {
-        command: "gh",
-        args: ["release", "upload", tag, ...assets, "--clobber"]
-      },
-      {
-        command: "gh",
-        args: ["release", "edit", tag, "--notes-file", NOTES_FILE, "--latest"]
-      }
-    ]
-    : [{
-      command: "gh",
-      args: ["release", "create", tag, ...assets, "--title", `${GEMINI_LIVE_NAME} ${version}`, "--notes-file", NOTES_FILE, "--latest"]
-    }];
+        {
+          command: "gh",
+          args: ["release", "upload", tag, ...assets, "--clobber"]
+        },
+        {
+          command: "gh",
+          args: ["release", "edit", tag, "--notes-file", NOTES_FILE, "--latest"]
+        }
+      ]
+    : [
+        {
+          command: "gh",
+          args: [
+            "release",
+            "create",
+            tag,
+            ...assets,
+            "--title",
+            `${GEMINI_LIVE_NAME} ${version}`,
+            "--notes-file",
+            NOTES_FILE,
+            "--latest"
+          ]
+        }
+      ];
   for (const command of commands) {
     if (isDryRun) {
       console.log(`  (dry run) $ ${toCommandLine(command)}`);

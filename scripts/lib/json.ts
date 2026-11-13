@@ -1,4 +1,4 @@
-import type { z } from "#scripts/lib/zod.ts";
+import type { zod } from "#scripts/lib/zod.ts";
 
 function parsedOrUndefined(text: string) {
   try {
@@ -9,11 +9,15 @@ function parsedOrUndefined(text: string) {
   }
 }
 
-export function parseJson<Schema extends z.ZodType>({ text, schema, fallback }: {
+export function parseJson<Schema extends zod.ZodType>({
+  text,
+  schema,
+  fallback
+}: {
   text: string | null;
   schema: Schema;
-  fallback: z.output<Schema>;
-}): z.output<Schema> {
+  fallback: zod.output<Schema>;
+}) {
   if (text === null) {
     return fallback;
   }
@@ -22,10 +26,7 @@ export function parseJson<Schema extends z.ZodType>({ text, schema, fallback }: 
   return parsed.success ? parsed.data : fallback;
 }
 
-export function parseRecords<T>({ text, schema }: {
-  text: string;
-  schema: z.ZodType<T>;
-}) {
+export function parseRecords<T>({ text, schema }: { text: string; schema: zod.ZodType<T> }) {
   const records: T[] = [];
   for (const line of text.split("\n")) {
     if (line) {

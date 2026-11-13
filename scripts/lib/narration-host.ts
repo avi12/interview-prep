@@ -1,56 +1,56 @@
-import { z } from "#scripts/lib/zod.ts";
+import { zod } from "#scripts/lib/zod.ts";
 
 export const NarrationAction = {
-  voices: "narrationVoices",
-  voice: "narrationVoice",
-  setVoice: "narrationSetVoice",
-  record: "narrationRecord"
+  VOICES: "narrationVoices",
+  VOICE: "narrationVoice",
+  SET_VOICE: "narrationSetVoice",
+  RECORD: "narrationRecord"
 } as const;
 
-export const voiceSchema = z.object({
-  ShortName: z.string(),
-  FriendlyName: z.string(),
-  Locale: z.string(),
-  LocaleName: z.string(),
-  Gender: z.string()
+export const voiceSchema = zod.object({
+  ShortName: zod.string(),
+  FriendlyName: zod.string(),
+  Locale: zod.string(),
+  LocaleName: zod.string(),
+  Gender: zod.string()
 });
 
-export const recordingSchema = z.object({
-  audio: z.string().startsWith("data:"),
-  duration: z.number(),
-  words: z.array(z.tuple([z.number(), z.number(), z.number()]))
+export const recordingSchema = zod.object({
+  audio: zod.string().startsWith("data:"),
+  duration: zod.number(),
+  words: zod.array(zod.tuple([zod.number(), zod.number(), zod.number()]))
 });
 
-const requestIdSchema = z.number().int();
+const requestIdSchema = zod.number().int();
 
-export const narrationRequestSchema = z.union([
-  z.object({
-    action: z.enum([NarrationAction.voices, NarrationAction.voice]),
+export const narrationRequestSchema = zod.union([
+  zod.object({
+    action: zod.enum([NarrationAction.VOICES, NarrationAction.VOICE]),
     request: requestIdSchema
   }),
-  z.object({
-    action: z.literal(NarrationAction.setVoice),
+  zod.object({
+    action: zod.literal(NarrationAction.SET_VOICE),
     request: requestIdSchema,
-    voice: z.string().min(1)
+    voice: zod.string().min(1)
   }),
-  z.object({
-    action: z.literal(NarrationAction.record),
+  zod.object({
+    action: zod.literal(NarrationAction.RECORD),
     request: requestIdSchema,
-    text: z.string().min(1),
-    voice: z.string().min(1)
+    text: zod.string().min(1),
+    voice: zod.string().min(1)
   })
 ]);
-export type NarrationRequest = z.infer<typeof narrationRequestSchema>;
+export type NarrationRequest = zod.infer<typeof narrationRequestSchema>;
 
 export type NarrationReply =
   | {
-    narrationReply: number;
-    value: unknown;
-  }
+      narrationReply: number;
+      value: unknown;
+    }
   | {
-    narrationReply: number;
-    error: string;
-  };
+      narrationReply: number;
+      error: string;
+    };
 
 export const NARRATION_HOST_SCRIPT = `
 if (typeof host !== "undefined" && host) {
@@ -70,9 +70,9 @@ if (typeof host !== "undefined" && host) {
     host.postMessage({ action, request: lastRequest, ...fields });
   });
   globalThis.narrationHost = {
-    listVoices: () => ask(${JSON.stringify(NarrationAction.voices)}, {}),
-    getVoice: () => ask(${JSON.stringify(NarrationAction.voice)}, {}),
-    setVoice: voice => ask(${JSON.stringify(NarrationAction.setVoice)}, { voice }),
-    record: ({ text, voice }) => ask(${JSON.stringify(NarrationAction.record)}, { text, voice })
+    listVoices: () => ask(${JSON.stringify(NarrationAction.VOICES)}, {}),
+    getVoice: () => ask(${JSON.stringify(NarrationAction.VOICE)}, {}),
+    setVoice: voice => ask(${JSON.stringify(NarrationAction.SET_VOICE)}, { voice }),
+    record: ({ text, voice }) => ask(${JSON.stringify(NarrationAction.RECORD)}, { text, voice })
   };
 }`;

@@ -1,3 +1,8 @@
+import { spawn, spawnSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
+import { readdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { writeFileDeep } from "#scripts/lib/files.ts";
 import { buildNarrationHost } from "#scripts/lib/narrate-tool.ts";
 import { ROOT, SERVER_DATA_DIR, TOKEN_FILE } from "#scripts/lib/paths.ts";
@@ -5,10 +10,6 @@ import { killMatching, killTree } from "#scripts/lib/process.ts";
 import { SERVER_DEFAULT_PORT, SERVER_HOST, serverOrigin } from "#scripts/lib/server.ts";
 import { readToken, trainerUrl } from "#scripts/lib/trainer-url.ts";
 import { VOICE_BUILD_COMMAND } from "#scripts/lib/voice.ts";
-import { spawn, spawnSync } from "node:child_process";
-import { randomBytes } from "node:crypto";
-import { readdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
-import { resolve } from "node:path";
 
 const PORT = Number(process.env.PORT ?? SERVER_DEFAULT_PORT);
 const HOST = SERVER_HOST;
@@ -25,11 +26,16 @@ const SERVER_ONLY_SETTINGS = {
   "update.showReleaseNotes": false
 };
 const SERVER_PROCESS_NEEDLES = ["--server-data-dir", SERVER_DATA_DIR];
-const isOpeningBrowser = !process.argv.includes("--no-open");
-const isDev = process.argv.includes("--dev");
+const IS_OPENING_BROWSER = !process.argv.includes("--no-open");
+const IS_DEV = process.argv.includes("--dev");
 const EXTENSION_FOLDER_PATTERN = /^avi12\.interview-prep-/;
 
-function runStep({ label, command, args, cwd = ROOT }: {
+function runStep({
+  label,
+  command,
+  args,
+  cwd = ROOT
+}: {
   label: string;
   command: string;
   args: string[];
@@ -56,10 +62,14 @@ function writeMachineSettings() {
   const workspaceSettings = JSON.parse(readFileSync(WORKSPACE_SETTINGS_FILE, "utf8"));
   writeFileDeep({
     path: MACHINE_SETTINGS_FILE,
-    content: JSON.stringify({
-      ...workspaceSettings,
-      ...SERVER_ONLY_SETTINGS
-    }, null, 2)
+    content: JSON.stringify(
+      {
+        ...workspaceSettings,
+        ...SERVER_ONLY_SETTINGS
+      },
+      null,
+      2
+    )
   });
 }
 
@@ -71,7 +81,7 @@ if (!buildNarrationHost()) {
   console.warn("The narration tool did not build, so lessons play only their recorded voice");
 }
 
-const isBuilt =
+const IS_BUILT =
   runStep({
     label: "build lessons",
     command: "node",
@@ -83,17 +93,19 @@ const isBuilt =
     args: ["package"],
     cwd: EXTENSION_DIR
   });
-if (!isBuilt) {
+if (!IS_BUILT) {
   process.exit(1);
 }
 
-const isVoicePageBuilt = runStep({
+const IS_VOICE_PAGE_BUILT = runStep({
   label: "build voice tutor page",
   command: VOICE_BUILD_COMMAND,
   args: []
 });
-if (!isVoicePageBuilt) {
-  console.warn(`The voice tutor page did not build, so its link shows a "run the build" note. Retry with: ${VOICE_BUILD_COMMAND}`);
+if (!IS_VOICE_PAGE_BUILT) {
+  console.warn(
+    `The voice tutor page did not build, so its link shows a "run the build" note. Retry with: ${VOICE_BUILD_COMMAND}`
+  );
 }
 
 installExtension(`"${VSIX_PATH}"`);
@@ -113,7 +125,7 @@ function linkExtensionToSource() {
   }
 }
 
-if (isDev) {
+if (IS_DEV) {
   linkExtensionToSource();
 }
 
@@ -146,12 +158,17 @@ const server = spawn(
   "code",
   [
     "serve-web",
-    "--host", HOST,
-    "--port", String(PORT),
-    "--connection-token", token,
+    "--host",
+    HOST,
+    "--port",
+    String(PORT),
+    "--connection-token",
+    token,
     "--accept-server-license-terms",
-    "--server-data-dir", `"${SERVER_DATA_DIR}"`,
-    "--default-folder", `"${ROOT}"`,
+    "--server-data-dir",
+    `"${SERVER_DATA_DIR}"`,
+    "--default-folder",
+    `"${ROOT}"`,
     "--disable-telemetry"
   ],
   {
@@ -169,15 +186,16 @@ function stopServer() {
 let isAnnounced = false;
 server.stdout.on("data", chunk => {
   const text = String(chunk);
-  if (!text.includes(READY_MARKER) || isAnnounced) {
+  const isNotReady = !text.includes(READY_MARKER) || isAnnounced;
+  if (isNotReady) {
     return;
   }
 
   isAnnounced = true;
   console.log(`\nInterview Prep is running:\n  ${url}\n\nCtrl+C stops it`);
 
-  if (isOpeningBrowser) {
-    spawn("cmd", ["/c", "start", "\"\"", url.replaceAll("&", "^&")], {
+  if (IS_OPENING_BROWSER) {
+    spawn("cmd", ["/c", "start", '""', url.replaceAll("&", "^&")], {
       stdio: "ignore",
       detached: true
     }).unref();

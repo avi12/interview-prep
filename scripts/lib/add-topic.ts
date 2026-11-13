@@ -16,7 +16,7 @@ const REQUIREMENTS_TEXT = REQUIREMENTS.join(" ");
 const ADD_TOPIC_PROMPTS = {
   claudeCode: `/extend-curriculum add a new track about ${TOPIC_PLACEHOLDER}, with 3 to 5 lessons, in the category that fits best. ${REQUIREMENTS_TEXT}`,
   anyAgent: `Follow ${EXTEND_SKILL_PATH} to add a new track about ${TOPIC_PLACEHOLDER}, with 3 to 5 lessons, in the category from curriculum/categories.json that fits best. ${REQUIREMENTS_TEXT}`
-} as const;
+};
 
 export const ADD_TOPIC_STEPS = [
   `Fork the course on GitHub, then clone your fork (${REPOSITORY_URL})`,
@@ -28,9 +28,6 @@ export const ADD_TOPIC_STEPS = [
   "Run pnpm start to study the new topic while the pull request is reviewed"
 ] as const;
 
-export function addTopicPrompt({ agent, topic }: {
-  agent: keyof typeof ADD_TOPIC_PROMPTS;
-  topic: string;
-}) {
+export function addTopicPrompt({ agent, topic }: { agent: keyof typeof ADD_TOPIC_PROMPTS; topic: string }) {
   return ADD_TOPIC_PROMPTS[agent].replace(TOPIC_PLACEHOLDER, topic.trim() || TOPIC_PLACEHOLDER);
 }

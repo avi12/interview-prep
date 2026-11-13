@@ -1,11 +1,7 @@
-import {
-  findGcpMismatches,
-  type FirebaseJson,
-  readFirebaseJson,
-  toServingConfig
-} from "#scripts/lib/firebase-rest-hosting.ts";
-import { GCP } from "#scripts/lib/gcp.ts";
 import { describe, expect, it } from "vitest";
+
+import { findGcpMismatches, readFirebaseJson, toServingConfig } from "#scripts/lib/firebase-rest-hosting.ts";
+import { GCP } from "#scripts/lib/gcp.ts";
 
 const TARGET = {
   hostingSiteId: "site",
@@ -13,21 +9,27 @@ const TARGET = {
   region: "europe-west1"
 };
 
-function configWith({ site = TARGET.hostingSiteId, serviceId = TARGET.runService, region = TARGET.region }: {
+function configWith({
+  site = TARGET.hostingSiteId,
+  serviceId = TARGET.runService,
+  region = TARGET.region
+}: {
   site?: string;
   serviceId?: string;
   region?: string;
-}): FirebaseJson {
+}) {
   return {
     hosting: {
       site,
-      rewrites: [{
-        source: "**",
-        run: {
-          serviceId,
-          region
+      rewrites: [
+        {
+          source: "**",
+          run: {
+            serviceId,
+            region
+          }
         }
-      }]
+      ]
     },
     firestore: {
       rules: "firestore.rules"
@@ -38,13 +40,15 @@ function configWith({ site = TARGET.hostingSiteId, serviceId = TARGET.runService
 describe("toServingConfig", () => {
   it("maps firebase.json rewrites to the Hosting REST shape", () => {
     expect(toServingConfig(configWith({}).hosting)).toEqual({
-      rewrites: [{
-        glob: "**",
-        run: {
-          serviceId: TARGET.runService,
-          region: TARGET.region
+      rewrites: [
+        {
+          glob: "**",
+          run: {
+            serviceId: TARGET.runService,
+            region: TARGET.region
+          }
         }
-      }]
+      ]
     });
   });
 });

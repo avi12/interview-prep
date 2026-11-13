@@ -7,15 +7,15 @@ import {
   WORK_DIR_NAME
 } from "#scripts/lib/layout.ts";
 import { Lang } from "#scripts/lib/schema.ts";
-import { z } from "#scripts/lib/zod.ts";
+import { zod } from "#scripts/lib/zod.ts";
 
 export const RunnableLang = {
-  ts: Lang.ts,
-  sql: Lang.sql,
-  py: Lang.py
+  ts: Lang.TS,
+  sql: Lang.SQL,
+  py: Lang.PY
 } as const;
 
-export type RunnableLangName = typeof RunnableLang[keyof typeof RunnableLang];
+export type RunnableLangName = (typeof RunnableLang)[keyof typeof RunnableLang];
 
 export const RunnerDir = {
   curriculum: CURRICULUM_DIR_NAME,
@@ -25,17 +25,17 @@ export const RunnerDir = {
 } as const;
 
 export const EnginePath = {
-  esbuildWasm: `${RUNNER_ENGINES_DIR_NAME}/esbuild/esbuild.wasm`,
-  esbuildModule: `${RUNNER_ENGINES_DIR_NAME}/esbuild/browser.js`,
-  pgliteDir: `${RUNNER_ENGINES_DIR_NAME}/pglite`,
-  pyodideDir: `${RUNNER_ENGINES_DIR_NAME}/pyodide`
+  ESBUILD_WASM: `${RUNNER_ENGINES_DIR_NAME}/esbuild/esbuild.wasm`,
+  ESBUILD_MODULE: `${RUNNER_ENGINES_DIR_NAME}/esbuild/browser.js`,
+  PGLITE_DIR: `${RUNNER_ENGINES_DIR_NAME}/pglite`,
+  PYODIDE_DIR: `${RUNNER_ENGINES_DIR_NAME}/pyodide`
 } as const;
 
 export const PgliteFile = {
-  module: "index.js",
-  wasm: "pglite.wasm",
-  initdbWasm: "initdb.wasm",
-  fsBundle: "pglite.data"
+  MODULE: "index.js",
+  WASM: "pglite.wasm",
+  INITDB_WASM: "initdb.wasm",
+  FS_BUNDLE: "pglite.data"
 } as const;
 
 const IMPORT_PREFIX_END = "/";
@@ -43,40 +43,38 @@ const IMPORT_PREFIX_END = "/";
 export const PYODIDE_MODULE_FILE = "pyodide.mjs";
 export const PYODIDE_BASE_PACKAGES = ["pytest"] as const;
 
-const filesSchema = z.record(z.string(), z.string());
+const filesSchema = zod.record(zod.string(), zod.string());
 
-export const runnerLessonSchema = z.object({
-  id: z.string(),
-  lang: z.enum(RunnableLang),
-  timeoutSeconds: z.number().int().positive(),
-  isDatabaseNeeded: z.boolean(),
+export const runnerLessonSchema = zod.object({
+  id: zod.string(),
+  lang: zod.enum(RunnableLang),
+  timeoutSeconds: zod.number().int().positive(),
+  isDatabaseNeeded: zod.boolean(),
   files: filesSchema
 });
 
-export const runnerKitSchema = z.object({
-  importMap: z.record(z.string(), z.string()),
-  setupFiles: z.array(z.string()),
-  testTimeoutMs: z.number(),
-  hookTimeoutMs: z.number(),
+export const runnerKitSchema = zod.object({
+  importMap: zod.record(zod.string(), zod.string()),
+  setupFiles: zod.array(zod.string()),
+  testTimeoutMs: zod.number(),
+  hookTimeoutMs: zod.number(),
   tsFiles: filesSchema,
   pyFiles: filesSchema
 });
 
-export type RunnerLesson = z.infer<typeof runnerLessonSchema>;
-export type RunnerKit = z.infer<typeof runnerKitSchema>;
-export type LessonFiles = z.infer<typeof filesSchema>;
+export type RunnerLesson = zod.infer<typeof runnerLessonSchema>;
+export type RunnerKit = zod.infer<typeof runnerKitSchema>;
+export type LessonFiles = zod.infer<typeof filesSchema>;
 
-export function mapImport({ specifier, importMap }: {
-  specifier: string;
-  importMap: Record<string, string>;
-}) {
+export function mapImport({ specifier, importMap }: { specifier: string; importMap: Record<string, string> }) {
   const exact = importMap[specifier];
   if (exact) {
     return exact;
   }
 
   for (const [prefix, target] of Object.entries(importMap)) {
-    if (prefix.endsWith(IMPORT_PREFIX_END) && specifier.startsWith(prefix)) {
+    const isPrefixEndsWithImportPrefixEnd = prefix.endsWith(IMPORT_PREFIX_END) && specifier.startsWith(prefix);
+    if (isPrefixEndsWithImportPrefixEnd) {
       return `${target}${specifier.slice(prefix.length)}`;
     }
   }

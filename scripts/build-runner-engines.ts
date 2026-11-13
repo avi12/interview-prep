@@ -1,7 +1,3 @@
-import { readJsonFile } from "#scripts/lib/files.ts";
-import { ROOT, RUNNER_DIST_DIR, WEB_APP_DIR } from "#scripts/lib/paths.ts";
-import { EnginePath, PgliteFile, PYODIDE_BASE_PACKAGES, PYODIDE_MODULE_FILE } from "#scripts/lib/runner-bundle.ts";
-import { z } from "#scripts/lib/zod.ts";
 import {
   copyFileSync,
   existsSync,
@@ -15,7 +11,18 @@ import {
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 
-const PYODIDE_CORE_FILES = ["pyodide.asm.mjs", "pyodide.asm.wasm", "python_stdlib.zip", "pyodide-lock.json", PYODIDE_MODULE_FILE];
+import { readJsonFile } from "#scripts/lib/files.ts";
+import { ROOT, RUNNER_DIST_DIR, WEB_APP_DIR } from "#scripts/lib/paths.ts";
+import { EnginePath, PgliteFile, PYODIDE_BASE_PACKAGES, PYODIDE_MODULE_FILE } from "#scripts/lib/runner-bundle.ts";
+import { zod } from "#scripts/lib/zod.ts";
+
+const PYODIDE_CORE_FILES = [
+  "pyodide.asm.mjs",
+  "pyodide.asm.wasm",
+  "python_stdlib.zip",
+  "pyodide-lock.json",
+  PYODIDE_MODULE_FILE
+];
 const PYODIDE_LOCK_FILE = "pyodide-lock.json";
 const PGLITE_FILE = /\.(js|wasm|data)$/;
 const ESBUILD_BROWSER_MODULE = "esm/browser.min.js";
@@ -27,15 +34,16 @@ const CANONICAL_SEPARATOR = "-";
 const BYTES_PER_MB = 1024 * 1024;
 const SIZE_DIGITS = 1;
 
-const lockSchema = z.object({
-  packages: z.record(
-    z.string(), z.object({
-      file_name: z.string(),
-      depends: z.array(z.string())
+const lockSchema = zod.object({
+  packages: zod.record(
+    zod.string(),
+    zod.object({
+      file_name: zod.string(),
+      depends: zod.array(zod.string())
     })
   )
 });
-const versionSchema = z.object({ version: z.string() });
+const versionSchema = zod.object({ version: zod.string() });
 
 const requireFromWeb = createRequire(resolve(WEB_APP_DIR, "package.json"));
 
@@ -43,10 +51,7 @@ function packageDir(name: string) {
   return dirname(realpathSync(requireFromWeb.resolve(`${name}/package.json`)));
 }
 
-function copyInto({ from, to }: {
-  from: string;
-  to: string;
-}) {
+function copyInto({ from, to }: { from: string; to: string }) {
   mkdirSync(dirname(to), { recursive: true });
   copyFileSync(from, to);
 }
@@ -66,10 +71,7 @@ function requirementNames() {
   return names;
 }
 
-function wheelClosure({ roots, packages }: {
-  roots: string[];
-  packages: z.infer<typeof lockSchema>["packages"];
-}) {
+function wheelClosure({ roots, packages }: { roots: string[]; packages: zod.infer<typeof lockSchema>["packages"] }) {
   const seen = new Set<string>();
   const pending = roots.map(canonicalName);
   for (let name = pending.pop(); name !== undefined; name = pending.pop()) {
@@ -88,10 +90,7 @@ function wheelClosure({ roots, packages }: {
   return [...seen].map(name => packages[name].file_name);
 }
 
-async function download({ url, to }: {
-  url: string;
-  to: string;
-}) {
+async function download({ url, to }: { url: string; to: string }) {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Download failed for ${url}: ${response.status}`);
@@ -104,11 +103,11 @@ function copyEsbuild() {
   const dir = packageDir("esbuild-wasm");
   copyInto({
     from: resolve(dir, ESBUILD_WASM),
-    to: resolve(RUNNER_DIST_DIR, EnginePath.esbuildWasm)
+    to: resolve(RUNNER_DIST_DIR, EnginePath.ESBUILD_WASM)
   });
   copyInto({
     from: resolve(dir, ESBUILD_BROWSER_MODULE),
-    to: resolve(RUNNER_DIST_DIR, EnginePath.esbuildModule)
+    to: resolve(RUNNER_DIST_DIR, EnginePath.ESBUILD_MODULE)
   });
 }
 
@@ -118,12 +117,12 @@ function copyPglite() {
     if (PGLITE_FILE.test(name)) {
       copyInto({
         from: resolve(distDir, name),
-        to: resolve(RUNNER_DIST_DIR, EnginePath.pgliteDir, name)
+        to: resolve(RUNNER_DIST_DIR, EnginePath.PGLITE_DIR, name)
       });
     }
   }
   for (const name of Object.values(PgliteFile)) {
-    if (!existsSync(resolve(RUNNER_DIST_DIR, EnginePath.pgliteDir, name))) {
+    if (!existsSync(resolve(RUNNER_DIST_DIR, EnginePath.PGLITE_DIR, name))) {
       throw new Error(`PGlite is missing ${name}`);
     }
   }
@@ -131,7 +130,7 @@ function copyPglite() {
 
 async function copyPyodide() {
   const dir = packageDir("pyodide");
-  const outDir = resolve(RUNNER_DIST_DIR, EnginePath.pyodideDir);
+  const outDir = resolve(RUNNER_DIST_DIR, EnginePath.PYODIDE_DIR);
   for (const name of PYODIDE_CORE_FILES) {
     copyInto({
       from: resolve(dir, name),
@@ -165,7 +164,7 @@ async function copyPyodide() {
   return wheels.length;
 }
 
-function sizeOf(path: string): number {
+function sizeOf(path: string) {
   const stats = statSync(path);
   if (!stats.isDirectory()) {
     return stats.size;

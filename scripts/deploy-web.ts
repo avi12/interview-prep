@@ -1,3 +1,7 @@
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+
 import {
   createReleaseRequest,
   createVersionRequest,
@@ -34,10 +38,7 @@ import {
   RUNNER_ENGINES_DIR_NAME
 } from "#scripts/lib/layout.ts";
 import { ROOT } from "#scripts/lib/paths.ts";
-import { z } from "#scripts/lib/zod.ts";
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { zod } from "#scripts/lib/zod.ts";
 
 const isDryRun = hasFlag("dry-run");
 
@@ -63,10 +64,10 @@ const ENGINE_OUTPUTS = [`${RUNNER_DIST_RELATIVE_DIR}/${RUNNER_ENGINES_DIR_NAME}`
 const WEB_BUILD_OUTPUTS = [`${WEB_APP_DIR}/dist-client/index.html`, `${WEB_APP_DIR}/dist-server/server.js`];
 const IMAGE_INPUTS = [DOCKERFILE, ".gcloudignore"];
 
-const firebaseInitSchema = z.object({
-  projectId: z.string(),
-  apiKey: z.string(),
-  appId: z.string()
+const firebaseInitSchema = zod.object({
+  projectId: zod.string(),
+  apiKey: zod.string(),
+  appId: zod.string()
 });
 
 function readGitShortSha() {
@@ -91,17 +92,16 @@ function assertOutputs(paths: string[]) {
   }
 }
 
-function buildStep({ label, args, outputs }: {
-  label: string;
-  args: string[];
-  outputs: string[];
-}): Step {
+function buildStep({ label, args, outputs }: { label: string; args: string[]; outputs: string[] }) {
   return {
     label,
-    plan: () => [toCommandLine({
-      command: "pnpm",
-      args
-    }), `expect ${outputs.join(", ")}`],
+    plan: () => [
+      toCommandLine({
+        command: "pnpm",
+        args
+      }),
+      `expect ${outputs.join(", ")}`
+    ],
     async run() {
       mustRunCommand({
         command: "pnpm",
@@ -115,10 +115,12 @@ function buildStep({ label, args, outputs }: {
 
 function cloudBuildConfig() {
   return {
-    steps: [{
-      name: CLOUD_BUILDER_DOCKER,
-      args: ["build", "--file", DOCKERFILE, "--tag", IMAGE, "."]
-    }],
+    steps: [
+      {
+        name: CLOUD_BUILDER_DOCKER,
+        args: ["build", "--file", DOCKERFILE, "--tag", IMAGE, "."]
+      }
+    ],
     images: [IMAGE],
     serviceAccount: `projects/${GCP.projectId}/serviceAccounts/${BUILD_SERVICE_ACCOUNT}`,
     options: {
@@ -182,7 +184,7 @@ const runStep: Step = {
   }
 };
 
-function hostingStep(): Step {
+function hostingStep() {
   const { config } = readCheckedFirebaseJson();
   const releaseMessage = `Cloud Run ${GCP.runService} ${IMAGE}`;
   return {
@@ -226,7 +228,10 @@ function hostingStep(): Step {
   };
 }
 
-async function fetchUntil<Result>({ url, read }: {
+async function fetchUntil<Result>({
+  url,
+  read
+}: {
   url: string;
   read: (response: Response) => Promise<Result | undefined>;
 }) {
@@ -244,7 +249,7 @@ async function fetchUntil<Result>({ url, read }: {
       }
 
       lastProblem = `HTTP ${response.status}`;
-      return response.status === HTTP_STATUS.ok ? read(response) : undefined;
+      return response.status === HTTP_STATUS.OK ? read(response) : undefined;
     }
   });
   if (result === undefined) {
@@ -256,7 +261,10 @@ async function fetchUntil<Result>({ url, read }: {
 
 const smokeStep: Step = {
   label: "smoke test",
-  plan: () => [`GET ${WEB_ORIGIN}${HEALTH_PATH} expects 200`, `GET ${WEB_ORIGIN}${FIREBASE_INIT_PATH} expects the Firebase web config`],
+  plan: () => [
+    `GET ${WEB_ORIGIN}${HEALTH_PATH} expects 200`,
+    `GET ${WEB_ORIGIN}${FIREBASE_INIT_PATH} expects the Firebase web config`
+  ],
   async run() {
     await fetchUntil({
       url: `${WEB_ORIGIN}${HEALTH_PATH}`,

@@ -1,7 +1,8 @@
+import { spawnSync } from "node:child_process";
+
 import { GCP } from "#scripts/lib/gcp.ts";
 import { ROOT } from "#scripts/lib/paths.ts";
-import type { z } from "#scripts/lib/zod.ts";
-import { spawnSync } from "node:child_process";
+import type { zod } from "#scripts/lib/zod.ts";
 
 const DEFAULT_ACCOUNT = "avi6106@gmail.com";
 const SHELL_SAFE_ARG = /^[\w@.:/=,+%-]+$/;
@@ -25,16 +26,13 @@ function quoteShellArg(arg: string) {
   }
 
   if (isWindows()) {
-    return `"${arg.replaceAll("\"", "\\\"")}"`;
+    return `"${arg.replaceAll('"', '\\"')}"`;
   }
 
   return `'${arg.replaceAll("'", "'\\''")}'`;
 }
 
-export function toCommandLine({ command, args }: {
-  command: string;
-  args: string[];
-}) {
+export function toCommandLine({ command, args }: { command: string; args: string[] }) {
   return [command, ...args].map(quoteShellArg).join(" ");
 }
 
@@ -49,7 +47,12 @@ export function describeGcloud(args: string[]) {
   });
 }
 
-export function runCommand({ command, args, cwd = ROOT, isStreamed = false }: {
+export function runCommand({
+  command,
+  args,
+  cwd = ROOT,
+  isStreamed = false
+}: {
   command: string;
   args: string[];
   cwd?: string;
@@ -59,7 +62,8 @@ export function runCommand({ command, args, cwd = ROOT, isStreamed = false }: {
     toCommandLine({
       command,
       args
-    }), {
+    }),
+    {
       cwd,
       shell: true,
       encoding: "utf8",
@@ -74,7 +78,12 @@ export function runCommand({ command, args, cwd = ROOT, isStreamed = false }: {
   };
 }
 
-export function mustRunCommand({ command, args, cwd, isStreamed = true }: {
+export function mustRunCommand({
+  command,
+  args,
+  cwd,
+  isStreamed = true
+}: {
   command: string;
   args: string[];
   cwd?: string;
@@ -99,10 +108,7 @@ export function mustRunCommand({ command, args, cwd, isStreamed = true }: {
   return result;
 }
 
-export function runGcloud({ args, isStreamed = false }: {
-  args: string[];
-  isStreamed?: boolean;
-}) {
+export function runGcloud({ args, isStreamed = false }: { args: string[]; isStreamed?: boolean }) {
   return runCommand({
     command: "gcloud",
     args: gcloudArgs(args),
@@ -110,10 +116,7 @@ export function runGcloud({ args, isStreamed = false }: {
   });
 }
 
-export function mustRunGcloud({ args, isStreamed = true }: {
-  args: string[];
-  isStreamed?: boolean;
-}) {
+export function mustRunGcloud({ args, isStreamed = true }: { args: string[]; isStreamed?: boolean }) {
   return mustRunCommand({
     command: "gcloud",
     args: gcloudArgs(args),
@@ -125,10 +128,7 @@ export function isNotFoundOutput(output: string) {
   return NOT_FOUND_OUTPUT.test(output);
 }
 
-export function readGcloudJson<Schema extends z.ZodType>({ args, schema }: {
-  args: string[];
-  schema: Schema;
-}) {
+export function readGcloudJson<Schema extends zod.ZodType>({ args, schema }: { args: string[]; schema: Schema }) {
   const result = runGcloud({ args: [...args, "--format=json"] });
   if (!result.isSuccess) {
     if (isNotFoundOutput(result.stderr)) {
@@ -149,8 +149,11 @@ export function readGcloudJson<Schema extends z.ZodType>({ args, schema }: {
 export function printAccessToken() {
   const result = runGcloud({ args: ["auth", "print-access-token"] });
   const token = result.stdout.trim();
-  if (!result.isSuccess || !token) {
-    throw new Error(`Could not get an access token for ${GCLOUD_ACCOUNT}. Run: gcloud auth login ${GCLOUD_ACCOUNT}\n${result.stderr.trim()}`);
+  const isTokenUnavailable = !result.isSuccess || !token;
+  if (isTokenUnavailable) {
+    throw new Error(
+      `Could not get an access token for ${GCLOUD_ACCOUNT}. Run: gcloud auth login ${GCLOUD_ACCOUNT}\n${result.stderr.trim()}`
+    );
   }
 
   return token;

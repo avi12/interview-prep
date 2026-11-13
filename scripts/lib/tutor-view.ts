@@ -1,4 +1,4 @@
-import { z } from "./zod.ts";
+import { zod } from "./zod.ts";
 
 export const TutorBlockKind = {
   HEADING: "heading",
@@ -6,35 +6,35 @@ export const TutorBlockKind = {
 } as const;
 export type TutorBlockKind = (typeof TutorBlockKind)[keyof typeof TutorBlockKind];
 
-export const tutorBlockSchema = z.object({
-  kind: z.enum(TutorBlockKind),
-  text: z.string()
+export const tutorBlockSchema = zod.object({
+  kind: zod.enum(TutorBlockKind),
+  text: zod.string()
 });
-export type TutorBlock = z.infer<typeof tutorBlockSchema>;
+export type TutorBlock = zod.infer<typeof tutorBlockSchema>;
 
-const tutorTestRunSchema = z.object({
-  ranAt: z.string(),
-  isPass: z.boolean()
+const tutorTestRunSchema = zod.object({
+  ranAt: zod.string(),
+  isPass: zod.boolean()
 });
-export type TutorTestRun = z.infer<typeof tutorTestRunSchema>;
+export type TutorTestRun = zod.infer<typeof tutorTestRunSchema>;
 
-export const tutorViewSchema = z.object({
-  version: z.string(),
-  title: z.string(),
-  blocks: z.array(tutorBlockSchema),
+export const tutorViewSchema = zod.object({
+  version: zod.string(),
+  title: zod.string(),
+  blocks: zod.array(tutorBlockSchema),
   testRun: tutorTestRunSchema.nullable()
 });
-export type TutorView = z.infer<typeof tutorViewSchema>;
+export type TutorView = zod.infer<typeof tutorViewSchema>;
 
 export const TUTOR_VIEW_PATH = "/tutor-view";
 
-export function tutorHeading(text: string): TutorBlock {
+export function tutorHeading(text: string) {
   return {
     kind: TutorBlockKind.HEADING,
     text
   };
 }
-export function tutorParagraph(text: string): TutorBlock {
+export function tutorParagraph(text: string) {
   return {
     kind: TutorBlockKind.PARAGRAPH,
     text

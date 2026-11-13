@@ -1,5 +1,5 @@
-import * as z from "zod";
+import * as zod from "zod";
 
-z.config({ jitless: true });
+zod.config({ jitless: true });
 
-export { z };
+export { zod };

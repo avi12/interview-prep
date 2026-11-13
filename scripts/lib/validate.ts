@@ -1,9 +1,11 @@
-import { LESSON_TESTS_DIR_NAME } from "#scripts/lib/layout.ts";
-import { type Card, type Lesson, readRoles } from "#scripts/lib/lessons.ts";
-import { EXERCISE_CARD_TITLE } from "#scripts/lib/schema.ts";
-import type { Token } from "marked";
 import { existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
+
+import type { Token } from "marked";
+
+import { LESSON_TESTS_DIR_NAME } from "#scripts/lib/layout.ts";
+import { type Card, type Figure, type Lesson, readRoles } from "#scripts/lib/lessons.ts";
+import { EXERCISE_CARD_TITLE } from "#scripts/lib/schema.ts";
 
 const MIN_CARDS = 4;
 const MAX_CARD_WORDS = 130;
@@ -12,7 +14,8 @@ const MIN_NARRATE_WORDS = 15;
 const MIN_HINTS = 2;
 const CUE_MARKER_PATTERN = /\[\[([\w-]+)\]\]/g;
 const CUE_ATTRIBUTE_PATTERN = /data-cue="([\w-]+)"/g;
-const EM_DASH = "—";
+const EM_DASH_CODE_POINT = 0x2014;
+const EM_DASH = String.fromCodePoint(EM_DASH_CODE_POINT);
 
 const NON_PROSE_TOKENS = new Set(["code", "table", "space", "html"]);
 
@@ -29,44 +32,47 @@ function wordCount(text: string) {
   return text.split(/\s+/).filter(Boolean).length;
 }
 
-function matchesOf({ pattern, text }: {
-  pattern: RegExp;
-  text: string;
-}) {
+function matchesOf({ pattern, text }: { pattern: RegExp; text: string }) {
   return [...text.matchAll(pattern)].map(match => match[1]);
 }
 
-function hasFiles({ dir, files }: {
-  dir: string;
-  files: string[];
-}) {
+function hasFiles({ dir, files }: { dir: string; files: string[] }) {
   return existsSync(dir) && files.every(file => existsSync(resolve(dir, file)));
 }
 
 function cardProblems(card: Card) {
   const problems: string[] = [];
   const words = proseWords(card.tokens);
-  if (words > MAX_CARD_WORDS) {
+  const isCardTooLong = words > MAX_CARD_WORDS;
+  if (isCardTooLong) {
     problems.push(`card "${card.title}" has ${words} words of prose (max ${MAX_CARD_WORDS})`);
   }
 
   const narrateWords = wordCount(card.narrate.replace(CUE_MARKER_PATTERN, ""));
-  if (narrateWords < MIN_NARRATE_WORDS) {
+  const isNarrationTooShort = narrateWords < MIN_NARRATE_WORDS;
+  if (isNarrationTooShort) {
     problems.push(`card "${card.title}" needs a narrate script (min ${MIN_NARRATE_WORDS} words)`);
   }
 
-  if (narrateWords > MAX_NARRATE_WORDS) {
+  const isNarrationTooLong = narrateWords > MAX_NARRATE_WORDS;
+  if (isNarrationTooLong) {
     problems.push(`card "${card.title}" narration is ${narrateWords} words (max ${MAX_NARRATE_WORDS})`);
   }
 
-  const figureCues = new Set(card.figures.flatMap(({ svg }) => matchesOf({
-    pattern: CUE_ATTRIBUTE_PATTERN,
-    text: svg
-  })));
-  const spokenCues = new Set(matchesOf({
-    pattern: CUE_MARKER_PATTERN,
-    text: card.narrate
-  }));
+  function figureCueNames({ svg }: Figure) {
+    return matchesOf({
+      pattern: CUE_ATTRIBUTE_PATTERN,
+      text: svg
+    });
+  }
+
+  const figureCues = new Set(card.figures.flatMap(figureCueNames));
+  const spokenCues = new Set(
+    matchesOf({
+      pattern: CUE_MARKER_PATTERN,
+      text: card.narrate
+    })
+  );
   for (const cue of spokenCues) {
     if (!figureCues.has(cue)) {
       problems.push(`card "${card.title}": cue [[${cue}]] has no data-cue element`);
@@ -97,11 +103,11 @@ export function lessonProblems(lesson: Lesson) {
   }
 
   if (!body.includes("> **Why:**")) {
-    problems.push("needs a \"> **Why:**\" callout");
+    problems.push('needs a "> **Why:**" callout');
   }
 
   if (!body.includes("> **Not this:**")) {
-    problems.push("needs a \"> **Not this:**\" callout (why not the other way)");
+    problems.push('needs a "> **Not this:**" callout (why not the other way)');
   }
 
   if (body.includes(EM_DASH)) {
@@ -137,22 +143,27 @@ export function lessonProblems(lesson: Lesson) {
     problems.push("frontmatter needs files: [...]");
   }
 
-  if (!hasFiles({
-    dir: resolve(lesson.dir, "starter"),
-    files: meta.files
-  })) {
+  if (
+    !hasFiles({
+      dir: resolve(lesson.dir, "starter"),
+      files: meta.files
+    })
+  ) {
     problems.push("starter/ is missing a listed file");
   }
 
-  if (!hasFiles({
-    dir: resolve(lesson.dir, "solution"),
-    files: meta.files
-  })) {
+  if (
+    !hasFiles({
+      dir: resolve(lesson.dir, "solution"),
+      files: meta.files
+    })
+  ) {
     problems.push("solution/ is missing a listed file");
   }
 
   const testsDir = resolve(lesson.dir, LESSON_TESTS_DIR_NAME);
-  if (!existsSync(testsDir) || readdirSync(testsDir).length === 0) {
+  const isTestsDirEmpty = !existsSync(testsDir) || readdirSync(testsDir).length === 0;
+  if (isTestsDirEmpty) {
     problems.push("tests/ is empty");
   }
 

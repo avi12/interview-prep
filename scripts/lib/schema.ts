@@ -1,11 +1,12 @@
+import { zod } from "#scripts/lib/zod.ts";
+
 import { tutorBlockSchema } from "./tutor-view.ts";
-import { z } from "#scripts/lib/zod.ts";
 
 export const Lang = {
-  ts: "ts",
-  py: "py",
-  sql: "sql",
-  none: "none"
+  TS: "ts",
+  PY: "py",
+  SQL: "sql",
+  NONE: "none"
 } as const;
 
 const MINUTES_MIN = 5;
@@ -14,99 +15,99 @@ const RUN_SECONDS_MIN = 10;
 const RUN_SECONDS_MAX = 600;
 const RUN_SECONDS_DEFAULT = 90;
 
-export const lessonMetaSchema = z.object({
-  title: z.string().min(3),
-  lang: z.enum(Lang),
-  minutes: z.number().int().min(MINUTES_MIN).max(MINUTES_MAX),
-  level: z.enum(["junior", "mid"]).default("junior"),
-  roles: z.array(z.string()).min(1),
-  files: z.array(z.string()).default([]),
-  timeoutSeconds: z.number().int().min(RUN_SECONDS_MIN).max(RUN_SECONDS_MAX).default(RUN_SECONDS_DEFAULT),
-  sources: z.array(z.url()).default([])
+export const lessonMetaSchema = zod.object({
+  title: zod.string().min(3),
+  lang: zod.enum(Lang),
+  minutes: zod.number().int().min(MINUTES_MIN).max(MINUTES_MAX),
+  level: zod.enum(["junior", "mid"]).default("junior"),
+  roles: zod.array(zod.string()).min(1),
+  files: zod.array(zod.string()).default([]),
+  timeoutSeconds: zod.number().int().min(RUN_SECONDS_MIN).max(RUN_SECONDS_MAX).default(RUN_SECONDS_DEFAULT),
+  sources: zod.array(zod.url()).default([])
 });
 
-export const categoriesSchema = z.array(
-  z.object({
-    id: z.string(),
-    title: z.string(),
-    blurb: z.string()
+export const categoriesSchema = zod.array(
+  zod.object({
+    id: zod.string(),
+    title: zod.string(),
+    blurb: zod.string()
   })
 );
 
-export const tracksSchema = z.array(
-  z.object({
-    id: z.string(),
-    title: z.string(),
-    blurb: z.string(),
-    category: z.string()
+export const tracksSchema = zod.array(
+  zod.object({
+    id: zod.string(),
+    title: zod.string(),
+    blurb: zod.string(),
+    category: zod.string()
   })
 );
 
 export const EXERCISE_CARD_TITLE = "Your turn";
 
-export const quizSchema = z.object({
-  q: z.string(),
-  options: z.array(z.coerce.string()).min(2).max(5),
-  answer: z.number().int().min(0),
-  why: z.string()
+export const quizSchema = zod.object({
+  q: zod.string(),
+  options: zod.array(zod.coerce.string()).min(2).max(5),
+  answer: zod.number().int().min(0),
+  why: zod.string()
 });
 
-export const lastTestSchema = z.object({
-  id: z.string(),
-  isPass: z.boolean(),
-  at: z.string(),
-  output: z.string()
+export const lastTestSchema = zod.object({
+  id: zod.string(),
+  isPass: zod.boolean(),
+  at: zod.string(),
+  output: zod.string()
 });
 
-export const tutorNotesSchema = z.array(tutorBlockSchema);
+export const tutorNotesSchema = zod.array(tutorBlockSchema);
 
-export const progressSchema = z.record(
-  z.string(),
-  z.object({
-    attempts: z.number().int(),
-    passedAt: z.string().nullable()
+export const progressSchema = zod.record(
+  zod.string(),
+  zod.object({
+    attempts: zod.number().int(),
+    passedAt: zod.string().nullable()
   })
 );
 
-const sqlTableSchema = z.object({
-  name: z.string(),
-  columns: z.array(
-    z.object({
-      name: z.string(),
-      type: z.string()
+const sqlTableSchema = zod.object({
+  name: zod.string(),
+  columns: zod.array(
+    zod.object({
+      name: zod.string(),
+      type: zod.string()
     })
   )
 });
 
-export type SqlTable = z.infer<typeof sqlTableSchema>;
+export type SqlTable = zod.infer<typeof sqlTableSchema>;
 
-export const rolesSchema = z.array(
-  z.object({
-    id: z.string(),
-    title: z.string()
+export const rolesSchema = zod.array(
+  zod.object({
+    id: zod.string(),
+    title: zod.string()
   })
 );
 
-export const lessonIndexSchema = z.object({
+export const lessonIndexSchema = zod.object({
   categories: categoriesSchema,
   tracks: tracksSchema,
   roles: rolesSchema,
-  orders: z.record(z.string(), z.array(z.string())),
-  lessons: z.array(
-    z.object({
-      id: z.string(),
-      track: z.string(),
-      title: z.string(),
-      minutes: z.number(),
-      lang: z.enum(Lang),
-      roles: z.array(z.string()),
-      files: z.array(z.string()),
-      hasExercise: z.boolean(),
-      html: z.string(),
-      tutor: z.string(),
-      sqlTables: z.array(sqlTableSchema).default([])
+  orders: zod.record(zod.string(), zod.array(zod.string())),
+  lessons: zod.array(
+    zod.object({
+      id: zod.string(),
+      track: zod.string(),
+      title: zod.string(),
+      minutes: zod.number(),
+      lang: zod.enum(Lang),
+      roles: zod.array(zod.string()),
+      files: zod.array(zod.string()),
+      hasExercise: zod.boolean(),
+      html: zod.string(),
+      tutor: zod.string(),
+      sqlTables: zod.array(sqlTableSchema).default([])
     })
   )
 });
 
-export type Quiz = z.infer<typeof quizSchema>;
+export type Quiz = zod.infer<typeof quizSchema>;

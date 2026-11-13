@@ -1,30 +1,39 @@
-import { readJsonFile } from "#scripts/lib/files.ts";
-import { API, HTTP_METHOD, type RequestSpec } from "#scripts/lib/firebase-rest.ts";
-import { GCP } from "#scripts/lib/gcp.ts";
-import { ROOT } from "#scripts/lib/paths.ts";
-import { z } from "#scripts/lib/zod.ts";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
+import { readJsonFile } from "#scripts/lib/files.ts";
+import { API, HTTP_METHOD } from "#scripts/lib/firebase-rest.ts";
+import { GCP } from "#scripts/lib/gcp.ts";
+import { ROOT } from "#scripts/lib/paths.ts";
+import { zod } from "#scripts/lib/zod.ts";
+
 const FIREBASE_JSON_FILE = resolve(ROOT, "firebase.json");
 
-const runRewriteSchema = z.object({
-  source: z.string().min(1),
-  run: z.object({
-    serviceId: z.string().min(1),
-    region: z.string().min(1)
-  }).strict()
-}).strict();
+const runRewriteSchema = zod
+  .object({
+    source: zod.string().min(1),
+    run: zod
+      .object({
+        serviceId: zod.string().min(1),
+        region: zod.string().min(1)
+      })
+      .strict()
+  })
+  .strict();
 
-const firebaseJsonSchema = z.object({
-  hosting: z.object({
-    site: z.string().min(1),
-    rewrites: z.array(runRewriteSchema).min(1)
-  }).strict(),
-  firestore: z.object({ rules: z.string().min(1) }).strict()
-}).strict();
+const firebaseJsonSchema = zod
+  .object({
+    hosting: zod
+      .object({
+        site: zod.string().min(1),
+        rewrites: zod.array(runRewriteSchema).min(1)
+      })
+      .strict(),
+    firestore: zod.object({ rules: zod.string().min(1) }).strict()
+  })
+  .strict();
 
-export type FirebaseJson = z.infer<typeof firebaseJsonSchema>;
+export type FirebaseJson = zod.infer<typeof firebaseJsonSchema>;
 
 interface HostingTarget {
   hostingSiteId: string;
@@ -32,18 +41,18 @@ interface HostingTarget {
   region: string;
 }
 
-export const siteSchema = z.object({
-  name: z.string(),
-  defaultUrl: z.string().optional(),
-  appId: z.string().optional()
+export const siteSchema = zod.object({
+  name: zod.string(),
+  defaultUrl: zod.string().optional(),
+  appId: zod.string().optional()
 });
 
-export const versionSchema = z.object({
-  name: z.string(),
-  status: z.string().optional()
+export const versionSchema = zod.object({
+  name: zod.string(),
+  status: zod.string().optional()
 });
 
-export const releaseSchema = z.object({ name: z.string() });
+export const releaseSchema = zod.object({ name: zod.string() });
 
 export function readFirebaseJson() {
   return readJsonFile({
@@ -64,10 +73,7 @@ export function toServingConfig(hosting: FirebaseJson["hosting"]) {
   };
 }
 
-export function findGcpMismatches({ config, target }: {
-  config: FirebaseJson;
-  target: HostingTarget;
-}) {
+export function findGcpMismatches({ config, target }: { config: FirebaseJson; target: HostingTarget }) {
   const mismatches: string[] = [];
   if (config.hosting.site !== target.hostingSiteId) {
     mismatches.push(`hosting.site is "${config.hosting.site}" but GCP.hostingSiteId is "${target.hostingSiteId}"`);
@@ -75,7 +81,9 @@ export function findGcpMismatches({ config, target }: {
 
   for (const rewrite of config.hosting.rewrites) {
     if (rewrite.run.serviceId !== target.runService) {
-      mismatches.push(`rewrite "${rewrite.source}" runs "${rewrite.run.serviceId}" but GCP.runService is "${target.runService}"`);
+      mismatches.push(
+        `rewrite "${rewrite.source}" runs "${rewrite.run.serviceId}" but GCP.runService is "${target.runService}"`
+      );
     }
 
     if (rewrite.run.region !== target.region) {
@@ -107,27 +115,27 @@ export function readCheckedFirebaseJson() {
   };
 }
 
-const SITE_PARENT = `${API.hosting}/projects/${GCP.projectId}/sites`;
+const SITE_PARENT = `${API.HOSTING}/projects/${GCP.projectId}/sites`;
 const SITE_URL = `${SITE_PARENT}/${GCP.hostingSiteId}`;
 
-export function getSiteRequest(): RequestSpec {
+export function getSiteRequest() {
   return {
-    method: HTTP_METHOD.get,
+    method: HTTP_METHOD.GET,
     url: SITE_URL
   };
 }
 
-export function createSiteRequest(): RequestSpec {
+export function createSiteRequest() {
   return {
-    method: HTTP_METHOD.post,
+    method: HTTP_METHOD.POST,
     url: `${SITE_PARENT}?siteId=${GCP.hostingSiteId}`,
     body: {}
   };
 }
 
-export function linkSiteAppRequest(appId: string): RequestSpec {
+export function linkSiteAppRequest(appId: string) {
   return {
-    method: HTTP_METHOD.patch,
+    method: HTTP_METHOD.PATCH,
     url: `${SITE_URL}?updateMask=appId`,
     body: {
       appId
@@ -135,34 +143,38 @@ export function linkSiteAppRequest(appId: string): RequestSpec {
   };
 }
 
-export function createVersionRequest(hosting: FirebaseJson["hosting"]): RequestSpec {
+export function createVersionRequest(hosting: FirebaseJson["hosting"]) {
   return {
-    method: HTTP_METHOD.post,
-    url: `${API.hosting}/sites/${hosting.site}/versions`,
+    method: HTTP_METHOD.POST,
+    url: `${API.HOSTING}/sites/${hosting.site}/versions`,
     body: {
       config: toServingConfig(hosting)
     }
   };
 }
 
-export function finalizeVersionRequest(versionName: string): RequestSpec {
+export function finalizeVersionRequest(versionName: string) {
   return {
-    method: HTTP_METHOD.patch,
-    url: `${API.hosting}/${versionName}?updateMask=status`,
+    method: HTTP_METHOD.PATCH,
+    url: `${API.HOSTING}/${versionName}?updateMask=status`,
     body: {
       status: "FINALIZED"
     }
   };
 }
 
-export function createReleaseRequest({ site, versionName, message }: {
+export function createReleaseRequest({
+  site,
+  versionName,
+  message
+}: {
   site: string;
   versionName: string;
   message: string;
-}): RequestSpec {
+}) {
   return {
-    method: HTTP_METHOD.post,
-    url: `${API.hosting}/sites/${site}/releases?versionName=${encodeURIComponent(versionName)}`,
+    method: HTTP_METHOD.POST,
+    url: `${API.HOSTING}/sites/${site}/releases?versionName=${encodeURIComponent(versionName)}`,
     body: {
       message
     }

@@ -1,29 +1,21 @@
+import { rmSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { writeFileDeep } from "#scripts/lib/files.ts";
 import { LESSONS_DIST_RELATIVE_DIR, RUNNER_DIST_RELATIVE_DIR } from "#scripts/lib/layout.ts";
-import {
-  readCategories,
-  readLessons,
-  readRoles,
-  readStudyOrders,
-  readTracks
-} from "#scripts/lib/lessons.ts";
+import { readCategories, readLessons, readRoles, readStudyOrders, readTracks } from "#scripts/lib/lessons.ts";
 import { INDEX_FILE, LESSONS_DIST_DIR, ROOT } from "#scripts/lib/paths.ts";
 import { renderLesson } from "#scripts/lib/render.ts";
 import { writeRunnerData } from "#scripts/lib/runner-data.ts";
 import { createSqlSchemaReader } from "#scripts/lib/sql-schema.ts";
 import { tutorNotes } from "#scripts/lib/tutor-notes.ts";
-import { rmSync } from "node:fs";
-import { resolve } from "node:path";
 
 const RM_MAX_RETRIES = 5;
 const RM_RETRY_DELAY_MS = 100;
 const HTML_EXTENSION = ".html";
 const TUTOR_EXTENSION = ".tutor.json";
 
-function distPath({ id, extension }: {
-  id: string;
-  extension: string;
-}) {
+function distPath({ id, extension }: { id: string; extension: string }) {
   return `${LESSONS_DIST_RELATIVE_DIR}/${id}${extension}`;
 }
 
@@ -39,7 +31,8 @@ for (const lesson of lessons) {
   const html = renderLesson(lesson);
   writeFileDeep({
     path: resolve(
-      ROOT, distPath({
+      ROOT,
+      distPath({
         id: lesson.id,
         extension: HTML_EXTENSION
       })
@@ -48,7 +41,8 @@ for (const lesson of lessons) {
   });
   writeFileDeep({
     path: resolve(
-      ROOT, distPath({
+      ROOT,
+      distPath({
         id: lesson.id,
         extension: TUTOR_EXTENSION
       })

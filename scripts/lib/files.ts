@@ -1,36 +1,29 @@
-import type { z } from "#scripts/lib/zod.ts";
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  writeFileSync
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve, sep } from "node:path";
+
+import type { zod } from "#scripts/lib/zod.ts";
 
 export function ensureParentDir(path: string) {
   return mkdirSync(dirname(path), { recursive: true });
 }
 
-export function writeFileDeep({ path, content }: {
-  path: string;
-  content: string;
-}) {
+export function writeFileDeep({ path, content }: { path: string; content: string }) {
   ensureParentDir(path);
   writeFileSync(path, content);
 }
 
-export function readJsonFile<Schema extends z.ZodType>({
+export function readJsonFile<Schema extends zod.ZodType>({
   path,
   schema,
   fallback
 }: {
   path: string;
   schema: Schema;
-  fallback?: z.output<Schema>;
+  fallback?: zod.output<Schema>;
 }) {
   const hasFallback = fallback !== undefined;
-  if (!existsSync(path) && hasFallback) {
+  const isMissingWithFallback = !existsSync(path) && hasFallback;
+  if (isMissingWithFallback) {
     return fallback;
   }
 
@@ -60,7 +53,8 @@ export function readTextTree(dir: string) {
   })) {
     const path = resolve(entry.parentPath, entry.name);
     const segments = relative(dir, path).split(sep);
-    if (!entry.isFile() || segments.some(segment => TEXT_TREE_IGNORED_NAMES.has(segment))) {
+    const isNotServableFile = !entry.isFile() || segments.some(segment => TEXT_TREE_IGNORED_NAMES.has(segment));
+    if (isNotServableFile) {
       continue;
     }
 

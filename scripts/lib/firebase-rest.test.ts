@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 import {
   createRestClient,
   type FetchLike,
@@ -6,17 +8,13 @@ import {
   operationSchema,
   waitForOperation
 } from "#scripts/lib/firebase-rest.ts";
-import { z } from "#scripts/lib/zod.ts";
-import { describe, expect, it } from "vitest";
+import { zod } from "#scripts/lib/zod.ts";
 
 const API_ROOT = "https://firebase.googleapis.com/v1beta1";
 const OPERATION_NAME = "operations/workflows/abc";
 const ATTEMPTS = 5;
 
-function jsonResponse({ status = HTTP_STATUS.ok, body }: {
-  status?: number;
-  body: unknown;
-}) {
+function jsonResponse({ status = HTTP_STATUS.OK, body }: { status?: number; body: unknown }) {
   return new Response(JSON.stringify(body), { status });
 }
 
@@ -119,11 +117,14 @@ describe("waitForOperation", () => {
   });
 
   it("gives up after the attempt limit", async () => {
-    const pending = Array.from({ length: ATTEMPTS }, () => jsonResponse({
-      body: {
-        name: OPERATION_NAME
-      }
-    }));
+    function pendingOperation() {
+      return jsonResponse({
+        body: {
+          name: OPERATION_NAME
+        }
+      });
+    }
+    const pending = Array.from({ length: ATTEMPTS }, pendingOperation);
     const { calls, fetchImpl } = fakeFetch(pending);
     await expect(
       waitForOperation({
@@ -144,10 +145,10 @@ describe("createRestClient", () => {
   it("turns an API error into an HttpError with status and message", async () => {
     const { fetchImpl } = fakeFetch([
       jsonResponse({
-        status: HTTP_STATUS.forbidden,
+        status: HTTP_STATUS.FORBIDDEN,
         body: {
           error: {
-            code: HTTP_STATUS.forbidden,
+            code: HTTP_STATUS.FORBIDDEN,
             status: "PERMISSION_DENIED",
             message: "no access"
           }
@@ -164,16 +165,18 @@ describe("createRestClient", () => {
   });
 
   it("rejects a response of the wrong shape", async () => {
-    const { fetchImpl } = fakeFetch([jsonResponse({
-      body: {
-        unexpected: true
-      }
-    })]);
+    const { fetchImpl } = fakeFetch([
+      jsonResponse({
+        body: {
+          unexpected: true
+        }
+      })
+    ]);
     await expect(
       clientWith(fetchImpl)({
         method: "GET",
         url: API_ROOT,
-        schema: z.object({ name: z.string() })
+        schema: zod.object({ name: zod.string() })
       })
     ).rejects.toThrow("unexpected shape");
   });

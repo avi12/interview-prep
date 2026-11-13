@@ -1,3 +1,5 @@
+import { resolve } from "node:path";
+
 import { NO_RESULT_TABLE_FLAG } from "#scripts/lib/layout.ts";
 import { findLesson, readLessons, readStudyOrders, readTracks } from "#scripts/lib/lessons.ts";
 import { DONE_COMMAND } from "#scripts/lib/panel.ts";
@@ -7,11 +9,10 @@ import { formatQueryResult } from "#scripts/lib/query-result.ts";
 import { ensureWorkCopy, prepareSolutionDir, resetWorkCopy, runQuiet } from "#scripts/lib/run.ts";
 import { groupByTrack, isPassed, nextUnpassedId } from "#scripts/lib/study.ts";
 import { formatTestCases } from "#scripts/lib/test-cases.ts";
-import { resolve } from "node:path";
 
 const [command, idArgument, ...flags] = process.argv.slice(2);
-const isSolutionRequested = flags.includes("--solution");
-const isResultTableShown = !flags.includes(NO_RESULT_TABLE_FLAG);
+const IS_SOLUTION_REQUESTED = flags.includes("--solution");
+const IS_RESULT_TABLE_SHOWN = !flags.includes(NO_RESULT_TABLE_FLAG);
 
 function listLessons() {
   const progress = readProgress();
@@ -25,7 +26,9 @@ function listLessons() {
       const mark = isPassed({
         id: lesson.id,
         progress
-      }) ? "x" : " ";
+      })
+        ? "x"
+        : " ";
       console.log(`  [${mark}] ${lesson.id}  (${lesson.meta.minutes} min, ${lesson.meta.lang})`);
     }
   }
@@ -51,22 +54,22 @@ async function testLesson(id: string) {
   }
 
   ensureWorkCopy(lesson);
-  const implDir = isSolutionRequested ? prepareSolutionDir(lesson) : lesson.workDir;
+  const implDir = IS_SOLUTION_REQUESTED ? prepareSolutionDir(lesson) : lesson.workDir;
   const { isPass, output, queryResults, testCases } = await runQuiet({
     lesson,
     implDir
   });
   console.log(output);
 
-  if (isResultTableShown) {
+  if (IS_RESULT_TABLE_SHOWN) {
     console.log(formatTestCases(testCases));
   }
 
-  for (const result of isResultTableShown ? queryResults : []) {
+  for (const result of IS_RESULT_TABLE_SHOWN ? queryResults : []) {
     console.log(formatQueryResult(result));
   }
 
-  if (!isSolutionRequested) {
+  if (!IS_SOLUTION_REQUESTED) {
     recordAttempt({
       id: lesson.id,
       isPass
@@ -78,7 +81,11 @@ async function testLesson(id: string) {
     });
   }
 
-  console.log(isPass ? "\nPASS - next lesson: pnpm lesson next" : "\nNot yet - read the first failing test, fix one thing, run again");
+  console.log(
+    isPass
+      ? "\nPASS - next lesson: pnpm lesson next"
+      : "\nNot yet - read the first failing test, fix one thing, run again"
+  );
   process.exitCode = isPass ? 0 : 1;
 }
 
@@ -125,7 +132,9 @@ const COMMANDS: Record<string, () => unknown> = {
 
 const handler = COMMANDS[command];
 if (!handler) {
-  console.log("Usage: pnpm lesson <list|open|test|reset|done> <lesson-id> [--solution]   |   pnpm lesson next [backend|analyst|ai]");
+  console.log(
+    "Usage: pnpm lesson <list|open|test|reset|done> <lesson-id> [--solution]   |   pnpm lesson next [backend|analyst|ai]"
+  );
   process.exit(1);
 }
 
