@@ -1,3 +1,4 @@
+import { lessonIdFromUrl } from "@/lib/lesson-address.ts";
 import { COURSE_PATH, HASHED_ASSETS_PATH, RUNNER_PATH, WORKERS_PATH } from "@/lib/web-paths.ts";
 import { contentTypeOf, readFileOrNull, resolveInside } from "@server/files.ts";
 import { CacheControl, ErrorCode, HttpStatus, sendError } from "@server/http.ts";
@@ -6,6 +7,8 @@ import { type Context, Hono } from "hono";
 import { extname, resolve } from "node:path";
 
 const SPA_ENTRY_FILE = "index.html";
+const TITLE_PATTERN = /<title>(.*?)<\/title>/;
+const TITLE_SEPARATOR = " - ";
 const HTML_EXTENSION = ".html";
 const HASHED_ASSETS_PREFIX = `${HASHED_ASSETS_PATH}/`;
 const COURSE_PREFIX = `${COURSE_PATH}/`;
@@ -41,6 +44,25 @@ function isWebviewHostPage(path: string) {
 
 function isSpaRoute(path: string) {
   return !path.startsWith(HASHED_ASSETS_PREFIX) && extname(path) === "";
+}
+
+function escapeHtml(text: string) {
+  return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+
+function withLessonTitle({ entry, lessonTitle }: {
+  entry: Uint8Array<ArrayBuffer>;
+  lessonTitle: string | undefined;
+}) {
+  if (lessonTitle === undefined) {
+    return entry;
+  }
+
+  const html = new TextDecoder().decode(entry).replace(
+    TITLE_PATTERN,
+    (_match, appTitle: string) => `<title>${escapeHtml(lessonTitle)}${TITLE_SEPARATOR}${appTitle}</title>`
+  );
+  return new TextEncoder().encode(html);
 }
 
 export function courseRoutes({ contentRoot, courseFiles }: {
@@ -87,7 +109,10 @@ export function runnerRoutes(runnerRoot: string) {
   });
 }
 
-export function clientRoutes(clientRoot: string) {
+export function clientRoutes({ clientRoot, lessonTitles }: {
+  clientRoot: string;
+  lessonTitles: ReadonlyMap<string, string>;
+}) {
   const entryFile = resolve(clientRoot, SPA_ENTRY_FILE);
 
   async function sendEntry(context: Context) {
@@ -96,9 +121,13 @@ export function clientRoutes(clientRoot: string) {
       return notFound(context);
     }
 
+    const lessonId = lessonIdFromUrl(new URL(context.req.url));
     return send({
       context,
-      body: entry,
+      body: withLessonTitle({
+        entry,
+        lessonTitle: lessonId === undefined ? undefined : lessonTitles.get(lessonId)
+      }),
       path: entryFile,
       cacheControl: CacheControl.revalidate
     });

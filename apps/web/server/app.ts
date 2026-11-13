@@ -43,6 +43,7 @@ export function createApp(dependencies: AppDependencies) {
   const { verifyIdToken, progressStore, clientRoot, contentRoot, log, rateLimit = DEFAULT_RATE_LIMIT } = dependencies;
   const lessons = readLessons(resolve(contentRoot, INDEX_RELATIVE_PATH));
   const lessonIds = new Set(lessons.map(lesson => lesson.id));
+  const lessonTitles = new Map(lessons.map(lesson => [lesson.id, lesson.title]));
 
   const api = new Hono()
     .use(async (context, next) => {
@@ -99,5 +100,10 @@ export function createApp(dependencies: AppDependencies) {
       })
     )
     .route("/", runnerRoutes(resolve(contentRoot, RUNNER_DIST_RELATIVE_DIR)))
-    .route("/", clientRoutes(clientRoot));
+    .route(
+      "/", clientRoutes({
+        clientRoot,
+        lessonTitles
+      })
+    );
 }

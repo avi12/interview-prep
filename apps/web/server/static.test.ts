@@ -98,6 +98,18 @@ describe("client", () => {
     expect(response.headers.get("cache-control")).toBe("no-cache");
   });
 
+  it("titles the page after the lesson when a lesson is opened directly", async () => {
+    const { app } = createTestApp();
+    const response = await app.request(`/?lesson=${KNOWN_LESSON}`);
+    expect(await response.text()).toContain(`<title>Title of ${KNOWN_LESSON} - Shell</title>`);
+  });
+
+  it("keeps the generic title for an unknown lesson", async () => {
+    const { app } = createTestApp();
+    const response = await app.request("/?lesson=nope/99-missing");
+    expect(await response.text()).toBe(SPA_HTML);
+  });
+
   it("falls back to the SPA entry for unknown routes", async () => {
     const { app } = createTestApp();
     const response = await app.request("/track/sql");

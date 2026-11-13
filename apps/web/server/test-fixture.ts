@@ -36,7 +36,7 @@ function lessonEntry(id: string) {
   return {
     id,
     track: id.split("/")[0],
-    title: id,
+    title: `Title of ${id}`,
     minutes: 10,
     lang: "none",
     roles: [],
