@@ -14,15 +14,15 @@ Follow `.claude/skills/extend-curriculum/SKILL.md`. It is plain markdown, so any
 
 The rules a lesson must meet live in one place, `curriculum/AUTHORING.md`, and `pnpm verify` enforces them. The learner the course is written for is described in `curriculum/LEARNER.md`.
 
-| File | Owns |
-| --- | --- |
-| `curriculum/LEARNER.md` | who the course is for and how they learn |
-| `curriculum/AUTHORING.md` | the lesson format and every rule `pnpm verify` checks |
-| `curriculum/tracks.json` | tracks (id, title, blurb), in display order |
-| `curriculum/roles.json` | target roles (id, title), used for each lesson's `roles` and the role picker |
-| `curriculum/path.json` | the study cycle: which track a learner draws the next lesson from |
-| `curriculum/<track>/<NN-slug>/` | one lesson: `lesson.md`, `starter/`, `solution/`, `tests/` |
-| `curriculum/_kit/` | helpers shared by lessons' tests |
+| File                            | Owns                                                                         |
+| ------------------------------- | ---------------------------------------------------------------------------- |
+| `curriculum/LEARNER.md`         | who the course is for and how they learn                                     |
+| `curriculum/AUTHORING.md`       | the lesson format and every rule `pnpm verify` checks                        |
+| `curriculum/tracks.json`        | tracks (id, title, blurb), in display order                                  |
+| `curriculum/roles.json`         | target roles (id, title), used for each lesson's `roles` and the role picker |
+| `curriculum/path.json`          | the study cycle: which track a learner draws the next lesson from            |
+| `curriculum/<track>/<NN-slug>/` | one lesson: `lesson.md`, `starter/`, `solution/`, `tests/`                   |
+| `curriculum/_kit/`              | helpers shared by lessons' tests                                             |
 
 ## Commands
 
@@ -37,7 +37,7 @@ pnpm build:engines         # self-host esbuild-wasm, PGlite and Pyodide (with it
 pnpm test:browser-runner   # grade every ts, sql and py lesson in headless Chrome: starter fails, solution passes
 ```
 
-Before every commit run `pnpm lint && pnpm stylelint && pnpm typecheck && pnpm fallow`. Run `pnpm verify` when lessons change, `pnpm test:browser-runner` when `curriculum/_kit/` or `apps/web/src/runner/` changes, and `pnpm -C apps/gemini-live compile` and `test` when the Gemini app changes.
+Before every commit run `pnpm lint && pnpm typecheck && pnpm fallow`. Run `pnpm verify` when lessons change, `pnpm test:browser-runner` when `curriculum/_kit/` or `apps/web/src/runner/` changes, and `pnpm -C apps/gemini-live compile` and `test` when the Gemini app changes.
 
 After a bug fix or feature that changes the web trainer, its lessons or the extension it runs, pass those checks and then run `pnpm deploy:web`, so the live site at https://avi-interview-prep.web.app always runs the latest version. Open pages pick it up on their own within a minute.
 
@@ -86,8 +86,15 @@ The two channels the library does not cover keep the same shape: the native mess
 
 - `main` is the default branch
 - One self-contained logical change per commit, with a message that says what changed and why
-- lint-staged fails when one file has both staged and unstaged changes. Commit the whole file, or set the final version aside, commit the intermediate one, then restore it
+- The pre-commit hook (`simple-git-hooks`) runs `pnpm avi12-lint --staged`; it fails when one file has both staged and unstaged changes. Commit the whole file, or set the final version aside, commit the intermediate one, then restore it
 
 ## License
 
 Apache License 2.0. Keep `LICENSE` and `NOTICE` in every copy and fork. `NOTICE` carries the original author's credit, and Apache 2.0 section 4(d) requires redistributions to keep it.
+
+## Linting
+
+- `pnpm lint` runs `avi12-lint` (oxfmt, stylelint, ESLint, oxlint, tsrs) on the shared presets from `avi12/lint-config` (pinned tag in `package.json`); `pnpm lint:fix` applies the fixers
+- Overrides live in `.oxlintrc.json` as file lists (JSON has no reason field), and their reasons are here
+- `house/positional-parameters` is off for files whose signature is fixed by a caller: `apps/gemini-live/src/lib/live-api/mic-worklet.ts` (AudioWorklet), `apps/gemini-live/scripts/cdp.ts`, `apps/vscode-ext/src/extension.ts`, `storageMemento.ts` and `test/vscodeFake.ts` (the VS Code API shape), `apps/web/server/security.ts`, `apps/web/src/runner/ts/expect.ts`, `host-modules.ts`, `node/**` and `apps/web/src/test/memory-storage.ts` (they mirror Node, Vitest or Web Storage signatures), `curriculum/_kit/fakeModel.ts` (mirrors the model SDK), and `scripts/lib/query-result.ts`, `render.ts` and `text-table.ts` (`Array.map` callbacks take `(item, index)` and `func-style` requires a function declaration, not an arrow)
+- Open defects in `avi12/lint-config`, fixed upstream in 0.4.7: `@stylistic/function-paren-newline` fights oxfmt, `house/google-syntax` bans `never` return types, and `expand-nested-type-literal` can loop; keep the workarounds already in the code until the bump

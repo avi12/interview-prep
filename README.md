@@ -52,20 +52,20 @@ https://github.com/user-attachments/assets/5054318b-fd63-47ef-8363-2ae6b4b1abcf
 
 ## Layout
 
-| Path | What |
-| --- | --- |
-| `curriculum/<track>/<NN-slug>/` | `lesson.md`, `starter/`, `solution/`, `tests/` |
-| `curriculum/_kit/` | helpers lessons share: implementation loading, Postgres (PGlite), fake LLM, mutation checks, seeded random, timing, bookstore Money |
-| `curriculum/LEARNER.md` | who the course is written for |
-| `curriculum/AUTHORING.md` | how to write a lesson (enforced by `pnpm verify`) |
-| `curriculum/tracks.json`, `roles.json`, `path.json` | tracks, target roles and the study order |
-| `work/` | your copies of the exercises (git-ignored) |
-| `.progress/` | what you passed (git-ignored) |
-| `scripts/` | CLI (`pnpm lesson`), build, verify, start; `scripts/lib` holds the shared helpers |
-| `apps/vscode-ext/` | the VS Code extension |
-| `apps/web/` | the hosted version: VS Code in the browser, in-browser test runner, server and sign-in |
-| `apps/gemini-live/` | the Gemini Live bridge |
-| `vendor/edge-tts-as-extension/` | the voice tool (git submodule) |
+| Path                                                | What                                                                                                                                |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `curriculum/<track>/<NN-slug>/`                     | `lesson.md`, `starter/`, `solution/`, `tests/`                                                                                      |
+| `curriculum/_kit/`                                  | helpers lessons share: implementation loading, Postgres (PGlite), fake LLM, mutation checks, seeded random, timing, bookstore Money |
+| `curriculum/LEARNER.md`                             | who the course is written for                                                                                                       |
+| `curriculum/AUTHORING.md`                           | how to write a lesson (enforced by `pnpm verify`)                                                                                   |
+| `curriculum/tracks.json`, `roles.json`, `path.json` | tracks, target roles and the study order                                                                                            |
+| `work/`                                             | your copies of the exercises (git-ignored)                                                                                          |
+| `.progress/`                                        | what you passed (git-ignored)                                                                                                       |
+| `scripts/`                                          | CLI (`pnpm lesson`), build, verify, start; `scripts/lib` holds the shared helpers                                                   |
+| `apps/vscode-ext/`                                  | the VS Code extension                                                                                                               |
+| `apps/web/`                                         | the hosted version: VS Code in the browser, in-browser test runner, server and sign-in                                              |
+| `apps/gemini-live/`                                 | the Gemini Live bridge                                                                                                              |
+| `vendor/edge-tts-as-extension/`                     | the voice tool (git submodule)                                                                                                      |
 
 ## Commands
 

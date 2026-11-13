@@ -9,7 +9,9 @@
   "bracketSpacing": true,
   "arrowParens": "avoid",
   "endOfLine": "lf",
-  "sortImports": { "sortSideEffects": true },
+  "sortImports": {
+    "sortSideEffects": true
+  },
   "ignorePatterns": [
     "**/node_modules/**",
     "**/dist/**",
@@ -24,6 +26,13 @@
     "**/pnpm-lock.yaml",
     "**/package-lock.json",
     "**/yarn.lock",
-    "**/bun.lock"
+    "**/bun.lock",
+    "vendor/**",
+    "work/**",
+    ".vscode-server/**",
+    "apps/web/dist-client/**",
+    "apps/web/dist-server/**",
+    "apps/vscode-ext/dist/**",
+    "curriculum/*/[0-9]*/**"
   ]
 }

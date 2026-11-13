@@ -1,8 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/getfallow/fallow/main/schema/fallowrc.json",
-  "extends": [
-    "./node_modules/fallow-config-avi12/fallow.json"
-  ],
+  "extends": ["./node_modules/fallow-config-avi12/fallow.json"],
   "entry": [
     "apps/gemini-live/src/entrypoints/**",
     "apps/gemini-live/test/*.ts",
@@ -32,11 +30,7 @@
   "rules": {
     "unused-enum-members": "warn"
   },
-  "ignorePatterns": [
-    "curriculum/**",
-    ".claude/worktrees/**",
-    "vendor/**"
-  ],
+  "ignorePatterns": ["curriculum/**", ".claude/worktrees/**", "vendor/**"],
   "ignoreDependencies": [
     "@electric-sql/pglite",
     "postcss-html",
@@ -52,9 +46,7 @@
   "ignoreExports": [
     {
       "file": "apps/web/src/runner/ts/node/util.ts",
-      "exports": [
-        "promisify"
-      ]
+      "exports": ["promisify"]
     }
   ],
   "usedClassMembers": [

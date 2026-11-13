@@ -1,21 +1,120 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "extends": ["./node_modules/oxlint-config-avi12/browser.json", "./node_modules/oxlint-plugin-naming/preset.json"],
+  "extends": ["./node_modules/oxlint-config-avi12/wxt.json", "./node_modules/oxlint-plugin-naming/preset.json"],
   "overrides": [
     {
       "files": ["scripts/**", "apps/**", "curriculum/_kit/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
-          { "paths": [{ "name": "zod", "message": "import z from scripts/lib/zod.ts - it turns off zod's JIT before the first schema is built" }] }
+          {
+            "paths": [
+              {
+                "name": "zod",
+                "message": "import z from scripts/lib/zod.ts - it turns off zod's JIT before the first schema is built"
+              }
+            ]
+          }
         ]
       }
     },
-    { "files": ["scripts/lib/zod.ts"], "rules": { "no-restricted-imports": "off" } }
+    {
+      "files": ["scripts/lib/zod.ts"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    },
+    {
+      "files": [
+        "apps/gemini-live/src/lib/live-api/mic-worklet.ts",
+        "apps/gemini-live/scripts/cdp.ts",
+        "apps/vscode-ext/src/extension.ts",
+        "apps/vscode-ext/src/storageMemento.ts",
+        "apps/vscode-ext/src/test/vscodeFake.ts",
+        "apps/web/server/security.ts",
+        "apps/web/src/runner/ts/expect.ts",
+        "apps/web/src/runner/ts/host-modules.ts",
+        "apps/web/src/runner/ts/node/**",
+        "apps/web/src/test/memory-storage.ts",
+        "curriculum/_kit/fakeModel.ts",
+        "scripts/lib/query-result.ts",
+        "scripts/lib/render.ts",
+        "scripts/lib/text-table.ts"
+      ],
+      "rules": {
+        "house/positional-parameters": "off"
+      }
+    },
+    {
+      "files": ["apps/gemini-live/src/lib/live-api/mic.ts"],
+      "rules": {
+        "import/default": "off"
+      }
+    }
   ],
   "ignorePatterns": [
-    "**/node_modules/**", "**/.output/**", "**/.output-voice/**", "**/.output-test/**", "**/.wxt/**", "dist/**", "work/**",
-    ".vscode-server/**", ".fallow/**", ".claude/worktrees/**", "vendor/**", "apps/vscode-ext/dist/**",
-    "curriculum/*/[0-9]*/**", "apps/web/dist-client/**", "apps/web/dist-server/**"
-  ]
+    "**/node_modules/**",
+    "**/.output/**",
+    "**/.output-voice/**",
+    "**/.output-test/**",
+    "**/.wxt/**",
+    "dist/**",
+    "work/**",
+    ".vscode-server/**",
+    ".fallow/**",
+    ".claude/worktrees/**",
+    "vendor/**",
+    "apps/vscode-ext/dist/**",
+    "curriculum/*/[0-9]*/**",
+    "apps/web/dist-client/**",
+    "apps/web/dist-server/**"
+  ],
+  "rules": {
+    "naming/convention": [
+      "error",
+      {
+        "presets": ["hook-names"],
+        "allowedPatterns": [
+          {
+            "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)+$",
+            "reason": "External formats spell keys in snake_case: the Anthropic Messages API, Postgres information_schema, the Pyodide lock file and extension manifests"
+          },
+          {
+            "pattern": "^node:[a-z/]+$",
+            "reason": "Node module specifiers used as keys of the host module table"
+          }
+        ],
+        "allowedNames": [
+          {
+            "reason": "Vite define key, read as a global in the app",
+            "names": ["__APP_VERSION__"]
+          },
+          {
+            "reason": "Hono's generic parameter, named by the framework",
+            "names": ["Variables"]
+          },
+          {
+            "reason": "VS Code's service brand marker",
+            "names": ["_serviceBrand"]
+          },
+          {
+            "reason": "The page global that Google's own script defines",
+            "names": ["default_BardChatUi"]
+          },
+          {
+            "reason": "The AudioWorkletGlobalScope global",
+            "names": ["sampleRate"]
+          },
+          {
+            "reason": "The KeyboardEvent init dictionary's member names",
+            "names": ["ctrlKey", "altKey", "shiftKey", "metaKey"]
+          },
+          {
+            "reason": "Test fixture key for a literal dollar sign in a formatter",
+            "names": ["$dollar"]
+          }
+        ]
+      }
+    ]
+  }
 }

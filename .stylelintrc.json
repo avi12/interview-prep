@@ -1,1 +1,28 @@
-{ "extends": ["stylelint-config-avi12"] }
+{
+  "extends": ["stylelint-config-avi12"],
+  "ignoreFiles": [
+    "**/node_modules/**",
+    "**/.output/**",
+    "**/.output-voice/**",
+    "**/.output-test/**",
+    "**/.wxt/**",
+    "dist/**",
+    "work/**",
+    ".vscode-server/**",
+    "vendor/**",
+    "apps/vscode-ext/dist/**",
+    "apps/web/dist-client/**",
+    "apps/web/dist-server/**",
+    "curriculum/**",
+    "**/*.svg",
+    "assets/skin.css"
+  ],
+  "rules": {
+    "custom-property-pattern": [
+      "^(vscode-[A-Za-z0-9-]+|[a-z][a-z0-9-]*(?:(?:--|__)[-a-z0-9]+)*[a-z0-9])$",
+      {
+        "message": "Expected a hyphenated name, or a --vscode-* theme variable that VS Code spells in camelCase"
+      }
+    ]
+  }
+}

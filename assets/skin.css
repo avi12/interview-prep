@@ -29,14 +29,25 @@
   --t-label-s: 600 10px/14px var(--font-sans);
 
   /* Hard-edged chassis - corners come from chamfers, not radii */
-  --shape-xs: 0; --shape-s: 0; --shape-m: 0;
-  --shape-l: 0; --shape-xl: 0; --shape-xxl: 0; --shape-full: 0;
+  --shape-xs: 0;
+  --shape-s: 0;
+  --shape-m: 0;
+  --shape-l: 0;
+  --shape-xl: 0;
+  --shape-xxl: 0;
+  --shape-full: 0;
   --chamfer: 12px;
   --chamfer-s: 7px;
 
   /* Spacing */
-  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
-  --s-5: 20px; --s-6: 24px; --s-7: 32px; --s-8: 40px;
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 40px;
 
   /* Motion - snap, not bounce */
   --ease-emph: cubic-bezier(0.16, 1, 0.3, 1);
@@ -44,7 +55,7 @@
   --dur-short: 80ms;
   --dur-medium: 140ms;
   --dur-long: 200ms;
-  --dur-theme: 260ms;   /* the one slow move - light <-> dark cross-fade */
+  --dur-theme: 260ms; /* the one slow move - light <-> dark cross-fade */
 
   /* LIGHT: the same HUD language inverted. Cool concrete ground, ink-navy
      outlines doing the structural work, electric cyan reserved for what the
@@ -85,8 +96,13 @@
   --tooltip-fg: #4fe9ff;
 
   /* Categorical / chart series - distinct in both schemes */
-  --cat-1: #0079a8; --cat-2: #c4004e; --cat-3: #5b3fd6; --cat-4: #00736b;
-  --cat-5: #9a4a12; --cat-6: #6e5200; --cat-7: #547a99;
+  --cat-1: #0079a8;
+  --cat-2: #c4004e;
+  --cat-3: #5b3fd6;
+  --cat-4: #00736b;
+  --cat-5: #9a4a12;
+  --cat-6: #6e5200;
+  --cat-7: #547a99;
 
   /* Hard offset shadows - printed-plate depth, no glow */
   --shadow-sm: 2px 2px 0 rgb(6 24 43 / 16%);
@@ -148,8 +164,13 @@
   --scrim: rgb(3 8 14 / 76%);
   --tooltip-bg: #00e5ff;
   --tooltip-fg: #001820;
-  --cat-1: #00e5ff; --cat-2: #ff2a4d; --cat-3: #c77dff; --cat-4: #6ee7b7;
-  --cat-5: #ff9e3d; --cat-6: #ffc24d; --cat-7: #698a9c;
+  --cat-1: #00e5ff;
+  --cat-2: #ff2a4d;
+  --cat-3: #c77dff;
+  --cat-4: #6ee7b7;
+  --cat-5: #ff9e3d;
+  --cat-6: #ffc24d;
+  --cat-7: #698a9c;
   --shadow-sm: 0 0 0 1px rgb(0 229 255 / 10%);
   --shadow-md: 0 0 0 1px rgb(0 229 255 / 14%), 0 6px 20px rgb(0 0 0 / 60%);
   --shadow-lg: 0 0 0 1px rgb(0 229 255 / 24%), 0 0 44px rgb(0 229 255 / 8%), 0 18px 50px rgb(0 0 0 / 75%);
@@ -205,8 +226,13 @@
     --scrim: rgb(3 8 14 / 76%);
     --tooltip-bg: #00e5ff;
     --tooltip-fg: #001820;
-    --cat-1: #00e5ff; --cat-2: #ff2a4d; --cat-3: #c77dff; --cat-4: #6ee7b7;
-    --cat-5: #ff9e3d; --cat-6: #ffc24d; --cat-7: #698a9c;
+    --cat-1: #00e5ff;
+    --cat-2: #ff2a4d;
+    --cat-3: #c77dff;
+    --cat-4: #6ee7b7;
+    --cat-5: #ff9e3d;
+    --cat-6: #ffc24d;
+    --cat-7: #698a9c;
     --shadow-sm: 0 0 0 1px rgb(0 229 255 / 10%);
     --shadow-md: 0 0 0 1px rgb(0 229 255 / 14%), 0 6px 20px rgb(0 0 0 / 60%);
     --shadow-lg: 0 0 0 1px rgb(0 229 255 / 24%), 0 0 44px rgb(0 229 255 / 8%), 0 18px 50px rgb(0 0 0 / 75%);
@@ -228,7 +254,9 @@
 
 /* ============================== BASE ==================================== */
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 /* A theme change cross-fades instead of snapping. Custom properties cannot be
    transitioned, so the tween lives on the properties that READ them: every
@@ -237,7 +265,9 @@
    cuts over is the gradient atmosphere on body - background-image is not
    interpolable, and the two schemes do not even have the same layers - but it
    rides at 3-4% alpha over the ground colour, which does fade. */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   transition:
     background-color var(--dur-theme) var(--ease-emph),
     border-color var(--dur-theme) var(--ease-emph),
@@ -269,15 +299,23 @@ body {
 /* Chamfer utilities - the corner cut IS the design language */
 .chamfer {
   clip-path: polygon(
-    var(--chamfer) 0, 100% 0,
-    100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%,
-    0 100%, 0 var(--chamfer));
+    var(--chamfer) 0,
+    100% 0,
+    100% calc(100% - var(--chamfer)),
+    calc(100% - var(--chamfer)) 100%,
+    0 100%,
+    0 var(--chamfer)
+  );
 }
 .chamfer-s {
   clip-path: polygon(
-    var(--chamfer-s) 0, 100% 0,
-    100% calc(100% - var(--chamfer-s)), calc(100% - var(--chamfer-s)) 100%,
-    0 100%, 0 var(--chamfer-s));
+    var(--chamfer-s) 0,
+    100% 0,
+    100% calc(100% - var(--chamfer-s)),
+    calc(100% - var(--chamfer-s)) 100%,
+    0 100%,
+    0 var(--chamfer-s)
+  );
 }
 
 /* Cards: 2px outline + chamfer + top sheen (dark only) */
@@ -288,9 +326,13 @@ body {
   background-image: var(--cyber-sheen);
   box-shadow: var(--shadow-md);
   clip-path: polygon(
-    var(--chamfer) 0, 100% 0,
-    100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%,
-    0 100%, 0 var(--chamfer));
+    var(--chamfer) 0,
+    100% 0,
+    100% calc(100% - var(--chamfer)),
+    calc(100% - var(--chamfer)) 100%,
+    0 100%,
+    0 var(--chamfer)
+  );
 }
 
 /* Card header with the signature 44px accent stub under it */
@@ -298,29 +340,50 @@ body {
   margin: 0 0 var(--s-4);
   padding-bottom: var(--s-3);
   border-bottom: 2px solid var(--border);
-  background: linear-gradient(90deg, var(--cyber-stripe) 0 44px, transparent 44px)
-    bottom left / 100% 4px no-repeat;
+  background: linear-gradient(90deg, var(--cyber-stripe) 0 44px, transparent 44px) bottom left / 100% 4px no-repeat;
   font: var(--t-title-l);
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
 /* Headings: uppercase, tracked out, glow only in dark */
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: var(--font-sans);
   letter-spacing: 0.07em;
   text-transform: uppercase;
   text-shadow: var(--cyber-glow-text);
 }
-h1 { font: var(--t-display-s); letter-spacing: 0.09em; }
-h2 { font: var(--t-headline-m); }
-h3 { font: var(--t-headline-s); }
+h1 {
+  font: var(--t-display-s);
+  letter-spacing: 0.09em;
+}
+h2 {
+  font: var(--t-headline-m);
+}
+h3 {
+  font: var(--t-headline-s);
+}
 
 /* Secondary / metadata text runs mono - the terminal register */
-.sub, .meta, .caption, figcaption, small, code, pre, kbd, .num {
+.sub,
+.meta,
+.caption,
+figcaption,
+small,
+code,
+pre,
+kbd,
+.num {
   font-family: var(--font-mono);
 }
-.sub, .meta, .caption, figcaption { color: var(--fg-muted); }
+.sub,
+.meta,
+.caption,
+figcaption {
+  color: var(--fg-muted);
+}
 
 /* Big numbers are mono + lit */
 .big {
@@ -349,11 +412,17 @@ h3 { font: var(--t-headline-s); }
     color var(--dur-theme) var(--ease-emph),
     box-shadow var(--dur-theme) var(--ease-emph);
   clip-path: polygon(
-    var(--chamfer-s) 0, 100% 0,
-    100% calc(100% - var(--chamfer-s)), calc(100% - var(--chamfer-s)) 100%,
-    0 100%, 0 var(--chamfer-s));
+    var(--chamfer-s) 0,
+    100% 0,
+    100% calc(100% - var(--chamfer-s)),
+    calc(100% - var(--chamfer-s)) 100%,
+    0 100%,
+    0 var(--chamfer-s)
+  );
 }
-.btn:hover { background: var(--hover); }
+.btn:hover {
+  background: var(--hover);
+}
 .btn[data-variant="primary"] {
   border-color: var(--primary);
   background: var(--primary);
@@ -367,7 +436,8 @@ h3 { font: var(--t-headline-s); }
   box-shadow: var(--cyber-glow-danger);
 }
 
-.chip, .badge {
+.chip,
+.badge {
   display: inline-flex;
   align-items: center;
   gap: var(--s-1);
@@ -380,11 +450,17 @@ h3 { font: var(--t-headline-s); }
   letter-spacing: 0.06em;
   text-transform: uppercase;
   clip-path: polygon(
-    var(--chamfer-s) 0, 100% 0,
-    100% calc(100% - var(--chamfer-s)), calc(100% - var(--chamfer-s)) 100%,
-    0 100%, 0 var(--chamfer-s));
+    var(--chamfer-s) 0,
+    100% 0,
+    100% calc(100% - var(--chamfer-s)),
+    calc(100% - var(--chamfer-s)) 100%,
+    0 100%,
+    0 var(--chamfer-s)
+  );
 }
-.chip[data-active="true"] { box-shadow: var(--cyber-active-ring); }
+.chip[data-active="true"] {
+  box-shadow: var(--cyber-active-ring);
+}
 
 /* Callouts: colour-coded left rail, no rounded corners */
 .callout {
@@ -393,11 +469,24 @@ h3 { font: var(--t-headline-s); }
   border-left: 6px solid var(--accent, var(--primary));
   background: var(--surface-2);
 }
-.callout[data-kind="ok"]     { --accent: var(--ok);     background: var(--ok-container); }
-.callout[data-kind="warn"]   { --accent: var(--warn);   background: var(--warn-container); }
-.callout[data-kind="danger"] { --accent: var(--danger); background: var(--danger-container); }
+.callout[data-kind="ok"] {
+  --accent: var(--ok);
+  background: var(--ok-container);
+}
+.callout[data-kind="warn"] {
+  --accent: var(--warn);
+  background: var(--warn-container);
+}
+.callout[data-kind="danger"] {
+  --accent: var(--danger);
+  background: var(--danger-container);
+}
 
-table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+}
 th {
   padding: var(--s-2) var(--s-3);
   border-bottom: 2px solid var(--border);
@@ -407,26 +496,48 @@ th {
   text-align: left;
   text-transform: uppercase;
 }
-td { padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--border); }
-tbody tr:nth-child(even) { background: var(--table-zebra); }
+td {
+  padding: var(--s-2) var(--s-3);
+  border-bottom: 1px solid var(--border);
+}
+tbody tr:nth-child(even) {
+  background: var(--table-zebra);
+}
 
-pre, code {
+pre,
+code {
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--fg);
 }
-pre { padding: var(--s-4); overflow-x: auto; }
-code { padding: 1px 5px; }
-pre code { padding: 0; border: none; background: none; }
+pre {
+  padding: var(--s-4);
+  overflow-x: auto;
+}
+code {
+  padding: 1px 5px;
+}
+pre code {
+  padding: 0;
+  border: none;
+  background: none;
+}
 
 /* Images / thumbnails read as surveillance feed */
-.thumb { border-radius: 0; filter: grayscale(1) contrast(1.08); }
+.thumb {
+  border-radius: 0;
+  filter: grayscale(1) contrast(1.08);
+}
 
 /* Wide content scrolls in its own box; the page body never does */
-.scroll-x { overflow-x: auto; }
+.scroll-x {
+  overflow-x: auto;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     transition-duration: 0.001ms !important;
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;

@@ -40,13 +40,13 @@ If the app signs in with `authDomain` set to `avi-interview-prep.web.app` (not t
 
 ### Who can do what
 
-| Service account | Role | Why |
-| --- | --- | --- |
-| `interview-prep-web` (Cloud Run) | `roles/datastore.user` | read and write progress in Firestore |
-| | `roles/firebaseauth.viewer` | the server checks that a token was not revoked, which reads the user record. Checking the signature alone needs no role |
-| `interview-prep-web-build` (Cloud Build) | `roles/artifactregistry.writer` on the image repo only | push the image |
-| | `roles/logging.logWriter` | write build logs |
-| | `roles/storage.objectViewer` | read the uploaded source |
+| Service account                          | Role                                                   | Why                                                                                                                     |
+| ---------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `interview-prep-web` (Cloud Run)         | `roles/datastore.user`                                 | read and write progress in Firestore                                                                                    |
+|                                          | `roles/firebaseauth.viewer`                            | the server checks that a token was not revoked, which reads the user record. Checking the signature alone needs no role |
+| `interview-prep-web-build` (Cloud Build) | `roles/artifactregistry.writer` on the image repo only | push the image                                                                                                          |
+|                                          | `roles/logging.logWriter`                              | write build logs                                                                                                        |
+|                                          | `roles/storage.objectViewer`                           | read the uploaded source                                                                                                |
 
 Cloud Build gets its own account because new projects no longer give it a default one with broad rights.
 
