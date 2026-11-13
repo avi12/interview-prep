@@ -1,6 +1,6 @@
 import type { AuthVariables } from "@server/auth.ts";
 import { ErrorCode, HttpStatus, sendError } from "@server/http.ts";
-import type { MiddlewareHandler } from "hono";
+import type { Context, Env, MiddlewareHandler } from "hono";
 
 export interface RateLimitOptions {
   capacity: number;
@@ -15,10 +15,17 @@ interface Bucket {
 
 const MILLISECONDS_PER_SECOND = 1000;
 const MAX_TRACKED_CALLERS = 10_000;
+const FORWARDED_FOR_HEADER = "x-forwarded-for";
+const UNKNOWN_ADDRESS = "unknown";
 
 export const DEFAULT_RATE_LIMIT = {
   capacity: 30,
   refillPerSecond: 1
+} as const satisfies RateLimitOptions;
+
+export const NARRATE_RATE_LIMIT = {
+  capacity: 10,
+  refillPerSecond: 0.2
 } as const satisfies RateLimitOptions;
 
 function createTokenBucket({ capacity, refillPerSecond, now = Date.now }: RateLimitOptions) {
@@ -61,10 +68,16 @@ function createTokenBucket({ capacity, refillPerSecond, now = Date.now }: RateLi
   };
 }
 
-export function rateLimitPerUser(options: RateLimitOptions) {
+function limiter<Environment extends Env>({
+  options,
+  keyOf
+}: {
+  options: RateLimitOptions;
+  keyOf: (context: Context<Environment>) => string;
+}) {
   const take = createTokenBucket(options);
   return (async (context, next) => {
-    if (!take(context.get("uid"))) {
+    if (!take(keyOf(context))) {
       context.header("retry-after", String(Math.ceil(1 / options.refillPerSecond)));
       return sendError({
         context,
@@ -74,5 +87,22 @@ export function rateLimitPerUser(options: RateLimitOptions) {
     }
 
     await next();
-  }) satisfies MiddlewareHandler<{ Variables: AuthVariables }>;
+  }) satisfies MiddlewareHandler<Environment>;
+}
+
+export function rateLimitPerUser(options: RateLimitOptions) {
+  return limiter<{ Variables: AuthVariables }>({
+    options,
+    keyOf: context => context.get("uid")
+  });
+}
+
+export function rateLimitPerIp(options: RateLimitOptions) {
+  return limiter({
+    options,
+    keyOf(context) {
+      const forwarded = context.req.header(FORWARDED_FOR_HEADER)?.split(",").at(-1)?.trim();
+      return forwarded || UNKNOWN_ADDRESS;
+    }
+  });
 }

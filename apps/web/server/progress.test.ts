@@ -198,9 +198,11 @@ describe("rate limit", () => {
   it("returns 429 once a user's bucket is empty, per user", async () => {
     let now = 0;
     const { app } = createTestApp({
-      capacity: 2,
-      refillPerSecond: 1,
-      now: () => now
+      rateLimit: {
+        capacity: 2,
+        refillPerSecond: 1,
+        now: () => now
+      }
     });
     const statuses: number[] = [];
     for (let iRequest = 0; iRequest < 3; iRequest++) {

@@ -2,9 +2,10 @@ import { extname, resolve } from "node:path";
 
 import { contentTypeOf, readFileOrNull, resolveInside } from "@server/files.ts";
 import { CacheControl, ErrorCode, HttpStatus, sendError } from "@server/http.ts";
-import { RUNNER_WORKER_CSP, WEBVIEW_HOST_CSP } from "@server/security.ts";
+import { CORP_RESPONSE_HEADER, CROSS_ORIGIN_RESOURCE, RUNNER_WORKER_CSP, WEBVIEW_HOST_CSP } from "@server/security.ts";
 import { type Context, Hono } from "hono";
 
+import { NARRATION_RUNTIME_RELATIVE_PATH } from "#scripts/lib/layout.ts";
 import { lessonIdFromUrl } from "@/lib/lesson-address.ts";
 import { COURSE_PATH, HASHED_ASSETS_PATH, RUNNER_PATH, WORKERS_PATH } from "@/lib/web-paths.ts";
 
@@ -83,6 +84,10 @@ export function courseRoutes({ contentRoot, courseFiles }: { contentRoot: string
     const body = file === null ? null : await readFileOrNull(file);
     if (file === null || body === null) {
       return notFound(context);
+    }
+
+    if (relativePath === NARRATION_RUNTIME_RELATIVE_PATH) {
+      context.header(CORP_RESPONSE_HEADER, CROSS_ORIGIN_RESOURCE);
     }
 
     return send({

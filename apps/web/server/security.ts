@@ -7,6 +7,8 @@ const CSP_HEADER = "content-security-policy";
 const CORP_HEADER = "cross-origin-resource-policy";
 const HSTS = "max-age=31536000; includeSubDomains";
 const SAME_ORIGIN_RESOURCE = "same-origin";
+export const CROSS_ORIGIN_RESOURCE = "cross-origin";
+export const CORP_RESPONSE_HEADER = CORP_HEADER;
 
 const GOOGLE_FONTS_STYLES = "https://fonts.googleapis.com";
 const GOOGLE_FONTS_FILES = "https://fonts.gstatic.com";
@@ -68,6 +70,7 @@ const APP_CSP = policy({
   "img-src": [...WORKBENCH["img-src"], ...GOOGLE_SIGN_IN["img-src"]],
   "style-src": [CspSource.SELF, CspSource.UNSAFE_INLINE, GOOGLE_FONTS_STYLES],
   "font-src": [...WORKBENCH["font-src"], GOOGLE_FONTS_FILES],
+  "media-src": [CspSource.SELF, CspSource.BLOB],
   ...LOCKED_DOWN,
   "form-action": [CspSource.SELF],
   "frame-ancestors": [CspSource.NONE]

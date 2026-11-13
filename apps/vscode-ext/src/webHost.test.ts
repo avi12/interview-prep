@@ -21,6 +21,7 @@ const LESSON: LessonEntry = {
   hasExercise: true,
   html: "dist/lessons/foundations/01-two-sum.html",
   tutor: "dist/lessons/foundations/01-two-sum.tutor.json",
+  narration: "dist/lessons/foundations/01-two-sum.narration.json",
   sqlTables: []
 };
 const STARTER: LessonFile[] = [

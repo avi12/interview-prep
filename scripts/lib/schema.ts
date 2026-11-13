@@ -61,6 +61,14 @@ export const lastTestSchema = zod.object({
 
 export const tutorNotesSchema = zod.array(tutorBlockSchema);
 
+export const narrationCardsSchema = zod.array(
+  zod.object({
+    card: zod.number().int().min(1),
+    title: zod.string(),
+    script: zod.string().min(1)
+  })
+);
+
 export const progressSchema = zod.record(
   zod.string(),
   zod.object({
@@ -105,6 +113,7 @@ export const lessonIndexSchema = zod.object({
       hasExercise: zod.boolean(),
       html: zod.string(),
       tutor: zod.string(),
+      narration: zod.string(),
       sqlTables: zod.array(sqlTableSchema).default([])
     })
   )

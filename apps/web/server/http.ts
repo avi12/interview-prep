@@ -1,4 +1,4 @@
-import type { Context } from "hono";
+import type { Context, MiddlewareHandler } from "hono";
 
 import type { zod } from "@/lib/zod.ts";
 
@@ -62,3 +62,8 @@ export function sendJson<T>({ context, schema, value }: { context: Context; sche
 
   return context.json(parsed.data, HttpStatus.OK);
 }
+
+export const noStore = (async (context, next) => {
+  await next();
+  context.header("cache-control", CacheControl.NO_STORE);
+}) satisfies MiddlewareHandler;
