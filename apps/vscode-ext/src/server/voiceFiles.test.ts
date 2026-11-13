@@ -1,6 +1,8 @@
-import { contentTypeOf, resolveVoiceFile } from "@/server/voiceFiles.ts";
 import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
+
+import { contentTypeOf, resolveVoiceFile } from "@/server/voiceFiles.ts";
 
 const buildDir = resolve("voice-build");
 
@@ -25,7 +27,15 @@ describe("resolveVoiceFile", () => {
   });
 
   it("rejects paths outside the build folder", () => {
-    for (const pathname of ["/voice/../secret.txt", "/voice/%2e%2e/secret.txt", "/voice/..%5Csecret.txt", "/voice/%2e%2e%2f%2e%2e/etc", "/voice/%E0%A4%A", "/voice/a%00.js", "/other/index.html"]) {
+    for (const pathname of [
+      "/voice/../secret.txt",
+      "/voice/%2e%2e/secret.txt",
+      "/voice/..%5Csecret.txt",
+      "/voice/%2e%2e%2f%2e%2e/etc",
+      "/voice/%E0%A4%A",
+      "/voice/a%00.js",
+      "/other/index.html"
+    ]) {
       expect(fileFor(pathname)).toBeNull();
     }
   });

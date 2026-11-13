@@ -8,67 +8,133 @@ export const SQL_SELECTOR: vscode.DocumentSelector = {
 const QUALIFIER_TRIGGER = ".";
 
 const SQL_KEYWORDS = [
-  "SELECT", "FROM", "WHERE", "GROUP BY", "HAVING", "ORDER BY", "LIMIT", "OFFSET", "AS", "DISTINCT",
-  "JOIN", "INNER JOIN", "LEFT JOIN", "ON", "AND", "OR", "NOT", "IN", "BETWEEN", "LIKE", "ILIKE",
-  "IS NULL", "IS NOT NULL", "ASC", "DESC", "CASE", "WHEN", "THEN", "ELSE", "END", "WITH", "UNION",
-  "COUNT", "SUM", "AVG", "MIN", "MAX", "ROUND", "COALESCE", "OVER", "PARTITION BY",
-  "ROW_NUMBER", "RANK", "DENSE_RANK", "LAG", "LEAD", "CREATE INDEX", "EXPLAIN"
+  "SELECT",
+  "FROM",
+  "WHERE",
+  "GROUP BY",
+  "HAVING",
+  "ORDER BY",
+  "LIMIT",
+  "OFFSET",
+  "AS",
+  "DISTINCT",
+  "JOIN",
+  "INNER JOIN",
+  "LEFT JOIN",
+  "ON",
+  "AND",
+  "OR",
+  "NOT",
+  "IN",
+  "BETWEEN",
+  "LIKE",
+  "ILIKE",
+  "IS NULL",
+  "IS NOT NULL",
+  "ASC",
+  "DESC",
+  "CASE",
+  "WHEN",
+  "THEN",
+  "ELSE",
+  "END",
+  "WITH",
+  "UNION",
+  "COUNT",
+  "SUM",
+  "AVG",
+  "MIN",
+  "MAX",
+  "ROUND",
+  "COALESCE",
+  "OVER",
+  "PARTITION BY",
+  "ROW_NUMBER",
+  "RANK",
+  "DENSE_RANK",
+  "LAG",
+  "LEAD",
+  "CREATE INDEX",
+  "EXPLAIN"
 ];
 
 const SortGroup = {
-  column: "0",
-  table: "1",
-  keyword: "2"
+  COLUMN: "0",
+  TABLE: "1",
+  KEYWORD: "2"
 } as const;
 
 const TABLE_REFERENCE = /\b(?:FROM|JOIN)\s+(\w+)(?:\s+(?:AS\s+)?(\w+))?/gi;
-const CLAUSE_WORDS = new Set(["on", "where", "join", "left", "right", "inner", "full", "cross", "group", "order", "limit", "having", "using"]);
+const CLAUSE_WORDS = new Set([
+  "on",
+  "where",
+  "join",
+  "left",
+  "right",
+  "inner",
+  "full",
+  "cross",
+  "group",
+  "order",
+  "limit",
+  "having",
+  "using"
+]);
 const QUALIFIED_PREFIX = /(\w+)\.\w*$/;
 
-function aliasesIn({ text, tables }: {
-  text: string;
-  tables: SqlTable[];
-}) {
+function aliasesIn({ text, tables }: { text: string; tables: SqlTable[] }) {
   const byName = new Map(tables.map(table => [table.name.toLowerCase(), table]));
   const aliases = new Map(byName);
   for (const [, name, alias] of text.matchAll(TABLE_REFERENCE)) {
     const table = byName.get(name.toLowerCase());
-    if (table && alias && !CLAUSE_WORDS.has(alias.toLowerCase())) {
+    const isTableAlias = table && alias && !CLAUSE_WORDS.has(alias.toLowerCase());
+    if (isTableAlias) {
       aliases.set(alias.toLowerCase(), table);
     }
   }
   return aliases;
 }
 
-function referencedTables({ text, tables }: {
-  text: string;
-  tables: SqlTable[];
-}) {
+function referencedTables({ text, tables }: { text: string; tables: SqlTable[] }) {
   const names = new Set([...text.matchAll(TABLE_REFERENCE)].map(([, name]) => name.toLowerCase()));
   const referenced = tables.filter(table => names.has(table.name.toLowerCase()));
   return referenced.length > 0 ? referenced : tables;
 }
 
 function columnItems(tables: SqlTable[]) {
-  return tables.flatMap(table =>
-    table.columns.map(column => {
-      const item = new vscode.CompletionItem({
-        label: column.name,
-        description: `${table.name} · ${column.type}`
-      }, vscode.CompletionItemKind.Field);
-      item.sortText = `${SortGroup.column}${column.name}`;
+  function tableCompletions(table: {
+    name: string;
+    columns: {
+      name: string;
+      type: string;
+    }[];
+  }) {
+    return table.columns.map(column => {
+      const item = new vscode.CompletionItem(
+        {
+          label: column.name,
+          description: `${table.name} · ${column.type}`
+        },
+        vscode.CompletionItemKind.Field
+      );
+      item.sortText = `${SortGroup.COLUMN}${column.name}`;
       return item;
-    }));
+    });
+  }
+  return tables.flatMap(tableCompletions);
 }
 
 function tableItems(tables: SqlTable[]) {
   return tables.map(table => {
-    const item = new vscode.CompletionItem({
-      label: table.name,
-      description: "table"
-    }, vscode.CompletionItemKind.Class);
+    const item = new vscode.CompletionItem(
+      {
+        label: table.name,
+        description: "table"
+      },
+      vscode.CompletionItemKind.Class
+    );
     item.detail = table.columns.map(column => column.name).join(", ");
-    item.sortText = `${SortGroup.table}${table.name}`;
+    item.sortText = `${SortGroup.TABLE}${table.name}`;
     return item;
   });
 }
@@ -76,7 +142,7 @@ function tableItems(tables: SqlTable[]) {
 function keywordItems() {
   return SQL_KEYWORDS.map(keyword => {
     const item = new vscode.CompletionItem(keyword, vscode.CompletionItemKind.Keyword);
-    item.sortText = `${SortGroup.keyword}${keyword}`;
+    item.sortText = `${SortGroup.KEYWORD}${keyword}`;
     return item;
   });
 }
@@ -100,12 +166,16 @@ export function registerSqlCompletion(tablesOfDocument: SqlTablesOfDocument) {
           return table ? columnItems([table]) : [];
         }
 
-        return [...columnItems(
-          referencedTables({
-            text,
-            tables
-          })
-        ), ...tableItems(tables), ...keywordItems()];
+        return [
+          ...columnItems(
+            referencedTables({
+              text,
+              tables
+            })
+          ),
+          ...tableItems(tables),
+          ...keywordItems()
+        ];
       }
     },
     QUALIFIER_TRIGGER

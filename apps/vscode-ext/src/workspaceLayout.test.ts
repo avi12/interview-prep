@@ -1,6 +1,7 @@
-import { lessonIdOfUri, workFileUris } from "@/workspaceLayout.ts";
 import { describe, expect, it } from "vitest";
 import * as vscode from "vscode";
+
+import { lessonIdOfUri, workFileUris } from "@/workspaceLayout.ts";
 
 const ROOT = vscode.Uri.file("/c:/repositories/interview-prep");
 

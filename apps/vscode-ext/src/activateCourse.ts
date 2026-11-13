@@ -1,3 +1,7 @@
+import type { NarrationRequest } from "@scripts/lib/narration-host.ts";
+import { PanelAction } from "@scripts/lib/panel.ts";
+import * as vscode from "vscode";
+
 import { addTopic } from "@/addTopic.ts";
 import { Command, IS_LOCAL_CONTEXT_KEY } from "@/contributions.ts";
 import { COURSE_FILTER_SETTINGS, courseSettings, createCourse } from "@/course.ts";
@@ -10,9 +14,6 @@ import { registerSqlHighlight } from "@/sqlHighlight.ts";
 import { createTestResultsView } from "@/testResults.ts";
 import { createTopicsStatus } from "@/topicsStatus.ts";
 import { lessonIdOfUri, workFileUris } from "@/workspaceLayout.ts";
-import type { NarrationRequest } from "@scripts/lib/narration-host.ts";
-import { PanelAction } from "@scripts/lib/panel.ts";
-import * as vscode from "vscode";
 
 const SHOW_LESSONS_COMMAND = "workbench.view.extension.interviewPrep";
 const SET_CONTEXT_COMMAND = "setContext";
@@ -27,7 +28,11 @@ function narrationUnavailable(request: NarrationRequest) {
   });
 }
 
-export async function activateCourse({ context, host, isHotSwap }: {
+export async function activateCourse({
+  context,
+  host,
+  isHotSwap
+}: {
   context: CourseContext;
   host: CourseHost;
   isHotSwap: boolean;
@@ -77,8 +82,12 @@ export async function activateCourse({ context, host, isHotSwap }: {
   }
 
   async function showExerciseFile(uri: vscode.Uri) {
-    const openGroup = vscode.window.tabGroups.all.find(group => group.tabs.some(tab =>
-      tab.input instanceof vscode.TabInputText && tab.input.uri.toString() === uri.toString()));
+    function isUriOpenInGroup(group: vscode.TabGroup) {
+      return group.tabs.some(
+        tab => tab.input instanceof vscode.TabInputText && tab.input.uri.toString() === uri.toString()
+      );
+    }
+    const openGroup = vscode.window.tabGroups.all.find(isUriOpenInGroup);
     await vscode.window.showTextDocument(uri, {
       viewColumn: openGroup?.viewColumn ?? vscode.ViewColumn.One,
       preview: false
@@ -98,10 +107,7 @@ export async function activateCourse({ context, host, isHotSwap }: {
     }
   }
 
-  async function openExerciseFile({ id, file }: {
-    id: string;
-    file: string;
-  }) {
+  async function openExerciseFile({ id, file }: { id: string; file: string }) {
     const lesson = course.findLesson(id);
     if (!lesson) {
       return;
@@ -130,7 +136,11 @@ export async function activateCourse({ context, host, isHotSwap }: {
       return;
     }
 
-    const answer = await vscode.window.showWarningMessage(`Reset your code for ${lesson.id} to the starter?`, { modal: true }, "Reset");
+    const answer = await vscode.window.showWarningMessage(
+      `Reset your code for ${lesson.id} to the starter?`,
+      { modal: true },
+      "Reset"
+    );
     if (answer !== "Reset") {
       return;
     }
@@ -150,13 +160,11 @@ export async function activateCourse({ context, host, isHotSwap }: {
     await openNextLesson();
   }
 
-  async function showLessonPanel({ id, isScrolledToTop }: {
-    id: string;
-    isScrolledToTop: boolean;
-  }) {
+  async function showLessonPanel({ id, isScrolledToTop }: { id: string; isScrolledToTop: boolean }) {
     const lesson = course.findLesson(id);
     const page = lesson ? await host.readCourseFile(lesson.html) : null;
-    if (!lesson || page === null) {
+    const isLessonPageMissing = !lesson || page === null;
+    if (isLessonPageMissing) {
       return vscode.window.showErrorMessage(`No lesson ${id}. Run: pnpm build`);
     }
 
@@ -168,28 +176,30 @@ export async function activateCourse({ context, host, isHotSwap }: {
       isScrolledToTop,
       nextName: course.nextLessonName(id),
       onNarration: answerNarration,
-      onOpenFile: file => void openExerciseFile({
-        id,
-        file
-      }),
+      onOpenFile(file) {
+        void openExerciseFile({
+          id,
+          file
+        });
+      },
       onAction(action) {
-        if (action === PanelAction.runTests) {
+        if (action === PanelAction.RUN_TESTS) {
           void runTests(id);
         }
 
-        if (action === PanelAction.openExercise) {
+        if (action === PanelAction.OPEN_EXERCISE) {
           void openExercise(id);
         }
 
-        if (action === PanelAction.resetExercise) {
+        if (action === PanelAction.RESET_EXERCISE) {
           void resetExercise(id);
         }
 
-        if (action === PanelAction.markDone) {
+        if (action === PanelAction.MARK_DONE) {
           void markDone(id);
         }
 
-        if (action === PanelAction.nextLesson) {
+        if (action === PanelAction.NEXT_LESSON) {
           void openNextLesson();
         }
       }
@@ -197,11 +207,13 @@ export async function activateCourse({ context, host, isHotSwap }: {
   }
 
   function otherLessonTabs(id: string) {
-    const currentFileUris = new Set(workFileUris({
-      root,
-      lessonId: id,
-      files: course.findLesson(id)?.files ?? []
-    }).map(uri => uri.toString()));
+    const currentFileUris = new Set(
+      workFileUris({
+        root,
+        lessonId: id,
+        files: course.findLesson(id)?.files ?? []
+      }).map(uri => uri.toString())
+    );
     return vscode.window.tabGroups.all
       .flatMap(group => group.tabs)
       .flatMap(tab => {
@@ -212,18 +224,24 @@ export async function activateCourse({ context, host, isHotSwap }: {
         const tabLessonId = lessonIdOf(tab.input.uri);
         const uri = tab.input.uri.toString();
         const isStale = tabLessonId !== id || !currentFileUris.has(uri);
-        return tabLessonId !== undefined && isStale ? [{
-          tab,
-          uri
-        }] : [];
+        const isStaleLessonTab = tabLessonId !== undefined && isStale;
+        return isStaleLessonTab
+          ? [
+              {
+                tab,
+                uri
+              }
+            ]
+          : [];
       });
   }
 
   async function closeOtherLessonTabs(id: string) {
     const tabs = otherLessonTabs(id);
     const uris = new Set(tabs.map(({ uri }) => uri));
-    const dirtyDocuments = vscode.workspace.textDocuments
-      .filter(document => document.isDirty && uris.has(document.uri.toString()));
+    const dirtyDocuments = vscode.workspace.textDocuments.filter(
+      document => document.isDirty && uris.has(document.uri.toString())
+    );
     await Promise.all(dirtyDocuments.map(document => document.save()));
     await vscode.window.tabGroups.close(tabs.map(({ tab }) => tab));
   }
@@ -240,10 +258,7 @@ export async function activateCourse({ context, host, isHotSwap }: {
     });
   }
 
-  async function showLessonWorkspace({ id, isScrolledToTop }: {
-    id: string;
-    isScrolledToTop: boolean;
-  }) {
+  async function showLessonWorkspace({ id, isScrolledToTop }: { id: string; isScrolledToTop: boolean }) {
     const lesson = course.findLesson(id);
     if (!lesson) {
       return showLessonPanel({
@@ -292,7 +307,9 @@ export async function activateCourse({ context, host, isHotSwap }: {
       course,
       state: context.workspaceState,
       readElementsBundle: host.readElementsBundle,
-      onAddTopic: () => void vscode.commands.executeCommand(Command.addTopic),
+      onAddTopic() {
+        void vscode.commands.executeCommand(Command.ADD_TOPIC);
+      },
       onFinished() {
         tree.refresh();
         void openNextLesson();
@@ -303,7 +320,9 @@ export async function activateCourse({ context, host, isHotSwap }: {
   async function openNextLesson() {
     const next = course.findNextLesson();
     if (!next) {
-      return vscode.window.showInformationMessage("That was the last lesson in your topics, and every one is passed. Nice. Add more topics from the status bar to keep going");
+      return vscode.window.showInformationMessage(
+        "That was the last lesson in your topics, and every one is passed. Nice. Add more topics from the status bar to keep going"
+      );
     }
 
     await openLesson(next.id);
@@ -320,13 +339,15 @@ export async function activateCourse({ context, host, isHotSwap }: {
 
   function lessonEditor() {
     const active = vscode.window.activeTextEditor;
-    if (active && isWorkspaceEditor(active)) {
+    const isActiveWorkspaceEditor = active && isWorkspaceEditor(active);
+    if (isActiveWorkspaceEditor) {
       return active;
     }
 
     const id = activeLessonId();
-    return vscode.window.visibleTextEditors.find(editor =>
-      isWorkspaceEditor(editor) && lessonIdOf(editor.document.uri) === id);
+    return vscode.window.visibleTextEditors.find(
+      editor => isWorkspaceEditor(editor) && lessonIdOf(editor.document.uri) === id
+    );
   }
 
   function activeLesson() {
@@ -363,6 +384,9 @@ export async function activateCourse({ context, host, isHotSwap }: {
   };
 
   void vscode.commands.executeCommand(SET_CONTEXT_COMMAND, IS_LOCAL_CONTEXT_KEY, host.local !== undefined);
+  function handleRunTests(uri?: vscode.Uri) {
+    return runTests((uri && lessonIdOf(uri)) ?? activeLessonId());
+  }
 
   context.subscriptions.push(
     host,
@@ -371,31 +395,32 @@ export async function activateCourse({ context, host, isHotSwap }: {
     testResults.registration,
     registerSqlCompletion(sqlTablesOf),
     registerSqlHighlight(sqlTablesOf),
-    vscode.commands.registerCommand(Command.openLesson, openLesson),
-    vscode.commands.registerCommand(Command.nextLesson, openNextLesson),
-    vscode.commands.registerCommand(Command.goToCurrentLesson, goToCurrentLesson),
-    vscode.commands.registerCommand(Command.chooseRole, course.chooseRole),
-    vscode.commands.registerCommand(Command.chooseTracks, openOnboarding),
-    vscode.commands.registerCommand(Command.addTopic, addTopic),
-    vscode.commands.registerCommand(Command.runTests, (uri?: vscode.Uri) =>
-      runTests((uri && lessonIdOf(uri)) ?? activeLessonId())),
-    vscode.commands.registerCommand(Command.resetExercise, () => resetExercise(activeLessonId())),
-    vscode.commands.registerCommand(Command.markDone, () => markDone(activeLessonId())),
-    vscode.commands.registerCommand(Command.refresh, refreshCourse),
-    vscode.commands.registerCommand(Command.showPath, () => tree.showView(LessonView.path)),
-    vscode.commands.registerCommand(Command.showTracks, () => tree.showView(LessonView.tracks)),
+    vscode.commands.registerCommand(Command.OPEN_LESSON, openLesson),
+    vscode.commands.registerCommand(Command.NEXT_LESSON, openNextLesson),
+    vscode.commands.registerCommand(Command.GO_TO_CURRENT_LESSON, goToCurrentLesson),
+    vscode.commands.registerCommand(Command.CHOOSE_ROLE, course.chooseRole),
+    vscode.commands.registerCommand(Command.CHOOSE_TRACKS, openOnboarding),
+    vscode.commands.registerCommand(Command.ADD_TOPIC, addTopic),
+    vscode.commands.registerCommand(Command.RUN_TESTS, handleRunTests),
+    vscode.commands.registerCommand(Command.RESET_EXERCISE, () => resetExercise(activeLessonId())),
+    vscode.commands.registerCommand(Command.MARK_DONE, () => markDone(activeLessonId())),
+    vscode.commands.registerCommand(Command.REFRESH, refreshCourse),
+    vscode.commands.registerCommand(Command.SHOW_PATH, () => tree.showView(LessonView.PATH)),
+    vscode.commands.registerCommand(Command.SHOW_TRACKS, () => tree.showView(LessonView.TRACKS)),
     ...(host.local?.register(session) ?? []),
-    vscode.workspace.onDidChangeConfiguration(e => {
-      if (COURSE_FILTER_SETTINGS.some(setting => e.affectsConfiguration(setting))) {
+    vscode.workspace.onDidChangeConfiguration(event => {
+      if (COURSE_FILTER_SETTINGS.some(setting => event.affectsConfiguration(setting))) {
         tree.refresh();
         topicsStatus.render();
       }
     }),
-    host.onDidChangeProgress(() => void refreshCourse()),
+    host.onDidChangeProgress(() => {
+      void refreshCourse();
+    }),
     host.onDidFinishTests(async ({ id, isPass }) => {
       await refreshCourse();
-
-      if (isPass && id === openLessonId) {
+      const isOpenLessonPassed = isPass && id === openLessonId;
+      if (isOpenLessonPassed) {
         void showLessonPanel({
           id,
           isScrolledToTop: false
@@ -411,7 +436,9 @@ export async function activateCourse({ context, host, isHotSwap }: {
       const passedTitle = course.findLesson(id)?.title ?? id;
       const nextName = course.nextLessonName(id);
       const nextChoice = nextName ? [`Next: ${nextName}`] : [];
-      vscode.window.showInformationMessage(`Passed ${passedTitle}`, ...nextChoice).then(choice => choice && openNextLesson());
+      vscode.window
+        .showInformationMessage(`Passed ${passedTitle}`, ...nextChoice)
+        .then(choice => choice && openNextLesson());
     }),
     new vscode.Disposable(closeLessonPanel)
   );
@@ -437,7 +464,8 @@ export async function activateCourse({ context, host, isHotSwap }: {
 
   const isAutoOpenEnabled = courseSettings().get<boolean>(AUTO_OPEN_SETTING, true);
   const linkedLessonId = host.address?.initialLessonId();
-  if (linkedLessonId && course.findLesson(linkedLessonId)) {
+  const hasLinkedLesson = linkedLessonId && course.findLesson(linkedLessonId);
+  if (hasLinkedLesson) {
     void openLesson(linkedLessonId);
   } else if (!isOnboarded(context.workspaceState)) {
     void openOnboarding();

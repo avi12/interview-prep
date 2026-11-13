@@ -1,21 +1,28 @@
 {
   "name": "interview-prep",
   "displayName": "Interview Prep",
-  "description": "Narrated lessons, runnable exercises and progress for the interview-prep course",
-  "publisher": "avi12",
   "version": "0.1.0",
   "private": true,
-  "license": "Apache-2.0",
-  "engines": {
-    "vscode": "^1.90.0"
-  },
+  "description": "Narrated lessons, runnable exercises and progress for the interview-prep course",
   "categories": [
     "Education"
   ],
+  "license": "Apache-2.0",
+  "publisher": "avi12",
   "main": "./dist/extension.js",
-  "activationEvents": [
-    "workspaceContains:curriculum/tracks.json"
-  ],
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "test": "vitest run",
+    "package": "pnpm build && vsce package --no-dependencies --allow-missing-repository --skip-license -o interview-prep.vsix"
+  },
+  "dependencies": {
+    "@vscode-elements/elements": "^2.5.1"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.6.0",
+    "esbuild": "^0.25.0"
+  },
   "contributes": {
     "views": {
       "interviewPrep": [
@@ -252,22 +259,15 @@
       ]
     }
   },
-  "scripts": {
-    "build": "node esbuild.mjs",
-    "test": "vitest run",
-    "package": "pnpm build && vsce package --no-dependencies --allow-missing-repository --skip-license -o interview-prep.vsix"
-  },
-  "devDependencies": {
-    "@types/vscode": "^1.90.0",
-    "@vscode/vsce": "^3.6.0",
-    "esbuild": "^0.25.0"
+  "activationEvents": [
+    "workspaceContains:curriculum/tracks.json"
+  ],
+  "engines": {
+    "vscode": "^1.90.0"
   },
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": true
     }
-  },
-  "dependencies": {
-    "@vscode-elements/elements": "^2.5.1"
   }
 }

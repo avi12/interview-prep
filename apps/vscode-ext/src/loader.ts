@@ -1,8 +1,10 @@
-import { disposeAll } from "@/disposables.ts";
-import { isHotReloadEnabled, onFileChanged } from "@/hotReload.ts";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
+
 import * as vscode from "vscode";
+
+import { disposeAll } from "@/disposables.ts";
+import { isHotReloadEnabled, onFileChanged } from "@/hotReload.ts";
 
 const APP_BUNDLE_RELATIVE_PATH = "dist/app.js";
 const MANIFEST_RELATIVE_PATH = "package.json";
@@ -10,9 +12,9 @@ const RELOAD_WINDOW_COMMAND = "workbench.action.reloadWindow";
 const SWAPPED_MESSAGE = "$(sync) Interview Prep updated";
 const SWAPPED_MESSAGE_MS = 2500;
 
-type App = {
+interface App {
   activate: (context: vscode.ExtensionContext, options: { isHotSwap: boolean }) => void;
-};
+}
 
 function appContext(context: vscode.ExtensionContext) {
   const subscriptions: vscode.Disposable[] = [];

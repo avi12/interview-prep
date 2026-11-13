@@ -1,8 +1,10 @@
-import { resolveSourceAlias, SOURCE_ALIASES } from "@/aliases.mts";
 import { readFileSync } from "node:fs";
 import { builtinModules } from "node:module";
 import { dirname, resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
+
+import { resolveSourceAlias, SOURCE_ALIASES } from "@/aliases.mts";
 
 const WEB_ENTRIES = ["web.ts"];
 const NODE_SCHEME = "node:";
@@ -16,10 +18,7 @@ function specifiersOf(path: string) {
   return [...readFileSync(path, "utf8").matchAll(IMPORT_SPECIFIER)].map(([, specifier]) => specifier);
 }
 
-function resolveLocal({ specifier, importer }: {
-  specifier: string;
-  importer: string;
-}) {
+function resolveLocal({ specifier, importer }: { specifier: string; importer: string }) {
   const aliased = resolveSourceAlias(specifier);
   if (aliased) {
     return aliased;
@@ -44,7 +43,8 @@ function webImportGraph() {
   const packages = new Set<string>();
   const pending = WEB_ENTRIES.map(entry => resolve(SOURCE_ALIASES["@"], entry));
   for (let path = pending.pop(); path; path = pending.pop()) {
-    if (seen.has(path) || path.endsWith(".json")) {
+    const isSeenOrJson = seen.has(path) || path.endsWith(".json");
+    if (isSeenOrJson) {
       continue;
     }
 
@@ -78,7 +78,9 @@ describe("web entry", () => {
   const names = [...graph.files].map(path => path.replaceAll("\\", "/").split("/").at(-1));
 
   it("reaches the shared core", () => {
-    expect(names).toEqual(expect.arrayContaining(["activateCourse.ts", "lessonTree.ts", "testResults.ts", "webHost.ts"]));
+    expect(names).toEqual(
+      expect.arrayContaining(["activateCourse.ts", "lessonTree.ts", "testResults.ts", "webHost.ts"])
+    );
   });
 
   it("imports nothing that needs Node", () => {

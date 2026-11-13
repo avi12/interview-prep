@@ -1,7 +1,8 @@
-import { Command, IS_LOCAL_CONTEXT_KEY, LOCAL_ONLY_COMMANDS, VoiceCommand } from "@/contributions.ts";
-import { WEB_EXTENSION_MANIFEST } from "@/webManifest.ts";
 import packageJson from "@manifest" with { type: "json" };
 import { describe, expect, it } from "vitest";
+
+import { Command, IS_LOCAL_CONTEXT_KEY, LOCAL_ONLY_COMMANDS, VoiceCommand } from "@/contributions.ts";
+import { WEB_EXTENSION_MANIFEST } from "@/webManifest.ts";
 
 const { commands, menus } = packageJson.contributes;
 const LOCAL_ONLY = new Set<string>(LOCAL_ONLY_COMMANDS);

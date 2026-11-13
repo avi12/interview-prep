@@ -1,5 +1,6 @@
-import { type KeyValueStorage, StorageMemento } from "@/storageMemento.ts";
 import { describe, expect, it } from "vitest";
+
+import { type KeyValueStorage, StorageMemento } from "@/storageMemento.ts";
 
 const STORAGE_KEY = "interviewPrep.globalState";
 
@@ -9,7 +10,9 @@ function memoryStorage() {
     items,
     storage: {
       getItem: key => items.get(key) ?? null,
-      setItem: (key, value) => void items.set(key, value)
+      setItem(key, value) {
+        items.set(key, value);
+      }
     } satisfies KeyValueStorage
   };
 }

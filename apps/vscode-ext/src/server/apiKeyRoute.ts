@@ -1,8 +1,9 @@
+import { API_KEY_PATH, apiKeyResponseSchema, apiKeyUpdateSchema } from "@scripts/lib/voice.ts";
+
 import type { ApiKeyStore } from "@/apiKey.ts";
 import { readJsonBody } from "@/server/body.ts";
 import { HttpStatus, sendJson, sendMethodNotAllowed, sendStatus } from "@/server/respond.ts";
 import type { Exchange, Route } from "@/server/router.ts";
-import { API_KEY_PATH, apiKeyResponseSchema, apiKeyUpdateSchema } from "@scripts/lib/voice.ts";
 
 const HttpMethod = {
   GET: "GET",
@@ -11,10 +12,7 @@ const HttpMethod = {
 } as const;
 const ALLOWED_METHODS = Object.values(HttpMethod);
 
-async function saveFromBody({ store, exchange }: {
-  store: ApiKeyStore;
-  exchange: Exchange;
-}) {
+async function saveFromBody({ store, exchange }: { store: ApiKeyStore; exchange: Exchange }) {
   const update = apiKeyUpdateSchema.safeParse(await readJsonBody(exchange.request));
   if (!update.success) {
     return null;
@@ -23,10 +21,7 @@ async function saveFromBody({ store, exchange }: {
   return store.save(update.data.key);
 }
 
-async function respondFor({ store, exchange }: {
-  store: ApiKeyStore;
-  exchange: Exchange;
-}) {
+async function respondFor({ store, exchange }: { store: ApiKeyStore; exchange: Exchange }) {
   const { method } = exchange.request;
   if (method === HttpMethod.GET) {
     return store.read();
@@ -42,7 +37,7 @@ async function respondFor({ store, exchange }: {
   });
 }
 
-export function apiKeyRoute(store: ApiKeyStore): Route {
+export function apiKeyRoute(store: ApiKeyStore) {
   return {
     isMatch: pathname => pathname === API_KEY_PATH,
     isGuarded: true,
@@ -72,5 +67,5 @@ export function apiKeyRoute(store: ApiKeyStore): Route {
         value: result
       });
     }
-  };
+  } satisfies Route;
 }

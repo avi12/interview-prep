@@ -1,15 +1,16 @@
-import { SQL_SELECTOR, type SqlTablesOfDocument } from "@/sqlCompletion.ts";
 import type { SqlTable } from "@scripts/lib/schema.ts";
 import * as vscode from "vscode";
 
+import { SQL_SELECTOR, type SqlTablesOfDocument } from "@/sqlCompletion.ts";
+
 const TokenType = {
-  column: "property",
-  table: "type"
+  COLUMN: "property",
+  TABLE: "type"
 } as const;
-const LEGEND = new vscode.SemanticTokensLegend([TokenType.column, TokenType.table]);
+const LEGEND = new vscode.SemanticTokensLegend([TokenType.COLUMN, TokenType.TABLE]);
 const TOKEN_INDEX = {
-  [TokenType.column]: 0,
-  [TokenType.table]: 1
+  [TokenType.COLUMN]: 0,
+  [TokenType.TABLE]: 1
 };
 const WORD = /\w+/g;
 const QUOTE = "'";
@@ -20,12 +21,12 @@ function namesByKind(tables: SqlTable[]) {
   const kinds = new Map<string, keyof typeof TOKEN_INDEX>();
   for (const table of tables) {
     for (const column of table.columns) {
-      kinds.set(column.name.toLowerCase(), TokenType.column);
+      kinds.set(column.name.toLowerCase(), TokenType.COLUMN);
     }
   }
 
   for (const table of tables) {
-    kinds.set(table.name.toLowerCase(), TokenType.table);
+    kinds.set(table.name.toLowerCase(), TokenType.TABLE);
   }
 
   return kinds;
@@ -36,15 +37,19 @@ function blankStringsAndComments(line: string) {
   let code = "";
   for (let index = 0; index < line.length; index++) {
     const character = line[index];
-    if (!isInString && line.startsWith(LINE_COMMENT, index)) {
+    const isLineCommentStart = !isInString && line.startsWith(LINE_COMMENT, index);
+    if (isLineCommentStart) {
       return code.padEnd(line.length);
     }
 
-    if (character === QUOTE) {
+    const isQuote = character === QUOTE;
+    if (isQuote) {
       isInString = !isInString;
     }
 
-    code += isInString || character === QUOTE ? " " : character;
+    const isStringContent = isInString || character === QUOTE;
+
+    code += isStringContent ? " " : character;
   }
   return code;
 }

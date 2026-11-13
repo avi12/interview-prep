@@ -2,39 +2,39 @@ import type { NarrationReply, NarrationRequest } from "@scripts/lib/narration-ho
 import type { Progress } from "@scripts/lib/progress-sync.ts";
 import type { RunResult } from "@scripts/lib/run-result.ts";
 import type { lessonIndexSchema } from "@scripts/lib/schema.ts";
-import type { z } from "@scripts/lib/zod.ts";
+import type { zod } from "@scripts/lib/zod.ts";
 import type * as vscode from "vscode";
 
-export type LessonIndex = z.infer<typeof lessonIndexSchema>;
+export type LessonIndex = zod.infer<typeof lessonIndexSchema>;
 export type LessonEntry = LessonIndex["lessons"][number];
 
 export type TestReport = Pick<RunResult, "output" | "queryResults" | "testCases">;
 
-export type TestsFinished = {
+export interface TestsFinished {
   id: string;
   isPass: boolean;
-};
+}
 
 export type CourseContext = Pick<vscode.ExtensionContext, "globalState" | "subscriptions" | "workspaceState">;
 
-export type CourseSession = {
+export interface CourseSession {
   activeLessonId: () => string | undefined;
   activeLesson: () => LessonEntry | undefined;
   lessonEditor: () => vscode.TextEditor | undefined;
   reloadLessons: () => Promise<void>;
-};
+}
 
-export type LocalFeatures = {
+export interface LocalFeatures {
   answerNarration: (request: NarrationRequest) => Promise<NarrationReply>;
   register: (session: CourseSession) => vscode.Disposable[];
-};
+}
 
-export type LessonAddress = {
+export interface LessonAddress {
   initialLessonId: () => string | undefined;
   showLesson: (lessonId: string) => void;
-};
+}
 
-export type CourseHost = {
+export interface CourseHost {
   address?: LessonAddress;
   workspaceRoot: vscode.Uri;
   readCourseFile: (relativePath: string) => Promise<string | null>;
@@ -49,4 +49,4 @@ export type CourseHost = {
   markDone: (lesson: LessonEntry) => Promise<void>;
   local?: LocalFeatures;
   dispose: () => void;
-};
+}

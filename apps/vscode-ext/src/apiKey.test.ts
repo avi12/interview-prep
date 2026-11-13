@@ -1,6 +1,7 @@
-import { resolveApiKey } from "@/apiKey.ts";
 import { ApiKeySource } from "@scripts/lib/voice.ts";
 import { describe, expect, it } from "vitest";
+
+import { resolveApiKey } from "@/apiKey.ts";
 
 describe("resolveApiKey", () => {
   it("prefers the environment variable", () => {

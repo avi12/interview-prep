@@ -1,12 +1,9 @@
-import { API_KEY_ENV, type ApiKeyResponse, ApiKeySource } from "@scripts/lib/voice.ts";
+import { API_KEY_ENV, ApiKeySource } from "@scripts/lib/voice.ts";
 import type { SecretStorage } from "vscode";
 
 const SECRET_NAME = "interviewPrep.geminiApiKey";
 
-export function resolveApiKey({ envKey, savedKey }: {
-  envKey: string | undefined;
-  savedKey: string | undefined;
-}): ApiKeyResponse {
+export function resolveApiKey({ envKey, savedKey }: { envKey: string | undefined; savedKey: string | undefined }) {
   const trimmedEnvKey = envKey?.trim();
   if (trimmedEnvKey) {
     return {

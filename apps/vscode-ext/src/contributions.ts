@@ -1,30 +1,30 @@
 export const Command = {
-  openLesson: "interviewPrep.openLesson",
-  nextLesson: "interviewPrep.nextLesson",
-  goToCurrentLesson: "interviewPrep.goToCurrentLesson",
-  runTests: "interviewPrep.runTests",
-  resetExercise: "interviewPrep.resetExercise",
-  markDone: "interviewPrep.markDone",
-  askClaude: "interviewPrep.askClaude",
-  chooseRole: "interviewPrep.chooseRole",
-  chooseTracks: "interviewPrep.chooseTracks",
-  addTopic: "interviewPrep.addTopic",
-  refresh: "interviewPrep.refresh",
-  showPath: "interviewPrep.showPath",
-  showTracks: "interviewPrep.showTracks"
+  OPEN_LESSON: "interviewPrep.openLesson",
+  NEXT_LESSON: "interviewPrep.nextLesson",
+  GO_TO_CURRENT_LESSON: "interviewPrep.goToCurrentLesson",
+  RUN_TESTS: "interviewPrep.runTests",
+  RESET_EXERCISE: "interviewPrep.resetExercise",
+  MARK_DONE: "interviewPrep.markDone",
+  ASK_CLAUDE: "interviewPrep.askClaude",
+  CHOOSE_ROLE: "interviewPrep.chooseRole",
+  CHOOSE_TRACKS: "interviewPrep.chooseTracks",
+  ADD_TOPIC: "interviewPrep.addTopic",
+  REFRESH: "interviewPrep.refresh",
+  SHOW_PATH: "interviewPrep.showPath",
+  SHOW_TRACKS: "interviewPrep.showTracks"
 } as const;
 
 export const VoiceCommand = {
-  openVoiceTutor: "interviewPrep.openVoiceTutor",
-  setGeminiApiKey: "interviewPrep.setGeminiApiKey",
-  clearGeminiApiKey: "interviewPrep.clearGeminiApiKey"
+  OPEN_VOICE_TUTOR: "interviewPrep.openVoiceTutor",
+  SET_GEMINI_API_KEY: "interviewPrep.setGeminiApiKey",
+  CLEAR_GEMINI_API_KEY: "interviewPrep.clearGeminiApiKey"
 } as const;
 
 export const IS_LOCAL_CONTEXT_KEY = "interviewPrep.isLocal";
 
 export const LOCAL_ONLY_COMMANDS = [
-  Command.askClaude,
-  VoiceCommand.openVoiceTutor,
-  VoiceCommand.setGeminiApiKey,
-  VoiceCommand.clearGeminiApiKey
+  Command.ASK_CLAUDE,
+  VoiceCommand.OPEN_VOICE_TUTOR,
+  VoiceCommand.SET_GEMINI_API_KEY,
+  VoiceCommand.CLEAR_GEMINI_API_KEY
 ] as const;

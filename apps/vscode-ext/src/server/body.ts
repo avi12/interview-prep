@@ -8,8 +8,8 @@ async function readText(request: IncomingMessage) {
   for await (const chunk of request) {
     const buffer = Buffer.from(chunk);
     size += buffer.length;
-
-    if (size > MAX_BODY_BYTES) {
+    const isBodyTooLarge = size > MAX_BODY_BYTES;
+    if (isBodyTooLarge) {
       return null;
     }
 
@@ -18,7 +18,7 @@ async function readText(request: IncomingMessage) {
   return Buffer.concat(chunks).toString("utf8");
 }
 
-function parseJson(text: string): unknown {
+function parseJson(text: string) {
   try {
     return JSON.parse(text);
   } catch {

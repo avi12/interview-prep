@@ -1,9 +1,11 @@
-import { HttpStatus, sendData, sendRedirect, sendStatus } from "@/server/respond.ts";
-import type { Route } from "@/server/router.ts";
-import { VOICE_BUILD_COMMAND, VOICE_BUILD_RELATIVE_DIR, VOICE_PATH } from "@scripts/lib/voice.ts";
 import { existsSync } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
+
+import { VOICE_BUILD_COMMAND, VOICE_BUILD_RELATIVE_DIR, VOICE_PATH } from "@scripts/lib/voice.ts";
+
+import { HttpStatus, sendData, sendRedirect, sendStatus } from "@/server/respond.ts";
+import type { Route } from "@/server/router.ts";
 
 const INDEX_FILE = "index.html";
 const VOICE_PATH_WITHOUT_SLASH = VOICE_PATH.slice(0, -1);
@@ -33,16 +35,14 @@ function withIndexFile(relativePath: string) {
   return isDirectory ? `${relativePath}${INDEX_FILE}` : relativePath;
 }
 
-export function resolveVoiceFile({ buildDir, pathname }: {
-  buildDir: string;
-  pathname: string;
-}) {
+export function resolveVoiceFile({ buildDir, pathname }: { buildDir: string; pathname: string }) {
   if (!pathname.startsWith(VOICE_PATH)) {
     return null;
   }
 
   const relativePath = decodePath(pathname.slice(VOICE_PATH.length));
-  if (relativePath === null || relativePath.includes("\0")) {
+  const isUnsafeRelativePath = relativePath === null || relativePath.includes("\0");
+  if (isUnsafeRelativePath) {
     return null;
   }
 
@@ -63,13 +63,14 @@ async function readServableFile(file: string) {
   return readFile(file);
 }
 
-export function voiceFilesRoute(root: string): Route {
+export function voiceFilesRoute(root: string) {
   const buildDir = resolve(root, VOICE_BUILD_RELATIVE_DIR);
   return {
     isMatch: pathname => pathname === VOICE_PATH_WITHOUT_SLASH || pathname.startsWith(VOICE_PATH),
     isGuarded: false,
     async handle({ response, pathname }) {
-      if (pathname === VOICE_PATH_WITHOUT_SLASH) {
+      const isVoiceRoot = pathname === VOICE_PATH_WITHOUT_SLASH;
+      if (isVoiceRoot) {
         return sendRedirect({
           response,
           location: VOICE_PATH
@@ -90,8 +91,10 @@ export function voiceFilesRoute(root: string): Route {
         pathname
       });
       const contentType = file ? contentTypeOf(file) : undefined;
-      const body = file && contentType ? await readServableFile(file) : null;
-      if (!body || !contentType) {
+      const isServableFile = file && contentType;
+      const body = isServableFile ? await readServableFile(file) : null;
+      const isBodyUnservable = !body || !contentType;
+      if (isBodyUnservable) {
         return sendStatus({
           response,
           status: HttpStatus.NOT_FOUND
@@ -104,5 +107,5 @@ export function voiceFilesRoute(root: string): Route {
         contentType
       });
     }
-  };
+  } satisfies Route;
 }

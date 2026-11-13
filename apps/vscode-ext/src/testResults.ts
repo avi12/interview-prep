@@ -1,17 +1,19 @@
-import type { Course } from "@/course.ts";
-import type { CourseHost, TestReport } from "@/courseHost.ts";
 import { escapeHtml } from "@scripts/lib/html.ts";
 import { queryResultTable } from "@scripts/lib/query-result.ts";
 import { Lang } from "@scripts/lib/schema.ts";
 import { failedCasesTable } from "@scripts/lib/test-cases.ts";
 import * as vscode from "vscode";
 
+import type { Course } from "@/course.ts";
+import type { CourseHost, TestReport } from "@/courseHost.ts";
+
 const VIEW_ID = "interviewPrep.testResults";
 const FOCUS_VIEW_COMMAND = `${VIEW_ID}.focus`;
 const MOVE_VIEWS_COMMAND = "vscode.moveViews";
 const RESULTS_CONTAINER_ID = "interviewPrepResults";
 const OUTPUT_SUMMARY = "Full test output";
-const EMPTY_TEXT = "Run your tests, and every failing case shows up here with its input, the expected value and what your code returned.";
+const EMPTY_TEXT =
+  "Run your tests, and every failing case shows up here with its input, the expected value and what your code returned.";
 const NO_QUERY_RESULT_TEXT = "No result table: your query did not run. The test output says why.";
 
 const STYLE = `
@@ -60,7 +62,11 @@ pre {
 
 const PROSE_COLUMN = "Test";
 
-function tableHtml({ columns, rows, isRightAligned = [] }: {
+function tableHtml({
+  columns,
+  rows,
+  isRightAligned = []
+}: {
   columns: string[];
   rows: string[][];
   isRightAligned?: boolean[];
@@ -68,7 +74,9 @@ function tableHtml({ columns, rows, isRightAligned = [] }: {
   const head = columns.map(column => `<th scope="col">${escapeHtml(column)}</th>`).join("");
   const body = rows.map(row => {
     const cells = row.map((cell, index) => {
-      const classes = [columns[index] === PROSE_COLUMN ? "" : "value", isRightAligned[index] ? "number" : ""].filter(Boolean).join(" ");
+      const classes = [columns[index] === PROSE_COLUMN ? "" : "value", isRightAligned[index] ? "number" : ""]
+        .filter(Boolean)
+        .join(" ");
       return `<td class="${classes}" data-column="${escapeHtml(columns[index])}">${escapeHtml(cell)}</td>`;
     });
     return `<tr>${cells.join("")}</tr>`;
@@ -79,10 +87,12 @@ function tableHtml({ columns, rows, isRightAligned = [] }: {
 function testCasesHtml({ testCases }: TestReport) {
   const { summary, isPass, columns, rows } = failedCasesTable(testCases);
   const heading = `<p class="summary" data-outcome="${isPass ? "pass" : "fail"}">${escapeHtml(summary)}</p>`;
-  return isPass ? heading : `${heading}${tableHtml({
-    columns,
-    rows
-  })}`;
+  return isPass
+    ? heading
+    : `${heading}${tableHtml({
+        columns,
+        rows
+      })}`;
 }
 
 function queryResultsHtml({ queryResults: results }: TestReport) {
@@ -90,15 +100,20 @@ function queryResultsHtml({ queryResults: results }: TestReport) {
     return `<p class="count">${escapeHtml(NO_QUERY_RESULT_TEXT)}</p>`;
   }
 
-  return results.map(result => {
-    const { heading, columns, rows, isRightAligned, countText } = queryResultTable(result);
-    const table = columns.length === 0 ? "" : tableHtml({
-      columns,
-      rows,
-      isRightAligned
-    });
-    return `<h2>${escapeHtml(heading)}</h2>${table}<p class="count">${escapeHtml(countText)}</p>`;
-  }).join("");
+  return results
+    .map(result => {
+      const { heading, columns, rows, isRightAligned, countText } = queryResultTable(result);
+      const table =
+        columns.length === 0
+          ? ""
+          : tableHtml({
+              columns,
+              rows,
+              isRightAligned
+            });
+      return `<h2>${escapeHtml(heading)}</h2>${table}<p class="count">${escapeHtml(countText)}</p>`;
+    })
+    .join("");
 }
 
 function pageHtml(body: string) {
@@ -113,7 +128,10 @@ function pageHtml(body: string) {
 </html>`;
 }
 
-export function createTestResultsView({ course, readTestReport }: {
+export function createTestResultsView({
+  course,
+  readTestReport
+}: {
   course: Course;
   readTestReport: CourseHost["readTestReport"];
 }) {
@@ -157,9 +175,11 @@ export function createTestResultsView({ course, readTestReport }: {
 
     const report = await readTestReport(id);
     const cases = testCasesHtml(report);
-    const queries = lesson.lang === Lang.sql ? queryResultsHtml(report) : "";
+    const queries = lesson.lang === Lang.SQL ? queryResultsHtml(report) : "";
     const { output } = report;
-    const outputDetails = output ? `<details><summary>${OUTPUT_SUMMARY}</summary><pre>${escapeHtml(output)}</pre></details>` : "";
+    const outputDetails = output
+      ? `<details><summary>${OUTPUT_SUMMARY}</summary><pre>${escapeHtml(output)}</pre></details>`
+      : "";
     await reveal(`${cases}${queries}${outputDetails}`);
   }
 

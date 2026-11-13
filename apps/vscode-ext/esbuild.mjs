@@ -1,5 +1,6 @@
-import { SOURCE_ALIASES } from "./src/aliases.mts";
 import { context } from "esbuild";
+
+import { SOURCE_ALIASES } from "./src/aliases.mts";
 
 const webviewElements = await context({
   entryPoints: {
@@ -13,7 +14,7 @@ const webviewElements = await context({
   minify: true
 });
 
-const isWatching = process.argv.includes("--watch");
+const IS_WATCHING = process.argv.includes("--watch");
 
 const bundle = await context({
   entryPoints: {
@@ -30,7 +31,7 @@ const bundle = await context({
   sourcemap: true,
   minify: false
 });
-if (isWatching) {
+if (IS_WATCHING) {
   await bundle.watch();
   await webviewElements.watch();
 } else {

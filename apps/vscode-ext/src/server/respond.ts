@@ -1,5 +1,6 @@
-import type { z } from "@scripts/lib/zod.ts";
 import type { ServerResponse } from "node:http";
+
+import type { zod } from "@scripts/lib/zod.ts";
 
 export const HttpStatus = {
   OK: 200,
@@ -16,16 +17,17 @@ type HttpStatus = (typeof HttpStatus)[keyof typeof HttpStatus];
 const NO_STORE = "no-store";
 const JSON_CONTENT_TYPE = "application/json; charset=utf-8";
 
-export function sendStatus({ response, status }: {
-  response: ServerResponse;
-  status: HttpStatus;
-}) {
+export function sendStatus({ response, status }: { response: ServerResponse; status: HttpStatus }) {
   response.writeHead(status, { "cache-control": NO_STORE }).end();
 }
 
-export function sendJson<T>({ response, schema, value }: {
+export function sendJson<T>({
+  response,
+  schema,
+  value
+}: {
   response: ServerResponse;
-  schema: z.ZodType<T>;
+  schema: zod.ZodType<T>;
   value: T;
 }) {
   const parsed = schema.safeParse(value);
@@ -36,41 +38,48 @@ export function sendJson<T>({ response, schema, value }: {
     });
   }
 
-  response.writeHead(HttpStatus.OK, {
-    "content-type": JSON_CONTENT_TYPE,
-    "cache-control": NO_STORE
-  }).end(JSON.stringify(parsed.data));
+  response
+    .writeHead(HttpStatus.OK, {
+      "content-type": JSON_CONTENT_TYPE,
+      "cache-control": NO_STORE
+    })
+    .end(JSON.stringify(parsed.data));
 }
 
-export function sendData({ response, body, contentType, status = HttpStatus.OK }: {
+export function sendData({
+  response,
+  body,
+  contentType,
+  status = HttpStatus.OK
+}: {
   response: ServerResponse;
   body: Buffer | string;
   contentType: string;
   status?: HttpStatus;
 }) {
-  response.writeHead(status, {
-    "content-type": contentType,
-    "cache-control": NO_STORE,
-    "x-content-type-options": "nosniff"
-  }).end(body);
+  response
+    .writeHead(status, {
+      "content-type": contentType,
+      "cache-control": NO_STORE,
+      "x-content-type-options": "nosniff"
+    })
+    .end(body);
 }
 
-export function sendRedirect({ response, location }: {
-  response: ServerResponse;
-  location: string;
-}) {
-  response.writeHead(HttpStatus.FOUND, {
-    location,
-    "cache-control": NO_STORE
-  }).end();
+export function sendRedirect({ response, location }: { response: ServerResponse; location: string }) {
+  response
+    .writeHead(HttpStatus.FOUND, {
+      location,
+      "cache-control": NO_STORE
+    })
+    .end();
 }
 
-export function sendMethodNotAllowed({ response, allowed }: {
-  response: ServerResponse;
-  allowed: readonly string[];
-}) {
-  response.writeHead(HttpStatus.METHOD_NOT_ALLOWED, {
-    allow: allowed.join(", "),
-    "cache-control": NO_STORE
-  }).end();
+export function sendMethodNotAllowed({ response, allowed }: { response: ServerResponse; allowed: readonly string[] }) {
+  response
+    .writeHead(HttpStatus.METHOD_NOT_ALLOWED, {
+      allow: allowed.join(", "),
+      "cache-control": NO_STORE
+    })
+    .end();
 }

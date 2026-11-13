@@ -1,4 +1,3 @@
-import type { LessonEntry } from "@/courseHost.ts";
 import {
   NARRATION_HOST_SCRIPT,
   type NarrationReply,
@@ -16,10 +15,17 @@ import {
 } from "@scripts/lib/panel.ts";
 import * as vscode from "vscode";
 
+import type { LessonEntry } from "@/courseHost.ts";
+
 const VIEW_TYPE = "interviewPrep.lesson";
 const BODY_END = "</body>";
 
-function panelHtml({ page, isPassed, isScrolledToTop, nextName }: {
+function panelHtml({
+  page,
+  isPassed,
+  isScrolledToTop,
+  nextName
+}: {
   page: string;
   isPassed: boolean;
   isScrolledToTop: boolean;
@@ -80,13 +86,18 @@ export function showLesson({
     nextName
   });
   if (!panel) {
-    panel = vscode.window.createWebviewPanel(VIEW_TYPE, lesson.title, {
-      viewColumn,
-      preserveFocus: true
-    }, {
-      enableScripts: true,
-      retainContextWhenHidden: true
-    });
+    panel = vscode.window.createWebviewPanel(
+      VIEW_TYPE,
+      lesson.title,
+      {
+        viewColumn,
+        preserveFocus: true
+      },
+      {
+        enableScripts: true,
+        retainContextWhenHidden: true
+      }
+    );
     panel.onDidDispose(() => (panel = undefined));
   }
 
@@ -108,12 +119,12 @@ export function showLesson({
     }
 
     const message = parsed.data;
-    if (message.action === PanelAction.viewing) {
+    if (message.action === PanelAction.VIEWING) {
       viewingSection = message.section;
       return;
     }
 
-    if (message.action === PanelAction.openFile) {
+    if (message.action === PanelAction.OPEN_FILE) {
       return onOpenFile(message.file);
     }
 

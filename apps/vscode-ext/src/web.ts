@@ -1,9 +1,10 @@
+import * as vscode from "vscode";
+
 import { activateCourse } from "@/activateCourse.ts";
 import type { CourseContext } from "@/courseHost.ts";
 import { disposeAll } from "@/disposables.ts";
 import { type KeyValueStorage, StorageMemento } from "@/storageMemento.ts";
 import { createWebCourseHost, type WebHostDependencies } from "@/webHost.ts";
-import * as vscode from "vscode";
 
 export { WEB_EXTENSION_MANIFEST } from "@/webManifest.ts";
 
@@ -12,8 +13,8 @@ export type WebCourseDependencies = WebHostDependencies & {
 };
 
 const StorageKey = {
-  global: "interviewPrep.globalState",
-  workspace: "interviewPrep.workspaceState"
+  GLOBAL: "interviewPrep.globalState",
+  WORKSPACE: "interviewPrep.workspaceState"
 } as const;
 
 export async function activateWeb({ storage, ...dependencies }: WebCourseDependencies) {
@@ -22,11 +23,11 @@ export async function activateWeb({ storage, ...dependencies }: WebCourseDepende
     subscriptions,
     globalState: new StorageMemento({
       storage,
-      storageKey: StorageKey.global
+      storageKey: StorageKey.GLOBAL
     }),
     workspaceState: new StorageMemento({
       storage,
-      storageKey: StorageKey.workspace
+      storageKey: StorageKey.WORKSPACE
     })
   };
   await activateCourse({

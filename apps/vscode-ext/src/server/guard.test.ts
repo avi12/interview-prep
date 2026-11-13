@@ -1,5 +1,6 @@
-import { isTrustedRequest } from "@/server/guard.ts";
 import { describe, expect, it } from "vitest";
+
+import { isTrustedRequest } from "@/server/guard.ts";
 
 const HOST = "127.0.0.1:8766";
 const ORIGIN = "http://127.0.0.1:8766";

@@ -1,22 +1,19 @@
 import { parseJson } from "@scripts/lib/json.ts";
-import { z } from "@scripts/lib/zod.ts";
+import { zod } from "@scripts/lib/zod.ts";
 import type * as vscode from "vscode";
 
-export type KeyValueStorage = {
+export interface KeyValueStorage {
   getItem: (key: string) => string | null;
   setItem: (key: string, value: string) => void;
-};
+}
 
-const valuesSchema = z.record(z.string(), z.unknown());
+const valuesSchema = zod.record(zod.string(), zod.unknown());
 
 export class StorageMemento implements vscode.Memento {
   private readonly storage: KeyValueStorage;
   private readonly storageKey: string;
 
-  constructor({ storage, storageKey }: {
-    storage: KeyValueStorage;
-    storageKey: string;
-  }) {
+  constructor({ storage, storageKey }: { storage: KeyValueStorage; storageKey: string }) {
     this.storage = storage;
     this.storageKey = storageKey;
   }
@@ -27,7 +24,7 @@ export class StorageMemento implements vscode.Memento {
 
   get<T>(key: string): T | undefined;
   get<T>(key: string, defaultValue: T): T;
-  get<T>(key: string, defaultValue?: T): unknown {
+  get<T>(key: string, defaultValue?: T) {
     const values = this.values();
     return key in values ? values[key] : defaultValue;
   }

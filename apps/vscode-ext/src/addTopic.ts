@@ -1,7 +1,8 @@
-import { showMarkdownGuide } from "@/markdownGuide.ts";
 import { ADD_TOPIC_STEPS, addTopicPrompt } from "@scripts/lib/add-topic.ts";
 import { REPOSITORY_URL } from "@scripts/lib/repository.ts";
 import * as vscode from "vscode";
+
+import { showMarkdownGuide } from "@/markdownGuide.ts";
 
 function guideMarkdown(topic: string) {
   const steps = ADD_TOPIC_STEPS.map((step, iStep) => `${iStep + 1}. ${step}`).join("\n");

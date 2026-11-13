@@ -1,32 +1,29 @@
-import type {
-  CourseHost,
-  LessonAddress,
-  LessonEntry,
-  TestReport,
-  TestsFinished
-} from "@/courseHost.ts";
-import { lessonWorkUri } from "@/workspaceLayout.ts";
 import type { Progress } from "@scripts/lib/progress-sync.ts";
 import type { RunResult } from "@scripts/lib/run-result.ts";
 import * as vscode from "vscode";
 
-export type LessonFile = {
+import type { CourseHost, LessonAddress, LessonEntry, TestReport, TestsFinished } from "@/courseHost.ts";
+import { lessonWorkUri } from "@/workspaceLayout.ts";
+
+export interface LessonFile {
   path: string;
   content: string;
-};
+}
 
-export type RunLesson = (request: {
+interface RunLessonRequest {
   lesson: LessonEntry;
   files: readonly LessonFile[];
-}) => Promise<RunResult>;
+}
 
-export type ProgressSource = {
+export type RunLesson = (request: RunLessonRequest) => Promise<RunResult>;
+
+export interface ProgressSource {
   current: () => Progress;
   subscribe: (listener: () => void) => () => void;
   markPassed: (lessonId: string) => Promise<void>;
-};
+}
 
-export type WebHostDependencies = {
+export interface WebHostDependencies {
   address: LessonAddress;
   courseBaseUrl: string;
   elementsBundle: string;
@@ -34,7 +31,7 @@ export type WebHostDependencies = {
   readStarter: (lessonId: string) => Promise<readonly LessonFile[]>;
   runLesson: RunLesson;
   progress: ProgressSource;
-};
+}
 
 const PATH_SEPARATOR = "/";
 const IS_UNTITLED_SAVED = false;
@@ -54,13 +51,13 @@ function failedRun(error: unknown) {
 }
 
 function exists(uri: vscode.Uri) {
-  return vscode.workspace.fs.stat(uri).then(() => true, () => false);
+  return vscode.workspace.fs.stat(uri).then(
+    () => true,
+    () => false
+  );
 }
 
-async function readTree({ dir, prefix }: {
-  dir: vscode.Uri;
-  prefix: string;
-}): Promise<LessonFile[]> {
+async function readTree({ dir, prefix }: { dir: vscode.Uri; prefix: string }) {
   const decoder = new TextDecoder();
   const files: LessonFile[] = [];
   for (const [name, type] of await vscode.workspace.fs.readDirectory(dir)) {
@@ -68,10 +65,10 @@ async function readTree({ dir, prefix }: {
     const path = prefix ? `${prefix}${PATH_SEPARATOR}${name}` : name;
     if (type === vscode.FileType.Directory) {
       files.push(
-        ...await readTree({
+        ...(await readTree({
           dir: uri,
           prefix: path
-        })
+        }))
       );
       continue;
     }
@@ -162,10 +159,11 @@ export function createWebCourseHost({
     workspaceRoot,
     address,
     readElementsBundle: async () => elementsBundle,
-    readCourseFile: relativePath => fetch(new URL(relativePath, courseBaseUrl)).then(
-      response => response.ok ? response.text() : null,
-      () => null
-    ),
+    readCourseFile: relativePath =>
+      fetch(new URL(relativePath, courseBaseUrl)).then(
+        response => (response.ok ? response.text() : null),
+        () => null
+      ),
     readProgress: async () => progress.current(),
     onDidChangeProgress: listener => new vscode.Disposable(progress.subscribe(() => listener())),
     ensureExerciseFiles,

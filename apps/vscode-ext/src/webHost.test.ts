@@ -1,18 +1,12 @@
-import type { LessonEntry, TestsFinished } from "@/courseHost.ts";
-import { resetFakeFiles } from "@/test/vscodeFake.ts";
-import { createWebCourseHost, type LessonFile, type RunLesson } from "@/webHost.ts";
 import type { Progress } from "@scripts/lib/progress-sync.ts";
 import type { RunResult } from "@scripts/lib/run-result.ts";
 import { Lang } from "@scripts/lib/schema.ts";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
+
+import type { LessonEntry, TestsFinished } from "@/courseHost.ts";
+import { resetFakeFiles } from "@/test/vscodeFake.ts";
+import { createWebCourseHost, type LessonFile, type RunLesson } from "@/webHost.ts";
 
 const ROOT = vscode.Uri.file("/workspace");
 const COURSE_BASE_URL = "https://course.example/files/";
@@ -21,7 +15,7 @@ const LESSON: LessonEntry = {
   track: "foundations",
   title: "Two Sum",
   minutes: 15,
-  lang: Lang.ts,
+  lang: Lang.TS,
   roles: ["backend"],
   files: ["twoSum.ts"],
   hasExercise: true,
@@ -44,13 +38,15 @@ const PASSING_RUN: RunResult = {
   isTimedOut: false,
   output: "1 passed",
   queryResults: [],
-  testCases: [{
-    test: "finds the pair",
-    isPass: true,
-    input: "[2, 7], 9",
-    expected: "[0, 1]",
-    actual: "[0, 1]"
-  }]
+  testCases: [
+    {
+      test: "finds the pair",
+      isPass: true,
+      input: "[2, 7], 9",
+      expected: "[0, 1]",
+      actual: "[0, 1]"
+    }
+  ]
 };
 
 function workUri(file: string) {
@@ -113,12 +109,16 @@ describe("createWebCourseHost", () => {
   });
 
   it("reads a missing or unreachable course file as null", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 404 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("", { status: 404 }))
+    );
     const { host } = createHost();
     expect(await host.readCourseFile("dist/index.json")).toBeNull();
 
     vi.stubGlobal(
-      "fetch", vi.fn(async () => {
+      "fetch",
+      vi.fn(async () => {
         throw new TypeError("offline");
       })
     );

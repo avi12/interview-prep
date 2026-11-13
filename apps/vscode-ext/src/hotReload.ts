@@ -1,5 +1,6 @@
-import { INDEX_RELATIVE_PATH } from "@scripts/lib/layout.ts";
 import { relative, resolve } from "node:path";
+
+import { INDEX_RELATIVE_PATH } from "@scripts/lib/layout.ts";
 import * as vscode from "vscode";
 
 const DEBOUNCE_MS = 300;
@@ -8,12 +9,10 @@ export function isHotReloadEnabled() {
   return vscode.workspace.getConfiguration("interviewPrep").get<boolean>("hotReload", false);
 }
 
-export function onFileChanged({ base, path, handler }: {
-  base: string;
-  path: string;
-  handler: () => void;
-}) {
-  const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(vscode.Uri.file(base), relative(base, resolve(base, path)).replaceAll("\\", "/")));
+export function onFileChanged({ base, path, handler }: { base: string; path: string; handler: () => void }) {
+  const watcher = vscode.workspace.createFileSystemWatcher(
+    new vscode.RelativePattern(vscode.Uri.file(base), relative(base, resolve(base, path)).replaceAll("\\", "/"))
+  );
   let timer: NodeJS.Timeout | undefined;
   function schedule() {
     clearTimeout(timer);
@@ -27,10 +26,7 @@ export function onFileChanged({ base, path, handler }: {
   });
 }
 
-export function watchLessons({ root, onLessonsChanged }: {
-  root: string;
-  onLessonsChanged: () => void;
-}) {
+export function watchLessons({ root, onLessonsChanged }: { root: string; onLessonsChanged: () => void }) {
   if (!isHotReloadEnabled()) {
     return [];
   }

@@ -1,8 +1,10 @@
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+
+import { SERVER_HOST, serverOrigin, TUTOR_VIEW_PORT } from "@scripts/lib/server.ts";
+import * as vscode from "vscode";
+
 import { isTrustedRequest } from "@/server/guard.ts";
 import { HttpStatus, sendStatus } from "@/server/respond.ts";
-import { SERVER_HOST, serverOrigin, TUTOR_VIEW_PORT } from "@scripts/lib/server.ts";
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import * as vscode from "vscode";
 
 export interface Exchange {
   request: IncomingMessage;
@@ -22,14 +24,15 @@ function pathnameOf(url = "") {
   return URL.canParse(url, BASE_URL) ? new URL(url, BASE_URL).pathname : undefined;
 }
 
-function findRoute({ routes, pathname }: {
-  routes: readonly Route[];
-  pathname: string | undefined;
-}) {
+function findRoute({ routes, pathname }: { routes: readonly Route[]; pathname: string | undefined }) {
   return pathname === undefined ? undefined : routes.find(candidate => candidate.isMatch(pathname));
 }
 
-async function dispatch({ routes, request, response }: {
+async function dispatch({
+  routes,
+  request,
+  response
+}: {
   routes: readonly Route[];
   request: IncomingMessage;
   response: ServerResponse;
@@ -39,14 +42,16 @@ async function dispatch({ routes, request, response }: {
     routes,
     pathname
   });
-  if (!route || pathname === undefined) {
+  const isUnroutable = !route || pathname === undefined;
+  if (isUnroutable) {
     return sendStatus({
       response,
       status: HttpStatus.NOT_FOUND
     });
   }
 
-  if (route.isGuarded && !isTrustedRequest(request.headers)) {
+  const isUntrustedGuardedRequest = route.isGuarded && !isTrustedRequest(request.headers);
+  if (isUntrustedGuardedRequest) {
     return sendStatus({
       response,
       status: HttpStatus.FORBIDDEN

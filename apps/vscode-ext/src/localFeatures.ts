@@ -1,6 +1,8 @@
+import * as vscode from "vscode";
+
 import { createApiKeyStore } from "@/apiKey.ts";
 import { Command } from "@/contributions.ts";
-import type { CourseSession, LocalFeatures } from "@/courseHost.ts";
+import type { CourseSession } from "@/courseHost.ts";
 import { watchLessons } from "@/hotReload.ts";
 import { createNarrationVoices } from "@/narrationVoices.ts";
 import { apiKeyRoute } from "@/server/apiKeyRoute.ts";
@@ -9,36 +11,34 @@ import { voiceFilesRoute } from "@/server/voiceFiles.ts";
 import { voiceSetupRoute } from "@/server/voiceSetupRoute.ts";
 import { tutorViewRoute } from "@/tutorView.ts";
 import { registerVoiceTutor } from "@/voiceTutor.ts";
-import * as vscode from "vscode";
 
 const CLAUDE_TERMINAL_NAME = "Claude tutor";
 
-function askClaude({ root, lessonId }: {
-  root: string;
-  lessonId: string | undefined;
-}) {
+function askClaude({ root, lessonId }: { root: string; lessonId: string | undefined }) {
   const existing = vscode.window.terminals.find(candidate => candidate.name === CLAUDE_TERMINAL_NAME);
-  const terminal = existing ?? vscode.window.createTerminal({
-    name: CLAUDE_TERMINAL_NAME,
-    cwd: root
-  });
+  const terminal =
+    existing ??
+    vscode.window.createTerminal({
+      name: CLAUDE_TERMINAL_NAME,
+      cwd: root
+    });
   terminal.show();
   const lessonHint = lessonId ? ` The lesson I have open is ${lessonId}.` : "";
   terminal.sendText(`claude "/tutor${lessonHint}"`);
 }
 
-export function createLocalFeatures({ context, root }: {
-  context: vscode.ExtensionContext;
-  root: string;
-}): LocalFeatures {
+export function createLocalFeatures({ context, root }: { context: vscode.ExtensionContext; root: string }) {
   const apiKeyStore = createApiKeyStore(context.secrets);
 
   function register(session: CourseSession) {
-    return [
-      vscode.commands.registerCommand(Command.askClaude, () => askClaude({
+    function handleAskClaude() {
+      return askClaude({
         root,
         lessonId: session.activeLessonId()
-      })),
+      });
+    }
+    return [
+      vscode.commands.registerCommand(Command.ASK_CLAUDE, handleAskClaude),
       serveRoutes([
         tutorViewRoute({
           root,
@@ -52,7 +52,9 @@ export function createLocalFeatures({ context, root }: {
       ...registerVoiceTutor(apiKeyStore),
       ...watchLessons({
         root,
-        onLessonsChanged: () => void session.reloadLessons()
+        onLessonsChanged() {
+          void session.reloadLessons();
+        }
       })
     ];
   }

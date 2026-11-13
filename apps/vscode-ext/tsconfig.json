@@ -4,23 +4,12 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
-    "types": [
-      "node",
-      "vscode"
-    ],
+    "types": ["node", "vscode"],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@scripts/*": [
-        "../../scripts/*"
-      ],
-      "@manifest": [
-        "./package.json"
-      ]
+      "@/*": ["./src/*"],
+      "@scripts/*": ["../../scripts/*"],
+      "@manifest": ["./package.json"]
     }
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

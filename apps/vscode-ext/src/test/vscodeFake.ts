@@ -5,10 +5,7 @@ export class Uri {
   readonly scheme: string;
   readonly path: string;
 
-  private constructor({ scheme, path }: {
-    scheme: string;
-    path: string;
-  }) {
+  private constructor({ scheme, path }: { scheme: string; path: string }) {
     this.scheme = scheme;
     this.path = path;
   }
@@ -66,14 +63,11 @@ export class EventEmitter<T> {
 export const FileType = {
   File: 1,
   Directory: 2
-} as const;
+};
 
 const files = new Map<string, Uint8Array>();
 
-function isInside({ dir, path }: {
-  dir: string;
-  path: string;
-}) {
+function isInside({ dir, path }: { dir: string; path: string }) {
   return path.startsWith(`${dir}${PATH_SEPARATOR}`);
 }
 
@@ -86,11 +80,15 @@ export const workspace = {
   fs: {
     async stat(uri: Uri) {
       const isFile = files.has(uri.path);
-      const isDirectory = [...files.keys()].some(path => isInside({
-        dir: uri.path,
-        path
-      }));
-      if (!isFile && !isDirectory) {
+      function isInsideUri(path: string) {
+        return isInside({
+          dir: uri.path,
+          path
+        });
+      }
+      const isDirectory = [...files.keys()].some(isInsideUri);
+      const isMissingEntry = !isFile && !isDirectory;
+      if (isMissingEntry) {
         throw missing(uri);
       }
 
@@ -110,10 +108,12 @@ export const workspace = {
     async readDirectory(uri: Uri) {
       const entries = new Map<string, number>();
       for (const path of files.keys()) {
-        if (!isInside({
-          dir: uri.path,
-          path
-        })) {
+        if (
+          !isInside({
+            dir: uri.path,
+            path
+          })
+        ) {
           continue;
         }
 
@@ -124,10 +124,13 @@ export const workspace = {
     },
     async delete(uri: Uri) {
       for (const path of files.keys()) {
-        if (path === uri.path || isInside({
-          dir: uri.path,
-          path
-        })) {
+        const isSamePath =
+          path === uri.path ||
+          isInside({
+            dir: uri.path,
+            path
+          });
+        if (isSamePath) {
           files.delete(path);
         }
       }

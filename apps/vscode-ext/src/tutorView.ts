@@ -1,8 +1,6 @@
-import type { LessonEntry } from "@/courseHost.ts";
-import { lessonPanelState } from "@/lessonPanel.ts";
-import { readLastTest } from "@/nodeHost.ts";
-import { HttpStatus, sendJson, sendStatus } from "@/server/respond.ts";
-import type { Route } from "@/server/router.ts";
+import { createHash } from "node:crypto";
+import { relative, resolve } from "node:path";
+
 import { readJsonFile } from "@scripts/lib/files.ts";
 import { tutorNotesSchema } from "@scripts/lib/schema.ts";
 import {
@@ -11,12 +9,15 @@ import {
   tutorHeading,
   tutorParagraph,
   type TutorTestRun,
-  type TutorView,
   tutorViewSchema
 } from "@scripts/lib/tutor-view.ts";
-import { createHash } from "node:crypto";
-import { relative, resolve } from "node:path";
 import * as vscode from "vscode";
+
+import type { LessonEntry } from "@/courseHost.ts";
+import { lessonPanelState } from "@/lessonPanel.ts";
+import { readLastTest } from "@/nodeHost.ts";
+import { HttpStatus, sendJson, sendStatus } from "@/server/respond.ts";
+import type { Route } from "@/server/router.ts";
 
 const MAX_CODE_LINES = 400;
 const MAX_SELECTION_CHARS = 200;
@@ -30,20 +31,16 @@ interface ViewSources {
   editor: () => vscode.TextEditor | undefined;
 }
 
-function fileName({ root, editor }: {
-  root: string;
-  editor: vscode.TextEditor;
-}) {
+function fileName({ root, editor }: { root: string; editor: vscode.TextEditor }) {
   return relative(root, editor.document.uri.fsPath).replaceAll("\\", "/");
 }
 
-function nowBlocks({ root, editor }: {
-  root: string;
-  editor: vscode.TextEditor | undefined;
-}) {
+function nowBlocks({ root, editor }: { root: string; editor: vscode.TextEditor | undefined }) {
   const panel = lessonPanelState();
   if (panel.isActive) {
-    return [tutorParagraph(panel.section ? `Reading the lesson, at the part "${panel.section}".` : "Reading the lesson.")];
+    return [
+      tutorParagraph(panel.section ? `Reading the lesson, at the part "${panel.section}".` : "Reading the lesson.")
+    ];
   }
 
   if (!editor) {
@@ -59,10 +56,7 @@ function nowBlocks({ root, editor }: {
   return [tutorParagraph(selected ? `${where}, with "${selected}" selected.` : `${where}.`)];
 }
 
-function codeBlocks({ root, editor }: {
-  root: string;
-  editor: vscode.TextEditor | undefined;
-}) {
+function codeBlocks({ root, editor }: { root: string; editor: vscode.TextEditor | undefined }) {
   if (!editor) {
     return [];
   }
@@ -71,7 +65,9 @@ function codeBlocks({ root, editor }: {
   const cursorLine = editor.selection.active.line;
   const lines = document.getText().split(/\r?\n/).slice(0, MAX_CODE_LINES);
   const numbered = lines.map((line, index) => `${index === cursorLine ? ">" : " "}${index + 1}| ${line}`).join("\n");
-  const problems = vscode.languages.getDiagnostics(document.uri).map(({ range, message }) => `line ${range.start.line + 1}: ${message}`);
+  const problems = vscode.languages
+    .getDiagnostics(document.uri)
+    .map(({ range, message }) => `line ${range.start.line + 1}: ${message}`);
   return [
     tutorHeading(
       `The learner's file ${fileName({
@@ -80,14 +76,13 @@ function codeBlocks({ root, editor }: {
       })}, line numbers on the left, > marks the cursor line`
     ),
     tutorParagraph(numbered || "(the file is empty)"),
-    ...(problems.length > 0 ? [tutorHeading("Problems VS Code shows in this file"), tutorParagraph(problems.join("\n"))] : [])
+    ...(problems.length > 0
+      ? [tutorHeading("Problems VS Code shows in this file"), tutorParagraph(problems.join("\n"))]
+      : [])
   ];
 }
 
-function testBlocks({ root, lessonId }: {
-  root: string;
-  lessonId: string;
-}) {
+function testBlocks({ root, lessonId }: { root: string; lessonId: string }) {
   const lastTest = readLastTest({
     root,
     lessonId
@@ -101,10 +96,7 @@ function testBlocks({ root, lessonId }: {
   return [tutorHeading(`Last test run: ${outcome}, ${minutesAgo} minutes ago`), tutorParagraph(lastTest.output.trim())];
 }
 
-function lessonBlocks({ root, lesson }: {
-  root: string;
-  lesson: LessonEntry;
-}) {
+function lessonBlocks({ root, lesson }: { root: string; lesson: LessonEntry }) {
   return [
     ...testBlocks({
       root,
@@ -118,7 +110,7 @@ function lessonBlocks({ root, lesson }: {
   ];
 }
 
-function buildTutorView({ root, lesson, editor }: ViewSources): TutorView {
+function buildTutorView({ root, lesson, editor }: ViewSources) {
   const currentLesson = lesson();
   const currentEditor = editor();
   const blocks: TutorBlock[] = [
@@ -131,27 +123,35 @@ function buildTutorView({ root, lesson, editor }: ViewSources): TutorView {
       root,
       editor: currentEditor
     }),
-    ...(currentLesson ? lessonBlocks({
-      root,
-      lesson: currentLesson
-    }) : [])
+    ...(currentLesson
+      ? lessonBlocks({
+          root,
+          lesson: currentLesson
+        })
+      : [])
   ];
   const title = currentLesson?.title ?? NO_LESSON_TITLE;
-  const lastTest = currentLesson ? readLastTest({
-    root,
-    lessonId: currentLesson.id
-  }) : null;
-  const testRun: TutorTestRun | null = lastTest ? {
-    ranAt: lastTest.at,
-    isPass: lastTest.isPass
-  } : null;
-  const version = createHash(VERSION_HASH).update(
-    JSON.stringify({
-      title,
-      blocks,
-      testRun
-    })
-  ).digest("hex");
+  const lastTest = currentLesson
+    ? readLastTest({
+        root,
+        lessonId: currentLesson.id
+      })
+    : null;
+  const testRun: TutorTestRun | null = lastTest
+    ? {
+        ranAt: lastTest.at,
+        isPass: lastTest.isPass
+      }
+    : null;
+  const version = createHash(VERSION_HASH)
+    .update(
+      JSON.stringify({
+        title,
+        blocks,
+        testRun
+      })
+    )
+    .digest("hex");
   return {
     version,
     title,
@@ -168,7 +168,7 @@ function safeTutorView(sources: ViewSources) {
   }
 }
 
-export function tutorViewRoute(sources: ViewSources): Route {
+export function tutorViewRoute(sources: ViewSources) {
   return {
     isMatch: pathname => pathname === TUTOR_VIEW_PATH,
     isGuarded: false,
@@ -187,5 +187,5 @@ export function tutorViewRoute(sources: ViewSources): Route {
         value: view
       });
     }
-  };
+  } satisfies Route;
 }

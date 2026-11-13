@@ -1,5 +1,7 @@
-import type { CourseHost, LocalFeatures } from "@/courseHost.ts";
-import { onTestsFinished, runLessonCli, runTestsInTerminal } from "@/lessonCli.ts";
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+
 import { readJsonFile } from "@scripts/lib/files.ts";
 import { LAST_TEST_RELATIVE_PATH, PROGRESS_RELATIVE_PATH } from "@scripts/lib/layout.ts";
 import { DONE_COMMAND } from "@scripts/lib/panel.ts";
@@ -7,20 +9,17 @@ import { parseQueryResults, queryResultsRelativePath } from "@scripts/lib/query-
 import { readRecordText } from "@scripts/lib/record-file.ts";
 import { lastTestSchema, progressSchema } from "@scripts/lib/schema.ts";
 import { parseTestCases, testCasesRelativePath } from "@scripts/lib/test-cases.ts";
-import { existsSync } from "node:fs";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
 import * as vscode from "vscode";
 
+import type { CourseHost, LocalFeatures } from "@/courseHost.ts";
+import { onTestsFinished, runLessonCli, runTestsInTerminal } from "@/lessonCli.ts";
+
 const LessonCliCommand = {
-  open: "open",
-  reset: "reset"
+  OPEN: "open",
+  RESET: "reset"
 } as const;
 
-export function readLastTest({ root, lessonId }: {
-  root: string;
-  lessonId: string;
-}) {
+export function readLastTest({ root, lessonId }: { root: string; lessonId: string }) {
   const lastTest = readJsonFile({
     path: resolve(root, LAST_TEST_RELATIVE_PATH),
     schema: lastTestSchema.nullable(),
@@ -44,7 +43,11 @@ function watchProgress(root: string) {
   };
 }
 
-export function createNodeCourseHost({ root, elementsBundlePath, local }: {
+export function createNodeCourseHost({
+  root,
+  elementsBundlePath,
+  local
+}: {
   root: string;
   elementsBundlePath: string;
   local: LocalFeatures;
@@ -67,28 +70,31 @@ export function createNodeCourseHost({ root, elementsBundlePath, local }: {
     workspaceRoot: vscode.Uri.file(root),
     readCourseFile,
     readElementsBundle: () => readFile(elementsBundlePath, "utf8"),
-    readProgress: async () => readJsonFile({
-      path: resolve(root, PROGRESS_RELATIVE_PATH),
-      schema: progressSchema,
-      fallback: {}
-    }),
+    readProgress: async () =>
+      readJsonFile({
+        path: resolve(root, PROGRESS_RELATIVE_PATH),
+        schema: progressSchema,
+        fallback: {}
+      }),
     onDidChangeProgress: progressWatch.onDidChange,
     async ensureExerciseFiles({ id }) {
-      await runCli([LessonCliCommand.open, id]);
+      await runCli([LessonCliCommand.OPEN, id]);
     },
     async resetExercise({ id }) {
-      await runCli([LessonCliCommand.reset, id]);
+      await runCli([LessonCliCommand.RESET, id]);
     },
-    runTests: ({ id }) => runTestsInTerminal({
-      root,
-      id
-    }),
+    runTests: ({ id }) =>
+      runTestsInTerminal({
+        root,
+        id
+      }),
     onDidFinishTests: listener => onTestsFinished(listener),
     readTestReport: async lessonId => ({
-      output: readLastTest({
-        root,
-        lessonId
-      })?.output ?? "",
+      output:
+        readLastTest({
+          root,
+          lessonId
+        })?.output ?? "",
       queryResults: parseQueryResults(readRecordText(resolve(root, queryResultsRelativePath(lessonId)))),
       testCases: parseTestCases(readRecordText(resolve(root, testCasesRelativePath(lessonId))))
     }),

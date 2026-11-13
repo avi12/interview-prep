@@ -1,6 +1,7 @@
-import type { Course } from "@/course.ts";
 import { OnboardingAction, onboardingMessageSchema, renderOnboarding } from "@scripts/lib/onboarding.ts";
 import * as vscode from "vscode";
+
+import type { Course } from "@/course.ts";
 
 const VIEW_TYPE = "interviewPrep.onboarding";
 const PANEL_TITLE = "Choose what to learn";
@@ -34,10 +35,7 @@ export async function showOnboarding({
     enableScripts: true
   });
   panel = createdPanel;
-  async function finish({ role, trackIds }: {
-    role?: string;
-    trackIds: readonly string[];
-  }) {
+  async function finish({ role, trackIds }: { role?: string; trackIds: readonly string[] }) {
     await course.saveCourseChoice({
       role: role ?? course.courseChoice().role,
       trackIds
@@ -54,12 +52,12 @@ export async function showOnboarding({
     }
 
     const message = parsed.data;
-    if (message.action === OnboardingAction.addTopic) {
+    if (message.action === OnboardingAction.ADD_TOPIC) {
       onAddTopic();
       return;
     }
 
-    if (message.action === OnboardingAction.skip) {
+    if (message.action === OnboardingAction.SKIP) {
       void finish({ trackIds: [] });
       return;
     }
