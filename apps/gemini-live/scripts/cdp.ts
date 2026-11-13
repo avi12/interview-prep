@@ -1,4 +1,4 @@
-import { zod } from "../src/lib/zod.ts";
+import { zod } from "#src/lib/zod.ts";
 
 const messageSchema = zod.object({
   id: zod.number().optional(),

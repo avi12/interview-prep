@@ -13,9 +13,9 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { setTimeout as wait } from "node:timers/promises";
 
-import { TUTOR_VIEW_PATH } from "../../../scripts/lib/tutor-view.ts";
-import { debugEndpoint } from "../scripts/cdp.ts";
-import { CHROME_FOR_TESTING_MISSING, chromeExecutable } from "../scripts/chrome-for-testing.ts";
+import { TUTOR_VIEW_PATH } from "#repo-scripts/lib/tutor-view.ts";
+import { debugEndpoint } from "#tools/cdp.ts";
+import { CHROME_FOR_TESTING_MISSING, chromeExecutable } from "#tools/chrome-for-testing.ts";
 
 const BROWSER_EXIT_WAIT_MS = 1000;
 const PROFILE_REMOVE_RETRIES = 5;

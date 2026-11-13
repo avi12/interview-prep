@@ -1,1 +1,1 @@
-export { zod } from "../../../../scripts/lib/zod.ts";
+export { zod } from "#repo-scripts/lib/zod.ts";

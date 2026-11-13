@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
-import { zod } from "../src/lib/zod.ts";
+import { zod } from "#src/lib/zod.ts";
 
 const MANIFEST_FILE = "manifest.json";
 const HASH_ALGORITHM = "sha1";

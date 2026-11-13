@@ -12,6 +12,9 @@
     },
     "#kit/*": "./curriculum/_kit/*"
   },
+  "exports": {
+    "./scripts/*": "./scripts/*"
+  },
   "scripts": {
     "lesson": "node scripts/lesson.ts",
     "build": "node scripts/build-lessons.ts",

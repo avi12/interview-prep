@@ -3,7 +3,8 @@ import { fileURLToPath } from "node:url";
 import { svelte, vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { defineConfig } from "vite";
 
-import { VOICE_BUILD_RELATIVE_DIR, VOICE_PATH } from "../../scripts/lib/voice.ts";
+import { VOICE_BUILD_RELATIVE_DIR, VOICE_PATH } from "#repo-scripts/lib/voice.ts";
+
 import { SCRIPTS_ALIAS, SOURCE_ALIAS } from "./aliases.ts";
 
 const VOICE_ROOT = fileURLToPath(new URL("src/voice", import.meta.url));

@@ -4,8 +4,9 @@ import { setTimeout as wait } from "node:timers/promises";
 import { watch } from "chokidar";
 import { build } from "wxt";
 
-import { readToken, trainerUrl } from "../../../scripts/lib/trainer-url.ts";
-import { resolveVscodeOrigin } from "../vscode-origin.ts";
+import { readToken, trainerUrl } from "#repo-scripts/lib/trainer-url.ts";
+import { resolveVscodeOrigin } from "#vscode-origin";
+
 import { launchChrome, reloadPages } from "./dev-browser.ts";
 import { fingerprintOutput, planReload, type ReloadPlan } from "./dev-output.ts";
 

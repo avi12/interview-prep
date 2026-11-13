@@ -1,4 +1,4 @@
-import { serverOrigin } from "../../scripts/lib/server.ts";
+import { serverOrigin } from "#repo-scripts/lib/server.ts";
 
 export function resolveVscodeOrigin() {
   return process.env.VSCODE_ORIGIN ?? serverOrigin();

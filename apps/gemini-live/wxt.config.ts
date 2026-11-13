@@ -1,8 +1,9 @@
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { defineConfig } from "wxt";
 
-import { WEB_ORIGIN } from "../../scripts/lib/gcp.ts";
-import { serverOrigin, TUTOR_VIEW_PORT, tutorViewUrl, voiceUrl } from "../../scripts/lib/server.ts";
+import { WEB_ORIGIN } from "#repo-scripts/lib/gcp.ts";
+import { serverOrigin, TUTOR_VIEW_PORT, tutorViewUrl, voiceUrl } from "#repo-scripts/lib/server.ts";
+
 import { SCRIPTS_ALIAS } from "./aliases.ts";
 import { EXTENSION_KEY } from "./extension-identity.ts";
 import { PROMPT_CLIP_GLOB } from "./src/lib/prompt-clip.ts";

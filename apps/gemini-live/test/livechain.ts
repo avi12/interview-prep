@@ -25,14 +25,14 @@
 import { readFileSync } from "node:fs";
 import { setTimeout as wait } from "node:timers/promises";
 
-import { type Cdp, type CdpTarget, connect, debugEndpoint, listTargets } from "../scripts/cdp.ts";
-import { buildBrief } from "../src/lib/brief.ts";
-import { Language } from "../src/lib/language.ts";
-import { parseSession } from "../src/lib/session-schema.ts";
-import { oneLine } from "../src/lib/text.ts";
-import { TutorAction, tutorActionSelector } from "../src/lib/tutor-action.ts";
-import { parseVscodeTitle } from "../src/lib/vscode-title.ts";
-import { zod } from "../src/lib/zod.ts";
+import { buildBrief } from "#src/lib/brief.ts";
+import { Language } from "#src/lib/language.ts";
+import { parseSession } from "#src/lib/session-schema.ts";
+import { oneLine } from "#src/lib/text.ts";
+import { TutorAction, tutorActionSelector } from "#src/lib/tutor-action.ts";
+import { parseVscodeTitle } from "#src/lib/vscode-title.ts";
+import { zod } from "#src/lib/zod.ts";
+import { type Cdp, type CdpTarget, connect, debugEndpoint, listTargets } from "#tools/cdp.ts";
 
 const NAME_COLUMN_WIDTH = 66;
 const DEFAULT_WAIT_TIMEOUT_MS = 30_000;

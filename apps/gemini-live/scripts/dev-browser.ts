@@ -4,8 +4,9 @@ import { join, resolve } from "node:path";
 
 import webExtRun from "web-ext-run";
 
-import { escapeRegex } from "../../../scripts/lib/regex.ts";
-import { extensionId } from "../extension-identity.ts";
+import { extensionId } from "#extension-identity";
+import { escapeRegex } from "#repo-scripts/lib/regex.ts";
+
 import { type CdpTarget, connect, DEBUG_HOST, listTargets } from "./cdp.ts";
 import { CHROME_FOR_TESTING_MISSING, chromeExecutable } from "./chrome-for-testing.ts";
 
