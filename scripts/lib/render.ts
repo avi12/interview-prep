@@ -233,7 +233,7 @@ export function renderLesson(lesson: Lesson) {
 <style>${PAGE_STYLE_FILES.map(readAsset).join("\n")}</style>
 </head>
 <body>
-<main class="page">
+<main class="page" data-lesson="${escapeHtml(lesson.id)}">
 <header class="lesson-head"><p class="meta">${escapeHtml(lesson.track)} / ${escapeHtml(lesson.slug)}</p><h1>${escapeHtml(meta.title)}</h1><p class="meta">${chips}</p></header>
 ${cards}
 ${renderSources(meta.sources)}

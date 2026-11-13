@@ -43,6 +43,7 @@
   "devDependencies": {
     "@types/node": "^24.0.0",
     "avi12-lint": "github:avi12/lint-config#v0.4.11&path:/packages/avi12-lint",
+    "esbuild": "^0.25.12",
     "eslint": "^10.13.0",
     "eslint-config-avi12": "github:avi12/lint-config#v0.4.11&path:/packages/eslint-config",
     "eslint-plugin-svelte": "^3.23.1",

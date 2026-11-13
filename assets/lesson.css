@@ -387,3 +387,47 @@ body {
 .hljs-variable {
   color: var(--fg);
 }
+
+.narrate-button {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 28px;
+  block-size: 28px;
+  margin-inline-start: auto;
+  padding: 0;
+  color: var(--fg);
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  cursor: pointer;
+
+  &::before {
+    content: "";
+    inline-size: 10px;
+    block-size: 12px;
+    background: currentcolor;
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+  }
+
+  &[aria-pressed="true"]::before {
+    clip-path: none;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: var(--primary-container);
+  }
+}
+
+.narrate-voice {
+  max-inline-size: 100%;
+  padding: var(--s-1) var(--s-2);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+}
+
+[data-narrating] {
+  outline: 2px solid var(--primary);
+  outline-offset: 6px;
+}

@@ -30,6 +30,9 @@ importers:
       avi12-lint:
         specifier: github:avi12/lint-config#v0.4.11&path:/packages/avi12-lint
         version: https://codeload.github.com/avi12/lint-config/tar.gz/ea66fa2357434e527f285e79bbe875f27cd5356d#path:/packages/avi12-lint
+      esbuild:
+        specifier: ^0.25.12
+        version: 0.25.12
       eslint:
         specifier: ^10.13.0
         version: 10.13.0(jiti@2.7.0)

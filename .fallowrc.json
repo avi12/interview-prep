@@ -14,6 +14,7 @@
     "apps/web/server/main.ts",
     "apps/web/build-server.ts",
     "apps/web/src/main.ts",
+    "apps/web/src/narration/runtime.ts",
     "apps/web/src/runner/run-lesson.ts",
     "apps/web/src/runner/*/worker.ts",
     "apps/web/browser-runner.e2e.ts",
