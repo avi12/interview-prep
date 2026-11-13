@@ -10,10 +10,7 @@ export class Money {
   readonly #cents: number;
   readonly #currency: string;
 
-  constructor({ cents, currency }: {
-    cents: number;
-    currency: string;
-  }) {
+  constructor({ cents, currency }: { cents: number; currency: string }) {
     if (!Number.isSafeInteger(cents)) {
       throw new DomainError(`money needs whole cents, got ${cents}`);
     }
@@ -69,7 +66,8 @@ export class Money {
   }
 
   multiply(quantity: number) {
-    if (!Number.isSafeInteger(quantity) || quantity < 0) {
+    const isInvalidQuantity = !Number.isSafeInteger(quantity) || quantity < 0;
+    if (isInvalidQuantity) {
       throw new DomainError(`quantity must be a whole number, got ${quantity}`);
     }
 
@@ -80,7 +78,8 @@ export class Money {
   }
 
   percentage(percent: number) {
-    if (!Number.isFinite(percent) || percent < 0) {
+    const isInvalidPercent = !Number.isFinite(percent) || percent < 0;
+    if (isInvalidPercent) {
       throw new DomainError(`percent must be zero or more, got ${percent}`);
     }
 

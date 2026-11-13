@@ -4,7 +4,7 @@ const SHOWN_LIMITS = {
   depth: 3,
   maxArrayLength: 12,
   maxStringLength: 60
-} as const;
+};
 const CLASS_SOURCE_PREFIX = "class";
 const LINE_BREAK_INDENT = /\s*\n\s*/g;
 const TRAILING_COMMA = /,(?=\s*[\]}])/g;
@@ -37,10 +37,7 @@ function isPlainFunction(value: unknown): value is (...args: unknown[]) => unkno
   return typeof value === "function" && !Function.prototype.toString.call(value).startsWith(CLASS_SOURCE_PREFIX);
 }
 
-function recorded({ name, run }: {
-  name: string;
-  run: (...args: unknown[]) => unknown;
-}) {
+function recorded({ name, run }: { name: string; run: (...args: unknown[]) => unknown }) {
   return (...args: unknown[]) => {
     lastCall = `${name}(${args.map(formatValue).join(", ")})`;
     return run(...args);

@@ -74,28 +74,28 @@ describe("valid data", () => {
 
 describe("students", () => {
   it("requires a name", async () => {
-    expectRefused({ result: await insertStudent({ name: null }), code: SqlState.notNull });
+    expectRefused({ result: await insertStudent({ name: null }), code: SqlState.NOT_NULL });
   });
 
   it("requires a unique email", async () => {
     await insertStudent({ email: "same@example.com" });
-    expectRefused({ result: await insertStudent({ name: "Omer", email: "same@example.com" }), code: SqlState.unique });
+    expectRefused({ result: await insertStudent({ name: "Omer", email: "same@example.com" }), code: SqlState.UNIQUE });
   });
 });
 
 describe("courses", () => {
   it("requires a title", async () => {
-    expectRefused({ result: await insertCourse({ title: null }), code: SqlState.notNull });
+    expectRefused({ result: await insertCourse({ title: null }), code: SqlState.NOT_NULL });
   });
 
   it("requires credits", async () => {
-    expectRefused({ result: await insertCourse({ credits: null }), code: SqlState.notNull });
+    expectRefused({ result: await insertCourse({ credits: null }), code: SqlState.NOT_NULL });
   });
 
   it("allows credits from 1 to 10 and refuses 0, 11 and negatives", async () => {
     expect((await insertCourse({ credits: 1 })).message).toBe("");
     expect((await insertCourse({ credits: 10 })).message).toBe("");
-    for (const credits of [0, 11, -3]) expectRefused({ result: await insertCourse({ credits }), code: SqlState.check });
+    for (const credits of [0, 11, -3]) expectRefused({ result: await insertCourse({ credits }), code: SqlState.CHECK });
   });
 });
 
@@ -104,15 +104,15 @@ describe("enrollments", () => {
     const studentId = await newStudent();
     const courseId = await newCourse();
     const unknownId = 9999;
-    expectRefused({ result: await enroll({ studentId: unknownId, courseId }), code: SqlState.foreignKey });
-    expectRefused({ result: await enroll({ studentId, courseId: unknownId }), code: SqlState.foreignKey });
+    expectRefused({ result: await enroll({ studentId: unknownId, courseId }), code: SqlState.FOREIGN_KEY });
+    expectRefused({ result: await enroll({ studentId, courseId: unknownId }), code: SqlState.FOREIGN_KEY });
   });
 
   it("refuses the same student in the same course twice", async () => {
     const studentId = await newStudent();
     const courseId = await newCourse();
     await enroll({ studentId, courseId });
-    expectRefused({ result: await enroll({ studentId, courseId, grade: 80 }), code: SqlState.unique });
+    expectRefused({ result: await enroll({ studentId, courseId, grade: 80 }), code: SqlState.UNIQUE });
   });
 
   it("allows a grade from 0 to 100 or NULL, and refuses anything else", async () => {
@@ -123,7 +123,7 @@ describe("enrollments", () => {
     }
     for (const grade of [101, -1]) {
       const courseId = await newCourse();
-      expectRefused({ result: await enroll({ studentId, courseId, grade }), code: SqlState.check });
+      expectRefused({ result: await enroll({ studentId, courseId, grade }), code: SqlState.CHECK });
     }
   });
 });
@@ -145,7 +145,7 @@ describe("deleting", () => {
     const courseId = await newCourse();
     await enroll({ studentId, courseId });
     const result = await tryStatement({ db, sql: "DELETE FROM courses WHERE id = $1", params: [courseId] });
-    expectRefused({ result, code: [SqlState.restrict, SqlState.foreignKey] });
+    expectRefused({ result, code: [SqlState.RESTRICT, SqlState.FOREIGN_KEY] });
     expect(await countOf("enrollments")).toBe(1);
   });
 

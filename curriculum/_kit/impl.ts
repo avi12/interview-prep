@@ -16,10 +16,7 @@ export function lessonIdOf(testUrl: string) {
   return segments.slice(-LESSON_ID_SEGMENTS).map(decodeURIComponent).join(PATH_SEPARATOR);
 }
 
-export function lessonFileUrl({ testUrl, file }: {
-  testUrl: string;
-  file: string;
-}) {
+export function lessonFileUrl({ testUrl, file }: { testUrl: string; file: string }) {
   return new URL(file, lessonDirUrl(testUrl));
 }
 
@@ -28,10 +25,7 @@ export function implDir(testUrl: string) {
   return dir.replace(TRAILING_SEPARATORS, "");
 }
 
-export function implPath({ testUrl, file }: {
-  testUrl: string;
-  file: string;
-}) {
+export function implPath({ testUrl, file }: { testUrl: string; file: string }) {
   return `${implDir(testUrl)}${PATH_SEPARATOR}${file}`;
 }
 
@@ -39,7 +33,10 @@ function isModule<T extends object>(value: unknown): value is T {
   return typeof value === "object" && value !== null;
 }
 
-export async function loadImpl<T extends object = Record<string, unknown>>({ testUrl, file }: {
+export async function loadImpl<T extends object = Record<string, unknown>>({
+  testUrl,
+  file
+}: {
   testUrl: string;
   file: string;
 }) {

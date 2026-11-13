@@ -1,16 +1,3 @@
-import type { KitHost, SuiteRuns } from "#kit/host-contract.ts";
-import {
-  crashOutcome,
-  mapWithLimit,
-  MAX_PARALLEL_RUNS,
-  RUN_TIMEOUT_MS,
-  suiteOutcomeOf,
-  type SuiteTest,
-  SuiteTestStatus
-} from "#kit/mutation-runs.ts";
-import { ROOT, WORK_DIR } from "#scripts/lib/paths.ts";
-import { IMPL_DIR_ENV, RECORD_ENV } from "#scripts/lib/record-env.ts";
-import { z } from "#scripts/lib/zod.ts";
 import { spawn } from "node:child_process";
 import {
   appendFileSync,
@@ -27,6 +14,20 @@ import { rm } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
+import type { KitHost, SuiteRuns } from "#kit/host-contract.ts";
+import {
+  crashOutcome,
+  mapWithLimit,
+  MAX_PARALLEL_RUNS,
+  RUN_TIMEOUT_MS,
+  suiteOutcomeOf,
+  type SuiteTest,
+  SuiteTestStatus
+} from "#kit/mutation-runs.ts";
+import { ROOT, WORK_DIR } from "#scripts/lib/paths.ts";
+import { IMPL_DIR_ENV, RECORD_ENV } from "#scripts/lib/record-env.ts";
+import { zod } from "#scripts/lib/zod.ts";
+
 const VITEST_ENTRY = resolve(ROOT, "node_modules", "vitest", "vitest.mjs");
 const RUNS_DIR = resolve(WORK_DIR, "_mutation");
 const RUN_CONFIG_FILE = "vitest.config.mjs";
@@ -38,18 +39,18 @@ const VITEST_ENV_PREFIX = "VITEST";
 const FORCE_COLOR_ENV = "FORCE_COLOR";
 const DROPPED_ENV = new Set<string>([IMPL_DIR_ENV, ...Object.values(RECORD_ENV), FORCE_COLOR_ENV]);
 
-const assertionSchema = z.object({
-  title: z.string(),
-  status: z.string(),
-  failureMessages: z.array(z.string()).optional()
+const assertionSchema = zod.object({
+  title: zod.string(),
+  status: zod.string(),
+  failureMessages: zod.array(zod.string()).optional()
 });
-const fileResultSchema = z.object({
-  status: z.string(),
-  message: z.string().optional(),
-  assertionResults: z.array(assertionSchema)
+const fileResultSchema = zod.object({
+  status: zod.string(),
+  message: zod.string().optional(),
+  assertionResults: zod.array(assertionSchema)
 });
-const jsonReportSchema = z.object({ testResults: z.array(fileResultSchema) });
-type JsonReport = z.infer<typeof jsonReportSchema>;
+const jsonReportSchema = zod.object({ testResults: zod.array(fileResultSchema) });
+type JsonReport = zod.infer<typeof jsonReportSchema>;
 
 function isKeptEnv(key: string) {
   return !key.startsWith(VITEST_ENV_PREFIX) && !DROPPED_ENV.has(key);
@@ -91,17 +92,14 @@ function readReport(file: string) {
 }
 
 function statusOf(status: string) {
-  if (status === SuiteTestStatus.passed || status === SuiteTestStatus.failed) {
+  if (status === SuiteTestStatus.PASSED || status === SuiteTestStatus.FAILED) {
     return status;
   }
 
-  return SuiteTestStatus.skipped;
+  return SuiteTestStatus.SKIPPED;
 }
 
-function outcomeFrom({ report, output }: {
-  report: JsonReport | undefined;
-  output: string;
-}) {
+function outcomeFrom({ report, output }: { report: JsonReport | undefined; output: string }) {
   if (!report) {
     return crashOutcome(output);
   }
@@ -113,7 +111,7 @@ function outcomeFrom({ report, output }: {
     message: failureMessages[0] ?? ""
   }));
   const crash = report.testResults
-    .filter(file => file.status === SuiteTestStatus.failed && file.assertionResults.length === 0)
+    .filter(file => file.status === SuiteTestStatus.FAILED && file.assertionResults.length === 0)
     .map(file => file.message ?? "")
     .join("\n");
   return suiteOutcomeOf({
@@ -149,7 +147,12 @@ async function removeStaleRuns() {
   }
 }
 
-async function runSuiteWithSubject({ suiteDir, suiteFile, subjectFile, subjectSource }: Omit<SuiteRuns, "subjectSources"> & { subjectSource: string }) {
+async function runSuiteWithSubject({
+  suiteDir,
+  suiteFile,
+  subjectFile,
+  subjectSource
+}: Omit<SuiteRuns, "subjectSources"> & { subjectSource: string }) {
   mkdirSync(RUNS_DIR, { recursive: true });
   const runDir = mkdtempSync(resolve(RUNS_DIR, "run-"));
   const reportFile = `${runDir}.json`;
@@ -160,7 +163,15 @@ async function runSuiteWithSubject({ suiteDir, suiteFile, subjectFile, subjectSo
     });
     writeFileSync(resolve(runDir, subjectFile), subjectSource);
     writeFileSync(resolve(runDir, RUN_CONFIG_FILE), RUN_CONFIG);
-    const { output } = await runVitest(["run", "--root", runDir, "--pool=threads", "--reporter=json", `--outputFile=${reportFile}`, suiteFile]);
+    const { output } = await runVitest([
+      "run",
+      "--root",
+      runDir,
+      "--pool=threads",
+      "--reporter=json",
+      `--outputFile=${reportFile}`,
+      suiteFile
+    ]);
     return outcomeFrom({
       report: readReport(reportFile),
       output
@@ -190,10 +201,11 @@ export const kitHost = {
     return mapWithLimit({
       items: subjectSources,
       limit: MAX_PARALLEL_RUNS,
-      work: subjectSource => runSuiteWithSubject({
-        ...suite,
-        subjectSource
-      })
+      work: subjectSource =>
+        runSuiteWithSubject({
+          ...suite,
+          subjectSource
+        })
     });
   }
 } satisfies KitHost;

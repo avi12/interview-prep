@@ -1,21 +1,21 @@
-export type FormatLimits = {
+export interface FormatLimits {
   depth: number;
   maxArrayLength: number;
   maxStringLength: number;
-};
+}
 
-type Context = {
+interface Context {
   limits: FormatLimits;
   level: number;
   seen: Set<object>;
-};
+}
 
 const CUSTOM_INSPECT = Symbol.for("nodejs.util.inspect.custom");
 const PLAIN_OBJECT_NAME = "Object";
 const NULL_PROTOTYPE_PREFIX = "[Object: null prototype] ";
 const PLAIN_KEY = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
 const SINGLE_QUOTE = "'";
-const DOUBLE_QUOTE = "\"";
+const DOUBLE_QUOTE = '"';
 const BACKTICK = "`";
 const TEMPLATE_START = "${";
 const CLASS_SOURCE = /^class\b/;
@@ -39,10 +39,7 @@ const FUNCTION_KINDS: Record<string, string> = {
   AsyncGeneratorFunction: "AsyncGeneratorFunction"
 };
 
-function plural({ count, word }: {
-  count: number;
-  word: string;
-}) {
+function plural({ count, word }: { count: number; word: string }) {
   return `${count} more ${word}${count > 1 ? "s" : ""}`;
 }
 
@@ -55,14 +52,14 @@ function quoteOf(text: string) {
     return DOUBLE_QUOTE;
   }
 
-  return text.includes(BACKTICK) || text.includes(TEMPLATE_START) ? SINGLE_QUOTE : BACKTICK;
+  const hasTemplateSyntax = text.includes(BACKTICK) || text.includes(TEMPLATE_START);
+
+  return hasTemplateSyntax ? SINGLE_QUOTE : BACKTICK;
 }
 
-function escapedChar({ char, quote }: {
-  char: string;
-  quote: string;
-}) {
-  if (char === quote) {
+function escapedChar({ char, quote }: { char: string; quote: string }) {
+  const isClosingQuote = char === quote;
+  if (isClosingQuote) {
     return `\\${char}`;
   }
 
@@ -72,7 +69,8 @@ function escapedChar({ char, quote }: {
   }
 
   const code = char.charCodeAt(0);
-  if (code < CONTROL_LIMIT || code === DELETE_CODE) {
+  const isControlCharacter = code < CONTROL_LIMIT || code === DELETE_CODE;
+  if (isControlCharacter) {
     return `\\x${code.toString(HEX_RADIX).toUpperCase().padStart(BYTE_HEX_WIDTH, "0")}`;
   }
 
@@ -91,10 +89,7 @@ function quoted(text: string) {
   return `${quote}${body}${quote}`;
 }
 
-function formatString({ text, limits }: {
-  text: string;
-  limits: FormatLimits;
-}) {
+function formatString({ text, limits }: { text: string; limits: FormatLimits }) {
   const extra = text.length - limits.maxStringLength;
   if (extra <= 0) {
     return quoted(text);
@@ -106,7 +101,7 @@ function formatString({ text, limits }: {
   })}`;
 }
 
-function formatFunction(value: Function) {
+function formatFunction(value: { name: string }) {
   const source = Function.prototype.toString.call(value);
   if (CLASS_SOURCE.test(source)) {
     const heritage = CLASS_HERITAGE.exec(source)?.[1];
@@ -135,12 +130,7 @@ function keyText(key: string | symbol) {
   return PLAIN_KEY.test(key) ? key : quoted(key);
 }
 
-function braced({ prefix, items, open, close }: {
-  prefix: string;
-  items: string[];
-  open: string;
-  close: string;
-}) {
+function braced({ prefix, items, open, close }: { prefix: string; items: string[]; open: string; close: string }) {
   if (items.length === 0) {
     return `${prefix}${open}${close}`;
   }
@@ -148,11 +138,7 @@ function braced({ prefix, items, open, close }: {
   return `${prefix}${open} ${items.join(", ")} ${close}`;
 }
 
-function limited({ items, total, limits }: {
-  items: string[];
-  total: number;
-  limits: FormatLimits;
-}) {
+function limited({ items, total, limits }: { items: string[]; total: number; limits: FormatLimits }) {
   const extra = total - limits.maxArrayLength;
   if (extra <= 0) {
     return items;
@@ -168,7 +154,8 @@ function limited({ items, total, limits }: {
 }
 
 function accessorText(descriptor: PropertyDescriptor) {
-  if (descriptor.get && descriptor.set) {
+  const isAccessorPair = typeof descriptor.get === "function" && typeof descriptor.set === "function";
+  if (isAccessorPair) {
     return "[Getter/Setter]";
   }
 
@@ -187,17 +174,15 @@ function isNumberView(value: object): value is ArrayBufferView & ArrayLike<numbe
   return ArrayBuffer.isView(value) && !(value instanceof DataView);
 }
 
-function propertyEntries({ value, context }: {
-  value: object;
-  context: Context;
-}) {
+function propertyEntries({ value, context }: { value: object; context: Context }) {
   const keys: (string | symbol)[] = [
     ...Object.keys(value),
     ...Object.getOwnPropertySymbols(value).filter(symbol => Object.prototype.propertyIsEnumerable.call(value, symbol))
   ];
   return keys.map(key => {
     const descriptor = Object.getOwnPropertyDescriptor(value, key);
-    if (descriptor && !("value" in descriptor)) {
+    const isAccessorDescriptor = descriptor && !("value" in descriptor);
+    if (isAccessorDescriptor) {
       return `${keyText(key)}: ${accessorText(descriptor)}`;
     }
 
@@ -208,17 +193,15 @@ function propertyEntries({ value, context }: {
   });
 }
 
-function formatChild({ value, context }: {
-  value: unknown;
-  context: Context;
-}) {
-  return formatAny({
+function formatChild({ value, context }: { value: unknown; context: Context }) {
+  const text: string = formatAny({
     value,
     context: {
       ...context,
       level: context.level + 1
     }
   });
+  return text;
 }
 
 function bytesText(bytes: Uint8Array) {
@@ -237,22 +220,17 @@ function isEmptyContainer(value: object) {
   return Object.keys(value).length === 0 && Object.getOwnPropertySymbols(value).length === 0;
 }
 
-function depthMarker({ value, name }: {
-  value: object;
-  name: string | null;
-}) {
+function depthMarker({ value, name }: { value: object; name: string | null }) {
   if (name === null) {
     return "[Object: null prototype]";
   }
 
-  return Array.isArray(value) && name === "Array" ? "[Array]" : `[${name}]`;
+  const isPlainArray = Array.isArray(value) && name === "Array";
+
+  return isPlainArray ? "[Array]" : `[${name}]`;
 }
 
-function formatCollection({ value, name, context }: {
-  value: object;
-  name: string | null;
-  context: Context;
-}) {
+function formatCollection({ value, name, context }: { value: object; name: string | null; context: Context }) {
   const { limits } = context;
   function child(item: unknown) {
     return formatChild({
@@ -260,8 +238,8 @@ function formatCollection({ value, name, context }: {
       context
     });
   }
-
-  if (value instanceof Map) {
+  const isMap = value instanceof Map;
+  if (isMap) {
     const shown = [...value].slice(0, limits.maxArrayLength).map(([key, item]) => `${child(key)} => ${child(item)}`);
     return braced({
       prefix: `${name ?? "Map"}(${value.size}) `,
@@ -275,7 +253,8 @@ function formatCollection({ value, name, context }: {
     });
   }
 
-  if (value instanceof Set) {
+  const isSet = value instanceof Set;
+  if (isSet) {
     const shown = [...value].slice(0, limits.maxArrayLength).map(child);
     return braced({
       prefix: `${name ?? "Set"}(${value.size}) `,
@@ -322,10 +301,7 @@ function formatCollection({ value, name, context }: {
   return undefined;
 }
 
-function formatObject({ value, context }: {
-  value: object;
-  context: Context;
-}) {
+function formatObject({ value, context }: { value: object; context: Context }) {
   if (context.seen.has(value)) {
     return "[Circular *1]";
   }
@@ -338,28 +314,34 @@ function formatObject({ value, context }: {
     }
   }
 
-  if (value instanceof Date) {
+  const isDate = value instanceof Date;
+  if (isDate) {
     return Number.isNaN(value.getTime()) ? "Invalid Date" : value.toISOString();
   }
 
-  if (value instanceof RegExp) {
+  const isRegExp = value instanceof RegExp;
+  if (isRegExp) {
     return String(value);
   }
 
-  if (value instanceof Error) {
+  const isError = value instanceof Error;
+  if (isError) {
     return value.stack ?? `${value.name}: ${value.message}`;
   }
 
-  if (value instanceof ArrayBuffer) {
+  const isArrayBuffer = value instanceof ArrayBuffer;
+  if (isArrayBuffer) {
     return `ArrayBuffer { [Uint8Contents]: <${bytesText(new Uint8Array(value))}>, byteLength: ${value.byteLength} }`;
   }
 
-  if (value instanceof Promise) {
+  const isPromise = value instanceof Promise;
+  if (isPromise) {
     return "Promise { <pending> }";
   }
 
   const name = constructorNameOf(value);
-  if (context.level > context.limits.depth && !isEmptyContainer(value)) {
+  const isDepthLimitReached = context.level > context.limits.depth && !isEmptyContainer(value);
+  if (isDepthLimitReached) {
     return depthMarker({
       value,
       name
@@ -367,27 +349,26 @@ function formatObject({ value, context }: {
   }
 
   context.seen.add(value);
-  const text = formatCollection({
-    value,
-    name,
-    context
-  }) ?? braced({
-    prefix: objectPrefix(name),
-    items: propertyEntries({
+  const text =
+    formatCollection({
       value,
+      name,
       context
-    }),
-    open: "{",
-    close: "}"
-  });
+    }) ??
+    braced({
+      prefix: objectPrefix(name),
+      items: propertyEntries({
+        value,
+        context
+      }),
+      open: "{",
+      close: "}"
+    });
   context.seen.delete(value);
   return text;
 }
 
-function formatAny({ value, context }: {
-  value: unknown;
-  context: Context;
-}): string {
+function formatAny({ value, context }: { value: unknown; context: Context }) {
   if (typeof value === "string") {
     return formatString({
       text: value,
@@ -421,10 +402,7 @@ function formatAny({ value, context }: {
   });
 }
 
-export function formatWithLimits({ value, limits }: {
-  value: unknown;
-  limits: FormatLimits;
-}) {
+export function formatWithLimits({ value, limits }: { value: unknown; limits: FormatLimits }) {
   return formatAny({
     value,
     context: {

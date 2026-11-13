@@ -1,27 +1,25 @@
 import { PGlite } from "@electric-sql/pglite";
+
 import { kitHost } from "#kit/host.ts";
 import { implPath } from "#kit/impl.ts";
-import { z } from "#scripts/lib/zod.ts";
+import { zod } from "#scripts/lib/zod.ts";
 
-const postgresErrorSchema = z.object({
-  code: z.string().optional(),
-  message: z.string()
+const postgresErrorSchema = zod.object({
+  code: zod.string().optional(),
+  message: zod.string()
 });
 
 export const SqlState = {
-  notNull: "23502",
-  restrict: "23001",
-  foreignKey: "23503",
-  unique: "23505",
-  check: "23514"
+  NOT_NULL: "23502",
+  RESTRICT: "23001",
+  FOREIGN_KEY: "23503",
+  UNIQUE: "23505",
+  CHECK: "23514"
 } as const;
 
-export async function openSchemaDb({ testUrl, file }: {
-  testUrl: string;
-  file: string;
-}) {
-  const db = new PGlite();
-  await db.exec(
+export async function openSchemaDb({ testUrl, file }: { testUrl: string; file: string }) {
+  const database = new PGlite();
+  await database.exec(
     kitHost.readText(
       implPath({
         testUrl,
@@ -29,14 +27,10 @@ export async function openSchemaDb({ testUrl, file }: {
       })
     )
   );
-  return db;
+  return database;
 }
 
-export async function tryStatement({ db, sql, params = [] }: {
-  db: PGlite;
-  sql: string;
-  params?: unknown[];
-}) {
+export async function tryStatement({ db, sql, params = [] }: { db: PGlite; sql: string; params?: unknown[] }) {
   try {
     await db.query(sql, params);
     return {

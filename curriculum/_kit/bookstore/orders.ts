@@ -1,17 +1,17 @@
 import type { Money } from "./money.ts";
 
-export type OrderLine = {
+export interface OrderLine {
   isbn: string;
   title: string;
   unitPrice: Money;
   quantity: number;
-};
+}
 
-export type EmailMessage = {
+export interface EmailMessage {
   to: string;
   subject: string;
   body: string;
-};
+}
 
 export interface Mailer {
   send(message: EmailMessage): Promise<void>;

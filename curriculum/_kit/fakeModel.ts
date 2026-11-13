@@ -1,41 +1,41 @@
-export type TextBlock = {
+export interface TextBlock {
   type: "text";
   text: string;
-};
-export type ToolUseBlock = {
+}
+export interface ToolUseBlock {
   type: "tool_use";
   id: string;
   name: string;
   input: Record<string, unknown>;
-};
-export type ToolResultBlock = {
+}
+export interface ToolResultBlock {
   type: "tool_result";
   tool_use_id: string;
   content?: string;
   is_error?: boolean;
-};
+}
 export type AssistantBlock = TextBlock | ToolUseBlock;
 export type UserBlock = TextBlock | ToolResultBlock;
-export type UserMessage = {
+export interface UserMessage {
   role: "user";
   content: string | UserBlock[];
-};
-export type AssistantMessage = {
+}
+export interface AssistantMessage {
   role: "assistant";
   content: string | AssistantBlock[];
-};
+}
 export type Message = UserMessage | AssistantMessage;
 
 export type StopReason = "end_turn" | "max_tokens" | "stop_sequence" | "tool_use" | "pause_turn" | "refusal";
 
-export type Usage = {
+export interface Usage {
   input_tokens: number;
   output_tokens: number;
   cache_creation_input_tokens?: number | null;
   cache_read_input_tokens?: number | null;
-};
+}
 
-export type ToolDefinition = {
+export interface ToolDefinition {
   name: string;
   description: string;
   input_schema: {
@@ -44,23 +44,25 @@ export type ToolDefinition = {
     required?: string[];
   };
   strict?: boolean;
-};
+}
 
-export type MessageRequest = {
+export interface MessageRequest {
   model: string;
   max_tokens: number;
   messages: Message[];
   system?: string;
   tools?: ToolDefinition[];
-  tool_choice?: { type: "auto" | "any" | "none" } | {
-    type: "tool";
-    name: string;
-  };
+  tool_choice?:
+    | { type: "auto" | "any" | "none" }
+    | {
+        type: "tool";
+        name: string;
+      };
   stop_sequences?: string[];
   temperature?: number;
-};
+}
 
-export type MessageResponse = {
+export interface MessageResponse {
   id: string;
   type: "message";
   role: "assistant";
@@ -69,47 +71,47 @@ export type MessageResponse = {
   stop_reason: StopReason;
   stop_sequence: string | null;
   usage: Usage;
-};
+}
 
-export type MessagesClient = {
+export interface MessagesClient {
   messages: { create: (request: MessageRequest) => Promise<MessageResponse> };
-};
+}
 
-export type DraftToolUse = {
+export interface DraftToolUse {
   type: "tool_use";
   id?: string;
   name: string;
   input: Record<string, unknown>;
-};
+}
 export type DraftBlock = TextBlock | DraftToolUse;
 
-export type ReplyTurn = {
+export interface ReplyTurn {
   kind: "reply";
   content: DraftBlock[];
   stopReason?: StopReason;
   stopSequence?: string;
   usage?: Partial<Usage>;
-};
-export type FailTurn = {
+}
+export interface FailTurn {
   kind: "fail";
   status: number;
   message: string;
-};
+}
 export type Turn = ReplyTurn | FailTurn;
 export type TurnScript = Turn | ((request: MessageRequest) => Turn);
 
-export type ToolCall = {
+export interface ToolCall {
   name: string;
   input: Record<string, unknown>;
   id?: string;
-};
+}
 type TurnOptions = Pick<ReplyTurn, "stopReason" | "stopSequence" | "usage">;
 
-export type FakeModelOptions = {
+export interface FakeModelOptions {
   modelName?: string;
   contextWindowTokens?: number;
   isLastTurnRepeated?: boolean;
-};
+}
 
 const CHARS_PER_TOKEN = 4;
 const DEFAULT_MODEL_NAME = "fake-model";
@@ -118,7 +120,16 @@ const BAD_REQUEST_STATUS = 400;
 const MIN_TEMPERATURE = 0;
 const MAX_TEMPERATURE = 1;
 const TOOL_NAME_PATTERN = /^[a-zA-Z0-9_-]{1,128}$/;
-const REQUEST_KEYS = new Set(["model", "max_tokens", "messages", "system", "tools", "tool_choice", "stop_sequences", "temperature"]);
+const REQUEST_KEYS = new Set([
+  "model",
+  "max_tokens",
+  "messages",
+  "system",
+  "tools",
+  "tool_choice",
+  "stop_sequences",
+  "temperature"
+]);
 const MESSAGE_KEYS = new Set(["role", "content"]);
 const TOOL_KEYS = new Set(["name", "description", "input_schema", "strict", "input_examples"]);
 const ROLES = new Set(["user", "assistant"]);
@@ -126,10 +137,7 @@ const ROLES = new Set(["user", "assistant"]);
 export class FakeApiError extends Error {
   readonly status: number;
 
-  constructor({ status, message }: {
-    status: number;
-    message: string;
-  }) {
+  constructor({ status, message }: { status: number; message: string }) {
     super(message);
     this.name = "FakeApiError";
     this.status = status;
@@ -148,43 +156,53 @@ export function estimateTokens(value: unknown) {
   return Math.ceil(JSON.stringify(value ?? "").length / CHARS_PER_TOKEN);
 }
 
-export function textTurn({ text, ...options }: { text: string } & TurnOptions): ReplyTurn {
+export function textTurn({ text, ...options }: { text: string } & TurnOptions) {
   return {
     kind: "reply",
-    content: [{
-      type: "text",
-      text
-    }],
+    content: [
+      {
+        type: "text",
+        text
+      }
+    ],
     ...options
-  };
+  } satisfies ReplyTurn;
 }
 
-export function toolUseTurn({ calls, text, ...options }: {
+export function toolUseTurn({
+  calls,
+  text,
+  ...options
+}: {
   calls: ToolCall[];
   text?: string;
-} & TurnOptions): ReplyTurn {
+} & TurnOptions) {
   return {
     kind: "reply",
-    content: [...(text ? [{
-      type: "text" as const,
-      text
-    }] : []), ...calls.map(call => ({
-      type: "tool_use" as const,
-      ...call
-    }))],
+    content: [
+      ...(text
+        ? [
+            {
+              type: "text" as const,
+              text
+            }
+          ]
+        : []),
+      ...calls.map(call => ({
+        type: "tool_use" as const,
+        ...call
+      }))
+    ],
     ...options
-  };
+  } satisfies ReplyTurn;
 }
 
-export function failTurn({ status, message }: {
-  status: number;
-  message: string;
-}): FailTurn {
+export function failTurn({ status, message }: { status: number; message: string }) {
   return {
     kind: "fail",
     status,
     message
-  };
+  } satisfies FailTurn;
 }
 
 function badRequest(message: string) {
@@ -194,37 +212,31 @@ function badRequest(message: string) {
   });
 }
 
-function blocksOf(message: Message): {
-  type: string;
-  [key: string]: unknown;
-}[] {
+function blocksOf(message: Message) {
   return typeof message.content === "string" ? [] : message.content;
 }
 
 function toolUseIdsOf(message: Message | undefined) {
-  return message?.role === "assistant" ? blocksOf(message).flatMap(block => (block.type === "tool_use" ? [String(block.id)] : [])) : [];
+  return message?.role === "assistant"
+    ? blocksOf(message).flatMap(block => (block.type === "tool_use" ? [block.id] : []))
+    : [];
 }
 
 function toolResultIdsOf(message: Message) {
-  return message.role === "user" ? blocksOf(message).flatMap(block => (block.type === "tool_result" ? [String(block.tool_use_id)] : [])) : [];
+  return message.role === "user"
+    ? blocksOf(message).flatMap(block => (block.type === "tool_result" ? [block.tool_use_id] : []))
+    : [];
 }
 
-function assertKnownKeys({ value, allowed, path }: {
-  value: object;
-  allowed: Set<string>;
-  path: string;
-}) {
-  for (const key in value) {
+function assertKnownKeys({ value, allowed, path }: { value: object; allowed: Set<string>; path: string }) {
+  for (const key of Object.keys(value)) {
     if (!allowed.has(key)) {
       throw badRequest(`${path}${key}: Extra inputs are not permitted`);
     }
   }
 }
 
-function assertContent({ message, index }: {
-  message: Message;
-  index: number;
-}) {
+function assertContent({ message, index }: { message: Message; index: number }) {
   if (typeof message.content === "string") {
     if (!message.content.trim()) {
       throw badRequest(`messages.${index}: text content blocks must contain non-whitespace text`);
@@ -233,19 +245,22 @@ function assertContent({ message, index }: {
     return;
   }
 
-  if (!Array.isArray(message.content) || message.content.length === 0) {
+  const isContentEmpty = !Array.isArray(message.content) || message.content.length === 0;
+  if (isContentEmpty) {
     throw badRequest(`messages.${index}.content: must be a non-empty string or array of content blocks`);
   }
 
   for (const block of message.content) {
-    if (block.type === "text" && !block.text?.trim()) {
+    const isBlankTextBlock = block.type === "text" && !block.text?.trim();
+    if (isBlankTextBlock) {
       throw badRequest(`messages.${index}: text content blocks must contain non-whitespace text`);
     }
   }
 }
 
 function assertMessages(messages: unknown) {
-  if (!Array.isArray(messages) || messages.length === 0) {
+  const isMessagesEmpty = !Array.isArray(messages) || messages.length === 0;
+  if (isMessagesEmpty) {
     throw badRequest("messages: Field required, and it must be a non-empty array");
   }
 
@@ -258,7 +273,9 @@ function assertMessages(messages: unknown) {
     });
 
     if (!ROLES.has(message.role)) {
-      throw badRequest(`messages.${index}.role: Input should be 'user' or 'assistant'. The system prompt is the top-level "system" field, not a message`);
+      throw badRequest(
+        `messages.${index}.role: Input should be 'user' or 'assistant'. The system prompt is the top-level "system" field, not a message`
+      );
     }
 
     assertContent({
@@ -274,7 +291,9 @@ function assertMessages(messages: unknown) {
 
 function assertEndsWithUser(messages: Message[]) {
   if (messages.at(-1)?.role !== "user") {
-    throw badRequest("This model does not support assistant message prefill. The conversation must end with a user message.");
+    throw badRequest(
+      "This model does not support assistant message prefill. The conversation must end with a user message."
+    );
   }
 }
 
@@ -284,7 +303,9 @@ function assertToolPairing(messages: Message[]) {
     const resultIds = toolResultIdsOf(message);
     const unexpected = resultIds.filter(id => !expectedIds.includes(id));
     if (unexpected.length > 0) {
-      throw badRequest(`messages.${index}.content: unexpected \`tool_use_id\` found in \`tool_result\` blocks: ${unexpected.join(", ")}. Each \`tool_result\` block must have a corresponding \`tool_use\` block in the previous message.`);
+      throw badRequest(
+        `messages.${index}.content: unexpected \`tool_use_id\` found in \`tool_result\` blocks: ${unexpected.join(", ")}. Each \`tool_result\` block must have a corresponding \`tool_use\` block in the previous message.`
+      );
     }
 
     if (expectedIds.length === 0) {
@@ -293,17 +314,23 @@ function assertToolPairing(messages: Message[]) {
 
     const missing = expectedIds.filter(id => !resultIds.includes(id));
     if (missing.length > 0) {
-      throw badRequest(`messages.${index - 1}: \`tool_use\` ids were found without \`tool_result\` blocks immediately after: ${missing.join(", ")}. Each \`tool_use\` block must have a corresponding \`tool_result\` block in the next message.`);
+      throw badRequest(
+        `messages.${index - 1}: \`tool_use\` ids were found without \`tool_result\` blocks immediately after: ${missing.join(", ")}. Each \`tool_use\` block must have a corresponding \`tool_result\` block in the next message.`
+      );
     }
 
     const leadingBlocks = blocksOf(message).slice(0, expectedIds.length);
     if (!leadingBlocks.every(block => block.type === "tool_result")) {
-      throw badRequest(`messages.${index}.content: \`tool_result\` blocks must come first in the content array, before any text.`);
+      throw badRequest(
+        `messages.${index}.content: \`tool_result\` blocks must come first in the content array, before any text.`
+      );
     }
   }
   const trailingIds = toolUseIdsOf(messages.at(-1));
   if (trailingIds.length > 0) {
-    throw badRequest(`messages.${messages.length - 1}: \`tool_use\` ids were found without \`tool_result\` blocks immediately after: ${trailingIds.join(", ")}. Each \`tool_use\` block must have a corresponding \`tool_result\` block in the next message.`);
+    throw badRequest(
+      `messages.${messages.length - 1}: \`tool_use\` ids were found without \`tool_result\` blocks immediately after: ${trailingIds.join(", ")}. Each \`tool_use\` block must have a corresponding \`tool_result\` block in the next message.`
+    );
   }
 }
 
@@ -338,7 +365,10 @@ function assertTools(tools: unknown) {
   }
 }
 
-function assertValidRequest({ request, contextWindowTokens }: {
+function assertValidRequest({
+  request,
+  contextWindowTokens
+}: {
   request: MessageRequest;
   contextWindowTokens: number;
 }) {
@@ -347,12 +377,13 @@ function assertValidRequest({ request, contextWindowTokens }: {
     allowed: REQUEST_KEYS,
     path: ""
   });
-
-  if (typeof request.model !== "string" || !request.model) {
+  const isModelMissing = typeof request.model !== "string" || !request.model;
+  if (isModelMissing) {
     throw badRequest("model: Field required");
   }
 
-  if (!Number.isInteger(request.max_tokens) || request.max_tokens < 1) {
+  const isMaxTokensInvalid = !Number.isInteger(request.max_tokens) || request.max_tokens < 1;
+  if (isMaxTokensInvalid) {
     throw badRequest("max_tokens: Field required, and it must be a positive integer");
   }
 
@@ -361,7 +392,9 @@ function assertValidRequest({ request, contextWindowTokens }: {
   }
 
   const { temperature } = request;
-  if (temperature !== undefined && !(temperature >= MIN_TEMPERATURE && temperature <= MAX_TEMPERATURE)) {
+  const isTemperatureInvalid =
+    temperature !== undefined && !(temperature >= MIN_TEMPERATURE && temperature <= MAX_TEMPERATURE);
+  if (isTemperatureInvalid) {
     throw badRequest(`temperature: Input should be between ${MIN_TEMPERATURE} and ${MAX_TEMPERATURE}`);
   }
 
@@ -374,7 +407,8 @@ function assertValidRequest({ request, contextWindowTokens }: {
     tools: request.tools,
     messages: request.messages
   });
-  if (inputTokens > contextWindowTokens) {
+  const isContextExceeded = inputTokens > contextWindowTokens;
+  if (isContextExceeded) {
     throw badRequest(`prompt is too long: ${inputTokens} tokens > ${contextWindowTokens} maximum`);
   }
 }
@@ -413,8 +447,11 @@ export class FakeModel {
 
   private takeTurn(request: MessageRequest) {
     const isScriptExhausted = this.nextIndex >= this.script.length;
-    if (isScriptExhausted && !this.options.isLastTurnRepeated) {
-      throw new Error(`FakeModel script has ${this.script.length} turn(s) but the code called the model ${this.nextIndex + 1} times. Is there a loop that never stops?`);
+    const isScriptOver = isScriptExhausted && !this.options.isLastTurnRepeated;
+    if (isScriptOver) {
+      throw new Error(
+        `FakeModel script has ${this.script.length} turn(s) but the code called the model ${this.nextIndex + 1} times. Is there a loop that never stops?`
+      );
     }
 
     const scripted = this.script[Math.min(this.nextIndex, this.script.length - 1)];
@@ -422,16 +459,17 @@ export class FakeModel {
     return typeof scripted === "function" ? scripted(request) : scripted;
   }
 
-  private buildResponse({ turn, request }: {
-    turn: ReplyTurn;
-    request: MessageRequest;
-  }): MessageResponse {
+  private buildResponse({ turn, request }: { turn: ReplyTurn; request: MessageRequest }) {
     const callNumber = this.requests.length;
-    const content = turn.content.map((block, index) =>
-      block.type === "tool_use" ? {
-        ...block,
-        id: block.id ?? `toolu_fake_${callNumber}_${index}`
-      } : block);
+    function withToolUseId(block: DraftBlock, index: number) {
+      return block.type === "tool_use"
+        ? {
+            ...block,
+            id: block.id ?? `toolu_fake_${callNumber}_${index}`
+          }
+        : block;
+    }
+    const content = turn.content.map(withToolUseId);
     const hasToolUse = content.some(block => block.type === "tool_use");
     const stopReason = turn.stopReason ?? (hasToolUse ? "tool_use" : "end_turn");
     return {
@@ -453,7 +491,7 @@ export class FakeModel {
         cache_read_input_tokens: 0,
         ...turn.usage
       }
-    };
+    } satisfies MessageResponse;
   }
 
   private async create(request: MessageRequest) {

@@ -1,6 +1,8 @@
+import type * as nodeCrypto from "node:crypto";
+
 import { vi } from "vitest";
 
-type NodeCrypto = typeof import("node:crypto");
+type NodeCrypto = typeof nodeCrypto;
 
 export type GetRandomBytes = (size: number) => Buffer;
 

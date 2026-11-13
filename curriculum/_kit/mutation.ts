@@ -1,43 +1,39 @@
+import { beforeAll, describe, expect, it } from "vitest";
+
 import type { SuiteOutcome } from "#kit/host-contract.ts";
 import { kitHost } from "#kit/host.ts";
 import { implDir, implPath, lessonFileUrl, lessonIdOf } from "#kit/impl.ts";
 import { STARTER_DIR_NAME } from "#scripts/lib/layout.ts";
-import { beforeAll, describe, expect, it } from "vitest";
 
 const SETUP_TIMEOUT_MS = 240_000;
 const WORD_SEPARATOR = /\s+/;
 
-export type Edit = {
+export interface Edit {
   find: string;
   replace: string;
-};
-export type Mutant = {
+}
+export interface Mutant {
   name: string;
   edits: Edit[];
-};
+}
 
 function withUnixLineEndings(text: string) {
   return text.replaceAll("\r\n", "\n");
 }
 
-function applyEdit({ source, edit, mutantName }: {
-  source: string;
-  edit: Edit;
-  mutantName: string;
-}) {
+function applyEdit({ source, edit, mutantName }: { source: string; edit: Edit; mutantName: string }) {
   const parts = source.split(edit.find);
   const occurrences = parts.length - 1;
   if (occurrences !== 1) {
-    throw new Error(`Mutant "${mutantName}": the text to change must appear exactly once in the reference, found ${occurrences}: ${edit.find}`);
+    throw new Error(
+      `Mutant "${mutantName}": the text to change must appear exactly once in the reference, found ${occurrences}: ${edit.find}`
+    );
   }
 
   return parts.join(edit.replace);
 }
 
-export function applyMutant({ source, mutant }: {
-  source: string;
-  mutant: Mutant;
-}) {
+export function applyMutant({ source, mutant }: { source: string; mutant: Mutant }) {
   let mutated = withUnixLineEndings(source);
   for (const edit of mutant.edits) {
     mutated = applyEdit({
@@ -80,10 +76,13 @@ export function defineMutationCheck({
     testUrl,
     file: suiteFile
   });
-  const subjectSources = [referenceSource, ...mutants.map(mutant => applyMutant({
-    source: referenceSource,
-    mutant
-  }))];
+  function applyMutation(mutant: Mutant) {
+    return applyMutant({
+      source: referenceSource,
+      mutant
+    });
+  }
+  const subjectSources = [referenceSource, ...mutants.map(applyMutation)];
   let outcomes: SuiteOutcome[] = [];
 
   describe(`your tests in ${suiteFile}`, () => {
@@ -102,7 +101,9 @@ export function defineMutationCheck({
 
     it("pass on the correct code", () => {
       if (!outcomes[0].isPass) {
-        expect.fail(`your tests fail on the correct code:\n${describeProblems(outcomes[0]) || "no passing test was found"}`);
+        expect.fail(
+          `your tests fail on the correct code:\n${describeProblems(outcomes[0]) || "no passing test was found"}`
+        );
       }
     });
 
@@ -123,17 +124,14 @@ export function defineMutationCheck({
         outcomeIndex: index + 1,
         name: mutant.name
       }))
-    )(
-      `catch seeded bug $number of ${mutants.length}`,
-      ({ outcomeIndex, name }) => {
-        if (!outcomes[0].isPass) {
-          expect.fail("fix the tests that fail on the correct code first");
-        }
-
-        if (outcomes[outcomeIndex].isPass) {
-          expect.fail(`your tests still pass when the code has this bug: ${name}`);
-        }
+    )(`catch seeded bug $number of ${mutants.length}`, ({ outcomeIndex, name }) => {
+      if (!outcomes[0].isPass) {
+        expect.fail("fix the tests that fail on the correct code first");
       }
-    );
+
+      if (outcomes[outcomeIndex].isPass) {
+        expect.fail(`your tests still pass when the code has this bug: ${name}`);
+      }
+    });
   });
 }
