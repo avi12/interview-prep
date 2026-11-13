@@ -1,10 +1,4 @@
 import {
-  NARRATION_HOST_SCRIPT,
-  type NarrationReply,
-  type NarrationRequest,
-  narrationRequestSchema
-} from "@scripts/lib/narration-host.ts";
-import {
   nextLessonScript,
   PanelAction,
   type PanelCommand,
@@ -24,22 +18,25 @@ function panelHtml({
   page,
   isPassed,
   isScrolledToTop,
-  nextName
+  nextName,
+  narrationRuntimeUrl
 }: {
   page: string;
+  narrationRuntimeUrl: string | undefined;
   isPassed: boolean;
   isScrolledToTop: boolean;
   nextName: string | undefined;
 }) {
   const scripts = [
     VIEWING_SCRIPT,
-    NARRATION_HOST_SCRIPT,
     isPassed ? PASSED_SCRIPT : "",
     isScrolledToTop ? SCROLL_TO_TOP_SCRIPT : "",
     nextName ? nextLessonScript(nextName) : ""
   ].join("\n");
   const openedAt = isScrolledToTop ? `<!-- opened ${Date.now()} -->` : "";
-  return page.replace(BODY_END, `<script>${scripts}</script>${openedAt}${BODY_END}`);
+  const narrationRuntime =
+    narrationRuntimeUrl === undefined ? "" : `<script src="${narrationRuntimeUrl}" defer></script>`;
+  return page.replace(BODY_END, `<script>${scripts}</script>${narrationRuntime}${openedAt}${BODY_END}`);
 }
 
 let panel: vscode.WebviewPanel | undefined;
@@ -67,7 +64,7 @@ export function showLesson({
   nextName,
   onAction,
   onOpenFile,
-  onNarration
+  narrationRuntimeUrl
 }: {
   page: string;
   lesson: LessonEntry;
@@ -77,13 +74,14 @@ export function showLesson({
   nextName: string | undefined;
   onAction: (action: PanelCommand) => void;
   onOpenFile: (file: string) => void;
-  onNarration: (request: NarrationRequest) => Promise<NarrationReply>;
+  narrationRuntimeUrl: string | undefined;
 }) {
   const html = panelHtml({
     page,
     isPassed,
     isScrolledToTop,
-    nextName
+    nextName,
+    narrationRuntimeUrl
   });
   if (!panel) {
     panel = vscode.window.createWebviewPanel(
@@ -107,12 +105,6 @@ export function showLesson({
   panel.reveal(viewColumn, true);
   messageSubscription?.dispose();
   messageSubscription = panel.webview.onDidReceiveMessage((raw: unknown) => {
-    const narration = narrationRequestSchema.safeParse(raw);
-    if (narration.success) {
-      void onNarration(narration.data).then(reply => panel?.webview.postMessage(reply));
-      return;
-    }
-
     const parsed = panelMessageSchema.safeParse(raw);
     if (!parsed.success) {
       return;

@@ -1,4 +1,3 @@
-import type { NarrationRequest } from "@scripts/lib/narration-host.ts";
 import { PanelAction } from "@scripts/lib/panel.ts";
 import * as vscode from "vscode";
 
@@ -19,15 +18,6 @@ const SHOW_LESSONS_COMMAND = "workbench.view.extension.interviewPrep";
 const SET_CONTEXT_COMMAND = "setContext";
 const OPEN_LESSON_KEY = "interviewPrep.openLesson";
 const AUTO_OPEN_SETTING = "autoOpenNextLesson";
-const NARRATION_UNAVAILABLE = "Other voices are recorded only when the course runs on your computer";
-
-function narrationUnavailable(request: NarrationRequest) {
-  return Promise.resolve({
-    narrationReply: request.request,
-    error: NARRATION_UNAVAILABLE
-  });
-}
-
 export async function activateCourse({
   context,
   host,
@@ -53,7 +43,6 @@ export async function activateCourse({
     readTestReport: host.readTestReport
   });
   const topicsStatus = createTopicsStatus(course);
-  const answerNarration = host.local?.answerNarration ?? narrationUnavailable;
 
   function lessonIdOf(uri: vscode.Uri) {
     return lessonIdOfUri({
@@ -175,7 +164,7 @@ export async function activateCourse({
       isPassed: course.isLessonPassed(id),
       isScrolledToTop,
       nextName: course.nextLessonName(id),
-      onNarration: answerNarration,
+      narrationRuntimeUrl: host.narrationRuntimeUrl,
       onOpenFile(file) {
         void openExerciseFile({
           id,

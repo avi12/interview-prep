@@ -1,4 +1,3 @@
-import type { NarrationReply, NarrationRequest } from "@scripts/lib/narration-host.ts";
 import type { Progress } from "@scripts/lib/progress-sync.ts";
 import type { RunResult } from "@scripts/lib/run-result.ts";
 import type { lessonIndexSchema } from "@scripts/lib/schema.ts";
@@ -25,7 +24,6 @@ export interface CourseSession {
 }
 
 export interface LocalFeatures {
-  answerNarration: (request: NarrationRequest) => Promise<NarrationReply>;
   register: (session: CourseSession) => vscode.Disposable[];
 }
 
@@ -37,6 +35,7 @@ export interface LessonAddress {
 export interface CourseHost {
   address?: LessonAddress;
   workspaceRoot: vscode.Uri;
+  narrationRuntimeUrl?: string;
   readCourseFile: (relativePath: string) => Promise<string | null>;
   readElementsBundle: () => Promise<string>;
   readProgress: () => Promise<Progress>;

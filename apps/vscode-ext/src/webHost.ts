@@ -1,3 +1,4 @@
+import { NARRATION_RUNTIME_RELATIVE_PATH } from "@scripts/lib/layout.ts";
 import type { Progress } from "@scripts/lib/progress-sync.ts";
 import type { RunResult } from "@scripts/lib/run-result.ts";
 import * as vscode from "vscode";
@@ -158,6 +159,7 @@ export function createWebCourseHost({
   return {
     workspaceRoot,
     address,
+    narrationRuntimeUrl: new URL(NARRATION_RUNTIME_RELATIVE_PATH, courseBaseUrl).href,
     readElementsBundle: async () => elementsBundle,
     readCourseFile: relativePath =>
       fetch(new URL(relativePath, courseBaseUrl)).then(

@@ -4,7 +4,6 @@ import { createApiKeyStore } from "@/apiKey.ts";
 import { Command } from "@/contributions.ts";
 import type { CourseSession } from "@/courseHost.ts";
 import { watchLessons } from "@/hotReload.ts";
-import { createNarrationVoices } from "@/narrationVoices.ts";
 import { apiKeyRoute } from "@/server/apiKeyRoute.ts";
 import { serveRoutes } from "@/server/router.ts";
 import { voiceFilesRoute } from "@/server/voiceFiles.ts";
@@ -60,10 +59,6 @@ export function createLocalFeatures({ context, root }: { context: vscode.Extensi
   }
 
   return {
-    answerNarration: createNarrationVoices({
-      root,
-      state: context.globalState
-    }),
     register
   };
 }
