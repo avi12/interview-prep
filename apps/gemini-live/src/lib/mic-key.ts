@@ -212,7 +212,8 @@ export function listenToMicKey(toggle: () => void) {
       return failure(SAME_KEY_TEXT);
     }
 
-    if (role === TeachRole.HELD_KEY && key.release === null) {
+    const isReleaseMissing = role === TeachRole.HELD_KEY && key.release === null;
+    if (isReleaseMissing) {
       return failure(NO_RELEASE_TEXT);
     }
 

@@ -92,7 +92,8 @@ function readReport(file: string) {
 }
 
 function statusOf(status: string) {
-  if (status === SuiteTestStatus.PASSED || status === SuiteTestStatus.FAILED) {
+  const isFinished = status === SuiteTestStatus.PASSED || status === SuiteTestStatus.FAILED;
+  if (isFinished) {
     return status;
   }
 
