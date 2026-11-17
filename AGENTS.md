@@ -37,7 +37,7 @@ pnpm build:engines         # self-host esbuild-wasm, PGlite and Pyodide (with it
 pnpm test:browser-runner   # grade every ts, sql and py lesson in headless Chrome: starter fails, solution passes
 ```
 
-Before every commit run `pnpm lint && pnpm typecheck && pnpm fallow`. Run `pnpm verify` when lessons change, `pnpm test:browser-runner` when `curriculum/_kit/` or `apps/web/src/runner/` changes, and `pnpm -C apps/gemini-live compile` and `test` when the Gemini app changes.
+Before every commit run `pnpm lint && pnpm svelte:check && pnpm typecheck && pnpm fallow`. Run `pnpm verify` when lessons change, `pnpm test:browser-runner` when `curriculum/_kit/` or `apps/web/src/runner/` changes, and `pnpm -C apps/gemini-live compile` and `test` when the Gemini app changes.
 
 After a bug fix or feature that changes the web trainer, its lessons or the extension it runs, pass those checks and then run `pnpm deploy:web`, so the live site at https://avi-interview-prep.web.app always runs the latest version. Open pages pick it up on their own within a minute.
 

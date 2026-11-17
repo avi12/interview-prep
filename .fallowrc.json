@@ -39,6 +39,7 @@
     "postcss-html",
     "monaco-editor",
     "avi12-lint",
+    "svelte-check",
     "eslint-config-avi12",
     "fallow-config-avi12",
     "oxlint-config-avi12",

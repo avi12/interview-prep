@@ -12,6 +12,7 @@ After every modification, once the pre-commit checks from AGENTS.md pass, run `p
 # Linting
 
 `pnpm lint` runs `avi12-lint` (shared config from `avi12/lint-config`); `pnpm lint:fix` fixes what it can
+`pnpm svelte:check` runs `avi12-svelte-check` (svelte-check in its TypeScript 7 mode on `tsrs`) over the Svelte app in `apps/gemini-live`
 `.oxlintrc.json` is JSON and has no reason field, so the reasons for its `house/positional-parameters` exemptions live here; the rule stays on everywhere else
 
 - `scripts/lib/query-result.ts`, `render.ts`, `text-table.ts`: local callbacks handed to `Array.map`, whose `(value, index)` signature is fixed by the language
