@@ -69,9 +69,6 @@ importers:
       postcss-html:
         specifier: ^1.8.1
         version: 1.8.1
-      simple-git-hooks:
-        specifier: ^2.14.0
-        version: 2.14.0
       stylelint:
         specifier: ^17.16.0
         version: 17.16.0(typescript@5.9.3)
@@ -2742,7 +2739,7 @@ packages:
     deprecated: Use @augment-vir/common, @augment-vir/node, @augment-vir/web, @augment-vir/test, or @augment-vir/assert instead.
 
   avi12-lint@https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5#path:/packages/avi12-lint:
-    resolution: {gitHosted: true, path: /packages/avi12-lint, tarball: https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5}
+    resolution: {gitHosted: true, integrity: sha512-M3xfwFaU5EG7VZYVSeoP+lGWmzNcO9UWyWdLwlZbSVwmwubjzjDt8rq2RZFlyQRge6XLfS9mkHZjHd3OvpatHg==, path: /packages/avi12-lint, tarball: https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5}
     version: 0.11.0
     hasBin: true
 
@@ -3318,7 +3315,7 @@ packages:
     engines: {node: '>=12'}
 
   eslint-config-avi12@https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5#path:/packages/eslint-config:
-    resolution: {gitHosted: true, path: /packages/eslint-config, tarball: https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5}
+    resolution: {gitHosted: true, integrity: sha512-M3xfwFaU5EG7VZYVSeoP+lGWmzNcO9UWyWdLwlZbSVwmwubjzjDt8rq2RZFlyQRge6XLfS9mkHZjHd3OvpatHg==, path: /packages/eslint-config, tarball: https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5}
     version: 0.11.0
     peerDependencies:
       eslint: ^9.20.0 || ^10.0.0
@@ -3467,7 +3464,7 @@ packages:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
 
   fallow-config-avi12@https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5#path:/packages/fallow-config:
-    resolution: {gitHosted: true, path: /packages/fallow-config, tarball: https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5}
+    resolution: {gitHosted: true, integrity: sha512-M3xfwFaU5EG7VZYVSeoP+lGWmzNcO9UWyWdLwlZbSVwmwubjzjDt8rq2RZFlyQRge6XLfS9mkHZjHd3OvpatHg==, path: /packages/fallow-config, tarball: https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5}
     version: 0.11.0
     peerDependencies:
       fallow: '>=2.103.0'
@@ -4544,7 +4541,7 @@ packages:
     engines: {node: '>= 0.4.0'}
 
   oxfmt-config-avi12@https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5#path:/packages/oxfmt-config:
-    resolution: {gitHosted: true, path: /packages/oxfmt-config, tarball: https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5}
+    resolution: {gitHosted: true, integrity: sha512-M3xfwFaU5EG7VZYVSeoP+lGWmzNcO9UWyWdLwlZbSVwmwubjzjDt8rq2RZFlyQRge6XLfS9mkHZjHd3OvpatHg==, path: /packages/oxfmt-config, tarball: https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5}
     version: 0.11.0
     peerDependencies:
       oxfmt: '>=0.78.0'
@@ -4566,13 +4563,13 @@ packages:
         optional: true
 
   oxlint-config-avi12@https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5#path:/packages/oxlint-config:
-    resolution: {gitHosted: true, path: /packages/oxlint-config, tarball: https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5}
+    resolution: {gitHosted: true, integrity: sha512-M3xfwFaU5EG7VZYVSeoP+lGWmzNcO9UWyWdLwlZbSVwmwubjzjDt8rq2RZFlyQRge6XLfS9mkHZjHd3OvpatHg==, path: /packages/oxlint-config, tarball: https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5}
     version: 0.11.0
     peerDependencies:
       oxlint: '>=1.90.0'
 
   oxlint-plugin-naming@https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5#path:/packages/oxlint-plugin-naming:
-    resolution: {gitHosted: true, path: /packages/oxlint-plugin-naming, tarball: https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5}
+    resolution: {gitHosted: true, integrity: sha512-M3xfwFaU5EG7VZYVSeoP+lGWmzNcO9UWyWdLwlZbSVwmwubjzjDt8rq2RZFlyQRge6XLfS9mkHZjHd3OvpatHg==, path: /packages/oxlint-plugin-naming, tarball: https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5}
     version: 0.11.0
     peerDependencies:
       oxlint: '>=1.90.0'
@@ -5086,10 +5083,6 @@ packages:
   simple-get@4.0.1:
     resolution: {integrity: sha512-brv7p5WgH0jmQJr1ZDDfKDOSeWWg+OVypG99A/5vYGPqJ6pxiaHLy8nxtFjBA7oMa01ebA9gfh1uMCFqOuXxvA==}
 
-  simple-git-hooks@2.14.0:
-    resolution: {integrity: sha512-kkTORPAuxQz2g1QUuN0J8yGWT28tjGBfPOdJ4xT7Vbeu30veKUZQIoID2qGgCDAakaQn59UeZJJ4cFGB8PVP2A==}
-    hasBin: true
-
   simple-swizzle@0.2.4:
     resolution: {integrity: sha512-nAu1WFPQSMNr2Zn9PGSZK9AGn4t/y97lEm+MXTtUDwfP0ksAIX4nO+6ruD9Jwut4C49SB1Ws+fbXsm/yScWOHw==}
 
@@ -5246,7 +5239,7 @@ packages:
       stylelint: '>=8.0.0'
 
   stylelint-config-avi12@https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5#path:/packages/stylelint-config:
-    resolution: {gitHosted: true, path: /packages/stylelint-config, tarball: https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5}
+    resolution: {gitHosted: true, integrity: sha512-M3xfwFaU5EG7VZYVSeoP+lGWmzNcO9UWyWdLwlZbSVwmwubjzjDt8rq2RZFlyQRge6XLfS9mkHZjHd3OvpatHg==, path: /packages/stylelint-config, tarball: https://codeload.github.com/avi12/lint-config/tar.gz/3b2bed262448df9fcfacba0253a1425e389883b5}
     version: 0.11.0
     peerDependencies:
       postcss-html: ^1.8.1
@@ -10790,8 +10783,6 @@ snapshots:
       once: 1.4.0
       simple-concat: 1.0.1
     optional: true
-
-  simple-git-hooks@2.14.0: {}
 
   simple-swizzle@0.2.4:
     dependencies:

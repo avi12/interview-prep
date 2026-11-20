@@ -29,7 +29,6 @@
     "svelte:check": "pnpm -C apps/gemini-live svelte:check",
     "typecheck": "tsrs -p tsconfig.json && tsrs -p tsconfig.solutions.json",
     "fallow": "fallow audit --base HEAD",
-    "prepare": "simple-git-hooks",
     "lint": "avi12-lint",
     "test:scripts": "vitest run -c scripts/vitest.config.ts",
     "lint:fix": "avi12-lint --fix"
@@ -57,7 +56,6 @@
     "oxlint-plugin-naming": "github:avi12/lint-config#v0.11.0&path:/packages/oxlint-plugin-naming",
     "postcss": "^8.5.30",
     "postcss-html": "^1.8.1",
-    "simple-git-hooks": "^2.14.0",
     "stylelint": "^17.16.0",
     "stylelint-config-avi12": "github:avi12/lint-config#v0.11.0&path:/packages/stylelint-config",
     "stylelint-config-standard": "^40.0.0",
@@ -66,9 +64,6 @@
     "tsrs": "0.25.0-ts7.1.0-beta",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
-  },
-  "simple-git-hooks": {
-    "pre-commit": "pnpm avi12-lint --staged"
   },
   "engines": {
     "node": ">=24"

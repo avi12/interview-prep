@@ -86,7 +86,7 @@ The two channels the library does not cover keep the same shape: the native mess
 
 - `main` is the default branch
 - One self-contained logical change per commit, with a message that says what changed and why
-- The pre-commit hook (`simple-git-hooks`) runs `pnpm avi12-lint --staged`; it fails when one file has both staged and unstaged changes. Commit the whole file, or set the final version aside, commit the intermediate one, then restore it
+- There is no commit hook, as in youtube-semi-sub: run `pnpm lint` before every commit, and fix the code, never the rules
 
 ## License
 

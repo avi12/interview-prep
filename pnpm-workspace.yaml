@@ -6,7 +6,7 @@ allowBuilds:
   esbuild: set this to true or false
   keytar: set this to true or false
   protobufjs: false
-  simple-git-hooks: true
+  simple-git-hooks: set this to true or false
   spawn-sync: false
 minimumReleaseAgeExclude:
   - "@codingame/monaco-vscode-accessibility-service-override@39.0.4"
